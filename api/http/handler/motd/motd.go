@@ -37,6 +37,7 @@ type motdData struct {
 // @success 200 {object} motdResponse
 // @router /motd [get]
 func (handler *Handler) motd(w http.ResponseWriter, r *http.Request) {
+	return // AIP MOD
 	motd, err := client.Get(portainer.MessageOfTheDayURL, 0)
 	if err != nil {
 		response.JSON(w, &motdResponse{Message: ""})

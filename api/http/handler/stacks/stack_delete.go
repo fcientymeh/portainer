@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
+
+
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/filesystem"
 	httperrors "github.com/portainer/portainer/api/http/errors"
@@ -42,6 +44,21 @@ func (handler *Handler) stackDelete(w http.ResponseWriter, r *http.Request) *htt
 		return httperror.BadRequest("Invalid stack identifier route variable", err)
 	}
 
+	uzer, errorek := security.RetrieveTokenData(r)
+//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+				if r.Method != http.MethodGet {
+          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+        }				
+		}
+	}
+//------------------------
 	securityContext, err := security.RetrieveRestrictedRequestContext(r)
 	if err != nil {
 		return httperror.InternalServerError("Unable to retrieve info from request context", err)
@@ -134,6 +151,12 @@ func (handler *Handler) stackDelete(w http.ResponseWriter, r *http.Request) *htt
 	if err := handler.FileService.RemoveDirectory(stack.ProjectPath); err != nil {
 		log.Warn().Err(err).Msg("Unable to remove stack files from disk")
 	}
+
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [DELETE STACK %s]     [%s]", uzer.Username, stack.Name, r)	
+		}
+	}	
 
 	return response.Empty(w)
 }

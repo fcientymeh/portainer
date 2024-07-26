@@ -2,11 +2,15 @@ package backup
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 
 	operations "github.com/portainer/portainer/api/backup"
+	httperrors "github.com/portainer/portainer/api/http/errors"
+
+	"github.com/portainer/portainer/api/http/security"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 )
@@ -42,6 +46,22 @@ func (h *Handler) backup(w http.ResponseWriter, r *http.Request) *httperror.Hand
 		return httperror.BadRequest("Invalid request payload", err)
 	}
 
+	//--- AIS: Read-Only user management ---
+	uzer, errorek := security.RetrieveTokenData(r)
+	teamMemberships, _ := h.dataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := h.dataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{StatusCode: http.StatusForbidden, Message: "Permission DENIED. READONLY ROLE", Err: httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
+
 	archivePath, err := operations.CreateBackupArchive(payload.Password, h.gate, h.dataStore, h.filestorePath)
 	if err != nil {
 		return httperror.InternalServerError("Failed to create backup", err)
@@ -51,5 +71,14 @@ func (h *Handler) backup(w http.ResponseWriter, r *http.Request) *httperror.Hand
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fmt.Sprintf("portainer-backup_%s", filepath.Base(archivePath))))
 	http.ServeFile(w, r, archivePath)
 
+	//------------ AIP AISECLAB MOD START------------------------
+	//
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Printf("[AIP AUDIT] [%s] [GENERATE PORTAINER BACKUP]     [%s]", uzer.Username, r)
+		}
+	}
+	//
+	//------------ AIP AISECLAB MOD END------------------------
 	return nil
 }

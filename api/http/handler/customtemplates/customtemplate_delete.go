@@ -33,6 +33,10 @@ func (handler *Handler) customTemplateDelete(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		return httperror.BadRequest("Invalid Custom template identifier route variable", err)
 	}
+	//--- AIS: Read-Only user management ---
+	uzer, errorek := security.RetrieveTokenData(r)
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
 
 	securityContext, err := security.RetrieveRestrictedRequestContext(r)
 	if err != nil {
@@ -45,6 +49,19 @@ func (handler *Handler) customTemplateDelete(w http.ResponseWriter, r *http.Requ
 	} else if err != nil {
 		return httperror.InternalServerError("Unable to find a custom template with the specified identifier inside the database", err)
 	}
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				log.Printf("[AIP AUDIT] [%s] [Permission DENIED. READONLY ROLE: DELETE CUSTOM TEMPLATE %s]     [%s]", uzer.Username, customTemplate.Title, r)
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
 
 	resourceControl, err := handler.DataStore.ResourceControl().ResourceControlByResourceIDAndType(strconv.Itoa(customTemplateID), portainer.CustomTemplateResourceControl)
 	if err != nil {
@@ -73,6 +90,16 @@ func (handler *Handler) customTemplateDelete(w http.ResponseWriter, r *http.Requ
 		}
 	}
 
+	customTemplate.ResourceControl = resourceControl
+	//------------ AIP AISECLAB MOD START------------------------
+	//
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [DELETE CUSTOM TEMPLATE %s]     [%s]", uzer.Username, customTemplate.Title, r)
+		}
+	}
+	//
+	//------------ AIP AISECLAB MOD END------------------------
 	return response.Empty(w)
 
 }

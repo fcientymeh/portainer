@@ -4,6 +4,9 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/rs/zerolog/log"
+	"github.com/portainer/portainer/api/http/security"
+	httperrors "github.com/portainer/portainer/api/http/errors"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
@@ -30,6 +33,21 @@ func (handler *Handler) endpointGroupDeleteEndpoint(w http.ResponseWriter, r *ht
 		return httperror.BadRequest("Invalid environment group identifier route variable", err)
 	}
 
+	uzer, _ := security.RetrieveTokenData(r)
+//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+    log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+				if r.Method != http.MethodGet {
+          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+        }				
+		}
+	}
+//------------------------
 	endpointID, err := request.RetrieveNumericRouteVariableValue(r, "endpointId")
 	if err != nil {
 		return httperror.BadRequest("Invalid environment identifier route variable", err)

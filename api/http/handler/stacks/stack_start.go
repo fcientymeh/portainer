@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"github.com/rs/zerolog/log"
+
 
 	portainer "github.com/portainer/portainer/api"
 	httperrors "github.com/portainer/portainer/api/http/errors"
@@ -38,6 +40,21 @@ func (handler *Handler) stackStart(w http.ResponseWriter, r *http.Request) *http
 		return httperror.BadRequest("Invalid stack identifier route variable", err)
 	}
 
+	uzer, errorek := security.RetrieveTokenData(r)
+//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+				if r.Method != http.MethodGet {
+          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+        }				
+		}
+	}
+//------------------------
 	securityContext, err := security.RetrieveRestrictedRequestContext(r)
 	if err != nil {
 		return httperror.InternalServerError("Unable to retrieve info from request context", err)
@@ -133,6 +150,11 @@ func (handler *Handler) stackStart(w http.ResponseWriter, r *http.Request) *http
 		stack.GitConfig.Authentication.Password = ""
 	}
 
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [START STACK %s]     [%s]", uzer.Username, stack.Name, r)	
+		}
+	}
 	return response.JSON(w, stack)
 }
 

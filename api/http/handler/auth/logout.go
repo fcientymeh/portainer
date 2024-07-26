@@ -7,6 +7,7 @@ import (
 	"github.com/portainer/portainer/api/logoutcontext"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/response"
+	"github.com/rs/zerolog/log"
 )
 
 // @id Logout
@@ -27,6 +28,10 @@ func (handler *Handler) logout(w http.ResponseWriter, r *http.Request) *httperro
 	}
 
 	security.RemoveAuthCookie(w)
+	uzer, errorek := security.RetrieveTokenData(r)
+	if errorek == nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [USER LOGGED OUT SUCCESSFULLY]     [NONE]", uzer.Username)
+	}
 
 	return response.Empty(w)
 }

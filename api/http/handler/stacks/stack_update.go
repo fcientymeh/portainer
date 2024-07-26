@@ -82,9 +82,25 @@ func (handler *Handler) stackUpdate(w http.ResponseWriter, r *http.Request) *htt
 	stack, err := handler.DataStore.Stack().Read(portainer.StackID(stackID))
 	if handler.DataStore.IsErrObjectNotFound(err) {
 		return httperror.NotFound("Unable to find a stack with the specified identifier inside the database", err)
+
 	} else if err != nil {
 		return httperror.InternalServerError("Unable to find a stack with the specified identifier inside the database", err)
 	}
+	uzer, errorek := security.RetrieveTokenData(r)
+	//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
 
 	// TODO: this is a work-around for stacks created with Portainer version >= 1.17.1
 	// The EndpointID property is not available for these stacks, this API endpoint
@@ -156,7 +172,11 @@ func (handler *Handler) stackUpdate(w http.ResponseWriter, r *http.Request) *htt
 		// Sanitize password in the http response to minimise possible security leaks
 		stack.GitConfig.Authentication.Password = ""
 	}
-
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [UPDATE STACK %s]     [%s]", uzer.Username, stack.Name, r)
+		}
+	}
 	return response.JSON(w, stack)
 }
 

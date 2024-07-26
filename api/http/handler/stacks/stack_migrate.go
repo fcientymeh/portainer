@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/rs/zerolog/log"
+
+
 	portainer "github.com/portainer/portainer/api"
 	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/http/security"
@@ -54,6 +57,21 @@ func (handler *Handler) stackMigrate(w http.ResponseWriter, r *http.Request) *ht
 	if err != nil {
 		return httperror.BadRequest("Invalid stack identifier route variable", err)
 	}
+	uzer, errorek := security.RetrieveTokenData(r)
+//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+				if r.Method != http.MethodGet {
+          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+        }				
+		}
+	}
+//------------------------
 
 	var payload stackMigratePayload
 	err = request.DecodeAndValidateJSONPayload(r, &payload)
@@ -179,7 +197,11 @@ func (handler *Handler) stackMigrate(w http.ResponseWriter, r *http.Request) *ht
 		// sanitize password in the http response to minimise possible security leaks
 		stack.GitConfig.Authentication.Password = ""
 	}
-
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [MIGRATE STACK %s]     [%s]", uzer.Username, stack.Name, r)	
+		}
+	}
 	return response.JSON(w, stack)
 }
 

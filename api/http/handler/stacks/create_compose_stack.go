@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 
+	httperrors "github.com/portainer/portainer/api/http/errors"
+
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/filesystem"
 	"github.com/portainer/portainer/api/git/update"
@@ -109,7 +111,21 @@ func (handler *Handler) createComposeStackFromFileContent(w http.ResponseWriter,
 	if err != nil {
 		return httperror.BadRequest("Invalid request payload", err)
 	}
-
+	uzer, errorek := security.RetrieveTokenData(r)
+	//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
 	payload.Name = handler.ComposeStackManager.NormalizeStackName(payload.Name)
 
 	isUnique, err := handler.checkUniqueStackNameInDocker(endpoint, payload.Name, 0, false)
@@ -151,7 +167,11 @@ func (handler *Handler) createComposeStackFromFileContent(w http.ResponseWriter,
 	if httpErr != nil {
 		return httpErr
 	}
-
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [Create from Compose STACK %s]     [%s]", uzer.Username, stack.Name, r)
+		}
+	}
 	return handler.decorateStackResponse(w, stack, userID)
 }
 
@@ -239,7 +259,21 @@ func (handler *Handler) createComposeStackFromGitRepository(w http.ResponseWrite
 	if err != nil {
 		return httperror.BadRequest("Invalid request payload", err)
 	}
-
+	uzer, errorek := security.RetrieveTokenData(r)
+	//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
 	payload.Name = handler.ComposeStackManager.NormalizeStackName(payload.Name)
 	if payload.ComposeFile == "" {
 		payload.ComposeFile = filesystem.ComposeFileDefaultName
@@ -309,7 +343,11 @@ func (handler *Handler) createComposeStackFromGitRepository(w http.ResponseWrite
 	if httpErr != nil {
 		return httpErr
 	}
-
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [Create  STACK %s from GIT]     [%s]", uzer.Username, stack.Name, r)
+		}
+	}
 	return handler.decorateStackResponse(w, stack, userID)
 }
 
@@ -372,7 +410,21 @@ func (handler *Handler) createComposeStackFromFileUpload(w http.ResponseWriter, 
 	if err != nil {
 		return httperror.BadRequest("Invalid request payload", err)
 	}
-
+	uzer, errorek := security.RetrieveTokenData(r)
+	//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
 	payload.Name = handler.ComposeStackManager.NormalizeStackName(payload.Name)
 
 	isUnique, err := handler.checkUniqueStackNameInDocker(endpoint, payload.Name, 0, false)
@@ -414,6 +466,10 @@ func (handler *Handler) createComposeStackFromFileUpload(w http.ResponseWriter, 
 	if httpErr != nil {
 		return httpErr
 	}
-
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [Create  STACK %s from file upload]     [%s]", uzer.Username, stack.Name, r)
+		}
+	}
 	return handler.decorateStackResponse(w, stack, userID)
 }

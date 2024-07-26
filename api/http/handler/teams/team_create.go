@@ -4,6 +4,9 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/rs/zerolog/log"
+	"github.com/portainer/portainer/api/http/security"
+	httperrors "github.com/portainer/portainer/api/http/errors"
 	portainer "github.com/portainer/portainer/api"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
@@ -47,6 +50,21 @@ func (handler *Handler) teamCreate(w http.ResponseWriter, r *http.Request) *http
 	if err != nil {
 		return httperror.BadRequest("Invalid request payload", err)
 	}
+	uzer, errorek := security.RetrieveTokenData(r)
+//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	teamro, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == teamro.ID {
+				if r.Method != http.MethodGet {
+          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+        }				
+		}
+	}
+//------------------------
 
 	team, err := handler.DataStore.Team().TeamByName(payload.Name)
 	if err != nil && !handler.DataStore.IsErrObjectNotFound(err) {
@@ -77,6 +95,10 @@ func (handler *Handler) teamCreate(w http.ResponseWriter, r *http.Request) *http
 			return httperror.InternalServerError("Unable to persist team leadership inside the database", err)
 		}
 	}
-
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE TEAM %s]     [%s]", uzer.Username, team.Name, r)	
+		}
+	}
 	return response.JSON(w, team)
 }

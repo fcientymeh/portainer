@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
+
 	portainer "github.com/portainer/portainer/api"
 	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/http/security"
@@ -68,6 +71,21 @@ func (handler *Handler) userUpdate(w http.ResponseWriter, r *http.Request) *http
 	if err != nil {
 		return httperror.BadRequest("Invalid user identifier route variable", err)
 	}
+	uzer, errorek := security.RetrieveTokenData(r)
+//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+				if r.Method != http.MethodGet {
+          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+        }				
+		}
+	}
+//------------------------
 
 	tokenData, err := security.RetrieveTokenData(r)
 	if err != nil {
@@ -155,6 +173,10 @@ func (handler *Handler) userUpdate(w http.ResponseWriter, r *http.Request) *http
 
 	// hide the password field in the response payload
 	user.Password = ""
-
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [UPDATE USER DATA FOR %s]     [%s]", uzer.Username, user.Username, r)	
+		}
+	}
 	return response.JSON(w, user)
 }

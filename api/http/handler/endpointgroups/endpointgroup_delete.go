@@ -6,9 +6,12 @@ import (
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
+	httperrors "github.com/portainer/portainer/api/http/errors"
+	"github.com/portainer/portainer/api/http/security"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
+	"github.com/rs/zerolog/log"
 )
 
 // @id EndpointGroupDelete
@@ -29,6 +32,22 @@ func (handler *Handler) endpointGroupDelete(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		return httperror.BadRequest("Invalid environment group identifier route variable", err)
 	}
+	uzer, _ := security.RetrieveTokenData(r)
+	//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	endpointGroup, err := handler.DataStore.EndpointGroup().Read(portainer.EndpointGroupID(endpointGroupID))
+	//------------------------
 
 	if endpointGroupID == 1 {
 		return httperror.Forbidden("Unable to remove the default 'Unassigned' group", errors.New("Cannot remove the default environment group"))
@@ -45,7 +64,10 @@ func (handler *Handler) endpointGroupDelete(w http.ResponseWriter, r *http.Reque
 
 		return httperror.InternalServerError("Unexpected error", err)
 	}
-
+	uzer, errorek := security.RetrieveTokenData(r)
+	if errorek == nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [DELETE GROUP %s]     [%s]", uzer.Username, endpointGroup.Name, r)
+	}
 	return response.Empty(w)
 }
 
@@ -95,6 +117,5 @@ func (handler *Handler) deleteEndpointGroup(tx dataservices.DataStoreTx, endpoin
 			return httperror.InternalServerError("Unable to persist tag changes inside the database", err)
 		}
 	}
-
 	return nil
 }

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/rs/zerolog/log"
+
 	portainer "github.com/portainer/portainer/api"
 	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/http/security"
@@ -58,6 +60,21 @@ func (handler *Handler) teamMembershipCreate(w http.ResponseWriter, r *http.Requ
 		return httperror.BadRequest("Invalid request payload", err)
 	}
 
+	uzer, errorek := security.RetrieveTokenData(r)
+	//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership2 := range teamMemberships {
+		if membership2.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
 	securityContext, err := security.RetrieveRestrictedRequestContext(r)
 	if err != nil {
 		return httperror.InternalServerError("Unable to retrieve info from request context", err)
@@ -91,7 +108,19 @@ func (handler *Handler) teamMembershipCreate(w http.ResponseWriter, r *http.Requ
 		return httperror.InternalServerError("Unable to persist team memberships inside the database", err)
 	}
 
-	defer handler.updateUserServiceAccounts(membership)
+	// defer handler.updateUserServiceAccounts(membership)
 
+	if membership.UserID == 1 && membership.TeamID == team.ID {
+		log.Info().Msgf("[AIP AUDIT] [%s] [CRITICAL CONFIGURATION ERROR!]     [First administrator cannot be added to READONLY group. It can block aip portainer management system]", uzer.Username)
+		return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+	}
+
+	user, err := handler.DataStore.User().Read(portainer.UserID(membership.UserID))
+	team2, err := handler.DataStore.Team().Read(portainer.TeamID(membership.TeamID))
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [TEAM MEMBERSHIP - ADD USER %s TO TEAM %s AS %s]     [%s]", uzer.Username, user.Username, team2.Name, membership.Role, r)
+		}
+	}
 	return response.JSON(w, membership)
 }

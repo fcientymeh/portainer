@@ -4,6 +4,9 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/rs/zerolog/log"
+
+	httperrors "github.com/portainer/portainer/api/http/errors"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/http/security"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
@@ -26,7 +29,20 @@ func (handler *Handler) webhookDelete(w http.ResponseWriter, r *http.Request) *h
 	if err != nil {
 		return httperror.BadRequest("Invalid webhook id", err)
 	}
-
+	uzer, errorek := security.RetrieveTokenData(r)
+//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+				if r.Method != http.MethodGet {
+          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+        }				
+		}
+	}
 	securityContext, err := security.RetrieveRestrictedRequestContext(r)
 	if err != nil {
 		return httperror.InternalServerError("Unable to retrieve user info from request context", err)
@@ -41,5 +57,10 @@ func (handler *Handler) webhookDelete(w http.ResponseWriter, r *http.Request) *h
 		return httperror.InternalServerError("Unable to remove the webhook from the database", err)
 	}
 
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [WEBHOOK DELETE]     [%s]", uzer.Username, r)	
+		}
+	}
 	return response.Empty(w)
 }

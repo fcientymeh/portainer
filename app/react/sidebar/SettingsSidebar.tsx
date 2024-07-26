@@ -37,7 +37,7 @@ export function SettingsSidebar({ isPureAdmin, isAdmin, isTeamLeader }: Props) {
           label="User-related"
           icon={Users}
           to="portainer.users"
-          pathOptions={{ includePaths: ['portainer.teams', 'portainer.roles'] }}
+          pathOptions={{ includePaths: ['portainer.teams'] }}
           data-cy="portainerSidebar-userRelated"
           listId="portainerSidebar-userRelated"
         >
@@ -54,14 +54,6 @@ export function SettingsSidebar({ isPureAdmin, isAdmin, isTeamLeader }: Props) {
             data-cy="portainerSidebar-teams"
           />
 
-          {isPureAdmin && (
-            <SidebarItem
-              to="portainer.roles"
-              label="Roles"
-              isSubMenu
-              data-cy="portainerSidebar-roles"
-            />
-          )}
         </SidebarParent>
       )}
       {isPureAdmin && (
@@ -119,29 +111,6 @@ export function SettingsSidebar({ isPureAdmin, isAdmin, isTeamLeader }: Props) {
             />
           )}
 
-          <SidebarParent
-            label="Logs"
-            to="portainer.authLogs"
-            icon={FileText}
-            pathOptions={{
-              includePaths: ['portainer.activityLogs'],
-            }}
-            data-cy="k8sSidebar-logs"
-            listId="k8sSidebar-logs"
-          >
-            <SidebarItem
-              label="Authentication"
-              to="portainer.authLogs"
-              isSubMenu
-              data-cy="portainerSidebar-authLogs"
-            />
-            <SidebarItem
-              to="portainer.activityLogs"
-              label="Activity"
-              isSubMenu
-              data-cy="portainerSidebar-activityLogs"
-            />
-          </SidebarParent>
         </>
       )}
       {isBE && !isPureAdmin && isAdmin && (

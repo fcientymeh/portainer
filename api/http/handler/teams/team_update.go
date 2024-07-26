@@ -3,6 +3,9 @@ package teams
 import (
 	"net/http"
 
+	"github.com/rs/zerolog/log"
+	"github.com/portainer/portainer/api/http/security"
+	httperrors "github.com/portainer/portainer/api/http/errors"
 	portainer "github.com/portainer/portainer/api"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
@@ -41,6 +44,21 @@ func (handler *Handler) teamUpdate(w http.ResponseWriter, r *http.Request) *http
 	if err != nil {
 		return httperror.BadRequest("Invalid team identifier route variable", err)
 	}
+	uzer, errorek := security.RetrieveTokenData(r)
+//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	teamro, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == teamro.ID {
+				if r.Method != http.MethodGet {
+          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+        }				
+		}
+	}
+//------------------------
 
 	var payload teamUpdatePayload
 	if err := request.DecodeAndValidateJSONPayload(r, &payload); err != nil {
@@ -62,5 +80,10 @@ func (handler *Handler) teamUpdate(w http.ResponseWriter, r *http.Request) *http
 		return httperror.NotFound("Unable to persist team changes inside the database", err)
 	}
 
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE TEAM %s]     [%s]", uzer.Username, team.Name, r)	
+		}
+	}
 	return response.JSON(w, team)
 }

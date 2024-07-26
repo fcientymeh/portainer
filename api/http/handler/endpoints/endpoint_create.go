@@ -13,11 +13,14 @@ import (
 	"github.com/portainer/portainer/api/crypto"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/http/client"
+	httperrors "github.com/portainer/portainer/api/http/errors"
+	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/edge"
 	"github.com/portainer/portainer/api/internal/endpointutils"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
+	"github.com/rs/zerolog/log"
 
 	"github.com/gofrs/uuid"
 )
@@ -217,6 +220,21 @@ func (handler *Handler) endpointCreate(w http.ResponseWriter, r *http.Request) *
 	if err != nil {
 		return httperror.InternalServerError("Unable to check if name is unique", err)
 	}
+	uzer, errorek := security.RetrieveTokenData(r)
+	//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
 
 	if !isUnique {
 		return httperror.Conflict("Name is not unique", nil)
@@ -272,6 +290,11 @@ func (handler *Handler) endpointCreate(w http.ResponseWriter, r *http.Request) *
 
 	if err := handler.DataStore.EndpointRelation().Create(relationObject); err != nil {
 		return httperror.InternalServerError("Unable to persist the relation object inside the database", err)
+	}
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE ENDPOINT %s]     [%s]", uzer.Username, endpoint.Name, r)
+		}
 	}
 
 	return response.JSON(w, endpoint)

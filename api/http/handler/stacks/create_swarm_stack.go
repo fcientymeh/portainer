@@ -6,11 +6,13 @@ import (
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/git/update"
+	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/stacks/stackbuilders"
 	"github.com/portainer/portainer/api/stacks/stackutils"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
+	"github.com/rs/zerolog/log"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/pkg/errors"
@@ -80,6 +82,23 @@ func (handler *Handler) createSwarmStackFromFileContent(w http.ResponseWriter, r
 	if err != nil {
 		return httperror.InternalServerError("Unable to check for name collision", err)
 	}
+
+	uzer, _ := security.RetrieveTokenData(r)
+	//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
+
 	if !isUnique {
 		return stackExistsError(payload.Name)
 	}
@@ -203,6 +222,22 @@ func (handler *Handler) createSwarmStackFromGitRepository(w http.ResponseWriter,
 	if err != nil {
 		return httperror.InternalServerError("Unable to check for name collision", err)
 	}
+
+	//--- AIS: Read-Only user management ---
+	uzer, errorek := security.RetrieveTokenData(r)
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
 	if !isUnique {
 		return stackExistsError(payload.Name)
 	}
@@ -251,6 +286,12 @@ func (handler *Handler) createSwarmStackFromGitRepository(w http.ResponseWriter,
 		return httpErr
 	}
 
+	uzer, errorek = security.RetrieveTokenData(r)
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE STACK %s]     [%s]", uzer.Username, stack.Name, r)
+		}
+	}
 	return handler.decorateStackResponse(w, stack, userID)
 }
 
@@ -322,7 +363,21 @@ func (handler *Handler) createSwarmStackFromFileUpload(w http.ResponseWriter, r 
 	if err != nil {
 		return httperror.BadRequest("Invalid request payload", err)
 	}
-
+	//--- AIS: Read-Only user management ---
+	uzer, errorek := security.RetrieveTokenData(r)
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
 	payload.Name = handler.SwarmStackManager.NormalizeStackName(payload.Name)
 
 	isUnique, err := handler.checkUniqueStackNameInDocker(endpoint, payload.Name, 0, true)
@@ -351,6 +406,11 @@ func (handler *Handler) createSwarmStackFromFileUpload(w http.ResponseWriter, r 
 	if httpErr != nil {
 		return httpErr
 	}
-
+	uzer, errorek = security.RetrieveTokenData(r)
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE STACK %s]     [%s]", uzer.Username, stack.Name, r)
+		}
+	}
 	return handler.decorateStackResponse(w, stack, userID)
 }

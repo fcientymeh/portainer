@@ -6,9 +6,12 @@ import (
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
+	httperrors "github.com/portainer/portainer/api/http/errors"
+	"github.com/portainer/portainer/api/http/security"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
+	"github.com/rs/zerolog/log"
 
 	"github.com/asaskevich/govalidator"
 )
@@ -56,6 +59,22 @@ func (handler *Handler) endpointGroupCreate(w http.ResponseWriter, r *http.Reque
 		return httperror.BadRequest("Invalid request payload", err)
 	}
 
+	//--- AIS: Read-Only user management ---
+	uzer, errorek := security.RetrieveTokenData(r)
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
+
 	var endpointGroup *portainer.EndpointGroup
 	err = handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		endpointGroup, err = handler.createEndpointGroup(tx, payload)
@@ -69,7 +88,12 @@ func (handler *Handler) endpointGroupCreate(w http.ResponseWriter, r *http.Reque
 
 		return httperror.InternalServerError("Unexpected error", err)
 	}
-
+	uzer, errorek = security.RetrieveTokenData(r)
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE GROUP %s]     [%s]", uzer.Username, endpointGroup.Name, r)
+		}
+	}
 	return response.JSON(w, endpointGroup)
 }
 

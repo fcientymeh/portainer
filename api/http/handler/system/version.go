@@ -84,6 +84,7 @@ func (handler *Handler) version(w http.ResponseWriter, r *http.Request) *httperr
 }
 
 func GetLatestVersion() string {
+	return "" //AIP MOD
 	motd, err := client.Get(portainer.VersionCheckURL, 5)
 	if err != nil {
 		log.Debug().Err(err).Msg("couldn't fetch latest Portainer release version")
@@ -105,6 +106,7 @@ func GetLatestVersion() string {
 }
 
 func HasNewerVersion(currentVersion, latestVersion string) bool {
+	return false //AIP MOD
 	currentVersionSemver, err := semver.NewVersion(currentVersion)
 	if err != nil {
 		log.Debug().Str("version", currentVersion).Msg("current Portainer version isn't a semver")

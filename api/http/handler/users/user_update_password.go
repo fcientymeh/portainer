@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
+
 	portainer "github.com/portainer/portainer/api"
 	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/http/security"
@@ -97,6 +100,11 @@ func (handler *Handler) userUpdatePassword(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		return httperror.InternalServerError("Unable to persist user changes inside the database", err)
 	}
-
+	uzer, errorek := security.RetrieveTokenData(r)
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [UPDATE PASSWORD FOR USER %s]     [%s]", uzer.Username, user.Username, r)	
+		}
+	}	
 	return response.Empty(w)
 }

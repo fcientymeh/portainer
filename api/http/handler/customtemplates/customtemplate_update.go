@@ -15,6 +15,7 @@ import (
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
+	"github.com/rs/zerolog/log"
 
 	"github.com/asaskevich/govalidator"
 )
@@ -169,6 +170,24 @@ func (handler *Handler) customTemplateUpdate(w http.ResponseWriter, r *http.Requ
 	customTemplate.IsComposeFormat = payload.IsComposeFormat
 	customTemplate.EdgeTemplate = payload.EdgeTemplate
 
+	//--- AIS: Read-Only user management ---
+	uzer, errorek := security.RetrieveTokenData(r)
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	//	log.Printf("AUDIT debug: %s", teamMemberships)
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				log.Info().Msgf("[AIP AUDIT] [%s] [Permission DENIED. READONLY ROLE: UPDATE CUSTOM TEMPLATE %s]     [%s]", uzer.Username, customTemplate.Title, r)
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
+
 	if payload.RepositoryURL != "" {
 		if !govalidator.IsURL(payload.RepositoryURL) {
 			return httperror.BadRequest("Invalid repository URL. Must correspond to a valid URL format", err)
@@ -226,6 +245,15 @@ func (handler *Handler) customTemplateUpdate(w http.ResponseWriter, r *http.Requ
 	if err := handler.DataStore.CustomTemplate().Update(customTemplate.ID, customTemplate); err != nil {
 		return httperror.InternalServerError("Unable to persist custom template changes inside the database", err)
 	}
+	//------------ AIP AISECLAB MOD START------------------------
+	//
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [UPDATE CUSTOM TEMPLATE %s]     [%s]", uzer.Username, customTemplate.Title, r)
+		}
+	}
+	//
+	//------------ AIP AISECLAB MOD END------------------------
 
 	return response.JSON(w, customTemplate)
 }

@@ -11,6 +11,7 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/filesystem"
 	gittypes "github.com/portainer/portainer/api/git/types"
+	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/authorization"
 	"github.com/portainer/portainer/api/stacks/stackutils"
@@ -28,6 +29,23 @@ func (handler *Handler) customTemplateCreate(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		return httperror.BadRequest("Invalid query parameter: method", err)
 	}
+	//--- AIS: Read-Only user management ---
+	uzer, errorek := security.RetrieveTokenData(r)
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	//	log.Printf("AUDIT debug: %s", teamMemberships)
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				//         log.Printf("[AIP AUDIT] [%s] [Permission DENIED. READONLY ROLE: CREATE CUSTOM TEMPLATE %s]     [%s]", uzer.Username, customTemplate.Title, r)
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
 
 	tokenData, err := security.RetrieveTokenData(r)
 	if err != nil {
@@ -65,6 +83,16 @@ func (handler *Handler) customTemplateCreate(w http.ResponseWriter, r *http.Requ
 	}
 
 	customTemplate.ResourceControl = resourceControl
+
+	//------------ AIP AISECLAB MOD START------------------------
+	//
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE CUSTOM TEMPLATE %s]     [%s]", uzer.Username, customTemplate.Title, r)
+		}
+	}
+	//
+	//------------ AIP AISECLAB MOD END------------------------
 
 	return response.JSON(w, customTemplate)
 }

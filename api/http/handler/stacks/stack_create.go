@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/rs/zerolog/log"
+
+	httperrors "github.com/portainer/portainer/api/http/errors"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/authorization"
@@ -24,6 +27,22 @@ func (handler *Handler) stackCreate(w http.ResponseWriter, r *http.Request) *htt
 	method, err := request.RetrieveRouteVariableValue(r, "method")
 	if err != nil {
 		return httperror.BadRequest("Invalid path parameter: method", err)
+ 		//--- AIS: Read-Only user management ---
+ 	uzer, _ := security.RetrieveTokenData(r)
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+				if r.Method != http.MethodGet {
+          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+        }				
+		}
+	}
+  //------------------------
+
 	}
 
 	endpointID, err := request.RetrieveNumericQueryParameter(r, "endpointId", false)

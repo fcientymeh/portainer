@@ -11,6 +11,7 @@ import (
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
+	"github.com/rs/zerolog/log"
 )
 
 type registryConfigurePayload struct {
@@ -112,7 +113,21 @@ func (handler *Handler) registryConfigure(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		return httperror.BadRequest("Invalid request payload", err)
 	}
-
+	uzer, errorek := security.RetrieveTokenData(r)
+	//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
 	registryID, err := request.RetrieveNumericRouteVariableValue(r, "id")
 	if err != nil {
 		return httperror.BadRequest("Invalid registry identifier route variable", err)
@@ -177,5 +192,10 @@ func (handler *Handler) registryConfigure(w http.ResponseWriter, r *http.Request
 		return httperror.InternalServerError("Unable to persist registry changes inside the database", err)
 	}
 
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [UPDATE REGISTRY %s]     [%s]", uzer.Username, registry.Name, r)
+		}
+	}
 	return response.Empty(w)
 }

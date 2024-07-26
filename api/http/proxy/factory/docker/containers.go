@@ -8,12 +8,13 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rs/zerolog/log"
+
+	"github.com/docker/docker/client"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/http/proxy/factory/utils"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/authorization"
-
-	"github.com/docker/docker/client"
 	"github.com/segmentio/encoding/json"
 )
 
@@ -183,6 +184,21 @@ func (transport *Transport) decorateContainerCreationOperation(request *http.Req
 		StatusCode: http.StatusForbidden,
 	}
 
+	uzer, _ := security.RetrieveTokenData(request)
+	//--- AIS: Read-Only user management ---
+	teamMemberships_aip, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team_aip, err := transport.dataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership_aip := range teamMemberships_aip {
+		if membership_aip.TeamID == team_aip.ID {
+			if request.Method != http.MethodGet {
+				return utils.WriteAccessDeniedResponse()
+			}
+		}
+	}
+	//------------------------
 	tokenData, err := security.RetrieveTokenData(request)
 	if err != nil {
 		return nil, err

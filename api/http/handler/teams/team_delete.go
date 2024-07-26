@@ -4,9 +4,12 @@ import (
 	"net/http"
 
 	portainer "github.com/portainer/portainer/api"
+	httperrors "github.com/portainer/portainer/api/http/errors"
+	"github.com/portainer/portainer/api/http/security"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
+	"github.com/rs/zerolog/log"
 
 	"github.com/pkg/errors"
 )
@@ -30,7 +33,22 @@ func (handler *Handler) teamDelete(w http.ResponseWriter, r *http.Request) *http
 	if err != nil {
 		return httperror.BadRequest("Invalid team identifier route variable", err)
 	}
-
+	uzer, errorek := security.RetrieveTokenData(r)
+	//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	teamro, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == teamro.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	team, err := handler.DataStore.Team().Read(portainer.TeamID(teamID))
+	//------------------------
 	_, err = handler.DataStore.Team().Read(portainer.TeamID(teamID))
 	if handler.DataStore.IsErrObjectNotFound(err) {
 		return httperror.NotFound("Unable to find a team with the specified identifier inside the database", err)
@@ -53,7 +71,11 @@ func (handler *Handler) teamDelete(w http.ResponseWriter, r *http.Request) *http
 	if err != nil {
 		return httperror.InternalServerError("Unable to reset default team", err)
 	}
-
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [DELETE TEAM %s]     [%s]", uzer.Username, team.Name, r)
+		}
+	}
 	return response.Empty(w)
 }
 

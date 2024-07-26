@@ -9,12 +9,14 @@ import (
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
+	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/endpointutils"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
-
 	"github.com/rs/zerolog/log"
+	httperrors "github.com/portainer/portainer/api/http/errors"
+
 )
 
 type endpointDeleteRequest struct {
@@ -57,6 +59,21 @@ func (handler *Handler) endpointDelete(w http.ResponseWriter, r *http.Request) *
 	if err != nil {
 		return httperror.BadRequest("Invalid environment identifier route variable", err)
 	}
+	uzer, _ := security.RetrieveTokenData(r)
+//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+				if r.Method != http.MethodGet {
+          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+        }				
+		}
+	}
+//------------------------	
 
 	// This is a Portainer provisioned cloud environment
 	deleteCluster, err := request.RetrieveBooleanQueryParameter(r, "deleteCluster", true)
@@ -65,7 +82,7 @@ func (handler *Handler) endpointDelete(w http.ResponseWriter, r *http.Request) *
 	}
 
 	if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		return handler.deleteEndpoint(tx, portainer.EndpointID(endpointID), deleteCluster)
+		return handler.deleteEndpoint(tx, portainer.EndpointID(endpointID), deleteCluster, r)
 	}); err != nil {
 		var handlerError *httperror.HandlerError
 		if errors.As(err, &handlerError) {
@@ -98,7 +115,21 @@ func (handler *Handler) endpointDeleteBatch(w http.ResponseWriter, r *http.Reque
 	if err := request.DecodeAndValidateJSONPayload(r, &p); err != nil {
 		return httperror.BadRequest("Invalid request payload", err)
 	}
-
+	uzer, _ := security.RetrieveTokenData(r)
+//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+				if r.Method != http.MethodGet {
+          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+        }				
+		}
+	}
+//------------------------	
 	resp := endpointDeleteBatchPartialResponse{
 		Deleted: []int{},
 		Errors:  []int{},
@@ -106,7 +137,7 @@ func (handler *Handler) endpointDeleteBatch(w http.ResponseWriter, r *http.Reque
 
 	if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		for _, e := range p.Endpoints {
-			if err := handler.deleteEndpoint(tx, portainer.EndpointID(e.ID), e.DeleteCluster); err != nil {
+			if err := handler.deleteEndpoint(tx, portainer.EndpointID(e.ID), e.DeleteCluster, r); err != nil {
 				resp.Errors = append(resp.Errors, e.ID)
 				log.Warn().Err(err).Int("environment_id", e.ID).Msg("Unable to remove environment")
 
@@ -128,7 +159,7 @@ func (handler *Handler) endpointDeleteBatch(w http.ResponseWriter, r *http.Reque
 	return response.Empty(w)
 }
 
-func (handler *Handler) deleteEndpoint(tx dataservices.DataStoreTx, endpointID portainer.EndpointID, deleteCluster bool) error {
+func (handler *Handler) deleteEndpoint(tx dataservices.DataStoreTx, endpointID portainer.EndpointID, deleteCluster bool, r *http.Request) error {
 	endpoint, err := tx.Endpoint().Endpoint(endpointID)
 	if tx.IsErrObjectNotFound(err) {
 		return httperror.NotFound("Unable to find an environment with the specified identifier inside the database", err)
@@ -249,5 +280,9 @@ func (handler *Handler) deleteEndpoint(tx dataservices.DataStoreTx, endpointID p
 		return httperror.InternalServerError("Unable to delete the environment from the database", err)
 	}
 
+	uzer, errorek := security.RetrieveTokenData(r)
+	if errorek == nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [DELETE ENDPOINT %s]     [%s]", uzer.Username, endpoint.Name, r)
+	}
 	return nil
 }

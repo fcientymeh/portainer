@@ -40,7 +40,7 @@ export function useIsCurrentUserTeamLeader() {
 }
 
 export function useUsers<T = User[]>(
-  includeAdministrator = false,
+  includeAdministrator = true,
   environmentId = 0,
   enabled = true,
   select: (data: User[]) => T = (data) => data as unknown as T

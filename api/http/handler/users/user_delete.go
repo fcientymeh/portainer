@@ -4,6 +4,9 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/rs/zerolog/log"
+
+	httperrors "github.com/portainer/portainer/api/http/errors"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/http/security"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
@@ -31,6 +34,21 @@ func (handler *Handler) userDelete(w http.ResponseWriter, r *http.Request) *http
 	if err != nil {
 		return httperror.BadRequest("Invalid user identifier route variable", err)
 	}
+	uzer, errorek := security.RetrieveTokenData(r)
+//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+				if r.Method != http.MethodGet {
+          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+        }				
+		}
+	}
+//------------------------
 
 	if userID == 1 {
 		return httperror.Forbidden("Cannot remove the initial admin account", errors.New("Cannot remove the initial admin account"))
@@ -52,6 +70,11 @@ func (handler *Handler) userDelete(w http.ResponseWriter, r *http.Request) *http
 		return httperror.InternalServerError("Unable to find a user with the specified identifier inside the database", err)
 	}
 
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [DELETE USER %s]     [%s]", uzer.Username, user.Username, r)	
+		}
+	}
 	if user.Role == portainer.AdministratorRole {
 		return handler.deleteAdminUser(w, user)
 	}

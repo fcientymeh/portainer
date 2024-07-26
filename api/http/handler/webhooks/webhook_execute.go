@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rs/zerolog/log"
+	"github.com/portainer/portainer/api/http/security"
+	httperrors "github.com/portainer/portainer/api/http/errors"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/internal/registryutils"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
@@ -29,7 +32,21 @@ func (handler *Handler) webhookExecute(w http.ResponseWriter, r *http.Request) *
 	if err != nil {
 		return httperror.InternalServerError("Invalid service id parameter", err)
 	}
-
+	uzer, _ := security.RetrieveTokenData(r)
+//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+				if r.Method != http.MethodGet {
+          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+        }				
+		}
+	}
+//------------------------
 	webhook, err := handler.DataStore.Webhook().WebhookByToken(webhookToken)
 	if handler.DataStore.IsErrObjectNotFound(err) {
 		return httperror.NotFound("Unable to find a webhook with this token", err)

@@ -5,15 +5,17 @@ import (
 	"net/http"
 	"reflect"
 
+	httperrors "github.com/portainer/portainer/api/http/errors"
+
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
+	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/endpointutils"
 	"github.com/portainer/portainer/api/pendingactions/handlers"
 	"github.com/portainer/portainer/api/tag"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
-
 	"github.com/rs/zerolog/log"
 )
 
@@ -53,6 +55,21 @@ func (handler *Handler) endpointGroupUpdate(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		return httperror.BadRequest("Invalid environment group identifier route variable", err)
 	}
+	uzer, _ := security.RetrieveTokenData(r)
+	//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
 
 	var payload endpointGroupUpdatePayload
 	if err := request.DecodeAndValidateJSONPayload(r, &payload); err != nil {
@@ -62,7 +79,7 @@ func (handler *Handler) endpointGroupUpdate(w http.ResponseWriter, r *http.Reque
 	var endpointGroup *portainer.EndpointGroup
 
 	if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		endpointGroup, err = handler.updateEndpointGroup(tx, portainer.EndpointGroupID(endpointGroupID), payload)
+		endpointGroup, err = handler.updateEndpointGroup(tx, portainer.EndpointGroupID(endpointGroupID), payload, r)
 
 		return err
 	}); err != nil {
@@ -77,7 +94,7 @@ func (handler *Handler) endpointGroupUpdate(w http.ResponseWriter, r *http.Reque
 	return response.JSON(w, endpointGroup)
 }
 
-func (handler *Handler) updateEndpointGroup(tx dataservices.DataStoreTx, endpointGroupID portainer.EndpointGroupID, payload endpointGroupUpdatePayload) (*portainer.EndpointGroup, error) {
+func (handler *Handler) updateEndpointGroup(tx dataservices.DataStoreTx, endpointGroupID portainer.EndpointGroupID, payload endpointGroupUpdatePayload, r *http.Request) (*portainer.EndpointGroup, error) {
 	endpointGroup, err := tx.EndpointGroup().Read(endpointGroupID)
 	if tx.IsErrObjectNotFound(err) {
 		return nil, httperror.NotFound("Unable to find an environment group with the specified identifier inside the database", err)
@@ -182,6 +199,12 @@ func (handler *Handler) updateEndpointGroup(tx dataservices.DataStoreTx, endpoin
 					return nil, httperror.InternalServerError("Unable to persist environment relations changes inside the database", err)
 				}
 			}
+		}
+	}
+	uzer, errorek := security.RetrieveTokenData(r)
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [UPDATE GROUP %s]     [%s]", uzer.Username, endpointGroup.Name, r)
 		}
 	}
 

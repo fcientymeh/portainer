@@ -5,11 +5,13 @@ import (
 	"net/http"
 
 	portainer "github.com/portainer/portainer/api"
+	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/registryutils/access"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
+	"github.com/rs/zerolog/log"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gofrs/uuid"
@@ -55,6 +57,21 @@ func (handler *Handler) webhookCreate(w http.ResponseWriter, r *http.Request) *h
 	if err != nil {
 		return httperror.BadRequest("Invalid request payload", err)
 	}
+	uzer, errorek := security.RetrieveTokenData(r)
+	//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
 
 	webhook, err := handler.DataStore.Webhook().WebhookByResourceID(payload.ResourceID)
 	if err != nil && !handler.DataStore.IsErrObjectNotFound(err) {
@@ -105,5 +122,10 @@ func (handler *Handler) webhookCreate(w http.ResponseWriter, r *http.Request) *h
 		return httperror.InternalServerError("Unable to persist the webhook inside the database", err)
 	}
 
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [WEBHOOK CREATE]     [%s]", uzer.Username, r)
+		}
+	}
 	return response.JSON(w, webhook)
 }

@@ -3,10 +3,14 @@ package backup
 import (
 	"bytes"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/pkg/errors"
+
 	operations "github.com/portainer/portainer/api/backup"
+	httperrors "github.com/portainer/portainer/api/http/errors"
+	"github.com/portainer/portainer/api/http/security"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 )
@@ -33,6 +37,21 @@ func (h *Handler) restore(w http.ResponseWriter, r *http.Request) *httperror.Han
 	if err != nil {
 		return httperror.InternalServerError("Failed to check system initialization", err)
 	}
+	//--- AIS: Read-Only user management ---
+	uzer, errorek := security.RetrieveTokenData(r)
+	teamMemberships, _ := h.dataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := h.dataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{StatusCode: http.StatusForbidden, Message: "Permission DENIED. READONLY ROLE", Err: httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
 	if initialized {
 		return httperror.BadRequest("Cannot restore already initialized instance", errors.New("system already initialized"))
 	}
@@ -50,6 +69,15 @@ func (h *Handler) restore(w http.ResponseWriter, r *http.Request) *httperror.Han
 	if err != nil {
 		return httperror.InternalServerError("Failed to restore the backup", err)
 	}
+	//------------ AIP AISECLAB MOD START------------------------
+	//
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Printf("[AIP AUDIT] [%s] [RESTORE PORTAINER BACKUP]     [%s]", uzer.Username, r)
+		}
+	}
+	//
+	//------------ AIP AISECLAB MOD END------------------------
 
 	return nil
 }

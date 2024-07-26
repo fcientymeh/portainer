@@ -10,6 +10,8 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/http/client"
+	httperrors "github.com/portainer/portainer/api/http/errors"
+	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/endpointutils"
 	"github.com/portainer/portainer/api/pendingactions/handlers"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
@@ -81,6 +83,21 @@ func (handler *Handler) endpointUpdate(w http.ResponseWriter, r *http.Request) *
 	if err != nil {
 		return httperror.BadRequest("Invalid environment identifier route variable", err)
 	}
+	uzer, errorek := security.RetrieveTokenData(r)
+	//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
+		}
+	}
+	//------------------------
 
 	var payload endpointUpdatePayload
 	if err := request.DecodeAndValidateJSONPayload(r, &payload); err != nil {
@@ -275,7 +292,9 @@ func (handler *Handler) endpointUpdate(w http.ResponseWriter, r *http.Request) *
 	if err := handler.SnapshotService.FillSnapshotData(endpoint); err != nil {
 		return httperror.InternalServerError("Unable to add snapshot data", err)
 	}
-
+	if errorek == nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [UPDATE ENDPOINT %s]     [%s]", uzer.Username, endpoint.Name, r)
+	}
 	return response.JSON(w, endpoint)
 }
 

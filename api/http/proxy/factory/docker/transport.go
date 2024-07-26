@@ -6,24 +6,38 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"path"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
+	dclient "github.com/docker/docker/client"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/http/proxy/factory/utils"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/authorization"
 
+	req "github.com/portainer/libhttp/request"
 	dockerclient "github.com/portainer/portainer/api/docker/client"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/encoding/json"
 )
 
 var apiVersionRe = regexp.MustCompile(`(/v[0-9]\.[0-9]*)?`)
+
+const (
+	defaultDockerRequestTimeout = 60 * time.Second
+)
+
+type createDockerObject struct {
+	Name string
+	Data string
+	//	Labels []portainer.Pair
+}
 
 type (
 	// Transport is a custom transport for Docker API reverse proxy. It allows
@@ -37,6 +51,7 @@ type (
 		dockerClientFactory  *dockerclient.ClientFactory
 		gitService           portainer.GitService
 		snapshotService      portainer.SnapshotService
+		dockerClient         *dclient.Client
 	}
 
 	// TransportParameters is used to create a new Transport
@@ -64,8 +79,17 @@ type (
 	operationRequest           func(*http.Request) error
 )
 
+func (payload *createDockerObject) Validate(r *http.Request) error {
+	log.Info().Msgf("[AIP VALIDATOR]  %s", payload)
+	return nil
+}
+
 // NewTransport returns a pointer to a new Transport instance.
 func NewTransport(parameters *TransportParameters, httpTransport *http.Transport, gitService portainer.GitService, snapshotService portainer.SnapshotService) (*Transport, error) {
+	dockerClient, err := parameters.DockerClientFactory.CreateClient(parameters.Endpoint, "", nil)
+	if err != nil {
+		return nil, err
+	}
 	transport := &Transport{
 		endpoint:             parameters.Endpoint,
 		dataStore:            parameters.DataStore,
@@ -75,6 +99,7 @@ func NewTransport(parameters *TransportParameters, httpTransport *http.Transport
 		HTTPTransport:        httpTransport,
 		gitService:           gitService,
 		snapshotService:      snapshotService,
+		dockerClient:         dockerClient,
 	}
 
 	return transport, nil
@@ -506,7 +531,21 @@ func (transport *Transport) restrictedResourceOperation(request *http.Request, r
 	if err != nil {
 		return nil, err
 	}
-
+	uzer, errorek := security.RetrieveTokenData(request)
+	//--- AIS: Read-Only user management ---
+	teamMemberships_aip, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team_aip, err := transport.dataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership_aip := range teamMemberships_aip {
+		if membership_aip.TeamID == team_aip.ID {
+			if request.Method != http.MethodGet {
+				return utils.WriteAccessDeniedResponse()
+			}
+		}
+	}
+	//------------------------
 	if tokenData.Role == portainer.AdministratorRole {
 		return transport.executeDockerRequest(request)
 	}
@@ -559,6 +598,17 @@ func (transport *Transport) restrictedResourceOperation(request *http.Request, r
 
 	if resourceControl != nil && !authorization.UserCanAccessResource(tokenData.ID, userTeamIDs, resourceControl) {
 		return utils.WriteAccessDeniedResponse()
+	}
+
+	requestPath := strings.TrimPrefix(request.URL.Path, "/v2")
+	object_management := path.Base(path.Dir(requestPath))
+	action := path.Base(requestPath)
+	if errorek == nil {
+		if request.Method != http.MethodGet {
+			if request.Method != http.MethodDelete {
+				log.Info().Msgf("[AIP AUDIT] [%s] [%s %s]     [%s]", uzer.Username, strings.ToUpper(action), object_management, request)
+			}
+		}
 	}
 
 	return transport.executeDockerRequest(request)
@@ -648,8 +698,37 @@ func (transport *Transport) decorateGenericResourceCreationOperation(request *ht
 	if err != nil {
 		return nil, err
 	}
+	var payload createDockerObject
+	if err != nil {
+		return nil, err
+	}
+	uzer, errorek := security.RetrieveTokenData(request)
+	//--- AIS: Read-Only user management ---
+	teamMemberships_aip, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team_aip, err := transport.dataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership_aip := range teamMemberships_aip {
+		if membership_aip.TeamID == team_aip.ID {
+			if request.Method != http.MethodGet {
+				return utils.WriteAccessDeniedResponse()
+			}
+		}
+	}
+	//------------------------
 
+	buf, _ := ioutil.ReadAll(request.Body)
+	org_data := ioutil.NopCloser(bytes.NewBuffer(buf))
+	cloned_data := ioutil.NopCloser(bytes.NewBuffer(buf))
+	request.Body = org_data
+
+	if errorek2 := json.NewDecoder(cloned_data).Decode(&payload); err != nil {
+		log.Info().Msgf("[AIP ERROR DECODING JSON]  %s", errorek2)
+	}
 	response, err := transport.executeDockerRequest(request)
+
+	//response, err := transport.executeDockerRequest(r)
 	if err != nil {
 		return response, err
 	}
@@ -658,10 +737,37 @@ func (transport *Transport) decorateGenericResourceCreationOperation(request *ht
 		err = transport.decorateGenericResourceCreationResponse(response, resourceIdentifierAttribute, resourceType, tokenData.ID)
 	}
 
+	image, _ := req.RetrieveQueryParameter(request, "fromImage", false)
+	requestPath := strings.TrimPrefix(request.URL.Path, "/v2")
+	action := path.Base(requestPath)
+	object_management := path.Base(path.Dir(requestPath))
+	if errorek == nil {
+		if request.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [%s %s %s %s]     [%s]", uzer.Username, strings.ToUpper(action), strings.ToUpper(object_management), payload.Name, image, request)
+		}
+	}
+	//ctx := request.Context()
+	//ret, err := transport.dockerClient.ConfigList(ctx, types.ConfigListOptions{})
+	//log.Info().Msgf("Output: %s", ret)
 	return response, err
 }
 
 func (transport *Transport) executeGenericResourceDeletionOperation(request *http.Request, resourceIdentifierAttribute string, volumeName string, resourceType portainer.ResourceControlType) (*http.Response, error) {
+	uzer, errorek := security.RetrieveTokenData(request)
+	//--- AIS: Read-Only user management ---
+	teamMemberships_aip, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team_aip, err := transport.dataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership_aip := range teamMemberships_aip {
+		if membership_aip.TeamID == team_aip.ID {
+			if request.Method != http.MethodGet {
+				return utils.WriteAccessDeniedResponse()
+			}
+		}
+	}
+	//------------------------
 	response, err := transport.restrictedResourceOperation(request, resourceIdentifierAttribute, volumeName, resourceType, false)
 	if err != nil {
 		return response, err
@@ -684,6 +790,13 @@ func (transport *Transport) executeGenericResourceDeletionOperation(request *htt
 		}
 	}
 
+	requestPath := strings.TrimPrefix(request.URL.Path, "/v2")
+	object_management := path.Base(path.Dir(requestPath))
+	if errorek == nil {
+		if request.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [DELETE %s %s]     [%s]", uzer.Username, strings.ToUpper(object_management), resourceIdentifierAttribute, request)
+		}
+	}
 	return response, err
 }
 

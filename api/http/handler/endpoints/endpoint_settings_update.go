@@ -3,6 +3,10 @@ package endpoints
 import (
 	"net/http"
 
+	"github.com/rs/zerolog/log"
+	"github.com/portainer/portainer/api/http/security"
+	httperrors "github.com/portainer/portainer/api/http/errors"
+
 	portainer "github.com/portainer/portainer/api"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
@@ -59,6 +63,21 @@ func (handler *Handler) endpointSettingsUpdate(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		return httperror.BadRequest("Invalid environment identifier route variable", err)
 	}
+	uzer, errorek := security.RetrieveTokenData(r)
+//--- AIS: Read-Only user management ---
+	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := handler.DataStore.Team().TeamByName("READONLY")
+	if err != nil {
+    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+				if r.Method != http.MethodGet {
+          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+        }				
+		}
+	}
+//------------------------	 
 
 	var payload endpointSettingsUpdatePayload
 	err = request.DecodeAndValidateJSONPayload(r, &payload)
@@ -126,5 +145,10 @@ func (handler *Handler) endpointSettingsUpdate(w http.ResponseWriter, r *http.Re
 		return httperror.InternalServerError("Failed persisting environment in database", err)
 	}
 
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Printf("[AIP AUDIT] [%s] [CREATE ENDPOINT %s]     [%s]", uzer.Username, endpoint.Name, r)	
+		}
+	}
 	return response.JSON(w, endpoint)
 }

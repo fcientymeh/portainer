@@ -137,6 +137,21 @@ func (transport *Transport) decorateVolumeResourceCreationOperation(request *htt
 		return nil, err
 	}
 
+	uzer, errorek := security.RetrieveTokenData(request)
+	//--- AIS: Read-Only user management ---
+	teamMemberships, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	team, err := transport.dataStore.Team().TeamByName("READONLY")
+	if err != nil {
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+	}
+	for _, membership := range teamMemberships {
+		if membership.TeamID == team.ID {
+			if request.Method != http.MethodGet {
+				return utils.WriteAccessDeniedResponse()
+			}
+		}
+	}
+	//------------------------
 	volumeID := request.Header.Get("X-Portainer-VolumeName")
 
 	if volumeID != "" {
@@ -163,6 +178,11 @@ func (transport *Transport) decorateVolumeResourceCreationOperation(request *htt
 		err = transport.decorateVolumeCreationResponse(response, resourceType, tokenData.ID)
 	}
 
+	if errorek == nil {
+		if request.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE VOLUME %s]     [%s]", uzer.Username, volumeID, request)
+		}
+	}
 	return response, err
 }
 
