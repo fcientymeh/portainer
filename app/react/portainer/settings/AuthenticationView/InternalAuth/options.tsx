@@ -23,15 +23,6 @@ export const options = [
     value: 2,
   },
   {
-    id: 'auth_ad',
-    icon: Microsoft,
-    label: 'Microsoft Active Directory',
-    description: 'AD authentication',
-    iconType: 'logo',
-    value: 4,
-    feature: FeatureId.HIDE_INTERNAL_AUTH,
-  },
-  {
     id: 'auth_oauth',
     icon: OAuth,
     label: 'OAuth',

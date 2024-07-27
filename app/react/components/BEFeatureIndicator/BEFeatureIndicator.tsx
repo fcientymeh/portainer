@@ -27,23 +27,7 @@ export function BEFeatureIndicator({
 
   return (
     <>
-      {limitedToBE && (
-        <a
-          className={clsx('be-indicator vertical-center text-xs', className)}
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {showIcon && (
-            <Icon icon={Briefcase} className="be-indicator-icon mr-1" />
-          )}
-          <span className="be-indicator-label break-words">
-            Business Feature
-          </span>
-        </a>
-      )}
 
-      {children(limitedToBE)}
     </>
   );
 }

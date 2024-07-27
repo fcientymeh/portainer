@@ -17,12 +17,5 @@ export const options = [
     label: 'Custom',
     value: SERVER_TYPES.CUSTOM,
   },
-  {
-    id: 'ldap_openldap',
-    icon: Openldap,
-    label: 'OpenLDAP',
-    value: SERVER_TYPES.OPEN_LDAP,
-    feature: FeatureId.EXTERNAL_AUTH_LDAP,
-    iconType: 'logo',
-  },
+
 ];
