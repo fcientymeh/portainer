@@ -4,9 +4,13 @@ import (
 	"cmp"
 	"context"
 	"crypto/sha256"
+	"io"
 	"os"
 	"path"
 	"strings"
+
+	gelf_udp "github.com/Graylog2/go-gelf/gelf"
+	gelf_tcp "gopkg.in/Graylog2/go-gelf.v2/gelf"
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/apikey"
@@ -613,6 +617,43 @@ func main() {
 			Str("webpack_version", build.WebpackVersion).
 			Str("go_version", build.GoVersion).
 			Msg("starting Portainer")
+		// os.Setenv("LOGGING_SERVER_ADDRESS", "wawcoremngm.fc.internal:12202")
+		//os.Setenv("LOGGING_SERVER_PROTO", "TCP")
+
+		var graylogAddr string
+		var graylogProto string
+
+		graylogAddr = os.Getenv("LOGGING_SERVER_ADDRESS")
+		graylogProto = os.Getenv("LOGGING_SERVER_PROTO")
+		log.Info().Msg("AIP Portainer Logger initialization")
+		log.Info().Msgf("Logging server addr: %s", graylogAddr)
+		log.Info().Msgf("Logging server proto: %s", graylogProto)
+		if graylogAddr != "" {
+			//NewWriter
+			if graylogProto == "UDP" {
+				log.Info().Str("Initializing AIP AUDIT UDP Logging Service to: %s", graylogAddr)
+				gelfWriter, err := gelf_udp.NewWriter(graylogAddr)
+				if err != nil {
+					log.Info().Msgf("Error Connecting AIP AUDIT Logging Service. Will try later...: %s", err)
+					log.Output(io.MultiWriter(os.Stdout, gelfWriter))
+
+				} else {
+					log.Output(io.MultiWriter(os.Stdout, gelfWriter))
+					log.Info().Msgf("Logging to Stdout and logstash@''%s", graylogAddr)
+				}
+			} else {
+				log.Info().Msgf("Initializing AIP AUDIT TCP Logging Service to: %s", graylogAddr)
+				gelfWriter, err := gelf_tcp.NewTCPWriter(graylogAddr)
+				if err != nil {
+					log.Output(io.MultiWriter(os.Stdout, gelfWriter))
+					log.Info().Msgf("Error Connecting AIP AUDIT Logging Service. Will try later...: %s", err)
+				} else {
+					log.Output(io.MultiWriter(os.Stdout, gelfWriter))
+					log.Info().Msgf("Logging to Stdout and logstash@'%s'", graylogAddr)
+				}
+			}
+
+		}
 
 		err := server.Start()
 

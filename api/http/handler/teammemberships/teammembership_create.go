@@ -103,16 +103,15 @@ func (handler *Handler) teamMembershipCreate(w http.ResponseWriter, r *http.Requ
 		Role:   portainer.MembershipRole(payload.Role),
 	}
 
-	err = handler.DataStore.TeamMembership().Create(membership)
-	if err != nil {
-		return httperror.InternalServerError("Unable to persist team memberships inside the database", err)
-	}
-
 	// defer handler.updateUserServiceAccounts(membership)
 
 	if membership.UserID == 1 && membership.TeamID == team.ID {
 		log.Info().Msgf("[AIP AUDIT] [%s] [CRITICAL CONFIGURATION ERROR!]     [First administrator cannot be added to READONLY group. It can block aip portainer management system]", uzer.Username)
 		return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+	}
+	err = handler.DataStore.TeamMembership().Create(membership)
+	if err != nil {
+		return httperror.InternalServerError("Unable to persist team memberships inside the database", err)
 	}
 
 	user, err := handler.DataStore.User().Read(portainer.UserID(membership.UserID))

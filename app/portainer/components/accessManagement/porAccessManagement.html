@@ -19,23 +19,7 @@
             on-change="(ctrl.onChangeUsersAndTeams)"
           ></por-access-management-users-selector>
 
-          <div class="form-group" ng-if="ctrl.entityType !== 'registry'">
-            <label class="col-sm-3 col-lg-2 control-label text-left"> Role </label>
-            <div class="col-sm-9 col-lg-6">
-              <div class="flex items-center">
-                <div>
-                  <select
-                    class="form-control"
-                    data-cy="access-management-role-select"
-                    ng-model="ctrl.formValues.selectedRole"
-                    ng-options="role as ctrl.roleLabel(role) disable when ctrl.isRoleLimitedToBE(role) for role in ctrl.roles"
-                  >
-                  </select>
-                </div>
-                <be-feature-indicator feature="ctrl.limitedFeature" class="space-left"></be-feature-indicator>
-              </div>
-            </div>
-          </div>
+
 
           <!-- actions -->
           <div class="form-group">
