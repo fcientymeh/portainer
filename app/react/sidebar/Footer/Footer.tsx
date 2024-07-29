@@ -21,7 +21,7 @@ function CEFooter() {
 
       <FooterContent>
         <img alt='logo2' style={{ width: 100 }} src={String(logo2)} />
-      </FooterContent> <span>2.20</span>
+      </FooterContent> <BuildInfoModalButton />
     </div>
   );
 }

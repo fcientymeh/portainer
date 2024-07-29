@@ -14,11 +14,10 @@ func configureLogger() {
 	zerolog.ErrorStackFieldName = "stack_trace"
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-
 	stdlog.SetFlags(0)
 	stdlog.SetOutput(log.Logger)
 
-	log.Logger = log.Logger.With().Caller().Stack().Logger()
+	//log.Logger = log.Logger.With().Logger()
 }
 
 func setLoggingLevel(level string) {
@@ -39,15 +38,21 @@ func setLoggingMode(mode string) {
 	case "PRETTY":
 		log.Logger = log.Output(zerolog.ConsoleWriter{
 			Out:           os.Stderr,
-			TimeFormat:    "2006/01/02 03:04PM",
+			TimeFormat:    "2006/01/02 03:04:00",
 			FormatMessage: formatMessage,
+			PartsExclude: []string{
+				zerolog.LevelFieldName,
+			},
 		})
 	case "NOCOLOR":
 		log.Logger = log.Output(zerolog.ConsoleWriter{
 			Out:           os.Stderr,
-			TimeFormat:    "2006/01/02 03:04PM",
+			TimeFormat:    "2006/01/02 03:04:00",
 			FormatMessage: formatMessage,
-			NoColor:       true,
+			PartsExclude: []string{
+				zerolog.LevelFieldName,
+			},
+			NoColor: true,
 		})
 	case "JSON":
 		log.Logger = log.Output(os.Stderr)
@@ -58,6 +63,5 @@ func formatMessage(i any) string {
 	if i == nil {
 		return ""
 	}
-
-	return fmt.Sprintf("%s |", i)
+	return fmt.Sprintf("%s", i)
 }
