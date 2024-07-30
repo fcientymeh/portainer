@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/docker/docker/api/types"
 	dclient "github.com/docker/docker/client"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
@@ -746,11 +747,6 @@ func (transport *Transport) decorateGenericResourceCreationOperation(request *ht
 			log.Info().Msgf("[AIP AUDIT] [%s] [%s %s %s %s]     [%s]", uzer.Username, strings.ToUpper(action), strings.ToUpper(object_management), payload.Name, image, request)
 		}
 	}
-	// aip tests
-	// log.Info().Msg("test")
-	//ctx := request.Context()
-	//ret, err := transport.dockerClient.ConfigList(ctx, types.ConfigListOptions{})
-	//log.Info().Msgf("Output: %s", ret)
 	return response, err
 }
 
@@ -769,7 +765,43 @@ func (transport *Transport) executeGenericResourceDeletionOperation(request *htt
 			}
 		}
 	}
-	//------------------------
+	//------------------------ AIP - recovery name of object during delete
+	// read object type: secret, config....
+	requestPath := strings.TrimPrefix(request.URL.Path, "/v2")
+	object_management := path.Base(path.Dir(requestPath))
+	fmt.Printf("Object type: %s\n", object_management)
+	// get context
+	ctx := request.Context()
+	var resourceID string
+	//tutaj bedzie CASE, w zaleznosci czy usuwamy kontener, siec, secret, config, volume czy huk wie co
+
+	switch object_management {
+	case "configs":
+		ret, err := transport.dockerClient.ConfigList(ctx, types.ConfigListOptions{})
+		if err != nil {
+			break
+		}
+		for _, config := range ret {
+			if resourceIdentifierAttribute == config.ID {
+				//fmt.Println(config.Spec.Name)
+				resourceID = config.Spec.Name
+			}
+		}
+	case "secrets":
+		ret, err := transport.dockerClient.SecretList(ctx, types.SecretListOptions{})
+		if err != nil {
+			break
+		}
+		for _, secret := range ret {
+			if resourceIdentifierAttribute == secret.ID {
+				//fmt.Println(config.Spec.Name)
+				resourceID = secret.Spec.Name
+			}
+		}
+	case "volumes":
+		resourceID = volumeName
+	}
+
 	response, err := transport.restrictedResourceOperation(request, resourceIdentifierAttribute, volumeName, resourceType, false)
 	if err != nil {
 		return response, err
@@ -792,13 +824,12 @@ func (transport *Transport) executeGenericResourceDeletionOperation(request *htt
 		}
 	}
 
-	requestPath := strings.TrimPrefix(request.URL.Path, "/v2")
-	object_management := path.Base(path.Dir(requestPath))
 	if errorek == nil {
 		if request.Method != http.MethodGet {
-			log.Info().Msgf("[AIP AUDIT] [%s] [DELETE %s %s]     [%s]", uzer.Username, strings.ToUpper(object_management), resourceIdentifierAttribute, request)
+			log.Info().Msgf("[AIP AUDIT] [%s] [DELETE %s %s]     [%s]", uzer.Username, strings.ToUpper(object_management), resourceID, request)
 		}
 	}
+
 	return response, err
 }
 
