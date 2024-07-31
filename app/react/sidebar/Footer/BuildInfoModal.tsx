@@ -79,27 +79,7 @@ function BuildInfoModal({ closeModal }: { closeModal: () => void }) {
                   </span>
                 </td>
               </tr>
-              <tr>
-                <td>
-                  <span className="inline-flex items-center">
-                    <Hash size="13" className="space-right" />
-                    CI Build Number: {Build.BuildNumber}
-                  </span>
-                </td>
-                <td>
-                  <span>
-                    <Tag size="13" className="space-right" />
-                    Image Tag: {Build.ImageTag}
-                  </span>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <GitCommit size="13" className="space-right" />
-                  Git Commit: {Build.GitCommit}
-                </td>
-                <td />
-              </tr>
+
             </tbody>
           </table>
         </div>
@@ -119,26 +99,23 @@ function BuildInfoModal({ closeModal }: { closeModal: () => void }) {
             </span>
             <span className="text-muted small">Go v{Build.GoVersion}</span>
           </div>
-        </div>
 
-        {isAdmin && Build.Env && (
-          <div className={clsx(styles.toolsList, 'mt-3')}>
-            <span className="inline-flex items-center ">
-              <Variable size="13" className="space-right" />
-              Environment Variables
+          </div>
+
+          <div className={styles.tools}>
+            <span className="text-muted small">
+              AIP Portainer by AiSECLAB Sp. z o.o. <br/>
+              based on Portainer CE under zlib {' '}
+              < a href="https://github.com/portainer/portainer?tab=Zlib-1-ov-file#readme">license</a>
             </span>
 
-            <div
-              className={clsx(styles.tools, 'max-h-32 space-y-2 overflow-auto')}
-            >
-              {Build.Env.map((envVar) => (
-                <div key={envVar}>
-                  <code>{envVar}</code>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+         
+
+        </div>
+
+
+
+
       </Modal.Body>
       <Modal.Footer>
         <Button
