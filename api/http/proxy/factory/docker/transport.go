@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	dclient "github.com/docker/docker/client"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
@@ -769,13 +770,14 @@ func (transport *Transport) executeGenericResourceDeletionOperation(request *htt
 	// read object type: secret, config....
 	requestPath := strings.TrimPrefix(request.URL.Path, "/v2")
 	object_management := path.Base(path.Dir(requestPath))
-	fmt.Printf("Object type: %s\n", object_management)
+	//fmt.Printf("Object type: %s\n", object_management)
 	// get context
 	ctx := request.Context()
 	var resourceID string
 	//tutaj bedzie CASE, w zaleznosci czy usuwamy kontener, siec, secret, config, volume czy huk wie co
-
+	resourceID = resourceIdentifierAttribute
 	switch object_management {
+
 	case "configs":
 		ret, err := transport.dockerClient.ConfigList(ctx, types.ConfigListOptions{})
 		if err != nil {
@@ -783,10 +785,11 @@ func (transport *Transport) executeGenericResourceDeletionOperation(request *htt
 		}
 		for _, config := range ret {
 			if resourceIdentifierAttribute == config.ID {
-				//fmt.Println(config.Spec.Name)
 				resourceID = config.Spec.Name
+				break
 			}
 		}
+
 	case "secrets":
 		ret, err := transport.dockerClient.SecretList(ctx, types.SecretListOptions{})
 		if err != nil {
@@ -794,14 +797,58 @@ func (transport *Transport) executeGenericResourceDeletionOperation(request *htt
 		}
 		for _, secret := range ret {
 			if resourceIdentifierAttribute == secret.ID {
-				//fmt.Println(config.Spec.Name)
 				resourceID = secret.Spec.Name
+				break
 			}
 		}
+
 	case "volumes":
 		resourceID = volumeName
-	}
 
+	case "networks":
+		ret, err := transport.dockerClient.NetworkList(ctx, types.NetworkListOptions{})
+		if err != nil {
+			break
+		}
+		for _, net := range ret {
+			if resourceIdentifierAttribute == net.ID {
+				fmt.Printf("Network: %s", net.Name)
+				resourceID = net.Name
+				break
+			}
+		}
+
+	case "services":
+		ret, err := transport.dockerClient.ServiceList(ctx, types.ServiceListOptions{})
+		if err != nil {
+			break
+		}
+		for _, service := range ret {
+			if resourceIdentifierAttribute == service.ID {
+				fmt.Printf("Service: %s", service.Spec.Name)
+				resourceID = service.Spec.Name
+				break
+			}
+		}
+
+	case "containers":
+		ret, err := transport.dockerClient.ContainerList(ctx, container.ListOptions{All: true})
+		if err != nil {
+			break
+		}
+		for _, container := range ret {
+			if resourceIdentifierAttribute == container.ID {
+				//fmt.Printf("container: %s", strings.Join(container.Names, " "))
+				resourceID = strings.Join(container.Names, " ")
+				break
+			}
+		}
+
+	}
+	//
+	//fmt.Printf("Object type: %s\n", object_management)
+
+	//
 	response, err := transport.restrictedResourceOperation(request, resourceIdentifierAttribute, volumeName, resourceType, false)
 	if err != nil {
 		return response, err

@@ -120,7 +120,12 @@ func (handler *Handler) createSwarmStackFromFileContent(w http.ResponseWriter, r
 	if httpErr != nil {
 		return httpErr
 	}
-
+	uzer, errorek := security.RetrieveTokenData(r)
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE STACK %s]     [%s]", uzer.Username, stack.Name, r)
+		}
+	}
 	return handler.decorateStackResponse(w, stack, userID)
 }
 
