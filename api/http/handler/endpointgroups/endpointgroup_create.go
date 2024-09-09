@@ -12,8 +12,6 @@ import (
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
 	"github.com/rs/zerolog/log"
-
-	"github.com/asaskevich/govalidator"
 )
 
 type endpointGroupCreatePayload struct {
@@ -28,7 +26,7 @@ type endpointGroupCreatePayload struct {
 }
 
 func (payload *endpointGroupCreatePayload) Validate(r *http.Request) error {
-	if govalidator.IsNull(payload.Name) {
+	if len(payload.Name) == 0 {
 		return errors.New("invalid environment group name")
 	}
 

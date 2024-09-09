@@ -13,7 +13,6 @@ import (
 	"github.com/portainer/portainer/pkg/libhttp/response"
 	"github.com/rs/zerolog/log"
 
-	"github.com/asaskevich/govalidator"
 	"github.com/gofrs/uuid"
 )
 
@@ -26,7 +25,7 @@ type webhookCreatePayload struct {
 }
 
 func (payload *webhookCreatePayload) Validate(r *http.Request) error {
-	if govalidator.IsNull(payload.ResourceID) {
+	if len(payload.ResourceID) == 0 {
 		return errors.New("Invalid ResourceID")
 	}
 	if payload.EndpointID == 0 {

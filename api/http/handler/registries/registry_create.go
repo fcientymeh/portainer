@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-
-
-
 	portainer "github.com/portainer/portainer/api"
 	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/http/security"
@@ -15,8 +12,7 @@ import (
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
 	"github.com/rs/zerolog/log"
-
-	"github.com/asaskevich/govalidator"
+	//"github.com/asaskevich/govalidator"
 )
 
 type registryCreatePayload struct {
@@ -50,19 +46,19 @@ type registryCreatePayload struct {
 }
 
 func (payload *registryCreatePayload) Validate(_ *http.Request) error {
-	if govalidator.IsNull(payload.Name) {
+	if len(payload.Name) == 0 {
 		return errors.New("Invalid registry name")
 	}
-	if govalidator.IsNull(payload.URL) {
+	if len(payload.URL) == 0 {
 		return errors.New("Invalid registry URL")
 	}
 
 	if payload.Authentication {
-		if govalidator.IsNull(payload.Username) || govalidator.IsNull(payload.Password) {
+		if len(payload.Username) == 0 || len(payload.Password) == 0 {
 			return errors.New("Invalid credentials. Username and password must be specified when authentication is enabled")
 		}
 		if payload.Type == portainer.EcrRegistry {
-			if govalidator.IsNull(payload.Ecr.Region) {
+			if len(payload.Ecr.Region) == 0 {
 				return errors.New("invalid credentials: access key ID, secret access key and region must be specified when authentication is enabled")
 			}
 		}
@@ -111,20 +107,20 @@ func (handler *Handler) registryCreate(w http.ResponseWriter, r *http.Request) *
 		return httperror.BadRequest("Invalid request payload", err)
 	}
 	uzer, errorek := security.RetrieveTokenData(r)
-//--- AIS: Read-Only user management ---
+	//--- AIS: Read-Only user management ---
 	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
 	team, err := handler.DataStore.Team().TeamByName("READONLY")
 	if err != nil {
-    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
 	}
 	for _, membership := range teamMemberships {
 		if membership.TeamID == team.ID {
-				if r.Method != http.MethodGet {
-          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
-        }				
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
 		}
 	}
-//------------------------
+	//------------------------
 
 	registry := &portainer.Registry{
 		Type:             payload.Type,

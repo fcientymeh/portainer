@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -15,8 +16,6 @@ import (
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
-
-	"github.com/asaskevich/govalidator"
 )
 
 type themePayload struct {
@@ -36,7 +35,7 @@ type userUpdatePayload struct {
 }
 
 func (payload *userUpdatePayload) Validate(r *http.Request) error {
-	if govalidator.Contains(payload.Username, " ") {
+	if strings.Contains(payload.Username, " ") {
 		return errors.New("invalid username. Must not contain any whitespace")
 	}
 

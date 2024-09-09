@@ -33,5 +33,7 @@ func (handler *Handler) logout(w http.ResponseWriter, r *http.Request) *httperro
 		log.Info().Msgf("[AIP AUDIT] [%s] [USER LOGGED OUT SUCCESSFULLY]     [NONE]", uzer.Username)
 	}
 
+	handler.bouncer.RevokeJWT(tokenData.Token)
+
 	return response.Empty(w)
 }
