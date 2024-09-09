@@ -88,7 +88,7 @@ func (handler *Handler) userCreate(w http.ResponseWriter, r *http.Request) *http
 
 		return httperror.InternalServerError("Unexpected error", err)
 	}
-
+	log.Info().Msgf("[AIP AUDIT] [%s] [CREATE USER %s, ROLE %s]     [%s]", uzer.Username, user.Username, user.Role, r)
 	return response.JSON(w, user)
 }
 
@@ -135,6 +135,5 @@ func (handler *Handler) createUser(tx dataservices.DataStoreTx, payload userCrea
 
 	hideFields(user)
 
-	log.Info().Msgf("[AIP AUDIT] [%s] [CREATE USER %s, ROLE %s]     [%s]", uzer.Username, user.Username, user.Role, r)
 	return user, nil
 }

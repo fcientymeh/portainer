@@ -49,7 +49,7 @@ func (handler *Handler) teamCreate(w http.ResponseWriter, r *http.Request) *http
 	if err := request.DecodeAndValidateJSONPayload(r, &payload); err != nil {
 		return httperror.BadRequest("Invalid request payload", err)
 	}
-	uzer, errorek := security.RetrieveTokenData(r)
+	uzer, _ := security.RetrieveTokenData(r)
 	//--- AIS: Read-Only user management ---
 	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
 	teamro, err := handler.DataStore.Team().TeamByName("READONLY")
@@ -80,7 +80,7 @@ func (handler *Handler) teamCreate(w http.ResponseWriter, r *http.Request) *http
 
 		return httperror.InternalServerError("Unexpected error", err)
 	}
-
+	log.Info().Msgf("[AIP AUDIT] [%s] [CREATE TEAM %s]     [%s]", uzer.Username, team.Name, r)
 	return response.JSON(w, team)
 }
 
@@ -108,11 +108,6 @@ func createTeam(tx dataservices.DataStoreTx, payload teamCreatePayload) (*portai
 
 		if err := tx.TeamMembership().Create(membership); err != nil {
 			return nil, httperror.InternalServerError("Unable to persist team leadership inside the database", err)
-		}
-	}
-	if errorek == nil {
-		if r.Method != http.MethodGet {
-			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE TEAM %s]     [%s]", uzer.Username, team.Name, r)
 		}
 	}
 	return team, nil
