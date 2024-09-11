@@ -612,8 +612,8 @@ func main() {
 		var graylogAddr string
 		var graylogProto string
 
-		os.Setenv("LOGGING_SERVER_ADDRESS", "172.31.0.11:12202")
-		os.Setenv("LOGGING_SERVER_PROTO", "TCP")
+		//os.Setenv("LOGGING_SERVER_ADDRESS", "172.31.0.11:12202")
+		//os.Setenv("LOGGING_SERVER_PROTO", "TCP")
 		graylogAddr = os.Getenv("LOGGING_SERVER_ADDRESS")
 		graylogProto = os.Getenv("LOGGING_SERVER_PROTO")
 		log.Info().Msg("AIP Portainer Logger initialization")

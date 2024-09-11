@@ -8,7 +8,6 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -56,13 +55,12 @@ func DetermineContainerPlatform() (ContainerPlatform, error) {
 	defer dockerCli.Close()
 
 	info, err := dockerCli.Info(context.Background())
+
 	if err != nil {
 		if client.IsErrConnectionFailed(err) {
-			log.Warn().Err(err).Msg("failed to retrieve docker info")
-
+			//log.Warn().Err(err).Msg("failed to retrieve docker info")
 			return "", nil
 		}
-
 		return "", errors.WithMessage(err, "failed to retrieve docker info")
 	}
 

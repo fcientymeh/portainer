@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"path"
 	"regexp"
@@ -696,20 +695,18 @@ func (transport *Transport) decorateGenericResourceCreationResponse(response *ht
 }
 
 func (transport *Transport) decorateGenericResourceCreationOperation(request *http.Request, resourceIdentifierAttribute string, resourceType portainer.ResourceControlType) (*http.Response, error) {
+	var payload createDockerObject
 	tokenData, err := security.RetrieveTokenData(request)
 	if err != nil {
 		return nil, err
 	}
-	var payload createDockerObject
-	if err != nil {
-		return nil, err
-	}
-	uzer, errorek := security.RetrieveTokenData(request)
+	//var payload createDockerObject
+
 	//--- AIS: Read-Only user management ---
-	teamMemberships_aip, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
+	teamMemberships_aip, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(tokenData.ID)
 	team_aip, err := transport.dataStore.Team().TeamByName("READONLY")
 	if err != nil {
-		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", tokenData.Username)
 	}
 	for _, membership_aip := range teamMemberships_aip {
 		if membership_aip.TeamID == team_aip.ID {
@@ -718,19 +715,29 @@ func (transport *Transport) decorateGenericResourceCreationOperation(request *ht
 			}
 		}
 	}
+
 	//------------------------
-
-	buf, _ := ioutil.ReadAll(request.Body)
-	org_data := ioutil.NopCloser(bytes.NewBuffer(buf))
-	cloned_data := ioutil.NopCloser(bytes.NewBuffer(buf))
-	request.Body = org_data
-
-	if errorek2 := json.NewDecoder(cloned_data).Decode(&payload); err != nil {
-		log.Info().Msgf("[AIP ERROR DECODING JSON]  %s", errorek2)
+	//powrocic do tego co  bylo i zdiagnozowac dlaczego sie wywala, prechwycic payload z body
+	var no_body int = 0
+	if request.Body != nil {
+		buf, err := io.ReadAll(request.Body)
+		if err != nil {
+			log.Info().Msgf("[Error reading body in request]  %s", err)
+			no_body = 1
+		}
+		org_data := io.NopCloser(bytes.NewBuffer(buf))
+		cloned_data := io.NopCloser(bytes.NewBuffer(buf))
+		request.Body = org_data
+		if errorek2 := json.NewDecoder(cloned_data).Decode(&payload); err != nil {
+			log.Info().Msgf("[AIP ERROR DECODING JSON]  %s", errorek2)
+			no_body = 1
+		}
+	} else {
+		no_body = 1
 	}
 	response, err := transport.executeDockerRequest(request)
 
-	//response, err := transport.executeDockerRequest(r)
+	//-----------------
 	if err != nil {
 		return response, err
 	}
@@ -739,13 +746,13 @@ func (transport *Transport) decorateGenericResourceCreationOperation(request *ht
 		err = transport.decorateGenericResourceCreationResponse(response, resourceIdentifierAttribute, resourceType, tokenData.ID)
 	}
 
-	image, _ := req.RetrieveQueryParameter(request, "fromImage", false)
-	requestPath := strings.TrimPrefix(request.URL.Path, "/v2")
-	action := path.Base(requestPath)
-	object_management := path.Base(path.Dir(requestPath))
-	if errorek == nil {
+	if no_body == 0 {
+		image, _ := req.RetrieveQueryParameter(request, "fromImage", false)
+		requestPath := strings.TrimPrefix(request.URL.Path, "/v2")
+		action := path.Base(requestPath)
+		object_management := path.Base(path.Dir(requestPath))
 		if request.Method != http.MethodGet {
-			log.Info().Msgf("[AIP AUDIT] [%s] [%s %s %s %s]     [%s]", uzer.Username, strings.ToUpper(action), strings.ToUpper(object_management), payload.Name, image, request)
+			log.Info().Msgf("[AIP AUDIT] [%s] [%s %s %s %s]     [%s]", tokenData.Username, strings.ToUpper(action), strings.ToUpper(object_management), payload.Name, image, request)
 		}
 	}
 	return response, err
@@ -812,7 +819,7 @@ func (transport *Transport) executeGenericResourceDeletionOperation(request *htt
 		}
 		for _, net := range ret {
 			if resourceIdentifierAttribute == net.ID {
-				fmt.Printf("Network: %s", net.Name)
+				//fmt.Printf("Network: %s", net.Name)
 				resourceID = net.Name
 				break
 			}
@@ -825,7 +832,7 @@ func (transport *Transport) executeGenericResourceDeletionOperation(request *htt
 		}
 		for _, service := range ret {
 			if resourceIdentifierAttribute == service.ID {
-				fmt.Printf("Service: %s", service.Spec.Name)
+				//fmt.Printf("Service: %s", service.Spec.Name)
 				resourceID = service.Spec.Name
 				break
 			}
@@ -844,6 +851,8 @@ func (transport *Transport) executeGenericResourceDeletionOperation(request *htt
 			}
 		}
 
+	case "images":
+		log.Info().Msgf("images: %s", resourceIdentifierAttribute)
 	}
 	//
 	//fmt.Printf("Object type: %s\n", object_management)

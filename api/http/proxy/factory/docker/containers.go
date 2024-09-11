@@ -6,7 +6,10 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"path"
 	"strings"
+
+	req "github.com/portainer/libhttp/request"
 
 	"github.com/rs/zerolog/log"
 
@@ -264,6 +267,16 @@ func (transport *Transport) decorateContainerCreationOperation(request *http.Req
 	if response.StatusCode == http.StatusCreated {
 		err = transport.decorateGenericResourceCreationResponse(response, resourceIdentifierAttribute, resourceType, tokenData.ID)
 	}
-
+	//------------ AIP Audit ------
+	container_name, _ := req.RetrieveQueryParameter(request, "name", false)
+	requestPath := strings.TrimPrefix(request.URL.Path, "/v2")
+	action := path.Base(requestPath)
+	object_management := path.Base(path.Dir(requestPath))
+	if request.Method != http.MethodGet {
+		if request.Method != http.MethodDelete {
+			log.Info().Msgf("[AIP AUDIT] [%s] [%s %s %s]     [%s]", uzer.Username, strings.ToUpper(action), object_management, container_name, request)
+		}
+	}
+	//------------
 	return response, err
 }
