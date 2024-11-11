@@ -1,7 +1,7 @@
 package endpointutils
 
 import (
-	"fmt"
+	"errors"
 	"strings"
 	"time"
 
@@ -91,7 +91,7 @@ func InitialIngressClassDetection(endpoint *portainer.Endpoint, endpointService 
 		}
 	}()
 
-	cli, err := factory.GetKubeClient(endpoint)
+	cli, err := factory.GetPrivilegedKubeClient(endpoint)
 	if err != nil {
 		log.Debug().Err(err).Msg("unable to create kubernetes client for ingress class detection")
 
@@ -128,7 +128,7 @@ func InitialMetricsDetection(endpoint *portainer.Endpoint, endpointService datas
 		}
 	}()
 
-	cli, err := factory.GetKubeClient(endpoint)
+	cli, err := factory.GetPrivilegedKubeClient(endpoint)
 	if err != nil {
 		log.Debug().Err(err).Msg("unable to create kubernetes client for initial metrics detection")
 
@@ -156,7 +156,7 @@ func storageDetect(endpoint *portainer.Endpoint, endpointService dataservices.En
 		}
 	}()
 
-	cli, err := factory.GetKubeClient(endpoint)
+	cli, err := factory.GetPrivilegedKubeClient(endpoint)
 	if err != nil {
 		log.Debug().Err(err).Msg("unable to create Kubernetes client for initial storage detection")
 
@@ -171,7 +171,7 @@ func storageDetect(endpoint *portainer.Endpoint, endpointService dataservices.En
 	} else if len(storage) == 0 {
 		log.Info().Err(err).Msg("zero storage classes found: they may be still building, retrying in 30 seconds")
 
-		return fmt.Errorf("zero storage classes found: they may be still building, retrying in 30 seconds")
+		return errors.New("zero storage classes found: they may be still building, retrying in 30 seconds")
 	}
 
 	endpoint.Kubernetes.Configuration.StorageClasses = storage
@@ -234,7 +234,7 @@ func getEndpointCheckinInterval(endpoint *portainer.Endpoint, settings *portaine
 		{endpoint.Edge.SnapshotInterval, settings.Edge.SnapshotInterval},
 	}
 
-	for i := range len(intervals) {
+	for i := range intervals {
 		effectiveInterval := intervals[i][0]
 		if effectiveInterval <= 0 {
 			effectiveInterval = intervals[i][1]

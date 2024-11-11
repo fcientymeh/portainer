@@ -11,6 +11,7 @@ linters:
     - errorlint
     - copyloopvar
     - intrange
+    - perfsprint
 
 linters-settings:
   depguard:

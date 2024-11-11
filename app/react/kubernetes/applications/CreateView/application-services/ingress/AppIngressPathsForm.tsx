@@ -39,10 +39,7 @@ export function AppIngressPathsForm({
   isEditMode,
 }: Props) {
   const environmentId = useEnvironmentId();
-  const ingressesQuery = useIngresses(
-    environmentId,
-    namespace ? [namespace] : undefined
-  );
+  const ingressesQuery = useIngresses(environmentId);
   const { data: ingresses } = ingressesQuery;
   const { data: ingressControllers, ...ingressControllersQuery } =
     useIngressControllers(environmentId, namespace);
@@ -56,7 +53,10 @@ export function AppIngressPathsForm({
     const allowedIngresses =
       ingresses?.filter((ing) => {
         const className = ing.ClassName || 'none';
-        return allowedIngressClasses.includes(className);
+        return (
+          allowedIngressClasses.includes(className) &&
+          ing.Namespace === namespace
+        );
       }) || [];
     return allowedIngresses.flatMap((ing) =>
       ing.Hosts?.length
@@ -67,7 +67,7 @@ export function AppIngressPathsForm({
           }))
         : []
     );
-  }, [ingressControllers, ingresses]);
+  }, [namespace, ingressControllers, ingresses]);
 
   if (ingressesQuery.isError || ingressControllersQuery.isError) {
     return <FormError>Unable to load ingresses.</FormError>;

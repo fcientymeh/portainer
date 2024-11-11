@@ -38,6 +38,7 @@ import { BETeaserButton } from '@@/BETeaserButton';
 import { CodeEditor } from '@@/CodeEditor';
 import { HelpLink } from '@@/HelpLink';
 import { TextTip } from '@@/Tip/TextTip';
+import { InlineLoader } from '@@/InlineLoader/InlineLoader';
 
 import { fileUploadField } from './file-upload-field';
 import { switchField } from './switch-field';
@@ -223,9 +224,7 @@ export const ngModule = angular
     r2a(CodeEditor, [
       'id',
       'placeholder',
-      'yaml',
-      'dockerFile',
-      'shell',
+      'type',
       'readonly',
       'onChange',
       'value',
@@ -245,6 +244,10 @@ export const ngModule = angular
       'children',
       'childrenWrapperClassName',
     ])
+  )
+  .component(
+    'inlineLoader',
+    r2a(InlineLoader, ['children', 'className', 'size'])
   )
   .component(
     'groupAssociationTable',

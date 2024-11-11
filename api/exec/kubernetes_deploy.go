@@ -44,7 +44,7 @@ func NewKubernetesDeployer(kubernetesTokenCacheManager *kubernetes.TokenCacheMan
 }
 
 func (deployer *KubernetesDeployer) getToken(userID portainer.UserID, endpoint *portainer.Endpoint, setLocalAdminToken bool) (string, error) {
-	kubeCLI, err := deployer.kubernetesClientFactory.GetKubeClient(endpoint)
+	kubeCLI, err := deployer.kubernetesClientFactory.GetPrivilegedKubeClient(endpoint)
 	if err != nil {
 		return "", err
 	}
@@ -71,7 +71,7 @@ func (deployer *KubernetesDeployer) getToken(userID portainer.UserID, endpoint *
 	}
 
 	if token == "" {
-		return "", fmt.Errorf("can not get a valid user service account token")
+		return "", errors.New("can not get a valid user service account token")
 	}
 
 	return token, nil

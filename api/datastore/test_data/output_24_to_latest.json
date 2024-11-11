@@ -1,10 +1,15 @@
 {
+  "api_key": null,
+  "customtemplates": null,
   "dockerhub": [
     {
       "Authentication": false,
       "Username": ""
     }
   ],
+  "edge_stack": null,
+  "edgegroups": null,
+  "edgejobs": null,
   "endpoint_groups": [
     {
       "AuthorizedTeams": null,
@@ -38,6 +43,7 @@
         "TenantID": ""
       },
       "ComposeSyntaxMaxVersion": "",
+      "ContainerEngine": "",
       "Edge": {
         "AsyncMode": false,
         "CommandInterval": 0,
@@ -102,6 +108,9 @@
       "UserAccessPolicies": {}
     }
   ],
+  "extension": null,
+  "helm_user_repository": null,
+  "pending_actions": null,
   "registries": [
     {
       "Authentication": true,
@@ -601,7 +610,7 @@
       "RequiredPasswordLength": 12
     },
     "KubeconfigExpiry": "0",
-    "KubectlShellImage": "portainer/kubectl-shell:2.22.0",
+    "KubectlShellImage": "portainer/kubectl-shell:2.23.0",
     "LDAPSettings": {
       "AnonymousMode": true,
       "AutoCreateUsers": true,
@@ -768,6 +777,7 @@
         "GpuUseList": null,
         "HealthyContainerCount": 0,
         "ImageCount": 9,
+        "IsPodman": false,
         "NodeCount": 0,
         "RunningContainerCount": 5,
         "ServiceCount": 0,
@@ -858,6 +868,8 @@
       "UpdatedBy": ""
     }
   ],
+  "tags": null,
+  "team_membership": null,
   "teams": [
     {
       "Id": 1,
@@ -930,6 +942,7 @@
     }
   ],
   "version": {
-    "VERSION": "{\"SchemaVersion\":\"2.22.0\",\"MigratorCount\":1,\"Edition\":1,\"InstanceID\":\"463d5c47-0ea5-4aca-85b1-405ceefee254\"}"
-  }
+    "VERSION": "{\"SchemaVersion\":\"2.23.0\",\"MigratorCount\":0,\"Edition\":1,\"InstanceID\":\"463d5c47-0ea5-4aca-85b1-405ceefee254\"}"
+  },
+  "webhooks": null
 }

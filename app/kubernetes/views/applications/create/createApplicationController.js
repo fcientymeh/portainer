@@ -29,6 +29,7 @@ import { confirm, confirmUpdate, confirmWebEditorDiscard } from '@@/modals/confi
 import { buildConfirmButton } from '@@/modals/utils';
 import { ModalType } from '@@/modals';
 import { KUBE_STACK_NAME_VALIDATION_REGEX } from '@/react/kubernetes/DeployView/StackName/constants';
+import { isVolumeUsed } from '@/react/kubernetes/volumes/utils';
 
 class KubernetesCreateApplicationController {
   /* #region  CONSTRUCTOR */
@@ -423,7 +424,7 @@ class KubernetesCreateApplicationController {
         const ingressNamesLoaded = this.ingresses.map((i) => i.Name);
         const areAllIngressesLoaded = uniqueIngressNamesUsed.every((ingressNameUsed) => ingressNamesLoaded.includes(ingressNameUsed));
         if (!areAllIngressesLoaded) {
-          this.refreshIngresses();
+          this.refreshIngresses(this.application.ResourcePool);
         }
       }
       // update the services
@@ -785,7 +786,7 @@ class KubernetesCreateApplicationController {
         });
         this.volumes = volumes;
         const filteredVolumes = _.filter(this.volumes, (volume) => {
-          const isUnused = !KubernetesVolumeHelper.isUsed(volume);
+          const isUnused = !isVolumeUsed(volume);
           const isRWX = volume.PersistentVolumeClaim.storageClass && _.includes(volume.PersistentVolumeClaim.storageClass.AccessModes, 'RWX');
           return isUnused || isRWX;
         });
@@ -918,7 +919,7 @@ class KubernetesCreateApplicationController {
   async checkIngressesToUpdate() {
     let ingressesToUpdate = [];
     let servicePortsToUpdate = [];
-    const fullIngresses = await getIngresses(this.endpoint.Id, this.formValues.ResourcePool.Namespace.Name);
+    const fullIngresses = await getIngresses(this.endpoint.Id);
     this.formValues.Services.forEach((updatedService) => {
       const oldServiceIndex = this.oldFormValues.Services.findIndex((oldService) => oldService.Name === updatedService.Name);
       const numberOfPortsInOldService = this.oldFormValues.Services[oldServiceIndex] && this.oldFormValues.Services[oldServiceIndex].Ports.length;

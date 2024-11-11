@@ -1,17 +1,23 @@
+import { Service } from 'kubernetes-types/core/v1';
+import { HorizontalPodAutoscaler } from 'kubernetes-types/autoscaling/v2';
+
 import { AppType, DeploymentType } from '../../types';
+
+export interface ApplicationRowData extends Application {
+  KubernetesApplications?: Array<Application>;
+}
 
 export interface Application {
   Id: string;
   Name: string;
   Image: string;
   Containers?: Array<unknown>;
-  Services?: Array<unknown>;
+  Services?: Array<Service>;
   CreationDate: string;
   ApplicationOwner?: string;
   StackName?: string;
   ResourcePool: string;
   ApplicationType: AppType;
-  KubernetesApplications?: Array<Application>;
   Metadata?: {
     labels: Record<string, string>;
   };
@@ -39,6 +45,13 @@ export interface Application {
     }>;
     Port: number;
   }>;
+  Resource?: {
+    CpuLimit?: number;
+    CpuRequest?: number;
+    MemoryLimit?: number;
+    MemoryRequest?: number;
+  };
+  HorizontalPodAutoscaler?: HorizontalPodAutoscaler;
 }
 
 export enum ConfigKind {

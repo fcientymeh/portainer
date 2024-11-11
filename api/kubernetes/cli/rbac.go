@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/portainer/portainer/api/internal/randomstring"
-
 	"github.com/rs/zerolog/log"
 	authv1 "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -86,6 +85,7 @@ func createServiceAccount(saClient corev1types.ServiceAccountInterface, name str
 	}
 
 	_, err := saClient.Create(context.Background(), serviceAccount, metav1.CreateOptions{})
+
 	return err
 }
 
@@ -111,6 +111,7 @@ func createRole(roleClient rbacv1types.RoleInterface, name string, verb string, 
 	}
 
 	_, err := roleClient.Create(context.Background(), role, metav1.CreateOptions{})
+
 	return err
 }
 
@@ -149,6 +150,7 @@ func createRoleBinding(roleBindingClient rbacv1types.RoleBindingInterface, clust
 	// Retry checkRoleBinding a maximum of 5 times with a 100ms wait after each attempt
 	for range maxRetries {
 		err = checkRoleBinding(roleBindingClient, roleBinding.Name)
+
 		time.Sleep(100 * time.Millisecond) // Wait for 100ms, even if the check passes
 
 		if err == nil {
