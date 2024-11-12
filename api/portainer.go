@@ -2,6 +2,7 @@ package portainer
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"time"
 
@@ -1374,6 +1375,7 @@ type (
 		//
 		// When this is set, docker compose will output its logs to stdout
 		AbortOnContainerExit bool
+		Prune                bool
 	}
 
 	ComposeRunOptions struct {
@@ -1498,6 +1500,8 @@ type (
 		SetupUserServiceAccount(userID int, teamIDs []int, restrictDefaultNamespace bool) error
 		IsRBACEnabled() (bool, error)
 		GetPortainerUserServiceAccount(tokendata *TokenData) (*corev1.ServiceAccount, error)
+		GetServiceAccounts(namespace string) ([]models.K8sServiceAccount, error)
+		DeleteServiceAccounts(reqs models.K8sServiceAccountDeleteRequests) error
 		GetServiceAccountBearerToken(userID int) (string, error)
 		CreateUserShellPod(ctx context.Context, serviceAccountName, shellPodImage string) (*KubernetesShellPod, error)
 		StartExecProcess(token string, useAdminToken bool, namespace, podName, containerName string, command []string, stdin io.Reader, stdout io.Writer, errChan chan error)
@@ -1531,6 +1535,16 @@ type (
 		CreateRegistrySecret(registry *Registry, namespace string) error
 		IsRegistrySecret(namespace, secretName string) (bool, error)
 		ToggleSystemState(namespace string, isSystem bool) error
+
+		GetClusterRoles() ([]models.K8sClusterRole, error)
+		DeleteClusterRoles(models.K8sClusterRoleDeleteRequests) error
+		GetClusterRoleBindings() ([]models.K8sClusterRoleBinding, error)
+		DeleteClusterRoleBindings(models.K8sClusterRoleBindingDeleteRequests) error
+
+		GetRoles(namespace string) ([]models.K8sRole, error)
+		DeleteRoles(models.K8sRoleDeleteRequests) error
+		GetRoleBindings(namespace string) ([]models.K8sRoleBinding, error)
+		DeleteRoleBindings(models.K8sRoleBindingDeleteRequests) error
 	}
 
 	// KubernetesDeployer represents a service to deploy a manifest inside a Kubernetes environment(endpoint)
@@ -1595,7 +1609,7 @@ type (
 
 const (
 	// APIVersion is the version number of the Portainer API
-	APIVersion = "2.23.0"
+	APIVersion = "2.24.0"
 	// Edition is what this edition of Portainer is called
 	Edition = PortainerCE
 	// ComposeSyntaxMaxVersion is a maximum supported version of the docker compose syntax
@@ -1721,6 +1735,30 @@ const (
 	// EdgeStackStatusCompleted represents a completed Edge stack
 	EdgeStackStatusCompleted
 )
+
+var edgeStackStatusTypeStr = map[EdgeStackStatusType]string{
+	EdgeStackStatusPending:             "Pending",
+	EdgeStackStatusDeploymentReceived:  "DeploymentReceived",
+	EdgeStackStatusError:               "Error",
+	EdgeStackStatusAcknowledged:        "Acknowledged",
+	EdgeStackStatusRemoved:             "Removed",
+	EdgeStackStatusRemoteUpdateSuccess: "RemoteUpdateSuccess",
+	EdgeStackStatusImagesPulled:        "ImagesPulled",
+	EdgeStackStatusRunning:             "Running",
+	EdgeStackStatusDeploying:           "Deploying",
+	EdgeStackStatusRemoving:            "Removing",
+	EdgeStackStatusPausedDeploying:     "PausedDeploying",
+	EdgeStackStatusRollingBack:         "RollingBack",
+	EdgeStackStatusRolledBack:          "RolledBack",
+	EdgeStackStatusCompleted:           "Completed",
+}
+
+func (s EdgeStackStatusType) String() string {
+	if str, ok := edgeStackStatusTypeStr[s]; ok {
+		return fmt.Sprintf("%d (%s)", s, str)
+	}
+	return fmt.Sprintf("%d (UNKNOWN)", s)
+}
 
 const (
 	_ EndpointStatus = iota
