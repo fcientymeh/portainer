@@ -1,4 +1,4 @@
-package composeplugin
+package compose
 
 import (
 	"context"
@@ -49,7 +49,7 @@ func TestComposeProjectStatus(t *testing.T) {
 		},
 	}
 
-	w := setup(t)
+	w := NewComposeDeployer()
 	ctx := context.Background()
 
 	for _, testCase := range testCases {
@@ -66,7 +66,7 @@ func TestComposeProjectStatus(t *testing.T) {
 
 			time.Sleep(5 * time.Second)
 
-			status, statusMessage, err := waitForStatus(w, ctx, projectName, libstack.StatusRunning)
+			status, statusMessage, err := waitForStatus(w, ctx, projectName, libstack.StatusRunning, "")
 			if err != nil {
 				t.Fatalf("[test: %s] Failed to get compose project status: %v", testCase.TestName, err)
 			}
@@ -79,14 +79,14 @@ func TestComposeProjectStatus(t *testing.T) {
 				t.Fatalf("[test: %s] Expected status message but got empty", testCase.TestName)
 			}
 
-			err = w.Remove(ctx, projectName, nil, libstack.Options{})
+			err = w.Remove(ctx, projectName, nil, libstack.RemoveOptions{})
 			if err != nil {
 				t.Fatalf("[test: %s] Failed to remove compose project: %v", testCase.TestName, err)
 			}
 
 			time.Sleep(20 * time.Second)
 
-			status, statusMessage, err = waitForStatus(w, ctx, projectName, libstack.StatusRemoved)
+			status, statusMessage, err = waitForStatus(w, ctx, projectName, libstack.StatusRemoved, "")
 			if err != nil {
 				t.Fatalf("[test: %s] Failed to get compose project status: %v", testCase.TestName, err)
 			}
@@ -102,11 +102,11 @@ func TestComposeProjectStatus(t *testing.T) {
 	}
 }
 
-func waitForStatus(deployer libstack.Deployer, ctx context.Context, stackName string, requiredStatus libstack.Status) (libstack.Status, string, error) {
+func waitForStatus(deployer libstack.Deployer, ctx context.Context, stackName string, requiredStatus libstack.Status, stackFileLocation string) (libstack.Status, string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	statusCh := deployer.WaitForStatus(ctx, stackName, requiredStatus)
+	statusCh := deployer.WaitForStatus(ctx, stackName, requiredStatus, stackFileLocation)
 	result := <-statusCh
 	if result.ErrorMsg == "" {
 		return result.Status, "", nil
