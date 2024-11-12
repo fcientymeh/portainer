@@ -3,6 +3,7 @@ package stacks
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/git/update"
@@ -124,6 +125,7 @@ func (handler *Handler) createSwarmStackFromFileContent(w http.ResponseWriter, r
 	if errorek == nil {
 		if r.Method != http.MethodGet {
 			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE STACK %s]     [%s]", uzer.Username, stack.Name, r)
+			log.Info().Msgf("[AIP AUDIT] [%s] [STACK DETAILS %s]     %s", uzer.Username, stack.Name, payload.StackFileContent)
 		}
 	}
 	return handler.decorateStackResponse(w, stack, userID)
@@ -295,6 +297,13 @@ func (handler *Handler) createSwarmStackFromGitRepository(w http.ResponseWriter,
 	if errorek == nil {
 		if r.Method != http.MethodGet {
 			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE STACK %s]     [%s]", uzer.Username, stack.Name, r)
+
+			var fPath string = stack.ProjectPath + stack.EntryPoint
+			fileContent, err := os.ReadFile(fPath)
+			if err == nil {
+				log.Info().Msgf("[AIP AUDIT] [%s] [Redeploy STACK DETAILS %s]     %s", uzer.Username, stack.Name, fileContent)
+
+			}
 		}
 	}
 	return handler.decorateStackResponse(w, stack, userID)
@@ -415,6 +424,7 @@ func (handler *Handler) createSwarmStackFromFileUpload(w http.ResponseWriter, r 
 	if errorek == nil {
 		if r.Method != http.MethodGet {
 			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE STACK %s]     [%s]", uzer.Username, stack.Name, r)
+			log.Info().Msgf("[AIP AUDIT] [%s] [STACK DETAILS %s]     %s", uzer.Username, stack.Name, payload.StackFileContent)
 		}
 	}
 	return handler.decorateStackResponse(w, stack, userID)

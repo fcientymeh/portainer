@@ -2,6 +2,7 @@ package stacks
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	portainer "github.com/portainer/portainer/api"
@@ -206,6 +207,13 @@ func (handler *Handler) stackGitRedeploy(w http.ResponseWriter, r *http.Request)
 	if errorek == nil {
 		if r.Method != http.MethodGet {
 			log.Info().Msgf("[AIP AUDIT] [%s] [Redeploy from GIT STACK %s]     [%s]", uzer.Username, stack.Name, r)
+			var fPath string = stack.ProjectPath + stack.EntryPoint
+			fileContent, err := os.ReadFile(fPath)
+			if err == nil {
+				log.Info().Msgf("[AIP AUDIT] [%s] [Redeploy STACK DETAILS %s]     %s", uzer.Username, stack.Name, fileContent)
+
+			}
+
 		}
 	}
 	return response.JSON(w, stack)

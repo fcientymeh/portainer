@@ -171,6 +171,7 @@ func (handler *Handler) stackUpdate(w http.ResponseWriter, r *http.Request) *htt
 		// Sanitize password in the http response to minimise possible security leaks
 		stack.GitConfig.Authentication.Password = ""
 	}
+
 	if errorek == nil {
 		if r.Method != http.MethodGet {
 			log.Info().Msgf("[AIP AUDIT] [%s] [UPDATE STACK %s]     [%s]", uzer.Username, stack.Name, r)
@@ -257,6 +258,8 @@ func (handler *Handler) updateComposeStack(r *http.Request, stack *portainer.Sta
 
 		return httperror.InternalServerError(err.Error(), err)
 	}
+	uzer, _ := security.RetrieveTokenData(r)
+	log.Info().Msgf("[AIP AUDIT] [%s] [UPDATE COMPOSE STACK %s]     %s", uzer.Username, stack.Name, payload.StackFileContent)
 
 	handler.FileService.RemoveStackFileBackup(stackFolder, stack.EntryPoint)
 
@@ -284,6 +287,7 @@ func (handler *Handler) updateSwarmStack(r *http.Request, stack *portainer.Stack
 		// detach from git
 		stack.GitConfig = nil
 	}
+	// Get content of stack
 
 	stackFolder := strconv.Itoa(int(stack.ID))
 	if _, err := handler.FileService.UpdateStoreStackFileFromBytes(stackFolder, stack.EntryPoint, []byte(payload.StackFileContent)); err != nil {
@@ -324,6 +328,8 @@ func (handler *Handler) updateSwarmStack(r *http.Request, stack *portainer.Stack
 
 		return httperror.InternalServerError(err.Error(), err)
 	}
+	uzer, _ := security.RetrieveTokenData(r)
+	log.Info().Msgf("[AIP AUDIT] [%s] [UPDATE SWARM STACK %s]     %s", uzer.Username, stack.Name, payload.StackFileContent)
 
 	handler.FileService.RemoveStackFileBackup(stackFolder, stack.EntryPoint)
 
