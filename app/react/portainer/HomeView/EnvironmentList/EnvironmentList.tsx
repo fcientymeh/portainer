@@ -109,6 +109,8 @@ export function EnvironmentList({ onClickBrowse, onRefresh }: Props) {
     agentVersions,
     updateInformation: isBE,
     edgeAsync: getEdgeAsyncValue(connectionTypes),
+    platformTypes,
+    excludeSnapshotRaw: true,
   };
 
   const queryWithSort = {

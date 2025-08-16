@@ -133,6 +133,8 @@ type (
 		SecretKeyName             *string
 		LogLevel                  *string
 		LogMode                   *string
+		KubectlShellImage         *string
+		PullLimitCheckDisabled    *bool
 	}
 
 	// CustomTemplateVariableDefinition
@@ -184,6 +186,16 @@ type (
 	// CustomTemplatePlatform represents a custom template platform
 	CustomTemplatePlatform int
 
+	// DiagnosticsData represents the diagnostics data for an environment
+	// this contains the logs, telnet, traceroute, dns and proxy information
+	// which will be part of the DockerSnapshot and KubernetesSnapshot structs
+	DiagnosticsData struct {
+		Log    string            `json:"Log,omitempty"`
+		Telnet map[string]string `json:"Telnet,omitempty"`
+		DNS    map[string]string `json:"DNS,omitempty"`
+		Proxy  map[string]string `json:"Proxy,omitempty"`
+	}
+
 	// DockerHub represents all the required information to connect and use the
 	// Docker Hub
 	DockerHub struct {
@@ -216,6 +228,7 @@ type (
 		GpuUseAll               bool              `json:"GpuUseAll"`
 		GpuUseList              []string          `json:"GpuUseList"`
 		IsPodman                bool              `json:"IsPodman"`
+		DiagnosticsData         *DiagnosticsData  `json:"DiagnosticsData"`
 	}
 
 	// DockerContainerSnapshot is an extent of Docker's Container struct
@@ -297,7 +310,7 @@ type (
 		// FileVersion is the version of the stack file, used to detect changes
 		FileVersion int `json:"FileVersion"`
 		// ConfigHash is the commit hash of the git repository used for deploying the stack
-		ConfigHash string `json:"ConfigHash"`
+		ConfigHash string `json:"ConfigHash,omitempty"`
 	}
 
 	// EdgeStack represents an edge stack
@@ -317,9 +330,6 @@ type (
 		DeploymentType EdgeStackDeploymentType `json:"DeploymentType"`
 		// Uses the manifest's namespaces instead of the default one
 		UseManifestNamespaces bool
-
-		// Deprecated
-		Prune bool `json:"Prune,omitempty"`
 	}
 
 	EdgeStackDeploymentType int
@@ -344,23 +354,24 @@ type (
 		// EE only feature
 		DeploymentInfo StackDeploymentInfo
 		// ReadyRePullImage is a flag to indicate whether the auto update is trigger to re-pull image
-		ReadyRePullImage bool
+		ReadyRePullImage bool `json:"ReadyRePullImage,omitempty"`
 
 		// Deprecated
-		Details EdgeStackStatusDetails
+		Details *EdgeStackStatusDetails `json:"Details,omitempty"`
 		// Deprecated
-		Error string
+		Error string `json:"Error,omitempty"`
 		// Deprecated
-		Type EdgeStackStatusType `json:"Type"`
+		Type EdgeStackStatusType `json:"Type,omitempty"`
 	}
 
 	// EdgeStackDeploymentStatus represents an edge stack deployment status
 	EdgeStackDeploymentStatus struct {
 		Time  int64
 		Type  EdgeStackStatusType
-		Error string
+		Error string `json:"Error,omitempty"`
 		// EE only feature
-		RollbackTo *int
+		RollbackTo *int `json:"RollbackTo,omitempty"`
+		Version    int  `json:"Version,omitempty"`
 	}
 
 	// EdgeStackStatusType represents an edge stack status type
@@ -599,6 +610,7 @@ type (
 		Id             string                 `json:"Id"`
 		Name           string                 `json:"Name"`
 		Status         corev1.NamespaceStatus `json:"Status"`
+		Annotations    map[string]string      `json:"Annotations"`
 		CreationDate   string                 `json:"CreationDate"`
 		NamespaceOwner string                 `json:"NamespaceOwner"`
 		IsSystem       bool                   `json:"IsSystem"`
@@ -635,11 +647,12 @@ type (
 
 	// KubernetesSnapshot represents a snapshot of a specific Kubernetes environment(endpoint) at a specific time
 	KubernetesSnapshot struct {
-		Time              int64  `json:"Time"`
-		KubernetesVersion string `json:"KubernetesVersion"`
-		NodeCount         int    `json:"NodeCount"`
-		TotalCPU          int64  `json:"TotalCPU"`
-		TotalMemory       int64  `json:"TotalMemory"`
+		Time              int64            `json:"Time"`
+		KubernetesVersion string           `json:"KubernetesVersion"`
+		NodeCount         int              `json:"NodeCount"`
+		TotalCPU          int64            `json:"TotalCPU"`
+		TotalMemory       int64            `json:"TotalMemory"`
+		DiagnosticsData   *DiagnosticsData `json:"DiagnosticsData"`
 	}
 
 	// KubernetesConfiguration represents the configuration of a Kubernetes environment(endpoint)
@@ -1367,7 +1380,13 @@ type (
 		ValidateFlags(flags *CLIFlags) error
 	}
 
+	ComposeOptions struct {
+		Registries []Registry
+	}
+
 	ComposeUpOptions struct {
+		ComposeOptions
+
 		// ForceRecreate forces to recreate containers
 		ForceRecreate bool
 		// AbortOnContainerExit will stop the deployment if a container exits.
@@ -1378,7 +1397,16 @@ type (
 		Prune                bool
 	}
 
+	ComposeDownOptions struct {
+		// RemoveVolumes will remove the named volumes declared in the compose file
+		// and anonymous volumes attached to the stack's containers
+		// Drives `docker compose down --volumes`
+		RemoveVolumes bool
+	}
+
 	ComposeRunOptions struct {
+		ComposeOptions
+
 		// Remove will remove the container after it has stopped
 		Remove bool
 		// Args are the arguments to pass to the container
@@ -1394,7 +1422,7 @@ type (
 		Run(ctx context.Context, stack *Stack, endpoint *Endpoint, serviceName string, options ComposeRunOptions) error
 		Up(ctx context.Context, stack *Stack, endpoint *Endpoint, options ComposeUpOptions) error
 		Down(ctx context.Context, stack *Stack, endpoint *Endpoint) error
-		Pull(ctx context.Context, stack *Stack, endpoint *Endpoint) error
+		Pull(ctx context.Context, stack *Stack, endpoint *Endpoint, options ComposeOptions) error
 	}
 
 	// CryptoService represents a service for encrypting/hashing data
@@ -1464,7 +1492,8 @@ type (
 		StoreSSLCertPair(cert, key []byte) (string, string, error)
 		CopySSLCertPair(certPath, keyPath string) (string, string, error)
 		CopySSLCACert(caCertPath string) (string, error)
-		StoreMTLSCertificates(cert, caCert, key []byte) (string, string, string, error)
+		StoreMTLSCertificates(caCert, cert, key []byte) (string, string, string, error)
+		GetMTLSCertificates() (string, string, string, error)
 		GetDefaultChiselPrivateKeyPath() string
 		StoreChiselPrivateKey(privateKey []byte) error
 	}
@@ -1516,7 +1545,7 @@ type (
 		GetConfigMaps(namespace string) ([]models.K8sConfigMap, error)
 		GetSecrets(namespace string) ([]models.K8sSecret, error)
 		GetIngressControllers() (models.K8sIngressControllers, error)
-		GetApplications(namespace, nodename string, withDependencies bool) ([]models.K8sApplication, error)
+		GetApplications(namespace, nodename string) ([]models.K8sApplication, error)
 		GetMetrics() (models.K8sMetrics, error)
 		GetStorage() ([]KubernetesStorageClassConfig, error)
 		CreateIngress(namespace string, info models.K8sIngressInfo, owner string) error
@@ -1594,7 +1623,7 @@ type (
 		Start()
 		SetSnapshotInterval(snapshotInterval string) error
 		SnapshotEndpoint(endpoint *Endpoint) error
-		FillSnapshotData(endpoint *Endpoint) error
+		FillSnapshotData(endpoint *Endpoint, includeRaw bool) error
 	}
 
 	// SwarmStackManager represents a service to manage Swarm stacks
@@ -1609,7 +1638,9 @@ type (
 
 const (
 	// APIVersion is the version number of the Portainer API
-	APIVersion = "2.24.0"
+	APIVersion = "2.29.0"
+	// Support annotation for the API version ("STS" for Short-Term Support or "LTS" for Long-Term Support)
+	APIVersionSupport = "STS"
 	// Edition is what this edition of Portainer is called
 	Edition = PortainerCE
 	// ComposeSyntaxMaxVersion is a maximum supported version of the docker compose syntax
@@ -1657,6 +1688,10 @@ const (
 	AuthCookieKey = "portainer_api_key"
 	// PortainerCacheHeader is used to enabled FE caching for Kubernetes resources
 	PortainerCacheHeader = "X-Portainer-Cache"
+	// KubectlShellImageEnvVar is the environment variable used to override the default kubectl shell image
+	KubectlShellImageEnvVar = "KUBECTL_SHELL_IMAGE"
+	// PullLimitCheckDisabledEnvVar is the environment variable used to disable the pull limit check
+	PullLimitCheckDisabledEnvVar = "PULL_LIMIT_CHECK_DISABLED"
 )
 
 // List of supported features

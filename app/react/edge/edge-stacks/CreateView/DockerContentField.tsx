@@ -1,3 +1,6 @@
+import { useDockerComposeSchema } from '@/react/hooks/useDockerComposeSchema/useDockerComposeSchema';
+
+import { InlineLoader } from '@@/InlineLoader';
 import { WebEditorForm } from '@@/WebEditorForm';
 
 export function DockerContentField({
@@ -5,12 +8,20 @@ export function DockerContentField({
   onChange,
   readonly,
   value,
+  isLoading,
 }: {
   value: string;
   onChange: (value: string) => void;
   error?: string;
   readonly?: boolean;
+  isLoading?: boolean;
 }) {
+  const dockerComposeSchemaQuery = useDockerComposeSchema();
+
+  if (isLoading || dockerComposeSchemaQuery.isInitialLoading) {
+    return <InlineLoader>Loading stack content...</InlineLoader>;
+  }
+
   return (
     <WebEditorForm
       id="stack-creation-editor"
@@ -20,6 +31,7 @@ export function DockerContentField({
       placeholder="Define or paste the content of your docker compose file here"
       error={error}
       readonly={readonly}
+      schema={dockerComposeSchemaQuery.data}
       data-cy="stack-creation-editor"
     >
       You can get more information about Compose file format in the{' '}

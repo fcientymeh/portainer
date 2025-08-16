@@ -12,7 +12,6 @@ import (
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/apikey"
-	"github.com/portainer/portainer/api/build"
 	"github.com/portainer/portainer/api/chisel"
 	"github.com/portainer/portainer/api/cli"
 	"github.com/portainer/portainer/api/crypto"
@@ -42,6 +41,7 @@ import (
 	"github.com/portainer/portainer/api/kubernetes"
 	kubecli "github.com/portainer/portainer/api/kubernetes/cli"
 	"github.com/portainer/portainer/api/ldap"
+	"github.com/portainer/portainer/api/logs"
 	"github.com/portainer/portainer/api/oauth"
 	"github.com/portainer/portainer/api/pendingactions"
 	"github.com/portainer/portainer/api/pendingactions/actions"
@@ -49,9 +49,10 @@ import (
 	"github.com/portainer/portainer/api/platform"
 	"github.com/portainer/portainer/api/scheduler"
 	"github.com/portainer/portainer/api/stacks/deployments"
+	"github.com/portainer/portainer/pkg/build"
 	"github.com/portainer/portainer/pkg/featureflags"
 	"github.com/portainer/portainer/pkg/libhelm"
-	"github.com/portainer/portainer/pkg/libstack"
+	libhelmtypes "github.com/portainer/portainer/pkg/libhelm/types"
 	"github.com/portainer/portainer/pkg/libstack/compose"
 
 	gelf_udp "github.com/Graylog2/go-gelf/gelf"
@@ -100,7 +101,7 @@ func initDataStore(flags *portainer.CLIFlags, secretKey []byte, fileService port
 		log.Fatal().Msg("failed creating database connection: expecting a boltdb database type but a different one was received")
 	}
 
-	store := datastore.NewStore(*flags.Data, fileService, connection)
+	store := datastore.NewStore(flags, fileService, connection)
 
 	isNew, err := store.Open()
 	if err != nil {
@@ -127,7 +128,7 @@ func initDataStore(flags *portainer.CLIFlags, secretKey []byte, fileService port
 			log.Fatal().Err(err).Msg("failed generating instance id")
 		}
 
-		migratorInstance := migrator.NewMigrator(&migrator.MigratorParameters{})
+		migratorInstance := migrator.NewMigrator(&migrator.MigratorParameters{Flags: flags})
 		migratorCount := migratorInstance.GetMigratorCountOfCurrentAPIVersion()
 
 		// from MigrateData
@@ -172,32 +173,12 @@ func checkDBSchemaServerVersionMatch(dbStore dataservices.DataStore, serverVersi
 	return v.SchemaVersion == serverVersion && v.Edition == serverEdition
 }
 
-func initComposeStackManager(composeDeployer libstack.Deployer, proxyManager *proxy.Manager) portainer.ComposeStackManager {
-	composeWrapper, err := exec.NewComposeStackManager(composeDeployer, proxyManager)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed creating compose manager")
-	}
-
-	return composeWrapper
-}
-
-func initSwarmStackManager(
-	assetsPath string,
-	configPath string,
-	signatureService portainer.DigitalSignatureService,
-	fileService portainer.FileService,
-	reverseTunnelService portainer.ReverseTunnelService,
-	dataStore dataservices.DataStore,
-) (portainer.SwarmStackManager, error) {
-	return exec.NewSwarmStackManager(assetsPath, configPath, signatureService, fileService, reverseTunnelService, dataStore)
-}
-
 func initKubernetesDeployer(kubernetesTokenCacheManager *kubeproxy.TokenCacheManager, kubernetesClientFactory *kubecli.ClientFactory, dataStore dataservices.DataStore, reverseTunnelService portainer.ReverseTunnelService, signatureService portainer.DigitalSignatureService, proxyManager *proxy.Manager, assetsPath string) portainer.KubernetesDeployer {
 	return exec.NewKubernetesDeployer(kubernetesTokenCacheManager, kubernetesClientFactory, dataStore, reverseTunnelService, signatureService, proxyManager, assetsPath)
 }
 
-func initHelmPackageManager(assetsPath string) (libhelm.HelmPackageManager, error) {
-	return libhelm.NewHelmPackageManager(libhelm.HelmConfig{BinaryPath: assetsPath})
+func initHelmPackageManager() (libhelmtypes.HelmPackageManager, error) {
+	return libhelm.NewHelmPackageManager()
 }
 
 func initAPIKeyService(datastore dataservices.DataStore) apikey.APIKeyService {
@@ -265,10 +246,10 @@ func updateSettingsFromFlags(dataStore dataservices.DataStore, flags *portainer.
 		return err
 	}
 
-	settings.SnapshotInterval = *cmp.Or(flags.SnapshotInterval, &settings.SnapshotInterval)
-	settings.LogoURL = *cmp.Or(flags.Logo, &settings.LogoURL)
-	settings.EnableEdgeComputeFeatures = *cmp.Or(flags.EnableEdgeComputeFeatures, &settings.EnableEdgeComputeFeatures)
-	settings.TemplatesURL = *cmp.Or(flags.Templates, &settings.TemplatesURL)
+	settings.SnapshotInterval = cmp.Or(*flags.SnapshotInterval, settings.SnapshotInterval)
+	settings.LogoURL = cmp.Or(*flags.Logo, settings.LogoURL)
+	settings.EnableEdgeComputeFeatures = cmp.Or(*flags.EnableEdgeComputeFeatures, settings.EnableEdgeComputeFeatures)
+	settings.TemplatesURL = cmp.Or(*flags.Templates, settings.TemplatesURL)
 
 	if *flags.Labels != nil {
 		settings.BlackListedLabels = *flags.Labels
@@ -441,9 +422,9 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 
 	composeDeployer := compose.NewComposeDeployer()
 
-	composeStackManager := initComposeStackManager(composeDeployer, proxyManager)
+	composeStackManager := exec.NewComposeStackManager(composeDeployer, proxyManager, dataStore)
 
-	swarmStackManager, err := initSwarmStackManager(*flags.Assets, dockerConfigPath, signatureService, fileService, reverseTunnelService, dataStore)
+	swarmStackManager, err := exec.NewSwarmStackManager(*flags.Assets, dockerConfigPath, signatureService, fileService, reverseTunnelService, dataStore)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed initializing swarm stack manager")
 	}
@@ -464,7 +445,7 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 
 	proxyManager.NewProxyFactory(dataStore, signatureService, reverseTunnelService, dockerClientFactory, kubernetesClientFactory, kubernetesTokenCacheManager, gitService, snapshotService)
 
-	helmPackageManager, err := initHelmPackageManager(*flags.Assets)
+	helmPackageManager, err := initHelmPackageManager()
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed initializing helm package manager")
 	}
@@ -602,17 +583,18 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 		AdminCreationDone:           adminCreationDone,
 		PendingActionsService:       pendingActionsService,
 		PlatformService:             platformService,
+		PullLimitCheckDisabled:      *flags.PullLimitCheckDisabled,
 	}
 }
 
 func main() {
-	configureLogger()
-	setLoggingMode("PRETTY")
+	logs.ConfigureLogger()
+	logs.SetLoggingMode("PRETTY")
 
 	flags := initCLI()
 
-	setLoggingLevel(*flags.LogLevel)
-	setLoggingMode(*flags.LogMode)
+	logs.SetLoggingLevel(*flags.LogLevel)
+	logs.SetLoggingMode(*flags.LogMode)
 
 	for {
 

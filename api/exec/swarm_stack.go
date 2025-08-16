@@ -11,7 +11,6 @@ import (
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/internal/registryutils"
 	"github.com/portainer/portainer/api/stacks/stackutils"
 
 	"github.com/rs/zerolog/log"
@@ -46,8 +45,7 @@ func NewSwarmStackManager(
 		dataStore:            datastore,
 	}
 
-	err := manager.updateDockerCLIConfiguration(manager.configPath)
-	if err != nil {
+	if err := manager.updateDockerCLIConfiguration(manager.configPath); err != nil {
 		return nil, err
 	}
 
@@ -63,33 +61,14 @@ func (manager *SwarmStackManager) Login(registries []portainer.Registry, endpoin
 
 	for _, registry := range registries {
 		if registry.Authentication {
-			err = registryutils.EnsureRegTokenValid(manager.dataStore, &registry)
+			username, password, err := getEffectiveRegUsernamePassword(manager.dataStore, &registry)
 			if err != nil {
-				log.
-					Warn().
-					Err(err).
-					Str("RegistryName", registry.Name).
-					Msg("Failed to validate registry token. Skip logging with this registry.")
-
-				continue
-			}
-
-			username, password, err := registryutils.GetRegEffectiveCredential(&registry)
-			if err != nil {
-				log.
-					Warn().
-					Err(err).
-					Str("RegistryName", registry.Name).
-					Msg("Failed to get effective credential. Skip logging with this registry.")
-
 				continue
 			}
 
 			registryArgs := append(args, "login", "--username", username, "--password", password, registry.URL)
-			err = runCommandAndCaptureStdErr(command, registryArgs, nil, "")
-			if err != nil {
-				log.
-					Warn().
+			if err := runCommandAndCaptureStdErr(command, registryArgs, nil, ""); err != nil {
+				log.Warn().
 					Err(err).
 					Str("RegistryName", registry.Name).
 					Msg("Failed to login.")
@@ -148,13 +127,14 @@ func (manager *SwarmStackManager) Remove(stack *portainer.Stack, endpoint *porta
 		return err
 	}
 
-	args = append(args, "stack", "rm", stack.Name)
+	args = append(args, "stack", "rm", "--detach=false", stack.Name)
 
 	return runCommandAndCaptureStdErr(command, args, nil, "")
 }
 
 func runCommandAndCaptureStdErr(command string, args []string, env []string, workingDir string) error {
 	var stderr bytes.Buffer
+
 	cmd := exec.Command(command, args...)
 	cmd.Stderr = &stderr
 
@@ -167,8 +147,7 @@ func runCommandAndCaptureStdErr(command string, args []string, env []string, wor
 		cmd.Env = append(cmd.Env, env...)
 	}
 
-	err := cmd.Run()
-	if err != nil {
+	if err := cmd.Run(); err != nil {
 		return errors.New(stderr.String())
 	}
 
@@ -192,6 +171,7 @@ func (manager *SwarmStackManager) prepareDockerCommandAndArgs(binaryPath, config
 		if err != nil {
 			return "", nil, err
 		}
+
 		endpointURL = "tcp://" + tunnelAddr
 	}
 
@@ -216,9 +196,10 @@ func (manager *SwarmStackManager) prepareDockerCommandAndArgs(binaryPath, config
 
 func (manager *SwarmStackManager) updateDockerCLIConfiguration(configPath string) error {
 	configFilePath := path.Join(configPath, "config.json")
+
 	config, err := manager.retrieveConfigurationFromDisk(configFilePath)
 	if err != nil {
-		return err
+		log.Warn().Err(err).Msg("unable to retrieve the Swarm configuration from disk, proceeding without it")
 	}
 
 	signature, err := manager.signatureService.CreateSignature(portainer.PortainerAgentSignatureMessage)
@@ -246,8 +227,7 @@ func (manager *SwarmStackManager) retrieveConfigurationFromDisk(path string) (ma
 		return make(map[string]any), nil
 	}
 
-	err = json.Unmarshal(raw, &config)
-	if err != nil {
+	if err := json.Unmarshal(raw, &config); err != nil {
 		return nil, err
 	}
 

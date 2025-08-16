@@ -51,10 +51,14 @@ func setupHandler(t *testing.T) (*Handler, string) {
 		t.Fatal(err)
 	}
 
+	coord := NewEdgeStackStatusUpdateCoordinator(store)
+	go coord.Start()
+
 	handler := NewHandler(
 		security.NewRequestBouncer(store, jwtService, apiKeyService),
 		store,
 		edgestacks.NewService(store),
+		coord,
 	)
 
 	handler.FileService = fs
@@ -143,4 +147,16 @@ func createEdgeStack(t *testing.T, store dataservices.DataStore, endpointID port
 	}
 
 	return edgeStack
+}
+
+func createEdgeGroup(t *testing.T, store dataservices.DataStore) portainer.EdgeGroup {
+	edgeGroup := portainer.EdgeGroup{
+		ID:   1,
+		Name: "EdgeGroup 1",
+	}
+
+	if err := store.EdgeGroup().Create(&edgeGroup); err != nil {
+		t.Fatal(err)
+	}
+	return edgeGroup
 }

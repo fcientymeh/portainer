@@ -17,7 +17,8 @@ import (
 	"github.com/portainer/portainer/pkg/libhttp/response"
 	"github.com/rs/zerolog/log"
 
-	"github.com/asaskevich/govalidator"
+	//"github.com/asaskevich/govalidator"
+	"github.com/portainer/portainer/pkg/validate"
 )
 
 type customTemplateUpdatePayload struct {
@@ -189,7 +190,7 @@ func (handler *Handler) customTemplateUpdate(w http.ResponseWriter, r *http.Requ
 	//------------------------
 
 	if payload.RepositoryURL != "" {
-		if !govalidator.IsURL(payload.RepositoryURL) {
+		if !validate.IsURL(payload.RepositoryURL) {
 			return httperror.BadRequest("Invalid repository URL. Must correspond to a valid URL format", err)
 		}
 

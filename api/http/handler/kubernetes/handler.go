@@ -15,6 +15,7 @@ import (
 	"github.com/portainer/portainer/api/kubernetes/cli"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
+	"github.com/portainer/portainer/pkg/libkubectl"
 	"github.com/rs/zerolog/log"
 
 	"github.com/gorilla/mux"
@@ -55,6 +56,10 @@ func NewHandler(bouncer security.BouncerService, authorizationService *authoriza
 	endpointRouter.Handle("/applications/count", httperror.LoggerHandler(h.getAllKubernetesApplicationsCount)).Methods(http.MethodGet)
 	endpointRouter.Handle("/configmaps", httperror.LoggerHandler(h.GetAllKubernetesConfigMaps)).Methods(http.MethodGet)
 	endpointRouter.Handle("/configmaps/count", httperror.LoggerHandler(h.getAllKubernetesConfigMapsCount)).Methods(http.MethodGet)
+	endpointRouter.Handle("/cron_jobs", httperror.LoggerHandler(h.getAllKubernetesCronJobs)).Methods(http.MethodGet)
+	endpointRouter.Handle("/cron_jobs/delete", httperror.LoggerHandler(h.deleteKubernetesCronJobs)).Methods(http.MethodPost)
+	endpointRouter.Handle("/jobs", httperror.LoggerHandler(h.getAllKubernetesJobs)).Methods(http.MethodGet)
+	endpointRouter.Handle("/jobs/delete", httperror.LoggerHandler(h.deleteKubernetesJobs)).Methods(http.MethodPost)
 	endpointRouter.Handle("/cluster_roles", httperror.LoggerHandler(h.getAllKubernetesClusterRoles)).Methods(http.MethodGet)
 	endpointRouter.Handle("/cluster_roles/delete", httperror.LoggerHandler(h.deleteClusterRoles)).Methods(http.MethodPost)
 	endpointRouter.Handle("/cluster_role_bindings", httperror.LoggerHandler(h.getAllKubernetesClusterRoleBindings)).Methods(http.MethodGet)
@@ -81,11 +86,11 @@ func NewHandler(bouncer security.BouncerService, authorizationService *authoriza
 	endpointRouter.Handle("/services/delete", httperror.LoggerHandler(h.deleteKubernetesServices)).Methods(http.MethodPost)
 	endpointRouter.Handle("/rbac_enabled", httperror.LoggerHandler(h.getKubernetesRBACStatus)).Methods(http.MethodGet)
 	endpointRouter.Handle("/namespaces", httperror.LoggerHandler(h.createKubernetesNamespace)).Methods(http.MethodPost)
-	endpointRouter.Handle("/namespaces", httperror.LoggerHandler(h.updateKubernetesNamespace)).Methods(http.MethodPut)
 	endpointRouter.Handle("/namespaces", httperror.LoggerHandler(h.deleteKubernetesNamespace)).Methods(http.MethodDelete)
 	endpointRouter.Handle("/namespaces", httperror.LoggerHandler(h.getKubernetesNamespaces)).Methods(http.MethodGet)
 	endpointRouter.Handle("/namespaces/count", httperror.LoggerHandler(h.getKubernetesNamespacesCount)).Methods(http.MethodGet)
 	endpointRouter.Handle("/namespaces/{namespace}", httperror.LoggerHandler(h.getKubernetesNamespace)).Methods(http.MethodGet)
+	endpointRouter.Handle("/namespaces/{namespace}", httperror.LoggerHandler(h.updateKubernetesNamespace)).Methods(http.MethodPut)
 	endpointRouter.Handle("/volumes", httperror.LoggerHandler(h.GetAllKubernetesVolumes)).Methods(http.MethodGet)
 	endpointRouter.Handle("/volumes/count", httperror.LoggerHandler(h.getAllKubernetesVolumesCount)).Methods(http.MethodGet)
 	endpointRouter.Handle("/service_accounts", httperror.LoggerHandler(h.getAllKubernetesServiceAccounts)).Methods(http.MethodGet)
@@ -98,6 +103,7 @@ func NewHandler(bouncer security.BouncerService, authorizationService *authoriza
 	endpointRouter.Handle("/cluster_roles/delete", httperror.LoggerHandler(h.deleteClusterRoles)).Methods(http.MethodPost)
 	endpointRouter.Handle("/cluster_role_bindings", httperror.LoggerHandler(h.getAllKubernetesClusterRoleBindings)).Methods(http.MethodGet)
 	endpointRouter.Handle("/cluster_role_bindings/delete", httperror.LoggerHandler(h.deleteClusterRoleBindings)).Methods(http.MethodPost)
+	endpointRouter.Handle("/describe", httperror.LoggerHandler(h.describeResource)).Methods(http.MethodGet)
 
 	// namespaces
 	// in the future this piece of code might be in another package (or a few different packages - namespaces/namespace?)
@@ -115,7 +121,11 @@ func NewHandler(bouncer security.BouncerService, authorizationService *authoriza
 	namespaceRouter.Handle("/services", httperror.LoggerHandler(h.createKubernetesService)).Methods(http.MethodPost)
 	namespaceRouter.Handle("/services", httperror.LoggerHandler(h.updateKubernetesService)).Methods(http.MethodPut)
 	namespaceRouter.Handle("/services", httperror.LoggerHandler(h.getKubernetesServicesByNamespace)).Methods(http.MethodGet)
+	namespaceRouter.Handle("/volumes", httperror.LoggerHandler(h.GetKubernetesVolumesInNamespace)).Methods(http.MethodGet)
 	namespaceRouter.Handle("/volumes/{volume}", httperror.LoggerHandler(h.getKubernetesVolume)).Methods(http.MethodGet)
+
+	// Deprecated
+	endpointRouter.Handle("/namespaces", middlewares.Deprecated(endpointRouter, deprecatedNamespaceParser)).Methods(http.MethodPut)
 
 	return h
 }
@@ -206,7 +216,17 @@ func (handler *Handler) kubeClientMiddleware(next http.Handler) http.Handler {
 				return
 			}
 
-			nonAdminNamespaces, err = pcli.GetNonAdminNamespaces(int(user.ID), endpoint.Kubernetes.Configuration.RestrictDefaultNamespace)
+			teamMemberships, err := handler.DataStore.TeamMembership().TeamMembershipsByUserID(user.ID)
+			if err != nil {
+				httperror.WriteError(w, http.StatusInternalServerError, "an error occurred during the KubeClientMiddleware operation, unable to get team memberships for user: ", err)
+				return
+			}
+			teamIDs := []int{}
+			for _, membership := range teamMemberships {
+				teamIDs = append(teamIDs, int(membership.TeamID))
+			}
+
+			nonAdminNamespaces, err = pcli.GetNonAdminNamespaces(int(user.ID), teamIDs, endpoint.Kubernetes.Configuration.RestrictDefaultNamespace)
 			if err != nil {
 				httperror.WriteError(w, http.StatusInternalServerError, "an error occurred during the KubeClientMiddleware operation, unable to retrieve non-admin namespaces. Error: ", err)
 				return
@@ -250,4 +270,37 @@ func (handler *Handler) kubeClientMiddleware(next http.Handler) http.Handler {
 		handler.KubernetesClientFactory.SetProxyKubeClient(strconv.Itoa(int(endpoint.ID)), tokenData.Token, kubeCli)
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (handler *Handler) getLibKubectlAccess(r *http.Request) (*libkubectl.ClientAccess, error) {
+	tokenData, err := security.RetrieveTokenData(r)
+	if err != nil {
+		return nil, httperror.InternalServerError("Unable to retrieve user authentication token", err)
+	}
+
+	bearerToken, _, err := handler.JwtService.GenerateToken(tokenData)
+	if err != nil {
+		return nil, httperror.Unauthorized("Unauthorized", err)
+	}
+
+	endpoint, err := middlewares.FetchEndpoint(r)
+	if err != nil {
+		return nil, httperror.InternalServerError("Unable to find the Kubernetes endpoint associated to the request.", err)
+	}
+
+	sslSettings, err := handler.DataStore.SSLSettings().Settings()
+	if err != nil {
+		return nil, httperror.InternalServerError("Unable to retrieve settings from the database", err)
+	}
+
+	hostURL := "localhost"
+	if !sslSettings.SelfSigned {
+		hostURL = r.Host
+	}
+
+	kubeConfigInternal := handler.kubeClusterAccessService.GetClusterDetails(hostURL, endpoint.ID, true)
+	return &libkubectl.ClientAccess{
+		Token:     bearerToken,
+		ServerUrl: kubeConfigInternal.ClusterServerURL,
+	}, nil
 }

@@ -62,6 +62,15 @@ func (connection *DbConnection) GetStorePath() string {
 	return connection.Path
 }
 
+func (connection *DbConnection) GetDatabaseFileSize() (int64, error) {
+	file, err := os.Stat(connection.GetDatabaseFilePath())
+	if err != nil {
+		return 0, fmt.Errorf("Failed to stat database file path: %s err: %w", connection.GetDatabaseFilePath(), err)
+	}
+
+	return file.Size(), nil
+}
+
 func (connection *DbConnection) SetEncrypted(flag bool) {
 	connection.isEncrypted = flag
 }
@@ -233,6 +242,32 @@ func (connection *DbConnection) GetObject(bucketName string, key []byte, object 
 	return connection.ViewTx(func(tx portainer.Transaction) error {
 		return tx.GetObject(bucketName, key, object)
 	})
+}
+
+func (connection *DbConnection) GetRawBytes(bucketName string, key []byte) ([]byte, error) {
+	var value []byte
+
+	err := connection.ViewTx(func(tx portainer.Transaction) error {
+		var err error
+		value, err = tx.GetRawBytes(bucketName, key)
+
+		return err
+	})
+
+	return value, err
+}
+
+func (connection *DbConnection) KeyExists(bucketName string, key []byte) (bool, error) {
+	var exists bool
+
+	err := connection.ViewTx(func(tx portainer.Transaction) error {
+		var err error
+		exists, err = tx.KeyExists(bucketName, key)
+
+		return err
+	})
+
+	return exists, err
 }
 
 func (connection *DbConnection) getEncryptionKey() []byte {

@@ -1,15 +1,30 @@
-import CodeMirror from '@uiw/react-codemirror';
-import { StreamLanguage, LanguageSupport } from '@codemirror/language';
+import CodeMirror, {
+  keymap,
+  oneDarkHighlightStyle,
+} from '@uiw/react-codemirror';
+import {
+  StreamLanguage,
+  LanguageSupport,
+  syntaxHighlighting,
+  indentService,
+} from '@codemirror/language';
 import { yaml } from '@codemirror/legacy-modes/mode/yaml';
 import { dockerFile } from '@codemirror/legacy-modes/mode/dockerfile';
 import { shell } from '@codemirror/legacy-modes/mode/shell';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { createTheme } from '@uiw/codemirror-themes';
 import { tags as highlightTags } from '@lezer/highlight';
+import type { JSONSchema7 } from 'json-schema';
+import { lintKeymap, lintGutter } from '@codemirror/lint';
+import { defaultKeymap } from '@codemirror/commands';
+import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
+import { yamlCompletion, yamlSchema } from 'yaml-schema';
 
 import { AutomationTestingProps } from '@/types';
 
 import { CopyButton } from '@@/buttons/CopyButton';
+
+import { useDebounce } from '../hooks/useDebounce';
 
 import styles from './CodeEditor.module.css';
 import { TextTip } from './Tip/TextTip';
@@ -21,11 +36,12 @@ interface Props extends AutomationTestingProps {
   placeholder?: string;
   type?: Type;
   readonly?: boolean;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
   value: string;
   height?: string;
   versions?: number[];
   onVersionChange?: (version: number) => void;
+  schema?: JSONSchema7;
 }
 
 const theme = createTheme({
@@ -55,21 +71,75 @@ const theme = createTheme({
   ],
 });
 
-const yamlLanguage = new LanguageSupport(StreamLanguage.define(yaml));
+// Custom indentation service for YAML
+const yamlIndentExtension = indentService.of((context, pos) => {
+  const prevLine = context.lineAt(pos, -1);
+
+  // Default to same as previous line
+  const prevIndent = /^\s*/.exec(prevLine.text)?.[0].length || 0;
+
+  // If previous line ends with a colon, increase indent
+  if (/:\s*$/.test(prevLine.text)) {
+    return prevIndent + 2; // Indent 2 spaces after a colon
+  }
+
+  return prevIndent;
+});
+
+// Create enhanced YAML language with custom indentation (from @codemirror/legacy-modes/mode/yaml)
+const yamlLanguageLegacy = new LanguageSupport(StreamLanguage.define(yaml), [
+  yamlIndentExtension,
+  syntaxHighlighting(oneDarkHighlightStyle),
+]);
+
 const dockerFileLanguage = new LanguageSupport(
   StreamLanguage.define(dockerFile)
 );
 const shellLanguage = new LanguageSupport(StreamLanguage.define(shell));
 
 const docTypeExtensionMap: Record<Type, LanguageSupport> = {
-  yaml: yamlLanguage,
+  yaml: yamlLanguageLegacy,
   dockerfile: dockerFileLanguage,
   shell: shellLanguage,
 };
 
+function schemaValidationExtensions(schema: JSONSchema7) {
+  // skip the hover extension because fields like 'networks' display as 'null' with no description when using the default hover
+  // skip the completion extension in favor of custom completion
+  const [yaml, linter, , , stateExtensions] = yamlSchema(schema);
+  return [
+    yaml,
+    linter,
+    autocompletion({
+      icons: false,
+      activateOnTypingDelay: 300,
+      selectOnOpen: true,
+      activateOnTyping: true,
+      override: [
+        (ctx) => {
+          const getCompletions = yamlCompletion();
+          const completions = getCompletions(ctx);
+          if (Array.isArray(completions)) {
+            return null;
+          }
+
+          completions.validFor = /^\w*$/;
+
+          return completions;
+        },
+      ],
+    }),
+    stateExtensions,
+    yamlIndentExtension,
+    syntaxHighlighting(oneDarkHighlightStyle),
+    lintGutter(),
+    keymap.of([...defaultKeymap, ...completionKeymap, ...lintKeymap]),
+  ];
+}
+
 export function CodeEditor({
   id,
-  onChange,
+  onChange = () => {},
   placeholder,
   readonly,
   value,
@@ -77,29 +147,34 @@ export function CodeEditor({
   onVersionChange,
   height = '500px',
   type,
+  schema,
   'data-cy': dataCy,
 }: Props) {
   const [isRollback, setIsRollback] = useState(false);
 
   const extensions = useMemo(() => {
-    const extensions = [];
-    if (type && docTypeExtensionMap[type]) {
-      extensions.push(docTypeExtensionMap[type]);
+    if (!type || !docTypeExtensionMap[type]) {
+      return [];
     }
-    return extensions;
-  }, [type]);
+    // YAML-specific schema validation
+    if (schema && type === 'yaml') {
+      return schemaValidationExtensions(schema);
+    }
+    // Default language support
+    return [docTypeExtensionMap[type]];
+  }, [type, schema]);
 
-  function handleVersionChange(version: number) {
-    if (versions && versions.length > 1) {
-      if (version < versions[0]) {
-        setIsRollback(true);
-      } else {
-        setIsRollback(false);
+  const handleVersionChange = useCallback(
+    (version: number) => {
+      if (versions && versions.length > 1) {
+        setIsRollback(version < versions[0]);
       }
-    }
+      onVersionChange?.(version);
+    },
+    [onVersionChange, versions]
+  );
 
-    onVersionChange?.(version);
-  }
+  const [debouncedValue, debouncedOnChange] = useDebounce(value, onChange);
 
   return (
     <>
@@ -136,15 +211,15 @@ export function CodeEditor({
       <CodeMirror
         className={styles.root}
         theme={theme}
-        value={value}
-        onChange={onChange}
+        value={debouncedValue}
+        onChange={debouncedOnChange}
         readOnly={readonly || isRollback}
         id={id}
         extensions={extensions}
         height={height}
         basicSetup={{
           highlightSelectionMatches: false,
-          autocompletion: false,
+          autocompletion: !!schema,
         }}
         data-cy={dataCy}
       />

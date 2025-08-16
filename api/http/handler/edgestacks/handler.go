@@ -22,21 +22,21 @@ type Handler struct {
 	GitService         portainer.GitService
 	edgeStacksService  *edgestackservice.Service
 	KubernetesDeployer portainer.KubernetesDeployer
+	stackCoordinator   *EdgeStackStatusUpdateCoordinator
 }
 
 // NewHandler creates a handler to manage environment(endpoint) group operations.
-func NewHandler(bouncer security.BouncerService, dataStore dataservices.DataStore, edgeStacksService *edgestackservice.Service) *Handler {
+func NewHandler(bouncer security.BouncerService, dataStore dataservices.DataStore, edgeStacksService *edgestackservice.Service, stackCoordinator *EdgeStackStatusUpdateCoordinator) *Handler {
 	h := &Handler{
 		Router:            mux.NewRouter(),
 		requestBouncer:    bouncer,
 		DataStore:         dataStore,
 		edgeStacksService: edgeStacksService,
+		stackCoordinator:  stackCoordinator,
 	}
 
 	h.Handle("/edge_stacks/create/{method}",
 		bouncer.AdminAccess(bouncer.EdgeComputeOperation(httperror.LoggerHandler(h.edgeStackCreate)))).Methods(http.MethodPost)
-	h.Handle("/edge_stacks",
-		bouncer.AdminAccess(bouncer.EdgeComputeOperation(middlewares.Deprecated(h, deprecatedEdgeStackCreateUrlParser)))).Methods(http.MethodPost) // Deprecated
 	h.Handle("/edge_stacks",
 		bouncer.AdminAccess(bouncer.EdgeComputeOperation(httperror.LoggerHandler(h.edgeStackList)))).Methods(http.MethodGet)
 	h.Handle("/edge_stacks/{id}",
@@ -53,15 +53,13 @@ func NewHandler(bouncer security.BouncerService, dataStore dataservices.DataStor
 	edgeStackStatusRouter := h.NewRoute().Subrouter()
 	edgeStackStatusRouter.Use(middlewares.WithEndpoint(h.DataStore.Endpoint(), "endpoint_id"))
 
-	edgeStackStatusRouter.PathPrefix("/edge_stacks/{id}/status/{endpoint_id}").Handler(bouncer.PublicAccess(httperror.LoggerHandler(h.edgeStackStatusDelete))).Methods(http.MethodDelete)
-
 	return h
 }
 
-func (handler *Handler) handlerDBErr(err error, msg string) *httperror.HandlerError {
+func handlerDBErr(err error, msg string) *httperror.HandlerError {
 	httpErr := httperror.InternalServerError(msg, err)
 
-	if handler.DataStore.IsErrObjectNotFound(err) {
+	if dataservices.IsErrObjectNotFound(err) {
 		httpErr.StatusCode = http.StatusNotFound
 	}
 

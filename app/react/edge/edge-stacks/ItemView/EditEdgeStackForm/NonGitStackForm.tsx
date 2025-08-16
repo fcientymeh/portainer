@@ -46,7 +46,7 @@ import { getDefaultStaggerConfig } from '../../components/StaggerFieldset.types'
 
 import { PrivateRegistryFieldsetWrapper } from './PrivateRegistryFieldsetWrapper';
 import { FormValues } from './types';
-import { useValidateEnvironmentTypes } from './useEdgeGroupHasType';
+import { useEdgeGroupHasType } from './useEdgeGroupHasType';
 import { useStaggerUpdateStatus } from './useStaggerUpdateStatus';
 import { useUpdateEdgeStackMutation } from './useUpdateEdgeStackMutation';
 import { ComposeForm } from './ComposeForm';
@@ -143,7 +143,7 @@ export function NonGitStackForm({ edgeStack }: { edgeStack: EdgeStack }) {
         updateVersion,
         webhook: values.webhookEnabled
           ? edgeStack.Webhook || createWebhookId()
-          : undefined,
+          : '',
         envVars: values.envVars,
         rollbackTo: values.rollbackTo,
         staggerConfig: values.staggerConfig,
@@ -194,7 +194,7 @@ function InnerForm({
   usePreventExit(initialValues.content, values.content, !isSaved);
 
   const { getCachedContent, setContentCache } = useCachedContent();
-  const { hasType } = useValidateEnvironmentTypes(values.edgeGroups);
+  const { hasType } = useEdgeGroupHasType(values.edgeGroups);
   const staggerUpdateStatus = useStaggerUpdateStatus(edgeStack.Id);
   const [selectedVersion, setSelectedVersion] = useState(versionOptions?.[0]);
   const selectedParallelOption =

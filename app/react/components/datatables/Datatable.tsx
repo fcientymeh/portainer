@@ -70,6 +70,7 @@ export interface Props<D extends DefaultType> extends AutomationTestingProps {
   getRowCanExpand?(row: Row<D>): boolean;
   noWidget?: boolean;
   extendTableOptions?: (options: TableOptions<D>) => TableOptions<D>;
+  includeSearch?: boolean;
 }
 
 export function Datatable<D extends DefaultType>({
@@ -98,6 +99,7 @@ export function Datatable<D extends DefaultType>({
   totalCount = dataset.length,
   isServerSidePagination = false,
   extendTableOptions = (value) => value,
+  includeSearch,
 }: Props<D> & PaginationProps) {
   const pageCount = useMemo(
     () => Math.ceil(totalCount / settings.pageSize),
@@ -125,12 +127,13 @@ export function Datatable<D extends DefaultType>({
           pageIndex: page || 0,
         },
         sorting: settings.sortBy ? [settings.sortBy] : [],
+
+        ...initialTableState,
+
         globalFilter: {
           search: settings.search,
           ...initialTableState.globalFilter,
         },
-
-        ...initialTableState,
       },
       defaultColumn: {
         enableColumnFilter: false,
@@ -170,6 +173,14 @@ export function Datatable<D extends DefaultType>({
 
   const selectedRowModel = tableInstance.getSelectedRowModel();
   const selectedItems = selectedRowModel.rows.map((row) => row.original);
+  const filteredItems = tableInstance
+    .getFilteredRowModel()
+    .rows.map((row) => row.original);
+
+  const hiddenSelectedItems = useMemo(
+    () => _.difference(selectedItems, filteredItems),
+    [selectedItems, filteredItems]
+  );
 
   return (
     <Table.Container noWidget={noWidget} aria-label={title}>
@@ -183,6 +194,7 @@ export function Datatable<D extends DefaultType>({
         renderTableActions={() => renderTableActions(selectedItems)}
         renderTableSettings={() => renderTableSettings(tableInstance)}
         data-cy={`${dataCy}-header`}
+        includeSearch={includeSearch}
       />
 
       <DatatableContent<D>
@@ -202,6 +214,7 @@ export function Datatable<D extends DefaultType>({
         pageSize={tableState.pagination.pageSize}
         pageCount={tableInstance.getPageCount()}
         totalSelected={selectedItems.length}
+        totalHiddenSelected={hiddenSelectedItems.length}
       />
     </Table.Container>
   );

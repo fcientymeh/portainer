@@ -11,11 +11,11 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	dclient "github.com/docker/docker/client"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/http/proxy/factory/utils"
@@ -52,7 +52,8 @@ type (
 		dockerClientFactory  *dockerclient.ClientFactory
 		gitService           portainer.GitService
 		snapshotService      portainer.SnapshotService
-		dockerClient         *dclient.Client
+		dockerID             string
+		mu                   sync.Mutex
 	}
 
 	// TransportParameters is used to create a new Transport
@@ -706,7 +707,7 @@ func (transport *Transport) decorateGenericResourceCreationOperation(request *ht
 	teamMemberships_aip, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(tokenData.ID)
 	team_aip, err := transport.dataStore.Team().TeamByName("READONLY")
 	if err != nil {
-		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", tokenData.Username)
+		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE] - transport.go:710", tokenData.Username)
 	}
 	for _, membership_aip := range teamMemberships_aip {
 		if membership_aip.TeamID == team_aip.ID {
@@ -875,9 +876,7 @@ func (transport *Transport) executeGenericResourceDeletionOperation(request *htt
 	}
 
 	if resourceControl != nil {
-		if err := transport.dataStore.ResourceControl().Delete(resourceControl.ID); err != nil {
-			return response, err
-		}
+		err = transport.dataStore.ResourceControl().Delete(resourceControl.ID)
 	}
 
 	if errorek == nil {

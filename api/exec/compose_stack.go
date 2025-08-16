@@ -9,27 +9,32 @@ import (
 	"strings"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/http/proxy"
 	"github.com/portainer/portainer/api/http/proxy/factory"
+	"github.com/portainer/portainer/api/internal/registryutils"
 	"github.com/portainer/portainer/api/stacks/stackutils"
 	"github.com/portainer/portainer/pkg/libstack"
 
+	"github.com/docker/cli/cli/config/types"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 // ComposeStackManager is a wrapper for docker-compose binary
 type ComposeStackManager struct {
 	deployer     libstack.Deployer
 	proxyManager *proxy.Manager
+	dataStore    dataservices.DataStore
 }
 
-// NewComposeStackManager returns a docker-compose wrapper if corresponding binary present, otherwise nil
-func NewComposeStackManager(deployer libstack.Deployer, proxyManager *proxy.Manager) (*ComposeStackManager, error) {
-
+// NewComposeStackManager returns a Compose stack manager
+func NewComposeStackManager(deployer libstack.Deployer, proxyManager *proxy.Manager, dataStore dataservices.DataStore) *ComposeStackManager {
 	return &ComposeStackManager{
 		deployer:     deployer,
 		proxyManager: proxyManager,
-	}, nil
+		dataStore:    dataStore,
+	}
 }
 
 // ComposeSyntaxMaxVersion returns the maximum supported version of the docker compose syntax
@@ -60,6 +65,7 @@ func (manager *ComposeStackManager) Up(ctx context.Context, stack *portainer.Sta
 			EnvFilePath: envFilePath,
 			Host:        url,
 			ProjectName: stack.Name,
+			Registries:  portainerRegistriesToAuthConfigs(manager.dataStore, options.Registries),
 		},
 		ForceRecreate:        options.ForceRecreate,
 		AbortOnContainerExit: options.AbortOnContainerExit,
@@ -90,6 +96,7 @@ func (manager *ComposeStackManager) Run(ctx context.Context, stack *portainer.St
 			EnvFilePath: envFilePath,
 			Host:        url,
 			ProjectName: stack.Name,
+			Registries:  portainerRegistriesToAuthConfigs(manager.dataStore, options.Registries),
 		},
 		Remove:   options.Remove,
 		Args:     options.Args,
@@ -103,8 +110,7 @@ func (manager *ComposeStackManager) Down(ctx context.Context, stack *portainer.S
 	url, proxy, err := manager.fetchEndpointProxy(endpoint)
 	if err != nil {
 		return err
-	}
-	if proxy != nil {
+	} else if proxy != nil {
 		defer proxy.Close()
 	}
 
@@ -120,12 +126,11 @@ func (manager *ComposeStackManager) Down(ctx context.Context, stack *portainer.S
 
 // Pull an image associated with a service defined in a docker-compose.yml or docker-stack.yml file,
 // but does not start containers based on those images.
-func (manager *ComposeStackManager) Pull(ctx context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
+func (manager *ComposeStackManager) Pull(ctx context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, options portainer.ComposeOptions) error {
 	url, proxy, err := manager.fetchEndpointProxy(endpoint)
 	if err != nil {
 		return err
-	}
-	if proxy != nil {
+	} else if proxy != nil {
 		defer proxy.Close()
 	}
 
@@ -140,6 +145,7 @@ func (manager *ComposeStackManager) Pull(ctx context.Context, stack *portainer.S
 		EnvFilePath: envFilePath,
 		Host:        url,
 		ProjectName: stack.Name,
+		Registries:  portainerRegistriesToAuthConfigs(manager.dataStore, options.Registries),
 	})
 	return errors.Wrap(err, "failed to pull images of the stack")
 }
@@ -178,12 +184,12 @@ func createEnvFile(stack *portainer.Stack) (string, error) {
 
 	// Copy from default .env file
 	defaultEnvPath := path.Join(stack.ProjectPath, path.Dir(stack.EntryPoint), ".env")
-	if err = copyDefaultEnvFile(envfile, defaultEnvPath); err != nil {
+	if err := copyDefaultEnvFile(envfile, defaultEnvPath); err != nil {
 		return "", err
 	}
 
 	// Copy from stack env vars
-	if err = copyConfigEnvVars(envfile, stack.Env); err != nil {
+	if err := copyConfigEnvVars(envfile, stack.Env); err != nil {
 		return "", err
 	}
 
@@ -218,4 +224,50 @@ func copyConfigEnvVars(w io.Writer, envs []portainer.Pair) error {
 		}
 	}
 	return nil
+}
+
+func portainerRegistriesToAuthConfigs(tx dataservices.DataStoreTx, registries []portainer.Registry) []types.AuthConfig {
+	var authConfigs []types.AuthConfig
+
+	for _, r := range registries {
+		ac := types.AuthConfig{
+			Username:      r.Username,
+			Password:      r.Password,
+			ServerAddress: r.URL,
+		}
+
+		if r.Authentication {
+			var err error
+
+			ac.Username, ac.Password, err = getEffectiveRegUsernamePassword(tx, &r)
+			if err != nil {
+				continue
+			}
+		}
+
+		authConfigs = append(authConfigs, ac)
+	}
+
+	return authConfigs
+}
+
+func getEffectiveRegUsernamePassword(tx dataservices.DataStoreTx, registry *portainer.Registry) (string, string, error) {
+	if err := registryutils.EnsureRegTokenValid(tx, registry); err != nil {
+		log.Warn().
+			Err(err).
+			Str("RegistryName", registry.Name).
+			Msg("Failed to validate registry token. Skip logging with this registry.")
+
+		return "", "", err
+	}
+
+	username, password, err := registryutils.GetRegEffectiveCredential(registry)
+	if err != nil {
+		log.Warn().
+			Err(err).
+			Str("RegistryName", registry.Name).
+			Msg("Failed to get effective credential. Skip logging with this registry.")
+	}
+
+	return username, password, err
 }

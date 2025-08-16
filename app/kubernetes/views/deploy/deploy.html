@@ -1,4 +1,4 @@
-<page-header ng-if="ctrl.state.viewReady" title="'Create from file'" breadcrumbs="['Deploy Kubernetes resources']" reload="true"></page-header>
+<page-header ng-if="ctrl.state.viewReady" title="'Create from code'" breadcrumbs="['Deploy Kubernetes resources']" reload="true"></page-header>
 
 <kubernetes-view-loading view-ready="ctrl.state.viewReady"></kubernetes-view-loading>
 
@@ -187,13 +187,7 @@
                 <!-- Helm -->
                 <div ng-show="ctrl.state.BuildMethod === ctrl.BuildMethods.HELM">
                   <div class="col-sm-12 form-section-title" ng-if="ctrl.state.selectedHelmChart">Selected Helm chart</div>
-                  <helm-templates-view
-                    on-select-helm-chart="(ctrl.onSelectHelmChart)"
-                    endpoint="ctrl.endpoint"
-                    namespace="ctrl.formValues.Namespace"
-                    stack-name="ctrl.formValues.StackName"
-                    name="ctrl.formValues.Name"
-                  ></helm-templates-view>
+                  <helm-templates-view on-select-helm-chart="(ctrl.onSelectHelmChart)" namespace="ctrl.formValues.Namespace" name="ctrl.formValues.Name" />
                 </div>
                 <!-- !Helm -->
 

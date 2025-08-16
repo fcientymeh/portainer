@@ -3,12 +3,12 @@ package libhelm
 import (
 	"testing"
 
-	"github.com/portainer/portainer/pkg/libhelm/libhelmtest"
+	"github.com/portainer/portainer/pkg/libhelm/test"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_ValidateHelmRepositoryURL(t *testing.T) {
-	libhelmtest.EnsureIntegrationTest(t)
+	test.EnsureIntegrationTest(t)
 	is := assert.New(t)
 
 	type testCase struct {

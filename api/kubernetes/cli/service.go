@@ -81,8 +81,8 @@ func parseService(service corev1.Service) models.K8sServiceInfo {
 	ingressStatus := make([]models.K8sServiceIngress, 0)
 	for _, status := range service.Status.LoadBalancer.Ingress {
 		ingressStatus = append(ingressStatus, models.K8sServiceIngress{
-			IP:   status.IP,
-			Host: status.Hostname,
+			IP:       status.IP,
+			Hostname: status.Hostname,
 		})
 	}
 
@@ -130,7 +130,7 @@ func (kcl *KubeClient) convertToK8sService(info models.K8sServiceInfo) corev1.Se
 	for _, i := range info.IngressStatus {
 		service.Status.LoadBalancer.Ingress = append(
 			service.Status.LoadBalancer.Ingress,
-			corev1.LoadBalancerIngress{IP: i.IP, Hostname: i.Host},
+			corev1.LoadBalancerIngress{IP: i.IP, Hostname: i.Hostname},
 		)
 	}
 
@@ -174,7 +174,7 @@ func (kcl *KubeClient) UpdateService(namespace string, info models.K8sServiceInf
 func (kcl *KubeClient) CombineServicesWithApplications(services []models.K8sServiceInfo) ([]models.K8sServiceInfo, error) {
 	if containsServiceWithSelector(services) {
 		updatedServices := make([]models.K8sServiceInfo, len(services))
-		pods, replicaSets, _, _, _, _, _, err := kcl.fetchAllPodsAndReplicaSets("", metav1.ListOptions{})
+		portainerApplicationResources, err := kcl.fetchAllApplicationsListResources("", metav1.ListOptions{})
 		if err != nil {
 			return nil, fmt.Errorf("an error occurred during the CombineServicesWithApplications operation, unable to fetch pods and replica sets. Error: %w", err)
 		}
@@ -182,7 +182,7 @@ func (kcl *KubeClient) CombineServicesWithApplications(services []models.K8sServ
 		for index, service := range services {
 			updatedService := service
 
-			application, err := kcl.GetApplicationFromServiceSelector(pods, service, replicaSets)
+			application, err := kcl.GetApplicationFromServiceSelector(portainerApplicationResources.Pods, service, portainerApplicationResources.ReplicaSets)
 			if err != nil {
 				return services, fmt.Errorf("an error occurred during the CombineServicesWithApplications operation, unable to get application from service. Error: %w", err)
 			}

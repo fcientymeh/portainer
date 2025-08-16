@@ -19,13 +19,21 @@ import { ServiceAccountsView } from '@/react/kubernetes/more-resources/ServiceAc
 import { ClusterRolesView } from '@/react/kubernetes/more-resources/ClusterRolesView';
 import { RolesView } from '@/react/kubernetes/more-resources/RolesView';
 import { VolumesView } from '@/react/kubernetes/volumes/ListView/VolumesView';
+import { NamespaceView } from '@/react/kubernetes/namespaces/ItemView/NamespaceView';
 import { AccessView } from '@/react/kubernetes/namespaces/AccessView/AccessView';
+import { JobsView } from '@/react/kubernetes/more-resources/JobsView/JobsView';
+import { ClusterView } from '@/react/kubernetes/cluster/ClusterView';
+import { HelmApplicationView } from '@/react/kubernetes/helm/HelmApplicationView';
 
 export const viewsModule = angular
   .module('portainer.kubernetes.react.views', [])
   .component(
     'kubernetesCreateNamespaceView',
     r2a(withUIRouter(withReactQuery(withCurrentUser(CreateNamespaceView))), [])
+  )
+  .component(
+    'namespaceView',
+    r2a(withUIRouter(withReactQuery(withCurrentUser(NamespaceView))), [])
   )
   .component(
     'kubernetesNamespacesView',
@@ -73,6 +81,14 @@ export const viewsModule = angular
     )
   )
   .component(
+    'kubernetesHelmApplicationView',
+    r2a(withUIRouter(withReactQuery(withCurrentUser(HelmApplicationView))), [])
+  )
+  .component(
+    'kubernetesClusterView',
+    r2a(withUIRouter(withReactQuery(withCurrentUser(ClusterView))), [])
+  )
+  .component(
     'kubernetesConfigureView',
     r2a(withUIRouter(withReactQuery(withCurrentUser(ConfigureView))), [])
   )
@@ -83,6 +99,10 @@ export const viewsModule = angular
   .component(
     'kubernetesConsoleView',
     r2a(withUIRouter(withReactQuery(withCurrentUser(ConsoleView))), [])
+  )
+  .component(
+    'jobsView',
+    r2a(withUIRouter(withReactQuery(withCurrentUser(JobsView))), [])
   )
   .component(
     'serviceAccountsView',

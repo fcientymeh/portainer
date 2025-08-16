@@ -10,9 +10,14 @@ import (
 // newSingleHostReverseProxyWithHostHeader is based on NewSingleHostReverseProxy
 // from golang.org/src/net/http/httputil/reverseproxy.go and merely sets the Host
 // HTTP header, which NewSingleHostReverseProxy deliberately preserves.
-func newSingleHostReverseProxyWithHostHeader(target *url.URL) *httputil.ReverseProxy {
+func NewSingleHostReverseProxyWithHostHeader(target *url.URL) *httputil.ReverseProxy {
+	return &httputil.ReverseProxy{Director: createDirector(target)}
+}
+
+func createDirector(target *url.URL) func(*http.Request) {
+	sensitiveHeaders := []string{"Cookie", "X-Csrf-Token"}
 	targetQuery := target.RawQuery
-	director := func(req *http.Request) {
+	return func(req *http.Request) {
 		req.URL.Scheme = target.Scheme
 		req.URL.Host = target.Host
 		req.URL.Path = singleJoiningSlash(target.Path, req.URL.Path)
@@ -26,8 +31,11 @@ func newSingleHostReverseProxyWithHostHeader(target *url.URL) *httputil.ReverseP
 			// explicitly disable User-Agent so it's not set to default value
 			req.Header.Set("User-Agent", "")
 		}
+
+		for _, header := range sensitiveHeaders {
+			delete(req.Header, header)
+		}
 	}
-	return &httputil.ReverseProxy{Director: director}
 }
 
 // singleJoiningSlash from golang.org/src/net/http/httputil/reverseproxy.go

@@ -10,13 +10,13 @@ import (
 	"github.com/portainer/portainer/api/agent"
 	"github.com/portainer/portainer/api/crypto"
 	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/internal/endpointutils"
 	"github.com/portainer/portainer/api/pendingactions"
+	endpointsutils "github.com/portainer/portainer/pkg/endpoints"
 
 	"github.com/rs/zerolog/log"
 )
 
-// Service repesents a service to manage environment(endpoint) snapshots.
+// Service represents a service to manage environment(endpoint) snapshots.
 // It provides an interface to start background snapshots as well as
 // specific Docker/Kubernetes environment(endpoint) snapshot methods.
 type Service struct {
@@ -64,7 +64,7 @@ func NewBackgroundSnapshotter(dataStore dataservices.DataStore, tunnelService po
 		}
 
 		for _, e := range endpoints {
-			if !endpointutils.IsEdgeEndpoint(&e) || e.Edge.AsyncMode || !e.UserTrusted {
+			if !endpointsutils.HasDirectConnectivity(&e) {
 				continue
 			}
 
@@ -170,32 +170,8 @@ func (service *Service) Create(snapshot portainer.Snapshot) error {
 	return service.dataStore.Snapshot().Create(&snapshot)
 }
 
-func (service *Service) FillSnapshotData(endpoint *portainer.Endpoint) error {
-	return FillSnapshotData(service.dataStore, endpoint)
-}
-
-func FillSnapshotData(tx dataservices.DataStoreTx, endpoint *portainer.Endpoint) error {
-	snapshot, err := tx.Snapshot().Read(endpoint.ID)
-	if tx.IsErrObjectNotFound(err) {
-		endpoint.Snapshots = []portainer.DockerSnapshot{}
-		endpoint.Kubernetes.Snapshots = []portainer.KubernetesSnapshot{}
-
-		return nil
-	}
-
-	if err != nil {
-		return err
-	}
-
-	if snapshot.Docker != nil {
-		endpoint.Snapshots = []portainer.DockerSnapshot{*snapshot.Docker}
-	}
-
-	if snapshot.Kubernetes != nil {
-		endpoint.Kubernetes.Snapshots = []portainer.KubernetesSnapshot{*snapshot.Kubernetes}
-	}
-
-	return nil
+func (service *Service) FillSnapshotData(endpoint *portainer.Endpoint, includeRaw bool) error {
+	return FillSnapshotData(service.dataStore, endpoint, includeRaw)
 }
 
 func (service *Service) snapshotKubernetesEndpoint(endpoint *portainer.Endpoint) error {
@@ -285,11 +261,16 @@ func (service *Service) snapshotEndpoints() error {
 
 		snapshotError := service.SnapshotEndpoint(&endpoint)
 
-		service.dataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		if err := service.dataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 			updateEndpointStatus(tx, &endpoint, snapshotError, service.pendingActionsService)
 
 			return nil
-		})
+		}); err != nil {
+			log.Error().
+				Err(err).
+				Int("endpoint_id", int(endpoint.ID)).
+				Msg("unable to update environment status")
+		}
 	}
 
 	return nil
@@ -340,12 +321,39 @@ func FetchDockerID(snapshot portainer.DockerSnapshot) (string, error) {
 		return info.ID, nil
 	}
 
-	swarmInfo := info.Swarm
-	if swarmInfo.Cluster == nil {
+	if info.Swarm.Cluster == nil {
 		return "", errors.New("swarm environment is missing cluster info snapshot")
 	}
 
-	clusterInfo := swarmInfo.Cluster
+	return info.Swarm.Cluster.ID, nil
+}
 
-	return clusterInfo.ID, nil
+func FillSnapshotData(tx dataservices.DataStoreTx, endpoint *portainer.Endpoint, includeRaw bool) error {
+	var snapshot *portainer.Snapshot
+	var err error
+
+	if includeRaw {
+		snapshot, err = tx.Snapshot().Read(endpoint.ID)
+	} else {
+		snapshot, err = tx.Snapshot().ReadWithoutSnapshotRaw(endpoint.ID)
+	}
+
+	if tx.IsErrObjectNotFound(err) {
+		endpoint.Snapshots = []portainer.DockerSnapshot{}
+		endpoint.Kubernetes.Snapshots = []portainer.KubernetesSnapshot{}
+
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	if snapshot.Docker != nil {
+		endpoint.Snapshots = []portainer.DockerSnapshot{*snapshot.Docker}
+	}
+
+	if snapshot.Kubernetes != nil {
+		endpoint.Kubernetes.Snapshots = []portainer.KubernetesSnapshot{*snapshot.Kubernetes}
+	}
+
+	return nil
 }

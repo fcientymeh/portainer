@@ -42,6 +42,7 @@ import (
 // Store defines the implementation of portainer.DataStore using
 // BoltDB as the storage system.
 type Store struct {
+	flags      *portainer.CLIFlags
 	connection portainer.Connection
 
 	fileService               portainer.FileService
@@ -99,7 +100,9 @@ func (store *Store) initServices() error {
 	}
 	store.EndpointRelationService = endpointRelationService
 
-	edgeStackService, err := edgestack.NewService(store.connection, endpointRelationService.InvalidateEdgeCacheForEdgeStack)
+	edgeStackService, err := edgestack.NewService(store.connection, func(tx portainer.Transaction, ID portainer.EdgeStackID) {
+		endpointRelationService.Tx(tx).InvalidateEdgeCacheForEdgeStack(ID)
+	})
 	if err != nil {
 		return err
 	}

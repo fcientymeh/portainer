@@ -2,27 +2,41 @@ package compose
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"maps"
-	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 
+	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/pkg/libstack"
 
-	"github.com/compose-spec/compose-go/v2/dotenv"
-	"github.com/compose-spec/compose-go/v2/loader"
+	"github.com/compose-spec/compose-go/v2/cli"
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
+	cmdcompose "github.com/docker/compose/v2/cmd/compose"
 	"github.com/docker/compose/v2/pkg/api"
 	"github.com/docker/compose/v2/pkg/compose"
+	"github.com/docker/compose/v2/pkg/utils"
+	"github.com/docker/docker/registry"
 	"github.com/rs/zerolog/log"
+	"github.com/sirupsen/logrus"
 )
 
+const PortainerEdgeStackLabel = "io.portainer.edge_stack_id"
+
 var mu sync.Mutex
+
+func init() {
+	logrus.SetOutput(&LogrusToZerologWriter{})
+	logrus.SetFormatter(&logrus.TextFormatter{
+		DisableTimestamp: true,
+	})
+}
 
 func withCli(
 	ctx context.Context,
@@ -31,7 +45,7 @@ func withCli(
 ) error {
 	ctx = context.Background()
 
-	cli, err := command.NewDockerCli()
+	cli, err := command.NewDockerCli(command.WithCombinedStreams(log.Logger))
 	if err != nil {
 		return fmt.Errorf("unable to create a Docker client: %w", err)
 	}
@@ -42,14 +56,6 @@ func withCli(
 		opts.Hosts = []string{options.Host}
 	}
 
-	tempDir, err := os.MkdirTemp("", "docker-config")
-	if err != nil {
-		return fmt.Errorf("unable to create a temporary directory for the Docker config: %w", err)
-	}
-	defer os.RemoveAll(tempDir)
-
-	opts.ConfigDir = tempDir
-
 	mu.Lock()
 	if err := cli.Initialize(opts); err != nil {
 		mu.Unlock()
@@ -59,80 +65,44 @@ func withCli(
 	defer cli.Client().Close()
 
 	for _, r := range options.Registries {
-		creds := cli.ConfigFile().GetCredentialsStore(r.ServerAddress)
-
-		if err := creds.Store(r); err != nil {
-			return fmt.Errorf("unable to store the Docker credentials: %w", err)
+		if r.ServerAddress == "" || r.ServerAddress == registry.DefaultNamespace {
+			r.ServerAddress = registry.IndexServer
 		}
+
+		cli.ConfigFile().AuthConfigs[r.ServerAddress] = r
 	}
 
 	return cliFn(ctx, cli)
 }
 
-func withComposeService(
+func (c *ComposeDeployer) withComposeService(
 	ctx context.Context,
 	filePaths []string,
 	options libstack.Options,
 	composeFn func(api.Service, *types.Project) error,
 ) error {
 	return withCli(ctx, options, func(ctx context.Context, cli *command.DockerCli) error {
-		composeService := compose.NewComposeService(cli)
+		composeService := c.createComposeServiceFn(cli)
 
-		configDetails := types.ConfigDetails{
-			WorkingDir:  options.WorkingDir,
-			Environment: make(map[string]string),
-		}
-
-		for _, p := range filePaths {
-			configDetails.ConfigFiles = append(configDetails.ConfigFiles, types.ConfigFile{Filename: p})
-		}
-
-		envFile := make(map[string]string)
-
-		if options.EnvFilePath != "" {
-			env, err := dotenv.GetEnvFromFile(make(map[string]string), []string{options.EnvFilePath})
-			if err != nil {
-				return fmt.Errorf("unable to get the environment from the env file: %w", err)
-			}
-
-			maps.Copy(envFile, env)
-
-			configDetails.Environment = env
-		}
-
-		if len(configDetails.ConfigFiles) == 0 {
+		if len(filePaths) == 0 {
 			return composeFn(composeService, nil)
 		}
 
-		project, err := loader.LoadWithContext(ctx, configDetails,
-			func(o *loader.Options) {
-				o.SkipResolveEnvironment = true
-				o.ResolvePaths = !slices.Contains(options.ConfigOptions, "--no-path-resolution")
-
-				if options.ProjectName != "" {
-					o.SetProjectName(options.ProjectName, true)
-				}
-			},
-		)
+		project, err := createProject(ctx, filePaths, options)
 		if err != nil {
-			return fmt.Errorf("failed to load the compose file: %w", err)
+			return fmt.Errorf("failed to create compose project: %w", err)
 		}
 
-		if options.EnvFilePath != "" {
-			// Work around compose path handling
-			for i, service := range project.Services {
-				for j, envFile := range service.EnvFiles {
-					if !filepath.IsAbs(envFile.Path) {
-						project.Services[i].EnvFiles[j].Path = filepath.Join(project.WorkingDir, envFile.Path)
-					}
-				}
+		parallel := 0
+		if v, ok := project.Environment[cmdcompose.ComposeParallelLimit]; ok {
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return fmt.Errorf("%s must be an integer (found: %q)", cmdcompose.ComposeParallelLimit, v)
 			}
-
-			if p, err := project.WithServicesEnvironmentResolved(true); err == nil {
-				project = p
-			} else {
-				return fmt.Errorf("failed to resolve services environment: %w", err)
-			}
+			parallel = i
+		}
+		if parallel > 0 {
+			composeService.MaxConcurrency(parallel)
 		}
 
 		return composeFn(composeService, project)
@@ -141,8 +111,10 @@ func withComposeService(
 
 // Deploy creates and starts containers
 func (c *ComposeDeployer) Deploy(ctx context.Context, filePaths []string, options libstack.DeployOptions) error {
-	return withComposeService(ctx, filePaths, options.Options, func(composeService api.Service, project *types.Project) error {
-		addServiceLabels(project)
+	return c.withComposeService(ctx, filePaths, options.Options, func(composeService api.Service, project *types.Project) error {
+		addServiceLabels(project, false, options.EdgeStackID)
+
+		project = project.WithoutUnnecessaryResources()
 
 		var opts api.UpOptions
 		if options.ForceRecreate {
@@ -150,7 +122,20 @@ func (c *ComposeDeployer) Deploy(ctx context.Context, filePaths []string, option
 		}
 
 		opts.Create.RemoveOrphans = options.RemoveOrphans
-		opts.Start.CascadeStop = options.AbortOnContainerExit
+		if removeOrphans, ok := project.Environment[cmdcompose.ComposeRemoveOrphans]; ok {
+			opts.Create.RemoveOrphans = utils.StringToBool(removeOrphans)
+		}
+		if ignoreOrphans, ok := project.Environment[cmdcompose.ComposeIgnoreOrphans]; ok {
+			opts.Create.IgnoreOrphans = utils.StringToBool(ignoreOrphans)
+		}
+
+		if options.AbortOnContainerExit {
+			opts.Start.OnExit = api.CascadeStop
+		}
+
+		if err := composeService.Build(ctx, project, api.BuildOptions{}); err != nil {
+			return fmt.Errorf("compose build operation failed: %w", err)
+		}
 
 		if err := composeService.Up(ctx, project, opts); err != nil {
 			return fmt.Errorf("compose up operation failed: %w", err)
@@ -162,14 +147,31 @@ func (c *ComposeDeployer) Deploy(ctx context.Context, filePaths []string, option
 	})
 }
 
+// Run runs the given service just once, without considering dependencies
 func (c *ComposeDeployer) Run(ctx context.Context, filePaths []string, serviceName string, options libstack.RunOptions) error {
-	return withComposeService(ctx, filePaths, options.Options, func(composeService api.Service, project *types.Project) error {
-		addServiceLabels(project)
+	return c.withComposeService(ctx, filePaths, options.Options, func(composeService api.Service, project *types.Project) error {
+		addServiceLabels(project, true, 0)
+
+		for name, service := range project.Services {
+			if name == serviceName {
+				project.DisabledServices[serviceName] = service
+			}
+		}
+
+		project.Services = make(types.Services)
+
+		if err := composeService.Create(ctx, project, api.CreateOptions{RemoveOrphans: true}); err != nil {
+			return fmt.Errorf("compose create operation failed: %w", err)
+		}
+
+		maps.Copy(project.Services, project.DisabledServices)
+		project.DisabledServices = make(types.Services)
 
 		opts := api.RunOptions{
 			AutoRemove: options.Remove,
 			Command:    options.Args,
 			Detach:     options.Detached,
+			Service:    serviceName,
 		}
 
 		if _, err := composeService.RunOneOffContainer(ctx, project, opts); err != nil {
@@ -199,7 +201,7 @@ func (c *ComposeDeployer) Remove(ctx context.Context, projectName string, filePa
 
 // Pull pulls images
 func (c *ComposeDeployer) Pull(ctx context.Context, filePaths []string, options libstack.Options) error {
-	if err := withComposeService(ctx, filePaths, options, func(composeService api.Service, project *types.Project) error {
+	if err := c.withComposeService(ctx, filePaths, options, func(composeService api.Service, project *types.Project) error {
 		return composeService.Pull(ctx, project, api.PullOptions{})
 	}); err != nil {
 		return fmt.Errorf("compose pull operation failed: %w", err)
@@ -212,15 +214,16 @@ func (c *ComposeDeployer) Pull(ctx context.Context, filePaths []string, options 
 
 // Validate validates stack file
 func (c *ComposeDeployer) Validate(ctx context.Context, filePaths []string, options libstack.Options) error {
-	return withComposeService(ctx, filePaths, options, func(composeService api.Service, project *types.Project) error {
+	return c.withComposeService(ctx, filePaths, options, func(composeService api.Service, project *types.Project) error {
 		return nil
 	})
 }
 
+// Config returns the compose file with the paths resolved
 func (c *ComposeDeployer) Config(ctx context.Context, filePaths []string, options libstack.Options) ([]byte, error) {
 	var payload []byte
 
-	if err := withComposeService(ctx, filePaths, options, func(composeService api.Service, project *types.Project) error {
+	if err := c.withComposeService(ctx, filePaths, options, func(composeService api.Service, project *types.Project) error {
 		var err error
 		payload, err = project.MarshalYAML()
 		if err != nil {
@@ -235,16 +238,135 @@ func (c *ComposeDeployer) Config(ctx context.Context, filePaths []string, option
 	return payload, nil
 }
 
-func addServiceLabels(project *types.Project) {
+func (c *ComposeDeployer) GetExistingEdgeStacks(ctx context.Context) ([]libstack.EdgeStack, error) {
+	m := make(map[int]libstack.EdgeStack)
+
+	if err := c.withComposeService(ctx, nil, libstack.Options{}, func(composeService api.Service, project *types.Project) error {
+		stacks, err := composeService.List(ctx, api.ListOptions{
+			All: true,
+		})
+		if err != nil {
+			return err
+		}
+
+		for _, s := range stacks {
+			summary, err := composeService.Ps(ctx, s.Name, api.PsOptions{All: true})
+			if err != nil {
+				return err
+			}
+
+			for _, cs := range summary {
+				if sid, ok := cs.Labels[PortainerEdgeStackLabel]; ok {
+					id, err := strconv.Atoi(sid)
+					if err != nil {
+						return err
+					}
+
+					if cs.Labels[api.ProjectLabel] == "" {
+						return errors.New("invalid project label")
+					}
+
+					m[id] = libstack.EdgeStack{
+						ID:   id,
+						Name: cs.Labels[api.ProjectLabel],
+					}
+				}
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return slices.Collect(maps.Values(m)), nil
+}
+
+func addServiceLabels(project *types.Project, oneOff bool, edgeStackID portainer.EdgeStackID) {
+	oneOffLabel := "False"
+	if oneOff {
+		oneOffLabel = "True"
+	}
+
 	for i, s := range project.Services {
 		s.CustomLabels = map[string]string{
 			api.ProjectLabel:     project.Name,
 			api.ServiceLabel:     s.Name,
 			api.VersionLabel:     api.ComposeVersion,
-			api.WorkingDirLabel:  "/",
+			api.WorkingDirLabel:  project.WorkingDir,
 			api.ConfigFilesLabel: strings.Join(project.ComposeFiles, ","),
-			api.OneoffLabel:      "False",
+			api.OneoffLabel:      oneOffLabel,
 		}
+
+		if edgeStackID > 0 {
+			s.CustomLabels.Add(PortainerEdgeStackLabel, strconv.Itoa(int(edgeStackID)))
+		}
+
 		project.Services[i] = s
 	}
+}
+
+func createProject(ctx context.Context, configFilepaths []string, options libstack.Options) (*types.Project, error) {
+	var workingDir string
+	if len(configFilepaths) > 0 {
+		workingDir = filepath.Dir(configFilepaths[0])
+	}
+
+	if options.ProjectDir != "" {
+		// When relative paths are used in the compose file, the project directory is used as the base path
+		workingDir = options.ProjectDir
+	}
+
+	var envFiles []string
+	if options.EnvFilePath != "" {
+		envFiles = append(envFiles, options.EnvFilePath)
+	}
+
+	projectOptions, err := cli.NewProjectOptions(configFilepaths,
+		cli.WithWorkingDirectory(workingDir),
+		cli.WithName(options.ProjectName),
+		cli.WithoutEnvironmentResolution,
+		cli.WithResolvedPaths(!slices.Contains(options.ConfigOptions, "--no-path-resolution")),
+		cli.WithEnv(options.Env),
+		cli.WithEnvFiles(envFiles...),
+		func(o *cli.ProjectOptions) error {
+			if len(o.EnvFiles) > 0 {
+				return nil
+			}
+
+			if fs, ok := o.Environment[cmdcompose.ComposeEnvFiles]; ok {
+				o.EnvFiles = strings.Split(fs, ",")
+			}
+			return nil
+		},
+		cli.WithDotEnv,
+		cli.WithDefaultProfiles(),
+		cli.WithConfigFileEnv,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load the compose file options : %w", err)
+	}
+
+	project, err := projectOptions.LoadProject(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load the compose file : %w", err)
+	}
+
+	// Work around compose path handling
+	for i, service := range project.Services {
+		for j, envFile := range service.EnvFiles {
+			if !filepath.IsAbs(envFile.Path) {
+				project.Services[i].EnvFiles[j].Path = filepath.Join(workingDir, envFile.Path)
+			}
+		}
+	}
+
+	// Set the services environment variables
+	if p, err := project.WithServicesEnvironmentResolved(true); err == nil {
+		project = p
+	} else {
+		return nil, fmt.Errorf("failed to resolve services environment: %w", err)
+	}
+
+	return project, nil
 }

@@ -1,6 +1,8 @@
 package endpointrelation
 
 import (
+	"sync"
+
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/internal/edge/cache"
@@ -13,10 +15,14 @@ const BucketName = "endpoint_relations"
 
 // Service represents a service for managing environment(endpoint) relation data.
 type Service struct {
-	connection      portainer.Connection
-	updateStackFn   func(ID portainer.EdgeStackID, updateFunc func(edgeStack *portainer.EdgeStack)) error
-	updateStackFnTx func(tx portainer.Transaction, ID portainer.EdgeStackID, updateFunc func(edgeStack *portainer.EdgeStack)) error
+	connection             portainer.Connection
+	updateStackFn          func(ID portainer.EdgeStackID, updateFunc func(edgeStack *portainer.EdgeStack)) error
+	updateStackFnTx        func(tx portainer.Transaction, ID portainer.EdgeStackID, updateFunc func(edgeStack *portainer.EdgeStack)) error
+	endpointRelationsCache []portainer.EndpointRelation
+	mu                     sync.Mutex
 }
+
+var _ dataservices.EndpointRelationService = &Service{}
 
 func (service *Service) BucketName() string {
 	return BucketName
@@ -76,6 +82,10 @@ func (service *Service) Create(endpointRelation *portainer.EndpointRelation) err
 	err := service.connection.CreateObjectWithId(BucketName, int(endpointRelation.EndpointID), endpointRelation)
 	cache.Del(endpointRelation.EndpointID)
 
+	service.mu.Lock()
+	service.endpointRelationsCache = nil
+	service.mu.Unlock()
+
 	return err
 }
 
@@ -92,9 +102,25 @@ func (service *Service) UpdateEndpointRelation(endpointID portainer.EndpointID, 
 
 	updatedRelationState, _ := service.EndpointRelation(endpointID)
 
+	service.mu.Lock()
+	service.endpointRelationsCache = nil
+	service.mu.Unlock()
+
 	service.updateEdgeStacksAfterRelationChange(previousRelationState, updatedRelationState)
 
 	return nil
+}
+
+func (service *Service) AddEndpointRelationsForEdgeStack(endpointIDs []portainer.EndpointID, edgeStackID portainer.EdgeStackID) error {
+	return service.connection.ViewTx(func(tx portainer.Transaction) error {
+		return service.Tx(tx).AddEndpointRelationsForEdgeStack(endpointIDs, edgeStackID)
+	})
+}
+
+func (service *Service) RemoveEndpointRelationsForEdgeStack(endpointIDs []portainer.EndpointID, edgeStackID portainer.EdgeStackID) error {
+	return service.connection.ViewTx(func(tx portainer.Transaction) error {
+		return service.Tx(tx).RemoveEndpointRelationsForEdgeStack(endpointIDs, edgeStackID)
+	})
 }
 
 // DeleteEndpointRelation deletes an Environment(Endpoint) relation object
@@ -108,25 +134,13 @@ func (service *Service) DeleteEndpointRelation(endpointID portainer.EndpointID) 
 		return err
 	}
 
+	service.mu.Lock()
+	service.endpointRelationsCache = nil
+	service.mu.Unlock()
+
 	service.updateEdgeStacksAfterRelationChange(deletedRelation, nil)
 
 	return nil
-}
-
-func (service *Service) InvalidateEdgeCacheForEdgeStack(edgeStackID portainer.EdgeStackID) {
-	rels, err := service.EndpointRelations()
-	if err != nil {
-		log.Error().Err(err).Msg("cannot retrieve endpoint relations")
-		return
-	}
-
-	for _, rel := range rels {
-		for id := range rel.EdgeStacks {
-			if edgeStackID == id {
-				cache.Del(rel.EndpointID)
-			}
-		}
-	}
 }
 
 func (service *Service) updateEdgeStacksAfterRelationChange(previousRelationState *portainer.EndpointRelation, updatedRelationState *portainer.EndpointRelation) {
