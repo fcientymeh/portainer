@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"path"
 
+	"github.com/docker/docker/client"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/http/proxy/factory/utils"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/authorization"
 	"github.com/portainer/portainer/api/internal/snapshot"
-
-	"github.com/docker/docker/client"
+	"github.com/rs/zerolog/log"
 )
 
 const volumeObjectIdentifier = "ResourceID"
