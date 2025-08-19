@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"os"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -29,21 +30,23 @@ import (
 
 const PortainerEdgeStackLabel = "io.portainer.edge_stack_id"
 
+const portainerEnvVarsPrefix = "PORTAINER_"
+
 var mu sync.Mutex
 
 func init() {
-	logrus.SetOutput(&LogrusToZerologWriter{})
+	logrus.SetOutput(LogrusToZerologWriter{})
 	logrus.SetFormatter(&logrus.TextFormatter{
 		DisableTimestamp: true,
 	})
 }
 
 func withCli(
-	ctx context.Context,
+	ctx context.Context, //nolint:staticcheck
 	options libstack.Options,
 	cliFn func(context.Context, *command.DockerCli) error,
 ) error {
-	ctx = context.Background()
+	ctx = context.Background() //nolint:staticcheck
 
 	cli, err := command.NewDockerCli(command.WithCombinedStreams(log.Logger))
 	if err != nil {
@@ -267,8 +270,9 @@ func (c *ComposeDeployer) GetExistingEdgeStacks(ctx context.Context) ([]libstack
 					}
 
 					m[id] = libstack.EdgeStack{
-						ID:   id,
-						Name: cs.Labels[api.ProjectLabel],
+						ID:       id,
+						Name:     cs.Labels[api.ProjectLabel],
+						ExitCode: cs.ExitCode,
 					}
 				}
 			}
@@ -322,11 +326,19 @@ func createProject(ctx context.Context, configFilepaths []string, options libsta
 		envFiles = append(envFiles, options.EnvFilePath)
 	}
 
+	var osPortainerEnvVars []string
+	for _, ev := range os.Environ() {
+		if strings.HasPrefix(ev, portainerEnvVarsPrefix) {
+			osPortainerEnvVars = append(osPortainerEnvVars, ev)
+		}
+	}
+
 	projectOptions, err := cli.NewProjectOptions(configFilepaths,
 		cli.WithWorkingDirectory(workingDir),
 		cli.WithName(options.ProjectName),
 		cli.WithoutEnvironmentResolution,
 		cli.WithResolvedPaths(!slices.Contains(options.ConfigOptions, "--no-path-resolution")),
+		cli.WithEnv(osPortainerEnvVars),
 		cli.WithEnv(options.Env),
 		cli.WithEnvFiles(envFiles...),
 		func(o *cli.ProjectOptions) error {

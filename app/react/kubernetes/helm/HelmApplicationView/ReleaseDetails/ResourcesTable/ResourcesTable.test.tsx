@@ -3,8 +3,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 
 import { withTestRouter } from '@/react/test-utils/withRouter';
 import { withTestQueryProvider } from '@/react/test-utils/withTestQuery';
-
-import { GenericResource } from '../../../types';
+import { GenericResource } from '@/react/kubernetes/helm/types';
 
 import { ResourcesTable } from './ResourcesTable';
 
@@ -22,7 +21,7 @@ vi.mock('@/react/hooks/useEnvironmentId', () => ({
   useEnvironmentId: () => mockUseEnvironmentId(),
 }));
 
-vi.mock('../../queries/useHelmRelease', () => ({
+vi.mock('@/react/kubernetes/helm/helmReleaseQueries/useHelmRelease', () => ({
   useHelmRelease: () => mockUseHelmRelease(),
 }));
 
@@ -167,9 +166,13 @@ describe('ResourcesTable', () => {
     );
 
     // Check that success badge is rendered
-    const successBadge = screen.getByText('MinimumReplicasAvailable');
+    const successBadge = screen.getByText(
+      (content, element) =>
+        content.includes('MinimumReplicasAvailable') &&
+        element !== null &&
+        element.className.includes('bg-success')
+    );
     expect(successBadge).toBeInTheDocument();
-    expect(successBadge.className).toContain('bg-success');
   });
 
   it('should show error badges for failed resources', () => {
@@ -177,8 +180,12 @@ describe('ResourcesTable', () => {
     expect(screen.getByText('probe-failure-nginx-bad')).toBeInTheDocument();
 
     // Check for the unhealthy status badge and make sure it has the error styling
-    const errorBadge = screen.getByText('InsufficientPods');
+    const errorBadge = screen.getByText(
+      (content, element) =>
+        content.includes('InsufficientPods') &&
+        element !== null &&
+        element.className.includes('bg-error')
+    );
     expect(errorBadge).toBeInTheDocument();
-    expect(errorBadge.className).toContain('bg-error');
   });
 });

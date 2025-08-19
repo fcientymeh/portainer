@@ -3,6 +3,7 @@ package libkubectl
 import (
 	"bytes"
 	"errors"
+	"fmt"
 
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/genericiooptions"
@@ -41,8 +42,8 @@ func NewClient(libKubectlAccess *ClientAccess, namespace, kubeconfig string, ins
 // If server and token are provided, they will be used to connect to the cluster
 // If neither kubeconfigPath or server and token are provided, an error will be returned
 func generateConfigFlags(token, server, namespace, kubeconfigPath string, insecure bool) (*genericclioptions.ConfigFlags, error) {
-	if kubeconfigPath == "" && (server == "" || token == "") {
-		return nil, errors.New("must provide either a kubeconfig path or a server and token")
+	if kubeconfigPath == "" && server == "" {
+		return nil, errors.New("must provide either a kubeconfig path or a server")
 	}
 
 	configFlags := genericclioptions.NewConfigFlags(true)
@@ -60,4 +61,8 @@ func generateConfigFlags(token, server, namespace, kubeconfigPath string, insecu
 	configFlags.Insecure = &insecure
 
 	return configFlags, nil
+}
+
+func newKubectlFatalError(code int, msg string) error {
+	return fmt.Errorf("kubectl fatal error (exit code %d): %s", code, msg)
 }

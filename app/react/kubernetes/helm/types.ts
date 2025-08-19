@@ -16,6 +16,7 @@ export interface GenericResource {
   metadata: {
     name: string;
     namespace?: string;
+    uid?: string;
   };
   status: ResourceStatus;
 }
@@ -29,6 +30,7 @@ export interface HelmRelease {
     notes?: string;
     description?: string;
     resources?: GenericResource[];
+    last_deployed: string;
   };
   /** The chart that was released */
   chart: HelmChart;
@@ -85,17 +87,19 @@ export interface HelmChartResponse {
   annotations?: {
     category?: string;
   };
+  version: string;
+  versions: string[];
 }
 
-export interface HelmRepositoryResponse {
+export interface HelmRegistryResponse {
   Id: number;
   UserId: number;
   URL: string;
 }
 
-export interface HelmRepositoriesResponse {
+export interface HelmRegistriesResponse {
   GlobalRepository: string;
-  UserRepositories: HelmRepositoryResponse[];
+  UserRepositories: HelmRegistryResponse[];
 }
 
 export interface HelmChartsResponse {
@@ -104,10 +108,13 @@ export interface HelmChartsResponse {
   generated: string;
 }
 
-export type InstallChartPayload = {
-  Name: string;
-  Repo: string;
-  Chart: string;
-  Values: string;
-  Namespace: string;
-};
+export interface UpdateHelmReleasePayload {
+  namespace: string;
+  values?: string;
+  repo: string;
+  name: string;
+  chart: string;
+  appVersion?: string;
+  version?: string;
+  atomic?: boolean;
+}

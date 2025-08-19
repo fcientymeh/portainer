@@ -34,7 +34,7 @@ type helmMockPackageManager struct{}
 
 // NewMockHelmPackageManager initializes a new HelmPackageManager service (a mock instance)
 func NewMockHelmPackageManager() types.HelmPackageManager {
-	return &helmMockPackageManager{}
+	return helmMockPackageManager{}
 }
 
 var mockCharts = []release.ReleaseElement{}
@@ -58,34 +58,35 @@ func newMockRelease(re *release.ReleaseElement) *release.Release {
 }
 
 // Install a helm chart (not thread safe)
-func (hpm *helmMockPackageManager) Install(installOpts options.InstallOptions) (*release.Release, error) {
-
+func (hpm helmMockPackageManager) Install(installOpts options.InstallOptions) (*release.Release, error) {
 	releaseElement := newMockReleaseElement(installOpts)
 
 	// Enforce only one chart with the same name per namespace
 	for i, rel := range mockCharts {
 		if rel.Name == installOpts.Name && rel.Namespace == installOpts.Namespace {
 			mockCharts[i] = *releaseElement
+
 			return newMockRelease(releaseElement), nil
 		}
 	}
 
 	mockCharts = append(mockCharts, *releaseElement)
+
 	return newMockRelease(releaseElement), nil
 }
 
 // Upgrade a helm chart (not thread safe)
-func (hpm *helmMockPackageManager) Upgrade(upgradeOpts options.InstallOptions) (*release.Release, error) {
+func (hpm helmMockPackageManager) Upgrade(upgradeOpts options.InstallOptions) (*release.Release, error) {
 	return hpm.Install(upgradeOpts)
 }
 
 // Rollback a helm chart (not thread safe)
-func (hpm *helmMockPackageManager) Rollback(rollbackOpts options.RollbackOptions) (*release.Release, error) {
-	return hpm.Rollback(rollbackOpts)
+func (hpm helmMockPackageManager) Rollback(rollbackOpts options.RollbackOptions) (*release.Release, error) {
+	return nil, nil
 }
 
 // Show values/readme/chart etc
-func (hpm *helmMockPackageManager) Show(showOpts options.ShowOptions) ([]byte, error) {
+func (hpm helmMockPackageManager) Show(showOpts options.ShowOptions) ([]byte, error) {
 	switch showOpts.OutputFormat {
 	case options.ShowChart:
 		return []byte(MockDataChart), nil
@@ -94,33 +95,36 @@ func (hpm *helmMockPackageManager) Show(showOpts options.ShowOptions) ([]byte, e
 	case options.ShowValues:
 		return []byte(MockDataValues), nil
 	}
+
 	return nil, nil
 }
 
 // Uninstall a helm chart (not thread safe)
-func (hpm *helmMockPackageManager) Uninstall(uninstallOpts options.UninstallOptions) error {
+func (hpm helmMockPackageManager) Uninstall(uninstallOpts options.UninstallOptions) error {
 	for i, rel := range mockCharts {
 		if rel.Name == uninstallOpts.Name && rel.Namespace == uninstallOpts.Namespace {
 			mockCharts = slices.Delete(mockCharts, i, i+1)
 		}
 	}
+
 	return nil
 }
 
 // List a helm chart (not thread safe)
-func (hpm *helmMockPackageManager) List(listOpts options.ListOptions) ([]release.ReleaseElement, error) {
+func (hpm helmMockPackageManager) List(listOpts options.ListOptions) ([]release.ReleaseElement, error) {
 	return mockCharts, nil
 }
 
 // Get a helm release (not thread safe)
-func (hpm *helmMockPackageManager) Get(getOpts options.GetOptions) (*release.Release, error) {
+func (hpm helmMockPackageManager) Get(getOpts options.GetOptions) (*release.Release, error) {
 	index := slices.IndexFunc(mockCharts, func(re release.ReleaseElement) bool {
 		return re.Name == getOpts.Name && re.Namespace == getOpts.Namespace
 	})
+
 	return newMockRelease(&mockCharts[index]), nil
 }
 
-func (hpm *helmMockPackageManager) GetHistory(historyOpts options.HistoryOptions) ([]*release.Release, error) {
+func (hpm helmMockPackageManager) GetHistory(historyOpts options.HistoryOptions) ([]*release.Release, error) {
 	var result []*release.Release
 	for i, v := range mockCharts {
 		if v.Name == historyOpts.Name && v.Namespace == historyOpts.Namespace {
@@ -154,13 +158,12 @@ entries:
     version: 1.0.6
 generated: "2020-08-19T00:00:46.754739363Z"`
 
-func (hbpm *helmMockPackageManager) SearchRepo(searchRepoOpts options.SearchRepoOptions) ([]byte, error) {
+func (hbpm helmMockPackageManager) SearchRepo(searchRepoOpts options.SearchRepoOptions) ([]byte, error) {
 	// Always return the same repo data no matter what
 	reader := strings.NewReader(mockPortainerIndex)
 
 	var file release.File
-	err := yaml.NewDecoder(reader).Decode(&file)
-	if err != nil {
+	if err := yaml.NewDecoder(reader).Decode(&file); err != nil {
 		return nil, errors.Wrap(err, "failed to decode index file")
 	}
 

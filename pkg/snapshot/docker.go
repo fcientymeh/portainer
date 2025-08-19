@@ -14,9 +14,9 @@ import (
 	networkingutils "github.com/portainer/portainer/pkg/networking"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	_container "github.com/docker/docker/api/types/container"
+	dockercontainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -100,7 +100,10 @@ func dockerSnapshotNodes(snapshot *portainer.DockerSnapshot, cli *client.Client)
 
 	snapshot.TotalCPU = int(nanoCpus / 1e9)
 	snapshot.TotalMemory = totalMem
-	snapshot.NodeCount = len(nodes)
+	snapshot.NodeCount = 1
+	if snapshot.Swarm {
+		snapshot.NodeCount = len(nodes)
+	}
 
 	return nil
 }
@@ -128,7 +131,7 @@ func dockerSnapshotSwarmServices(snapshot *portainer.DockerSnapshot, cli *client
 }
 
 func dockerSnapshotContainers(snapshot *portainer.DockerSnapshot, cli *client.Client) error {
-	containers, err := cli.ContainerList(context.Background(), container.ListOptions{All: true})
+	containers, err := cli.ContainerList(context.Background(), dockercontainer.ListOptions{All: true})
 	if err != nil {
 		return err
 	}
@@ -170,11 +173,16 @@ func dockerSnapshotContainers(snapshot *portainer.DockerSnapshot, cli *client.Cl
 
 		containerEnvs[container.ID] = response.Config.Env
 
-		var gpuOptions *_container.DeviceRequest
+		var gpuOptions *dockercontainer.DeviceRequest
 
-		for _, deviceRequest := range response.HostConfig.Resources.DeviceRequests {
-			if deviceRequest.Driver == "nvidia" || deviceRequest.Capabilities[0][0] == "gpu" {
-				gpuOptions = &deviceRequest
+		if response.HostConfig != nil {
+			for _, deviceRequest := range response.HostConfig.DeviceRequests {
+				if deviceRequest.Driver == "nvidia" ||
+					(len(deviceRequest.Capabilities) > 0 &&
+						len(deviceRequest.Capabilities[0]) > 0 &&
+						deviceRequest.Capabilities[0][0] == "gpu") {
+					gpuOptions = &deviceRequest
+				}
 			}
 		}
 
@@ -240,7 +248,7 @@ func dockerSnapshotVolumes(snapshot *portainer.DockerSnapshot, cli *client.Clien
 }
 
 func dockerSnapshotNetworks(snapshot *portainer.DockerSnapshot, cli *client.Client) error {
-	networks, err := cli.NetworkList(context.Background(), types.NetworkListOptions{})
+	networks, err := cli.NetworkList(context.Background(), network.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -298,7 +306,7 @@ func dockerSnapshotContainerErrorLogs(snapshot *portainer.DockerSnapshot, cli *c
 		return nil
 	}
 
-	rd, err := cli.ContainerLogs(context.Background(), containerId, container.LogsOptions{
+	rd, err := cli.ContainerLogs(context.Background(), containerId, dockercontainer.LogsOptions{
 		ShowStdout: false,
 		ShowStderr: true,
 		Tail:       "5",

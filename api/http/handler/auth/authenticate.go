@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	portainer "github.com/portainer/portainer/api"
@@ -176,18 +177,18 @@ func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, user st
 	}
 	if statusCode != 200 {
 		//log.Printf("Response failed with status code: %d \nReason: %s\n", res.StatusCode, body)
-		log.Printf("Unauthorized access! Invalid credentials ")
+		log.Printf("Unauthorized access! Invalid credentials - authenticate.go:180")
 		return &httperror.HandlerError{http.StatusUnprocessableEntity, "Invalid credentials", httperrors.ErrUnauthorized}
 	}
 	if statusCode == 200 {
-		log.Printf("User authorization OK")
+		log.Printf("User authorization OK - authenticate.go:184")
 		//		fmt.Printf("%s", res.StatusCode)
 		//		fmt.Printf("%s", body)
 		var userData userOD
 		json.Unmarshal([]byte(bodyRes), &userData)
-		log.Printf("JSON response validation OK")
-		log.Printf("Auth username: %s", userData.Name)
-		log.Printf("Auth user roles: %s", userData.BackendRoles)
+		log.Printf("JSON response validation OK - authenticate.go:189")
+		log.Printf("Auth username: %s - authenticate.go:190", userData.Name)
+		log.Printf("Auth user roles: %s - authenticate.go:191", userData.BackendRoles)
 		var odRole = portainer.StandardUserRole //defaultowo
 		var readonlyRole int
 		readonlyRole = 0
@@ -299,6 +300,13 @@ func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, user st
 		}
 	} else {
 		return &httperror.HandlerError{http.StatusUnprocessableEntity, "System or application error. Contact with AISecLab support team", httperrors.ErrUnauthorized}
+	// Clear any existing user caches
+	if user != nil {
+		handler.KubernetesClientFactory.ClearUserClientCache(strconv.Itoa(int(user.ID)))
+	}
+
+	if user != nil && isUserInitialAdmin(user) || settings.AuthenticationMethod == portainer.AuthenticationInternal {
+		return handler.authenticateInternal(rw, user, payload.Password)
 	}
 
 }

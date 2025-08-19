@@ -11,9 +11,9 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 )
 
-// GetHelmValuesFromFile reads the values file and parses it into a map[string]any
+// getHelmValuesFromFile reads the values file and parses it into a map[string]any
 // and returns the map.
-func (hspm *HelmSDKPackageManager) GetHelmValuesFromFile(valuesFile string) (map[string]any, error) {
+func (hspm *HelmSDKPackageManager) getHelmValuesFromFile(valuesFile string) (map[string]any, error) {
 	var vals map[string]any
 	if valuesFile != "" {
 		log.Debug().
@@ -62,8 +62,7 @@ func (hspm *HelmSDKPackageManager) getValues(getOpts options.GetOptions) (releas
 		return release.Values{}, err
 	}
 
-	// Create client for user supplied values
-	userValuesClient := action.NewGetValues(actionConfig)
+	userValuesClient := hspm.initValuesClient(actionConfig, getOpts)
 	userSuppliedValues, err := userValuesClient.Run(getOpts.Name)
 	if err != nil {
 		log.Error().
@@ -115,4 +114,12 @@ func (hspm *HelmSDKPackageManager) getValues(getOpts options.GetOptions) (releas
 		UserSuppliedValues: userSuppliedValuesString,
 		ComputedValues:     computedValuesString,
 	}, nil
+}
+
+func (hspm *HelmSDKPackageManager) initValuesClient(actionConfig *action.Configuration, getOpts options.GetOptions) *action.GetValues {
+	valuesClient := action.NewGetValues(actionConfig)
+	if getOpts.Revision > 0 {
+		valuesClient.Version = getOpts.Revision
+	}
+	return valuesClient
 }

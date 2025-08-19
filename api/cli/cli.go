@@ -61,11 +61,13 @@ func CLIFlags() *portainer.CLIFlags {
 		LogMode:                   kingpin.Flag("log-mode", "Set the logging output mode").Default("PRETTY").Enum("NOCOLOR", "PRETTY", "JSON"),
 		KubectlShellImage:         kingpin.Flag("kubectl-shell-image", "Kubectl shell image").Envar(portainer.KubectlShellImageEnvVar).Default(portainer.DefaultKubectlShellImage).String(),
 		PullLimitCheckDisabled:    kingpin.Flag("pull-limit-check-disabled", "Pull limit check").Envar(portainer.PullLimitCheckDisabledEnvVar).Default(defaultPullLimitCheckDisabled).Bool(),
+		TrustedOrigins:            kingpin.Flag("trusted-origins", "List of trusted origins for CSRF protection. Separate multiple origins with a comma.").Envar(portainer.TrustedOriginsEnvVar).String(),
+		CSP:                       kingpin.Flag("csp", "Content Security Policy (CSP) header").Envar(portainer.CSPEnvVar).Default("true").Bool(),
 	}
 }
 
 // ParseFlags parse the CLI flags and return a portainer.Flags struct
-func (*Service) ParseFlags(version string) (*portainer.CLIFlags, error) {
+func (Service) ParseFlags(version string) (*portainer.CLIFlags, error) {
 	kingpin.Version(version)
 
 	flags := CLIFlags()
@@ -85,7 +87,7 @@ func (*Service) ParseFlags(version string) (*portainer.CLIFlags, error) {
 }
 
 // ValidateFlags validates the values of the flags.
-func (*Service) ValidateFlags(flags *portainer.CLIFlags) error {
+func (Service) ValidateFlags(flags *portainer.CLIFlags) error {
 	displayDeprecationWarnings(flags)
 
 	if err := validateEndpointURL(*flags.EndpointURL); err != nil {

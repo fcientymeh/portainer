@@ -49,7 +49,6 @@ func (service *Service) BuildEdgeStack(
 		DeploymentType:        deploymentType,
 		CreationDate:          time.Now().Unix(),
 		EdgeGroups:            edgeGroups,
-		Status:                make(map[portainer.EndpointID]portainer.EdgeStackStatus, 0),
 		Version:               1,
 		UseManifestNamespaces: useManifestNamespaces,
 	}, nil
@@ -104,7 +103,15 @@ func (service *Service) PersistEdgeStack(
 		return nil, err
 	}
 
-	if err := tx.EndpointRelation().AddEndpointRelationsForEdgeStack(relatedEndpointIds, stack.ID); err != nil {
+	for _, endpointID := range relatedEndpointIds {
+		status := &portainer.EdgeStackStatusForEnv{EndpointID: endpointID}
+
+		if err := tx.EdgeStackStatus().Create(stack.ID, endpointID, status); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := tx.EndpointRelation().AddEndpointRelationsForEdgeStack(relatedEndpointIds, stack); err != nil {
 		return nil, fmt.Errorf("unable to add endpoint relations: %w", err)
 	}
 
@@ -122,9 +129,6 @@ func (service *Service) updateEndpointRelations(tx dataservices.DataStoreTx, edg
 	for _, endpointID := range relatedEndpointIds {
 		relation, err := endpointRelationService.EndpointRelation(endpointID)
 		if err != nil {
-			if tx.IsErrObjectNotFound(err) {
-				continue
-			}
 			return fmt.Errorf("unable to find endpoint relation in database: %w", err)
 		}
 
@@ -156,6 +160,10 @@ func (service *Service) DeleteEdgeStack(tx dataservices.DataStoreTx, edgeStackID
 
 	if err := tx.EdgeStack().DeleteEdgeStack(edgeStackID); err != nil {
 		return errors.WithMessage(err, "Unable to remove the edge stack from the database")
+	}
+
+	if err := tx.EdgeStackStatus().DeleteAll(edgeStackID); err != nil {
+		return errors.WithMessage(err, "unable to remove edge stack statuses from the database")
 	}
 
 	return nil

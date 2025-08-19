@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -351,6 +352,34 @@ func (kcl *KubeClient) DeleteNamespace(namespaceName string) (*corev1.Namespace,
 	return namespace, nil
 }
 
+// CombineNamespacesWithUnhealthyEvents combines namespaces with unhealthy events across all namespaces
+func (kcl *KubeClient) CombineNamespacesWithUnhealthyEvents(namespaces map[string]portainer.K8sNamespaceInfo) (map[string]portainer.K8sNamespaceInfo, error) {
+	allEvents, err := kcl.GetEvents("", "")
+	if err != nil && !k8serrors.IsNotFound(err) {
+		log.Error().
+			Str("context", "CombineNamespacesWithUnhealthyEvents").
+			Err(err).
+			Msg("unable to retrieve unhealthy events from the Kubernetes for an admin user")
+		return nil, err
+	}
+
+	unhealthyEventCounts := make(map[string]int)
+	for _, event := range allEvents {
+		if event.Type == "Warning" {
+			unhealthyEventCounts[event.Namespace]++
+		}
+	}
+
+	for namespaceName, namespace := range namespaces {
+		if count, exists := unhealthyEventCounts[namespaceName]; exists {
+			namespace.UnhealthyEventCount = count
+			namespaces[namespaceName] = namespace
+		}
+	}
+
+	return namespaces, nil
+}
+
 // CombineNamespacesWithResourceQuotas combines namespaces with resource quotas where matching is based on "portainer-rq-"+namespace.Name
 func (kcl *KubeClient) CombineNamespacesWithResourceQuotas(namespaces map[string]portainer.K8sNamespaceInfo, w http.ResponseWriter) *httperror.HandlerError {
 	resourceQuotas, err := kcl.GetResourceQuotas("")
@@ -408,6 +437,11 @@ func (kcl *KubeClient) ConvertNamespaceMapToSlice(namespaces map[string]portaine
 	for _, namespace := range namespaces {
 		namespaceSlice = append(namespaceSlice, namespace)
 	}
+
+	// Sort namespaces by name
+	sort.Slice(namespaceSlice, func(i, j int) bool {
+		return namespaceSlice[i].Name < namespaceSlice[j].Name
+	})
 
 	return namespaceSlice
 }

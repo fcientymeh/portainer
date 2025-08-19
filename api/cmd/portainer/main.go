@@ -51,9 +51,11 @@ import (
 	"github.com/portainer/portainer/api/stacks/deployments"
 	"github.com/portainer/portainer/pkg/build"
 	"github.com/portainer/portainer/pkg/featureflags"
+	"github.com/portainer/portainer/pkg/fips"
 	"github.com/portainer/portainer/pkg/libhelm"
 	libhelmtypes "github.com/portainer/portainer/pkg/libhelm/types"
 	"github.com/portainer/portainer/pkg/libstack/compose"
+	"github.com/portainer/portainer/pkg/validate"
 
 	gelf_udp "github.com/Graylog2/go-gelf/gelf"
 	"github.com/gofrs/uuid"
@@ -64,7 +66,7 @@ import (
 )
 
 func initCLI() *portainer.CLIFlags {
-	cliService := &cli.Service{}
+	cliService := cli.Service{}
 
 	flags, err := cliService.ParseFlags(portainer.APIVersion)
 	if err != nil {
@@ -173,8 +175,8 @@ func checkDBSchemaServerVersionMatch(dbStore dataservices.DataStore, serverVersi
 	return v.SchemaVersion == serverVersion && v.Edition == serverEdition
 }
 
-func initKubernetesDeployer(kubernetesTokenCacheManager *kubeproxy.TokenCacheManager, kubernetesClientFactory *kubecli.ClientFactory, dataStore dataservices.DataStore, reverseTunnelService portainer.ReverseTunnelService, signatureService portainer.DigitalSignatureService, proxyManager *proxy.Manager, assetsPath string) portainer.KubernetesDeployer {
-	return exec.NewKubernetesDeployer(kubernetesTokenCacheManager, kubernetesClientFactory, dataStore, reverseTunnelService, signatureService, proxyManager, assetsPath)
+func initKubernetesDeployer(kubernetesTokenCacheManager *kubeproxy.TokenCacheManager, kubernetesClientFactory *kubecli.ClientFactory, dataStore dataservices.DataStore, reverseTunnelService portainer.ReverseTunnelService, signatureService portainer.DigitalSignatureService, proxyManager *proxy.Manager) portainer.KubernetesDeployer {
+	return exec.NewKubernetesDeployer(kubernetesTokenCacheManager, kubernetesClientFactory, dataStore, reverseTunnelService, signatureService, proxyManager)
 }
 
 func initHelmPackageManager() (libhelmtypes.HelmPackageManager, error) {
@@ -311,8 +313,19 @@ func initKeyPair(fileService portainer.FileService, signatureService portainer.D
 	return generateAndStoreKeyPair(fileService, signatureService)
 }
 
+// dbSecretPath build the path to the file that contains the db encryption
+// secret. Normally in Docker this is built from the static path inside
+// /run/portainer for example: /run/portainer/<keyFilenameFlag> but for ease of
+// use outside Docker it also accepts an absolute path
+func dbSecretPath(keyFilenameFlag string) string {
+	if path.IsAbs(keyFilenameFlag) {
+		return keyFilenameFlag
+	}
+	return path.Join("/run/portainer", keyFilenameFlag)
+}
+
 func loadEncryptionSecretKey(keyfilename string) []byte {
-	content, err := os.ReadFile(path.Join("/run/secrets", keyfilename))
+	content, err := os.ReadFile(keyfilename)
 	if err != nil {
 		if os.IsNotExist(err) {
 			log.Info().Str("filename", keyfilename).Msg("encryption key file not present")
@@ -324,6 +337,7 @@ func loadEncryptionSecretKey(keyfilename string) []byte {
 	}
 
 	// return a 32 byte hash of the secret (required for AES)
+	// fips compliant version of this is not implemented in -ce
 	hash := sha256.Sum256(content)
 
 	return hash[:]
@@ -336,8 +350,23 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 		featureflags.Parse(*flags.FeatureFlags, portainer.SupportedFeatureFlags)
 	}
 
+	trustedOrigins := []string{}
+	if *flags.TrustedOrigins != "" {
+		// validate if the trusted origins are valid urls
+		for _, origin := range strings.Split(*flags.TrustedOrigins, ",") {
+			if !validate.IsTrustedOrigin(origin) {
+				log.Fatal().Str("trusted_origin", origin).Msg("invalid url for trusted origin. Please check the trusted origins flag.")
+			}
+
+			trustedOrigins = append(trustedOrigins, origin)
+		}
+	}
+
+	// -ce can not ever be run in FIPS mode
+	fips.InitFIPS(false)
+
 	fileService := initFileService(*flags.Data)
-	encryptionKey := loadEncryptionSecretKey(*flags.SecretKeyName)
+	encryptionKey := loadEncryptionSecretKey(dbSecretPath(*flags.SecretKeyName))
 	if encryptionKey == nil {
 		log.Info().Msg("proceeding without encryption key")
 	}
@@ -370,15 +399,16 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 		log.Fatal().Err(err).Msg("failed initializing JWT service")
 	}
 
-	ldapService := &ldap.Service{}
+	ldapService := ldap.Service{}
 
 	oauthService := oauth.NewService()
 
 	gitService := git.NewService(shutdownCtx)
 
-	openAMTService := openamt.NewService()
+	// Setting insecureSkipVerify to true to preserve the old behaviour.
+	openAMTService := openamt.NewService(true)
 
-	cryptoService := &crypto.Service{}
+	cryptoService := crypto.Service{}
 
 	signatureService := initDigitalSignatureService()
 
@@ -429,7 +459,7 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 		log.Fatal().Err(err).Msg("failed initializing swarm stack manager")
 	}
 
-	kubernetesDeployer := initKubernetesDeployer(kubernetesTokenCacheManager, kubernetesClientFactory, dataStore, reverseTunnelService, signatureService, proxyManager, *flags.Assets)
+	kubernetesDeployer := initKubernetesDeployer(kubernetesTokenCacheManager, kubernetesClientFactory, dataStore, reverseTunnelService, signatureService, proxyManager)
 
 	pendingActionsService := pendingactions.NewService(dataStore, kubernetesClientFactory)
 	pendingActionsService.RegisterHandler(actions.CleanNAPWithOverridePolicies, handlers.NewHandlerCleanNAPWithOverridePolicies(authorizationService, dataStore))
@@ -443,7 +473,7 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 
 	snapshotService.Start()
 
-	proxyManager.NewProxyFactory(dataStore, signatureService, reverseTunnelService, dockerClientFactory, kubernetesClientFactory, kubernetesTokenCacheManager, gitService, snapshotService)
+	proxyManager.NewProxyFactory(dataStore, signatureService, reverseTunnelService, dockerClientFactory, kubernetesClientFactory, kubernetesTokenCacheManager, gitService, snapshotService, jwtService)
 
 	helmPackageManager, err := initHelmPackageManager()
 	if err != nil {
@@ -551,6 +581,7 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 		Status:                      applicationStatus,
 		BindAddress:                 *flags.Addr,
 		BindAddressHTTPS:            *flags.AddrHTTPS,
+		CSP:                         *flags.CSP,
 		HTTPEnabled:                 sslDBSettings.HTTPEnabled,
 		AssetsPath:                  *flags.Assets,
 		DataStore:                   dataStore,
@@ -584,6 +615,7 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 		PendingActionsService:       pendingActionsService,
 		PlatformService:             platformService,
 		PullLimitCheckDisabled:      *flags.PullLimitCheckDisabled,
+		TrustedOrigins:              trustedOrigins,
 	}
 }
 

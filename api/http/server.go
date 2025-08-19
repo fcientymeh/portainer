@@ -77,6 +77,7 @@ type Server struct {
 	AuthorizationService        *authorization.Service
 	BindAddress                 string
 	BindAddressHTTPS            string
+	CSP                         bool
 	HTTPEnabled                 bool
 	AssetsPath                  string
 	Status                      *portainer.Status
@@ -113,6 +114,7 @@ type Server struct {
 	PendingActionsService       *pendingactions.PendingActionsService
 	PlatformService             platform.Service
 	PullLimitCheckDisabled      bool
+	TrustedOrigins              []string
 }
 
 // Start starts the HTTP server
@@ -120,13 +122,16 @@ func (server *Server) Start() error {
 	kubernetesTokenCacheManager := server.KubernetesTokenCacheManager
 
 	requestBouncer := security.NewRequestBouncer(server.DataStore, server.JWTService, server.APIKeyService)
+	if !server.CSP {
+		requestBouncer.DisableCSP()
+	}
 
 	rateLimiter := security.NewRateLimiter(10, 1*time.Second, 1*time.Hour)
 	offlineGate := offlinegate.NewOfflineGate()
 
 	passwordStrengthChecker := security.NewPasswordStrengthChecker(server.DataStore.Settings())
 
-	var authHandler = auth.NewHandler(requestBouncer, rateLimiter, passwordStrengthChecker)
+	var authHandler = auth.NewHandler(requestBouncer, rateLimiter, passwordStrengthChecker, server.KubernetesClientFactory)
 	authHandler.DataStore = server.DataStore
 	authHandler.CryptoService = server.CryptoService
 	authHandler.JWTService = server.JWTService
@@ -161,10 +166,7 @@ func (server *Server) Start() error {
 	edgeJobsHandler.FileService = server.FileService
 	edgeJobsHandler.ReverseTunnelService = server.ReverseTunnelService
 
-	edgeStackCoordinator := edgestacks.NewEdgeStackStatusUpdateCoordinator(server.DataStore)
-	go edgeStackCoordinator.Start()
-
-	var edgeStacksHandler = edgestacks.NewHandler(requestBouncer, server.DataStore, server.EdgeStacksService, edgeStackCoordinator)
+	var edgeStacksHandler = edgestacks.NewHandler(requestBouncer, server.DataStore, server.EdgeStacksService)
 	edgeStacksHandler.FileService = server.FileService
 	edgeStacksHandler.GitService = server.GitService
 	edgeStacksHandler.KubernetesDeployer = server.KubernetesDeployer
@@ -202,7 +204,7 @@ func (server *Server) Start() error {
 
 	var dockerHandler = dockerhandler.NewHandler(requestBouncer, server.AuthorizationService, server.DataStore, server.DockerClientFactory, containerService)
 
-	var fileHandler = file.NewHandler(filepath.Join(server.AssetsPath, "public"), adminMonitor.WasInstanceDisabled)
+	var fileHandler = file.NewHandler(filepath.Join(server.AssetsPath, "public"), server.CSP, adminMonitor.WasInstanceDisabled)
 
 	var endpointHelmHandler = helm.NewHandler(requestBouncer, server.DataStore, server.JWTService, server.KubernetesDeployer, server.HelmPackageManager, server.KubeClusterAccessService)
 
@@ -339,7 +341,7 @@ func (server *Server) Start() error {
 
 	handler = middlewares.WithPanicLogger(middlewares.WithSlowRequestsLogger(handler))
 
-	handler, err := csrf.WithProtect(handler)
+	handler, err := csrf.WithProtect(handler, server.TrustedOrigins)
 	if err != nil {
 		return errors.Wrap(err, "failed to create CSRF middleware")
 	}
@@ -349,7 +351,7 @@ func (server *Server) Start() error {
 			log.Info().Str("bind_address", server.BindAddress).Msg("starting HTTP server")
 			httpServer := &http.Server{
 				Addr:     server.BindAddress,
-				Handler:  handler,
+				Handler:  middlewares.PlaintextHTTPRequest(handler),
 				ErrorLog: errorLogger,
 			}
 
@@ -370,7 +372,7 @@ func (server *Server) Start() error {
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)), // Disable HTTP/2
 	}
 
-	httpsServer.TLSConfig = crypto.CreateTLSConfiguration()
+	httpsServer.TLSConfig = crypto.CreateTLSConfiguration(false)
 	httpsServer.TLSConfig.GetCertificate = func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
 		return server.SSLService.GetRawCertificate(), nil
 	}

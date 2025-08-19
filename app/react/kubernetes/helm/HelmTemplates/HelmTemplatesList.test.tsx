@@ -19,6 +19,8 @@ const mockCharts: Chart[] = [
     annotations: {
       category: 'database',
     },
+    version: '1.0.0',
+    versions: ['1.0.0', '1.0.1'],
   },
   {
     name: 'test-chart-2',
@@ -27,32 +29,80 @@ const mockCharts: Chart[] = [
     annotations: {
       category: 'database',
     },
+    version: '1.0.0',
+    versions: ['1.0.0', '1.0.1'],
   },
   {
     name: 'nginx-chart',
     description: 'Nginx Web Server',
-    repo: 'https://example.com',
+    repo: 'https://example.com/2',
     annotations: {
       category: 'web',
     },
+    version: '1.0.0',
+    versions: ['1.0.0', '1.0.1'],
   },
 ];
 
 const selectActionMock = vi.fn();
 
+const mockUseEnvironmentId = vi.fn(() => 1);
+
+vi.mock('@/react/hooks/useEnvironmentId', () => ({
+  useEnvironmentId: () => mockUseEnvironmentId(),
+}));
+
+// Mock the helm registries query
+vi.mock('../queries/useHelmRegistries', () => ({
+  useHelmRegistries: vi.fn(() => ({
+    data: ['https://example.com', 'https://example.com/2'],
+    isInitialLoading: false,
+    isError: false,
+  })),
+}));
+
+// Mock the environment registries query
+vi.mock(
+  '@/react/portainer/environments/queries/useEnvironmentRegistries',
+  () => ({
+    useEnvironmentRegistries: vi.fn(() => ({
+      data: [
+        { Id: 1, URL: 'https://registry.example.com' },
+        { Id: 2, URL: 'https://registry2.example.com' },
+      ],
+      isInitialLoading: false,
+      isError: false,
+    })),
+  })
+);
+
 function renderComponent({
   loading = false,
   charts = mockCharts,
   selectAction = selectActionMock,
+  selectedRegistry = {
+    repoUrl: 'https://example.com',
+    name: 'Test Registry',
+  },
+}: {
+  loading?: boolean;
+  charts?: Chart[];
+  selectAction?: (chart: Chart) => void;
+  selectedRegistry?: {
+    repoUrl?: string;
+    name?: string;
+  } | null;
 } = {}) {
   const user = new UserViewModel({ Username: 'user' });
+
   const Wrapped = withTestQueryProvider(
     withUserProvider(
       withTestRouter(() => (
         <HelmTemplatesList
-          loading={loading}
+          isLoadingCharts={loading}
           charts={charts}
           selectAction={selectAction}
+          selectedRegistry={selectedRegistry}
         />
       )),
       user
@@ -69,14 +119,17 @@ describe('HelmTemplatesList', () => {
   it('should display title and charts list', async () => {
     renderComponent();
 
-    // Check for the title
-    expect(screen.getByText('Helm chart')).toBeInTheDocument();
+    // Check for the title with registry name
+    expect(
+      screen.getByText('Select a helm chart from Test Registry')
+    ).toBeInTheDocument();
 
     // Check for charts
     expect(screen.getByText('test-chart-1')).toBeInTheDocument();
     expect(screen.getByText('Test Chart 1 Description')).toBeInTheDocument();
     expect(screen.getByText('nginx-chart')).toBeInTheDocument();
     expect(screen.getByText('Nginx Web Server')).toBeInTheDocument();
+    expect(screen.getByText('https://example.com/2')).toBeInTheDocument();
   });
 
   it('should call selectAction when a chart is clicked', async () => {
@@ -137,20 +190,39 @@ describe('HelmTemplatesList', () => {
   });
 
   it('should show loading message when loading prop is true', async () => {
-    renderComponent({ loading: true });
+    renderComponent({ loading: true, charts: [] });
 
     // Check for loading message
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByText('Loading helm charts...')).toBeInTheDocument();
     expect(
       screen.getByText('Initial download of Helm charts can take a few minutes')
     ).toBeInTheDocument();
   });
 
-  it('should show empty message when no charts are available', async () => {
-    renderComponent({ charts: [] });
+  it('should show empty message when no charts are available and a registry is selected', async () => {
+    renderComponent({
+      charts: [],
+      selectedRegistry: {
+        repoUrl: 'https://example.com',
+        name: 'Test Registry',
+      },
+    });
 
     // Check for empty message
-    expect(screen.getByText('No helm charts available.')).toBeInTheDocument();
+    expect(
+      screen.getByText('No helm charts available in this repository.')
+    ).toBeInTheDocument();
+  });
+
+  it("should show 'select registry' message when no charts are available and no registry is selected", async () => {
+    renderComponent({ charts: [], selectedRegistry: null });
+
+    // Check for message
+    expect(
+      screen.getByText(
+        'Please select a repository to view available Helm charts.'
+      )
+    ).toBeInTheDocument();
   });
 
   it('should show no results message when search has no matches', async () => {
