@@ -107,8 +107,9 @@ func (handler *Handler) teamMembershipUpdate(w http.ResponseWriter, r *http.Requ
 	err = handler.DataStore.TeamMembership().Update(membership.ID, membership)
 	if err != nil {
 
-	if err := handler.DataStore.TeamMembership().Update(membership.ID, membership); err != nil {
-		return httperror.InternalServerError("Unable to persist membership changes inside the database", err)
+		if err := handler.DataStore.TeamMembership().Update(membership.ID, membership); err != nil {
+			return httperror.InternalServerError("Unable to persist membership changes inside the database", err)
+		}
 	}
 
 	defer handler.updateUserServiceAccounts(membership)
