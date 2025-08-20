@@ -16,8 +16,8 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 	dclient "github.com/docker/docker/client"
-	"github.com/docker/engine-api/types"
 	req "github.com/portainer/libhttp/request"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
@@ -824,7 +824,8 @@ func (transport *Transport) executeGenericResourceDeletionOperation(request *htt
 		resourceID = volumeName
 
 	case "networks":
-		ret, err := transport.dockerClient.NetworkList(ctx, types.NetworkListOptions{})
+		//ret, err := transport.dockerClient.NetworkList(ctx, types.NetworkListOptions{})
+		ret, err := transport.dockerClient.NetworkList(ctx, network.ListOptions{})
 		if err != nil {
 			break
 		}
