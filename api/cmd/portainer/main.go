@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"crypto/sha256"
+	"fmt"
 	"io"
 	stdlog "log"
 	"os"
@@ -648,9 +649,14 @@ func main() {
 				if err != nil {
 					stdlog.SetOutput(io.MultiWriter(log.Logger, gelfWriter))
 					log.Logger = log.Output(zerolog.ConsoleWriter{
-						Out:           io.MultiWriter(os.Stderr, gelfWriter),
-						TimeFormat:    "2006/01/02 03:04:00",
-						FormatMessage: formatMessage,
+						Out:        io.MultiWriter(os.Stderr, gelfWriter),
+						TimeFormat: "2006/01/02 03:04:00",
+						FormatMessage: func(i interface{}) string {
+							if i == nil {
+								return ""
+							}
+							return fmt.Sprintf("%s", i)
+						},
 						PartsExclude: []string{
 							zerolog.LevelFieldName,
 						},
@@ -661,9 +667,14 @@ func main() {
 				} else {
 					stdlog.SetOutput(io.MultiWriter(log.Logger, gelfWriter))
 					log.Logger = log.Output(zerolog.ConsoleWriter{
-						Out:           io.MultiWriter(os.Stderr, gelfWriter),
-						TimeFormat:    "2006/01/02 03:04:00",
-						FormatMessage: formatMessage,
+						Out:        io.MultiWriter(os.Stderr, gelfWriter),
+						TimeFormat: "2006/01/02 15:04:00",
+						FormatMessage: func(i interface{}) string {
+							if i == nil {
+								return ""
+							}
+							return fmt.Sprintf("%s", i)
+						},
 						PartsExclude: []string{
 							zerolog.LevelFieldName,
 						},
@@ -677,9 +688,14 @@ func main() {
 				if err != nil {
 					stdlog.SetOutput(io.MultiWriter(log.Logger, gelfWriter))
 					log.Logger = log.Output(zerolog.ConsoleWriter{
-						Out:           io.MultiWriter(os.Stderr, gelfWriter),
-						TimeFormat:    "2006/01/02 03:04:00",
-						FormatMessage: formatMessage,
+						Out:        io.MultiWriter(os.Stderr, gelfWriter),
+						TimeFormat: "2006/01/02 03:04:00",
+						FormatMessage: func(i interface{}) string {
+							if i == nil {
+								return ""
+							}
+							return fmt.Sprintf("%s", i)
+						},
 						PartsExclude: []string{
 							zerolog.LevelFieldName,
 						},
@@ -690,9 +706,14 @@ func main() {
 					//log.Output(io.MultiWriter(os.Stdout, gelfWriter))
 					stdlog.SetOutput(io.MultiWriter(log.Logger, gelfWriter))
 					log.Logger = log.Output(zerolog.ConsoleWriter{
-						Out:           io.MultiWriter(os.Stderr, gelfWriter),
-						TimeFormat:    "2006/01/02 03:04:00",
-						FormatMessage: formatMessage,
+						Out:        io.MultiWriter(os.Stderr, gelfWriter),
+						TimeFormat: "2006/01/02 03:04:00",
+						FormatMessage: func(i interface{}) string {
+							if i == nil {
+								return ""
+							}
+							return fmt.Sprintf("%s", i)
+						},
 						PartsExclude: []string{
 							zerolog.LevelFieldName,
 						},

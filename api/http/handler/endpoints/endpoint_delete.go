@@ -177,7 +177,7 @@ func (handler *Handler) endpointDeleteBatchDeprecated(w http.ResponseWriter, r *
 	return handler.endpointDeleteBatch(w, r)
 }
 
-func (handler *Handler) deleteEndpoint(tx dataservices.DataStoreTx, endpointID portainer.EndpointID, deleteCluster bool) error {
+func (handler *Handler) deleteEndpoint(tx dataservices.DataStoreTx, endpointID portainer.EndpointID, deleteCluster bool, r *http.Request) error {
 	endpoint, err := tx.Endpoint().Endpoint(endpointID)
 	if tx.IsErrObjectNotFound(err) {
 		return httperror.NotFound("Unable to find an environment with the specified identifier inside the database", err)
