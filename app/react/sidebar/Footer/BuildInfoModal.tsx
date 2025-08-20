@@ -121,7 +121,7 @@ function BuildInfoModal({ closeModal }: { closeModal: () => void }) {
             <Wrench size="13" className="space-right" />
             Compilation tools:
           </span>
-
+      </div>
           <div className={styles.tools}>
             <span className="text-muted small">
               Nodejs {Build.NodejsVersion}
