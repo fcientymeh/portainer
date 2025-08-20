@@ -16,15 +16,15 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	dclient "github.com/docker/docker/client"
+	req "github.com/portainer/libhttp/request"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
+	dockerclient "github.com/portainer/portainer/api/docker/client"
 	gittypes "github.com/portainer/portainer/api/git/types"
 	"github.com/portainer/portainer/api/http/proxy/factory/utils"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/authorization"
-
-	req "github.com/portainer/libhttp/request"
-	dockerclient "github.com/portainer/portainer/api/docker/client"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/encoding/json"
 )
@@ -55,6 +55,7 @@ type (
 		snapshotService      portainer.SnapshotService
 		dockerID             string
 		mu                   sync.Mutex
+		dockerClient         *dclient.Client
 	}
 
 	// TransportParameters is used to create a new Transport
@@ -715,7 +716,7 @@ func (transport *Transport) decorateGenericResourceCreationOperation(request *ht
 	teamMemberships_aip, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(tokenData.ID)
 	team_aip, err := transport.dataStore.Team().TeamByName("READONLY")
 	if err != nil {
-		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE] - transport.go:710", tokenData.Username)
+		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE] - transport.go:719", tokenData.Username)
 	}
 	for _, membership_aip := range teamMemberships_aip {
 		if membership_aip.TeamID == team_aip.ID {
