@@ -5,7 +5,7 @@ PLATFORM=$(shell go env GOOS)
 ARCH=$(shell go env GOARCH)
 
 # build target, can be one of "production", "testing", "development"
-ENV=development
+ENV=production
 WEBPACK_CONFIG=webpack/webpack.$(ENV).js
 TAG=local
 
