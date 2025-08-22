@@ -1,45 +1,45 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
-   width="113.85938mm"
-   height="17.097797mm"
-   viewBox="0 0 113.85938 17.097797"
+   width="170"
+   height="219"
+   viewBox="0 0 170 219"
+   fill="none"
    version="1.1"
-   id="svg5"
+   id="svg13"
+   sodipodi:docname="logomark-CE.svg"
    inkscape:version="1.1 (c68e22c387, 2021-05-23)"
-   sodipodi:docname="portainer_logo-CE v2.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <sodipodi:namedview
-     id="namedview7"
+     id="namedview15"
      pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
-     inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="1.28"
-     inkscape:cx="91.40625"
-     inkscape:cy="13.671875"
+     inkscape:zoom="0.96118722"
+     inkscape:cx="78.028503"
+     inkscape:cy="103.51781"
      inkscape:window-width="1920"
      inkscape:window-height="1027"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="g14" />
+     inkscape:current-layer="svg13" />
   <defs
-     id="defs2">
+     id="defs11">
     <clipPath
-       id="clipPath18"
-       clipPathUnits="userSpaceOnUse">
-      <path
-         id="path16"
-         d="M 0,595.28 H 595.28 V 0 H 0 Z" />
+       id="clip0_261_120684">
+      <rect
+         width="168.414"
+         height="218.719"
+         fill="white"
+         transform="translate(0.724609)"
+         id="rect8" />
     </clipPath>
     <meshgradient
        inkscape:collect="always"
@@ -130,53 +130,34 @@
     </meshgradient>
   </defs>
   <g
-     inkscape:label="Warstwa 1"
-     inkscape:groupmode="layer"
-     id="layer1"
-     transform="translate(-30.900481,-90.002959)">
+     id="g985"
+     transform="matrix(1.7419977,0,0,2.3959111,104.20652,247.11734)">
     <g
-       clip-path="url(#clipPath18)"
-       id="g14"
-       transform="matrix(0.35185632,0,0,-0.35277777,-16.341493,241.09113)">
-      <g
-         transform="translate(322.9043,161.8818)"
-         id="g20" />
-      <g
-         transform="translate(449.4629,154.8779)"
-         id="g24" />
-      <g
-         transform="translate(276.7617,156.7256)"
-         id="g28" />
-      <g
-         transform="translate(282.2832,159.8779)"
-         id="g32" />
-      <g
-         transform="translate(155.26396,427.88744)"
-         id="g60"
-         style="fill:url(#meshgradient1452);fill-opacity:1">
-        <path
-           id="path62"
-           style="fill:#ac0b3d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-           d="m 0,0 -20.999,-48.072 h 7.113 c 0.696,0 1.382,0.105 2.073,0.326 0.698,0.219 1.341,0.512 1.959,0.896 0.594,0.399 1.14,0.844 1.615,1.366 0.489,0.511 0.856,1.076 1.133,1.671 l 2.274,5.34 4.393,9.963 4.228,10.063 c 0.191,0.439 0.33,0.869 0.458,1.277 0.122,0.395 0.217,0.752 0.285,1.074 0.091,0.371 0.2,1.035 0.2,1.035 0,0 0.077,-0.646 0.171,-1.011 0.066,-0.307 0.155,-0.664 0.266,-1.069 0.111,-0.41 0.27,-0.847 0.466,-1.306 l 4.195,-10.063 4.461,-9.963 2.35,-5.34 c 0.3,-0.669 0.668,-1.269 1.14,-1.791 0.471,-0.525 0.995,-0.972 1.578,-1.349 0.577,-0.363 1.211,-0.639 1.896,-0.824 0.677,-0.196 1.391,-0.295 2.127,-0.295 h 7.081 L 9.465,0 Z" />
-      </g>
-      <g
-         transform="translate(184.89476,405.35424)"
-         id="g64"
-         style="fill:url(#meshgradient1466);fill-opacity:1">
-        <path
-           id="path66"
-           style="fill:#ac0b3d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-           d="M 0,0 1.07,-2.441 5.444,-12.455 7,-15.939 l 2.352,-5.34 c 0.29,-0.67 0.662,-1.27 1.138,-1.791 0.468,-0.526 1.006,-0.973 1.577,-1.35 0.579,-0.363 1.211,-0.639 1.896,-0.824 0.689,-0.195 1.39,-0.295 2.126,-0.295 h 7.086 L 12.022,0 Z" />
-      </g>
-      <g
-         transform="translate(181.80986,412.39134)"
-         id="g68"
-         style="fill:url(#meshgradient1480);fill-opacity:1">
-        <path
-           id="path70"
-           style="fill:#ac0b3d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-           d="M 0,0 H 12.028 L 5.247,15.496 H -6.789 l 1.315,-2.928 z" />
-      </g>
+       transform="matrix(1.3298507,0,0,-1.3333333,-32.593324,-101.75359)"
+       id="g60"
+       style="fill:url(#meshgradient1452);fill-opacity:1">
+      <path
+         id="path62"
+         style="fill:#ac0b3d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         d="m 0,0 -20.999,-48.072 h 7.113 c 0.696,0 1.382,0.105 2.073,0.326 0.698,0.219 1.341,0.512 1.959,0.896 0.594,0.399 1.14,0.844 1.615,1.366 0.489,0.511 0.856,1.076 1.133,1.671 l 2.274,5.34 4.393,9.963 4.228,10.063 c 0.191,0.439 0.33,0.869 0.458,1.277 0.122,0.395 0.217,0.752 0.285,1.074 0.091,0.371 0.2,1.035 0.2,1.035 0,0 0.077,-0.646 0.171,-1.011 0.066,-0.307 0.155,-0.664 0.266,-1.069 0.111,-0.41 0.27,-0.847 0.466,-1.306 l 4.195,-10.063 4.461,-9.963 2.35,-5.34 c 0.3,-0.669 0.668,-1.269 1.14,-1.791 0.471,-0.525 0.995,-0.972 1.578,-1.349 0.577,-0.363 1.211,-0.639 1.896,-0.824 0.677,-0.196 1.391,-0.295 2.127,-0.295 h 7.081 L 9.465,0 Z" />
+    </g>
+    <g
+       transform="matrix(1.3298507,0,0,-1.3333333,6.811216,-71.709326)"
+       id="g64"
+       style="fill:url(#meshgradient1466);fill-opacity:1">
+      <path
+         id="path66"
+         style="fill:#ac0b3d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         d="M 0,0 1.07,-2.441 5.444,-12.455 7,-15.939 l 2.352,-5.34 c 0.29,-0.67 0.662,-1.27 1.138,-1.791 0.468,-0.526 1.006,-0.973 1.577,-1.35 0.579,-0.363 1.211,-0.639 1.896,-0.824 0.689,-0.195 1.39,-0.295 2.126,-0.295 h 7.086 L 12.022,0 Z" />
+    </g>
+    <g
+       transform="matrix(1.3298507,0,0,-1.3333333,2.7087596,-81.092126)"
+       id="g68"
+       style="fill:url(#meshgradient1480);fill-opacity:1">
+      <path
+         id="path70"
+         style="fill:#ac0b3d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         d="M 0,0 H 12.028 L 5.247,15.496 H -6.789 l 1.315,-2.928 z" />
     </g>
   </g>
   <script
