@@ -6,7 +6,9 @@ import { isBE } from '@/react/portainer/feature-flags/feature-flags.service';
 import { Link } from '@@/Link';
 
 import fullLogoBE from './portainer_logo-BE.svg';
-import fullLogoCE from './logo.png';
+import fullLogoCE from './portainer_logo-CE.svg';
+import smallLogoBE from './logomark-BE.svg';
+import smallLogoCE from './logomark-CE.svg';
 import { useSidebarState } from './useSidebarState';
 import styles from './Header.module.css';
 
