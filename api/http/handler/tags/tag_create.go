@@ -10,8 +10,8 @@ import (
 	"github.com/portainer/portainer/api/http/security"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
+	"github.com/portainer/portainer/pkg/libhttp/response"
 	"github.com/rs/zerolog/log"
-	//"github.com/asaskevich/govalidator"
 )
 
 type tagCreatePayload struct {
@@ -42,8 +42,7 @@ func (payload *tagCreatePayload) Validate(r *http.Request) error {
 // @router /tags [post]
 func (handler *Handler) tagCreate(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	var payload tagCreatePayload
-	err := request.DecodeAndValidateJSONPayload(r, &payload)
-	if err != nil {
+	if err := request.DecodeAndValidateJSONPayload(r, &payload); err != nil {
 		return httperror.BadRequest("Invalid request payload", err)
 	}
 	//--- AIS: Read-Only user management ---
@@ -63,6 +62,7 @@ func (handler *Handler) tagCreate(w http.ResponseWriter, r *http.Request) *httpe
 	}
 	//------------------------
 	var tag *portainer.Tag
+	var err error
 	err = handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		tag, err = createTag(tx, payload)
 		return err
@@ -72,7 +72,7 @@ func (handler *Handler) tagCreate(w http.ResponseWriter, r *http.Request) *httpe
 			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE TAG %s]     [%s]", uzer.Username, tag.Name, r)
 		}
 	}
-	return txResponse(w, tag, err)
+	return response.TxResponse(w, tag, err)
 }
 
 func createTag(tx dataservices.DataStoreTx, payload tagCreatePayload) (*portainer.Tag, error) {

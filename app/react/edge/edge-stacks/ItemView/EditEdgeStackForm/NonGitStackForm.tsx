@@ -76,8 +76,8 @@ export function NonGitStackForm({ edgeStack }: { edgeStack: EdgeStack }) {
     privateRegistryId: edgeStack.Registries?.[0],
     content: fileContent,
     useManifestNamespaces: edgeStack.UseManifestNamespaces,
-    prePullImage: edgeStack.PrePullImage,
-    retryDeploy: edgeStack.RetryDeploy,
+    prePullImage: edgeStack.PrePullImage ?? false,
+    retryDeploy: edgeStack.RetryDeploy ?? false,
     webhookEnabled: !!edgeStack.Webhook,
     envVars: edgeStack.EnvVars || [],
     rollbackTo: undefined,
@@ -114,12 +114,12 @@ export function NonGitStackForm({ edgeStack }: { edgeStack: EdgeStack }) {
         return;
       }
 
-      rePullImage = result.pullImage;
+      rePullImage = result.repullImageAndRedeploy;
     }
 
     const updateVersion = !!(
       fileContent !== values.content ||
-      values.privateRegistryId !== edgeStack.Registries[0] ||
+      values.privateRegistryId !== edgeStack.Registries?.[0] ||
       values.useManifestNamespaces !== edgeStack.UseManifestNamespaces ||
       values.prePullImage !== edgeStack.PrePullImage ||
       values.retryDeploy !== edgeStack.RetryDeploy ||

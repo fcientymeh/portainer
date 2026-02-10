@@ -7,6 +7,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/portainer/portainer/api/logs"
 	"github.com/portainer/portainer/pkg/libstack"
 
 	"github.com/compose-spec/compose-go/v2/types"
@@ -103,7 +104,7 @@ func getContainerLogsTail(ctx context.Context, service service) (string, error) 
 		if err != nil {
 			return errors.Wrap(err, "unable to get logs from container")
 		}
-		defer out.Close()
+		defer logs.CloseAndLogErr(out)
 
 		_, err = io.Copy(&combinedOutput, out)
 		if err != nil {
@@ -178,7 +179,7 @@ func (c *ComposeDeployer) WaitForStatus(ctx context.Context, name string, status
 
 		var containerSummaries []api.ContainerSummary
 
-		if err := c.withComposeService(ctx, nil, libstack.Options{ProjectName: name}, func(composeService api.Service, project *types.Project) error {
+		if err := c.withComposeService(ctx, nil, libstack.Options{ProjectName: name}, func(composeService api.Compose, project *types.Project) error {
 			var err error
 
 			psCtx, cancelFunc := context.WithTimeout(context.Background(), time.Minute)

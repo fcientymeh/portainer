@@ -64,16 +64,6 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 	if err := request.DecodeAndValidateJSONPayload(r, &payload); err != nil {
 		return httperror.BadRequest("Invalid request payload", err)
 	}
-
-	stack, err := handler.DataStore.Stack().Read(portainer.StackID(stackID))
-	if handler.DataStore.IsErrObjectNotFound(err) {
-		return httperror.NotFound("Unable to find a stack with the specified identifier inside the database", err)
-	} else if err != nil {
-		return httperror.InternalServerError("Unable to find a stack with the specified identifier inside the database", err)
-	} else if stack.GitConfig == nil {
-		msg := "No Git config in the found stack"
-		return httperror.InternalServerError(msg, errors.New(msg))
-	}
 	uzer, errorek := security.RetrieveTokenData(r)
 	//--- AIS: Read-Only user management ---
 	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
@@ -88,7 +78,25 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 			}
 		}
 	}
-	//------------------------
+
+	stack, err := handler.DataStore.Stack().Read(portainer.StackID(stackID))
+	if handler.DataStore.IsErrObjectNotFound(err) {
+		return httperror.NotFound("Unable to find a stack with the specified identifier inside the database", err)
+	} else if err != nil {
+		return httperror.InternalServerError("Unable to find a stack with the specified identifier inside the database", err)
+	} else if stack.GitConfig == nil {
+		msg := "No Git config in the found stack"
+		return httperror.InternalServerError(msg, errors.New(msg))
+	}
+
+	if payload.AutoUpdate != nil && payload.AutoUpdate.Webhook != "" &&
+		(stack.AutoUpdate == nil ||
+			(stack.AutoUpdate != nil && stack.AutoUpdate.Webhook != payload.AutoUpdate.Webhook)) {
+		if isUnique, err := handler.checkUniqueWebhookID(payload.AutoUpdate.Webhook); !isUnique || err != nil {
+			return httperror.Conflict("Webhook ID already exists", errors.New("webhook ID already exists"))
+		}
+	}
+
 	// TODO: this is a work-around for stacks created with Portainer version >= 1.17.1
 	// The EndpointID property is not available for these stacks, this API environment(endpoint)
 	// can use the optional EndpointID query parameter to associate a valid environment(endpoint) identifier to the stack.

@@ -1,7 +1,6 @@
 package endpointgroups
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/rs/zerolog/log"
@@ -9,6 +8,7 @@ import (
 	httperrors "github.com/portainer/portainer/api/http/errors"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
+	dserrors "github.com/portainer/portainer/api/dataservices/errors"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
@@ -56,22 +56,14 @@ func (handler *Handler) endpointGroupDeleteEndpoint(w http.ResponseWriter, r *ht
 	err = handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		return handler.removeEndpoint(tx, portainer.EndpointGroupID(endpointGroupID), portainer.EndpointID(endpointID))
 	})
-	if err != nil {
-		var httpErr *httperror.HandlerError
-		if errors.As(err, &httpErr) {
-			return httpErr
-		}
 
-		return httperror.InternalServerError("Unexpected error", err)
-	}
-
-	return response.Empty(w)
+	return response.TxEmptyResponse(w, err)
 }
 
 func (handler *Handler) removeEndpoint(tx dataservices.DataStoreTx, endpointGroupID portainer.EndpointGroupID, endpointID portainer.EndpointID) error {
-	_, err := tx.EndpointGroup().Read(endpointGroupID)
-	if tx.IsErrObjectNotFound(err) {
-		return httperror.NotFound("Unable to find an environment group with the specified identifier inside the database", err)
+	ok, err := tx.EndpointGroup().Exists(endpointGroupID)
+	if !ok {
+		return httperror.NotFound("Unable to find an environment group with the specified identifier inside the database", dserrors.ErrObjectNotFound)
 	} else if err != nil {
 		return httperror.InternalServerError("Unable to find an environment group with the specified identifier inside the database", err)
 	}

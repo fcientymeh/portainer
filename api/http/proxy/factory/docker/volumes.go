@@ -13,6 +13,7 @@ import (
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/authorization"
 	"github.com/portainer/portainer/api/internal/snapshot"
+	"github.com/portainer/portainer/api/logs"
 	"github.com/rs/zerolog/log"
 )
 
@@ -150,7 +151,7 @@ func (transport *Transport) decorateVolumeResourceCreationOperation(request *htt
 		if err != nil {
 			return nil, err
 		}
-		defer cli.Close()
+		defer logs.CloseAndLogErr(cli)
 
 		if _, err := cli.VolumeInspect(context.Background(), volumeID); err == nil {
 			return &http.Response{
@@ -257,7 +258,7 @@ func (transport *Transport) getDockerID() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer client.Close()
+	defer logs.CloseAndLogErr(client)
 
 	info, err := client.Info(context.Background())
 	if err != nil {

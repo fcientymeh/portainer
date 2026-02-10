@@ -16,18 +16,23 @@ import (
 // if the user is an admin, all configMaps in the current k8s environment(endpoint) are fetched using the fetchConfigMaps function.
 // otherwise, namespaces the non-admin user has access to will be used to filter the configMaps based on the allowed namespaces.
 func (kcl *KubeClient) GetConfigMaps(namespace string) ([]models.K8sConfigMap, error) {
-	if kcl.IsKubeAdmin {
+	if kcl.GetIsKubeAdmin() {
 		return kcl.fetchConfigMaps(namespace)
 	}
+
 	return kcl.fetchConfigMapsForNonAdmin(namespace)
 }
 
 // fetchConfigMapsForNonAdmin fetches the configMaps in the namespaces the user has access to.
 // This function is called when the user is not an admin.
 func (kcl *KubeClient) fetchConfigMapsForNonAdmin(namespace string) ([]models.K8sConfigMap, error) {
-	log.Debug().Msgf("Fetching configMaps for non-admin user: %v", kcl.NonAdminNamespaces)
+	nonAdminNamespaces := kcl.GetClientNonAdminNamespaces()
 
-	if len(kcl.NonAdminNamespaces) == 0 {
+	log.Debug().
+		Strs("non_admin_namespaces", nonAdminNamespaces).
+		Msg("fetching configMaps for non-admin user")
+
+	if len(nonAdminNamespaces) == 0 {
 		return nil, nil
 	}
 
@@ -129,21 +134,16 @@ func (kcl *KubeClient) CombineConfigMapWithApplications(configMap models.K8sConf
 		return models.K8sConfigMap{}, fmt.Errorf("an error occurred during the CombineConfigMapWithApplications operation, unable to get pods. Error: %w", err)
 	}
 
-	containsReplicaSetOwner := false
-	for _, pod := range pods.Items {
-		containsReplicaSetOwner = isReplicaSetOwner(pod)
-		break
-	}
-
-	var replicaSets *appsv1.ReplicaSetList
-	if containsReplicaSetOwner {
-		replicaSets, err = kcl.cli.AppsV1().ReplicaSets(configMap.Namespace).List(context.Background(), metav1.ListOptions{})
+	replicaSetsItems := []appsv1.ReplicaSet{}
+	if containsReplicaSetOwnerReference(pods) {
+		replicaSets, err := kcl.cli.AppsV1().ReplicaSets(configMap.Namespace).List(context.Background(), metav1.ListOptions{})
 		if err != nil {
 			return models.K8sConfigMap{}, fmt.Errorf("an error occurred during the CombineConfigMapWithApplications operation, unable to get replica sets. Error: %w", err)
 		}
+		replicaSetsItems = replicaSets.Items
 	}
 
-	applicationConfigurationOwners, err := kcl.GetApplicationConfigurationOwnersFromConfigMap(configMap, pods.Items, replicaSets.Items)
+	applicationConfigurationOwners, err := kcl.GetApplicationConfigurationOwnersFromConfigMap(configMap, pods.Items, replicaSetsItems)
 	if err != nil {
 		return models.K8sConfigMap{}, fmt.Errorf("an error occurred during the CombineConfigMapWithApplications operation, unable to get applications from config map. Error: %w", err)
 	}

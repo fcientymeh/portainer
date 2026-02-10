@@ -193,6 +193,8 @@ func (handler *Handler) registryUpdate(w http.ResponseWriter, r *http.Request) *
 	if err := handler.DataStore.Registry().Update(registry.ID, registry); err != nil {
 		return httperror.InternalServerError("Unable to persist registry changes inside the database", err)
 	}
+
+	hideFields(registry, true)
 	if errorek == nil {
 		if r.Method != http.MethodGet {
 			log.Info().Msgf("[AIP AUDIT] [%s] [UPDATE REGISTRY %s]     [%s]", uzer.Username, registry.Name, r)

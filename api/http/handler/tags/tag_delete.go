@@ -1,7 +1,6 @@
 package tags
 
 import (
-	"errors"
 	"net/http"
 	"slices"
 
@@ -50,29 +49,19 @@ func (handler *Handler) tagDelete(w http.ResponseWriter, r *http.Request) *httpe
 			}
 		}
 	}
-	//------------------------
+
+	// AIS
 	tagID := portainer.TagID(id)
 	tag, _ := handler.DataStore.Tag().Read(portainer.TagID(tagID))
-	//
 	err = handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		return deleteTag(tx, portainer.TagID(id))
 	})
-	if err != nil {
-		var handlerError *httperror.HandlerError
-		if errors.As(err, &handlerError) {
-			return handlerError
-		}
-
-		return httperror.InternalServerError("Unexpected error", err)
-	}
-	/// AIS
 	if errorek == nil {
 		if r.Method != http.MethodGet {
 			log.Info().Msgf("[AIP AUDIT] [%s] [DELETE TAG %s]     [%s]", uzer.Username, tag.Name, r)
 		}
 	}
-	///
-	return response.Empty(w)
+	return response.TxEmptyResponse(w, err)
 }
 
 func deleteTag(tx dataservices.DataStoreTx, tagID portainer.TagID) error {

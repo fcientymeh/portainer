@@ -415,14 +415,11 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
 
     const node = {
       name: 'kubernetes.cluster.node',
-      url: '/:nodeName',
+      url: '/:nodeName?tab',
       views: {
         'content@': {
-          component: 'kubernetesNodeView',
+          component: 'kubernetesNodeViewReact',
         },
-      },
-      data: {
-        docs: '/user/kubernetes/cluster/node',
       },
     };
 
@@ -473,7 +470,23 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
       },
     };
 
-    const resourcePools = {
+    const helmInstall = {
+      name: 'kubernetes.helminstall',
+      url: '/helm?referrer',
+      views: {
+        'content@': {
+          component: 'helmInstallView',
+        },
+      },
+      params: {
+        yaml: '',
+      },
+      data: {
+        docs: '/user/kubernetes/applications/manifest/helm',
+      },
+    };
+
+    const namespaces = {
       name: 'kubernetes.resourcePools',
       url: '/namespaces',
       views: {
@@ -499,7 +512,7 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
       },
     };
 
-    const resourcePool = {
+    const namespace = {
       name: 'kubernetes.resourcePools.resourcePool',
       url: '/:id?tab',
       views: {
@@ -678,12 +691,13 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
     $stateRegistryProvider.register(cluster);
     $stateRegistryProvider.register(dashboard);
     $stateRegistryProvider.register(deploy);
+    $stateRegistryProvider.register(helmInstall);
     $stateRegistryProvider.register(node);
     $stateRegistryProvider.register(nodeStats);
     $stateRegistryProvider.register(kubectlShell);
-    $stateRegistryProvider.register(resourcePools);
+    $stateRegistryProvider.register(namespaces);
     $stateRegistryProvider.register(namespaceCreation);
-    $stateRegistryProvider.register(resourcePool);
+    $stateRegistryProvider.register(namespace);
     $stateRegistryProvider.register(namespaceAccess);
     $stateRegistryProvider.register(volumes);
     $stateRegistryProvider.register(volume);

@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/logs"
 	"github.com/portainer/portainer/pkg/libstack"
 
 	"github.com/compose-spec/compose-go/v2/cli"
@@ -65,7 +66,7 @@ func withCli(
 		return fmt.Errorf("unable to initialize the Docker client: %w", err)
 	}
 	mu.Unlock()
-	defer cli.Client().Close()
+	defer logs.CloseAndLogErr(cli.Client())
 
 	for _, r := range options.Registries {
 		if r.ServerAddress == "" || r.ServerAddress == registry.DefaultNamespace {
@@ -75,6 +76,29 @@ func withCli(
 		cli.ConfigFile().AuthConfigs[r.ServerAddress] = r
 	}
 
+	// Docker resolves credentials in the following priority:
+	// 1. credHelpers – per-registry credential helpers
+	// 2. credsStore  – global credential store used for all registries
+	// 3. auths       – inline credentials defined in config.json
+	//
+	// Many Docker Desktop users (Windows/macOS) have a global credsStore configured
+	// by default (e.g. "desktop.exe" on Windows or "osxkeychain" on macOS). These
+	// global stores often do not include credentials for the custom registries
+	// defined in Portainer stacks, leading to authentication failures.
+	//
+	// To avoid this, when inline credentials are provided for one or more registries,
+	// we intentionally clear the global credsStore. This ensures Docker uses the
+	// credentials configured in Portainer instead of falling back to an empty global
+	// store.
+	//
+	// If no inline credentials are configured in Portainer, we keep the credsStore
+	// so Docker can still use it as a fallback.
+	// credHelpers are not affected as they are external services managed by the user.
+	// @ref: https://linear.app/portainer/issue/BE-12237
+	if len(options.Registries) > 0 {
+		cli.ConfigFile().CredentialsStore = ""
+	}
+
 	return cliFn(ctx, cli)
 }
 
@@ -82,7 +106,7 @@ func (c *ComposeDeployer) withComposeService(
 	ctx context.Context,
 	filePaths []string,
 	options libstack.Options,
-	composeFn func(api.Service, *types.Project) error,
+	composeFn func(api.Compose, *types.Project) error,
 ) error {
 	return withCli(ctx, options, func(ctx context.Context, cli *command.DockerCli) error {
 		composeService := c.createComposeServiceFn(cli)
@@ -114,12 +138,16 @@ func (c *ComposeDeployer) withComposeService(
 
 // Deploy creates and starts containers
 func (c *ComposeDeployer) Deploy(ctx context.Context, filePaths []string, options libstack.DeployOptions) error {
-	return c.withComposeService(ctx, filePaths, options.Options, func(composeService api.Service, project *types.Project) error {
+	return c.withComposeService(ctx, filePaths, options.Options, func(composeService api.Compose, project *types.Project) error {
 		addServiceLabels(project, false, options.EdgeStackID)
 
 		project = project.WithoutUnnecessaryResources()
 
-		var opts api.UpOptions
+		opts := api.UpOptions{
+			Start: api.StartOptions{
+				Project: project,
+			},
+		}
 		if options.ForceRecreate {
 			opts.Create.Recreate = api.RecreateForce
 		}
@@ -152,7 +180,7 @@ func (c *ComposeDeployer) Deploy(ctx context.Context, filePaths []string, option
 
 // Run runs the given service just once, without considering dependencies
 func (c *ComposeDeployer) Run(ctx context.Context, filePaths []string, serviceName string, options libstack.RunOptions) error {
-	return c.withComposeService(ctx, filePaths, options.Options, func(composeService api.Service, project *types.Project) error {
+	return c.withComposeService(ctx, filePaths, options.Options, func(composeService api.Compose, project *types.Project) error {
 		addServiceLabels(project, true, 0)
 
 		for name, service := range project.Services {
@@ -204,7 +232,7 @@ func (c *ComposeDeployer) Remove(ctx context.Context, projectName string, filePa
 
 // Pull pulls images
 func (c *ComposeDeployer) Pull(ctx context.Context, filePaths []string, options libstack.Options) error {
-	if err := c.withComposeService(ctx, filePaths, options, func(composeService api.Service, project *types.Project) error {
+	if err := c.withComposeService(ctx, filePaths, options, func(composeService api.Compose, project *types.Project) error {
 		return composeService.Pull(ctx, project, api.PullOptions{})
 	}); err != nil {
 		return fmt.Errorf("compose pull operation failed: %w", err)
@@ -217,7 +245,7 @@ func (c *ComposeDeployer) Pull(ctx context.Context, filePaths []string, options 
 
 // Validate validates stack file
 func (c *ComposeDeployer) Validate(ctx context.Context, filePaths []string, options libstack.Options) error {
-	return c.withComposeService(ctx, filePaths, options, func(composeService api.Service, project *types.Project) error {
+	return c.withComposeService(ctx, filePaths, options, func(composeService api.Compose, project *types.Project) error {
 		return nil
 	})
 }
@@ -226,7 +254,7 @@ func (c *ComposeDeployer) Validate(ctx context.Context, filePaths []string, opti
 func (c *ComposeDeployer) Config(ctx context.Context, filePaths []string, options libstack.Options) ([]byte, error) {
 	var payload []byte
 
-	if err := c.withComposeService(ctx, filePaths, options, func(composeService api.Service, project *types.Project) error {
+	if err := c.withComposeService(ctx, filePaths, options, func(composeService api.Compose, project *types.Project) error {
 		var err error
 		payload, err = project.MarshalYAML()
 		if err != nil {
@@ -244,7 +272,7 @@ func (c *ComposeDeployer) Config(ctx context.Context, filePaths []string, option
 func (c *ComposeDeployer) GetExistingEdgeStacks(ctx context.Context) ([]libstack.EdgeStack, error) {
 	m := make(map[int]libstack.EdgeStack)
 
-	if err := c.withComposeService(ctx, nil, libstack.Options{}, func(composeService api.Service, project *types.Project) error {
+	if err := c.withComposeService(ctx, nil, libstack.Options{}, func(composeService api.Compose, project *types.Project) error {
 		stacks, err := composeService.List(ctx, api.ListOptions{
 			All: true,
 		})

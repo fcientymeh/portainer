@@ -11,8 +11,8 @@ type K8sApplication struct {
 	ID                      string                                 `json:"Id"`
 	Name                    string                                 `json:"Name"`
 	Image                   string                                 `json:"Image"`
-	Containers              []interface{}                          `json:"Containers,omitempty"`
-	Services                []corev1.Service                       `json:"Services"`
+	Containers              []any                                  `json:"Containers,omitempty"`
+	Services                []corev1.Service                       `json:"Services" swaggerignore:"true"`
 	CreationDate            time.Time                              `json:"CreationDate"`
 	ApplicationOwner        string                                 `json:"ApplicationOwner,omitempty"`
 	StackName               string                                 `json:"StackName,omitempty"`
@@ -36,17 +36,22 @@ type K8sApplication struct {
 	Kind                    string                                 `json:"Kind,omitempty"`
 	MatchLabels             map[string]string                      `json:"MatchLabels,omitempty"`
 	Labels                  map[string]string                      `json:"Labels,omitempty"`
-	Resource                K8sApplicationResource                 `json:"Resource,omitempty"`
-	HorizontalPodAutoscaler *autoscalingv2.HorizontalPodAutoscaler `json:"HorizontalPodAutoscaler,omitempty"`
-	CustomResourceMetadata  CustomResourceMetadata                 `json:"CustomResourceMetadata,omitempty"`
+	Annotations             map[string]string                      `json:"Annotations,omitempty"`
+	Resource                K8sApplicationResource                 `json:"Resource,omitzero"`
+	HorizontalPodAutoscaler *autoscalingv2.HorizontalPodAutoscaler `json:"HorizontalPodAutoscaler,omitempty" swaggerignore:"true"`
+	CustomResourceMetadata  CustomResourceMetadata                 `json:"CustomResourceMetadata,omitzero"`
+	StackKind               string                                 `json:"StackKind,omitempty"`
 }
 
 type Metadata struct {
-	Labels map[string]string `json:"labels"`
+	Labels      map[string]string `json:"labels"`
+	Annotations map[string]string `json:"annotations"`
 }
 
 type CustomResourceMetadata struct {
+	Name       string `json:"name"`
 	Kind       string `json:"kind"`
+	Scope      string `json:"scope"`
 	APIVersion string `json:"apiVersion"`
 	Plural     string `json:"plural"`
 }
@@ -60,14 +65,14 @@ type Pod struct {
 	NodeName        string                 `json:"NodeName"`
 	PodIP           string                 `json:"PodIP"`
 	UID             string                 `json:"Uid"`
-	Resource        K8sApplicationResource `json:"Resource,omitempty"`
+	Resource        K8sApplicationResource `json:"Resource,omitzero"`
 	CreationDate    time.Time              `json:"CreationDate"`
 }
 
 type Configuration struct {
-	Data               map[string]interface{} `json:"Data,omitempty"`
-	Kind               string                 `json:"Kind"`
-	ConfigurationOwner string                 `json:"ConfigurationOwner"`
+	Data               map[string]any `json:"Data,omitempty"`
+	Kind               string         `json:"Kind"`
+	ConfigurationOwner string         `json:"ConfigurationOwner"`
 }
 
 type PublishedPort struct {

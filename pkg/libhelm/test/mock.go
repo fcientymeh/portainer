@@ -10,7 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/segmentio/encoding/json"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 const (
@@ -120,6 +120,10 @@ func (hpm helmMockPackageManager) Get(getOpts options.GetOptions) (*release.Rele
 	index := slices.IndexFunc(mockCharts, func(re release.ReleaseElement) bool {
 		return re.Name == getOpts.Name && re.Namespace == getOpts.Namespace
 	})
+
+	if index == -1 {
+		return nil, errors.Errorf("release %s not found in namespace %s", getOpts.Name, getOpts.Namespace)
+	}
 
 	return newMockRelease(&mockCharts[index]), nil
 }

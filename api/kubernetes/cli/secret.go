@@ -23,18 +23,23 @@ const (
 // if the user is an admin, all secrets in the current k8s environment(endpoint) are fetched using the getSecrets function.
 // otherwise, namespaces the non-admin user has access to will be used to filter the secrets based on the allowed namespaces.
 func (kcl *KubeClient) GetSecrets(namespace string) ([]models.K8sSecret, error) {
-	if kcl.IsKubeAdmin {
+	if kcl.GetIsKubeAdmin() {
 		return kcl.getSecrets(namespace)
 	}
+
 	return kcl.getSecretsForNonAdmin(namespace)
 }
 
 // getSecretsForNonAdmin fetches the secrets in the namespaces the user has access to.
 // This function is called when the user is not an admin.
 func (kcl *KubeClient) getSecretsForNonAdmin(namespace string) ([]models.K8sSecret, error) {
-	log.Debug().Msgf("Fetching secrets for non-admin user: %v", kcl.NonAdminNamespaces)
+	nonAdminNamespaces := kcl.GetClientNonAdminNamespaces()
 
-	if len(kcl.NonAdminNamespaces) == 0 {
+	log.Debug().
+		Strs("non_admin_namespaces", nonAdminNamespaces).
+		Msg("fetching secrets for non-admin user")
+
+	if len(nonAdminNamespaces) == 0 {
 		return nil, nil
 	}
 
@@ -145,21 +150,16 @@ func (kcl *KubeClient) CombineSecretWithApplications(secret models.K8sSecret) (m
 		return models.K8sSecret{}, fmt.Errorf("an error occurred during the CombineSecretWithApplications operation, unable to get pods. Error: %w", err)
 	}
 
-	containsReplicaSetOwner := false
-	for _, pod := range pods.Items {
-		containsReplicaSetOwner = isReplicaSetOwner(pod)
-		break
-	}
-
-	var replicaSets *appsv1.ReplicaSetList
-	if containsReplicaSetOwner {
-		replicaSets, err = kcl.cli.AppsV1().ReplicaSets(secret.Namespace).List(context.Background(), metav1.ListOptions{})
+	replicaSetsItems := []appsv1.ReplicaSet{}
+	if containsReplicaSetOwnerReference(pods) {
+		replicaSets, err := kcl.cli.AppsV1().ReplicaSets(secret.Namespace).List(context.Background(), metav1.ListOptions{})
 		if err != nil {
 			return models.K8sSecret{}, fmt.Errorf("an error occurred during the CombineSecretWithApplications operation, unable to get replica sets. Error: %w", err)
 		}
+		replicaSetsItems = replicaSets.Items
 	}
 
-	applicationConfigurationOwners, err := kcl.GetApplicationConfigurationOwnersFromSecret(secret, pods.Items, replicaSets.Items)
+	applicationConfigurationOwners, err := kcl.GetApplicationConfigurationOwnersFromSecret(secret, pods.Items, replicaSetsItems)
 	if err != nil {
 		return models.K8sSecret{}, fmt.Errorf("an error occurred during the CombineSecretWithApplications operation, unable to get applications from secret. Error: %w", err)
 	}

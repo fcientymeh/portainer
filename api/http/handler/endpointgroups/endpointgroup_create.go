@@ -52,8 +52,7 @@ func (payload *endpointGroupCreatePayload) Validate(r *http.Request) error {
 // @router /endpoint_groups [post]
 func (handler *Handler) endpointGroupCreate(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	var payload endpointGroupCreatePayload
-	err := request.DecodeAndValidateJSONPayload(r, &payload)
-	if err != nil {
+	if err := request.DecodeAndValidateJSONPayload(r, &payload); err != nil {
 		return httperror.BadRequest("Invalid request payload", err)
 	}
 
@@ -74,25 +73,19 @@ func (handler *Handler) endpointGroupCreate(w http.ResponseWriter, r *http.Reque
 	//------------------------
 
 	var endpointGroup *portainer.EndpointGroup
+	//var err error
 	err = handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		endpointGroup, err = handler.createEndpointGroup(tx, payload)
 		return err
 	})
-	if err != nil {
-		var httpErr *httperror.HandlerError
-		if errors.As(err, &httpErr) {
-			return httpErr
-		}
 
-		return httperror.InternalServerError("Unexpected error", err)
-	}
 	uzer, errorek = security.RetrieveTokenData(r)
 	if errorek == nil {
 		if r.Method != http.MethodGet {
 			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE GROUP %s]     [%s]", uzer.Username, endpointGroup.Name, r)
 		}
 	}
-	return response.JSON(w, endpointGroup)
+	return response.TxResponse(w, endpointGroup, err)
 }
 
 func (handler *Handler) createEndpointGroup(tx dataservices.DataStoreTx, payload endpointGroupCreatePayload) (*portainer.EndpointGroup, error) {

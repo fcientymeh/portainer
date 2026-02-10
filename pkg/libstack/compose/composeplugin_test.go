@@ -9,13 +9,17 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/compose-spec/compose-go/v2/consts"
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/docker/cli/cli/command"
+	"github.com/docker/cli/cli/config"
+	configtypes "github.com/docker/cli/cli/config/types"
 	cmdcompose "github.com/docker/compose/v2/cmd/compose"
 	"github.com/docker/compose/v2/pkg/api"
+	"github.com/docker/compose/v2/pkg/compose"
 	"github.com/google/go-cmp/cmp"
 	"github.com/portainer/portainer/pkg/libstack"
 	zerolog "github.com/rs/zerolog/log"
@@ -26,13 +30,13 @@ import (
 func Test_UpAndDown(t *testing.T) {
 	const projectName = "composetest"
 
-	const composeFileContent = `version: "3.9"
+	const composeFileContent = `
 services:
   busybox:
     image: "alpine:3.7"
     container_name: "composetest_container_one"`
 
-	const overrideComposeFileContent = `version: "3.9"
+	const overrideComposeFileContent = `
 services:
   busybox:
     image: "alpine:latest"
@@ -77,6 +81,65 @@ services:
 	require.NoError(t, err)
 
 	require.False(t, containerExists(composeContainerName))
+}
+
+// Detect regression in container injections.
+// Ref BE-12432
+// Ref https://github.com/portainer/portainer/issues/12909
+func Test_UpAndDownWithInjection(t *testing.T) {
+	const content = `
+services:
+  test:
+    image: alpine:latest
+    container_name: "composetest_alpine"
+    command: ["sh", "-c", "cat /test.txt"]
+    configs:
+      - source: test-config
+        target: /test.txt
+
+configs:
+  test-config:
+    content: |
+      Hello from inline config!
+      This should appear in the container.
+`
+	const projectName = "composetest"
+	const containerName = "composetest_alpine"
+	w := NewComposeDeployer()
+
+	dir := t.TempDir()
+	ctx := context.Background()
+
+	filePath := createFile(t, dir, "docker-compose.yml", content)
+	filePaths := []string{filePath}
+
+	err := w.Validate(ctx, filePaths, libstack.Options{ProjectName: projectName})
+	require.NoError(t, err)
+
+	err = w.Pull(ctx, filePaths, libstack.Options{ProjectName: projectName})
+	require.NoError(t, err)
+
+	require.False(t, containerExists(containerName))
+
+	err = w.Deploy(ctx, filePaths, libstack.DeployOptions{
+		Options: libstack.Options{
+			ProjectName: projectName,
+		},
+	})
+	require.NoError(t, err)
+
+	require.True(t, containerExists(containerName))
+
+	waitResult := w.WaitForStatus(ctx, projectName, libstack.StatusCompleted)
+
+	require.Empty(t, waitResult.ErrorMsg)
+	require.Equal(t, libstack.StatusCompleted, waitResult.Status)
+
+	err = w.Remove(ctx, projectName, filePaths, libstack.RemoveOptions{})
+	require.NoError(t, err)
+
+	require.False(t, containerExists(containerName))
+
 }
 
 func TestRun(t *testing.T) {
@@ -144,7 +207,10 @@ func Test_Config(t *testing.T) {
 	dir := t.TempDir()
 	projectName := "configtest"
 
-	defer os.RemoveAll(dir)
+	defer func() {
+		err := os.RemoveAll(dir)
+		require.NoError(t, err)
+	}()
 
 	testCases := []struct {
 		name               string
@@ -476,8 +542,20 @@ func Test_DeployWithRemoveOrphans(t *testing.T) {
 	}
 }
 
+type logger struct {
+	sync.Mutex
+	strings.Builder
+}
+
+func (l *logger) Write(p []byte) (n int, err error) {
+	l.Lock()
+	defer l.Unlock()
+
+	return l.Builder.Write(p)
+}
+
 func Test_DeployWithIgnoreOrphans(t *testing.T) {
-	var logOutput strings.Builder
+	var logOutput logger
 	oldLogger := zerolog.Logger
 	zerolog.Logger = zerolog.Output(&logOutput)
 	defer func() {
@@ -564,7 +642,7 @@ func Test_DeployWithIgnoreOrphans(t *testing.T) {
 	require.Equal(t, libstack.StatusCompleted, waitResult.Status)
 
 	logString := logOutput.String()
-	require.False(t, strings.Contains(logString, "Found orphan containers ([compose_ignore_orphans_test-service-1-1])"))
+	require.NotContains(t, logString, "Found orphan containers ([compose_ignore_orphans_test-service-1-1])")
 }
 
 func Test_MaxConcurrency(t *testing.T) {
@@ -595,14 +673,15 @@ func Test_MaxConcurrency(t *testing.T) {
 	err := w.Validate(ctx, filepaths, options)
 	require.NoError(t, err)
 
-	w.withComposeService(ctx, filepaths, options, func(service api.Service, _ *types.Project) error {
+	err = w.withComposeService(ctx, filepaths, options, func(service api.Compose, _ *types.Project) error {
 		if mockS, ok := service.(*mockComposeService); ok {
-			require.Equal(t, mockS.maxConcurrency, expectedMaxConcurrency)
+			require.Equal(t, expectedMaxConcurrency, mockS.maxConcurrency)
 		} else {
 			t.Fatalf("Expected mockComposeService but got %T", service)
 		}
 		return nil
 	})
+	require.NoError(t, err)
 }
 
 func Test_createProject(t *testing.T) {
@@ -1298,12 +1377,85 @@ func Test_createProject(t *testing.T) {
 	}
 }
 
-func createMockComposeService(dockerCli command.Cli) api.Service {
+func Test_CredentialsStore_Behavior(t *testing.T) {
+	ctx := context.Background()
+	// Create a temporary Docker config with a credsStore set (simulating Docker Desktop)
+	tmpDir := t.TempDir()
+
+	// Write a fake config.json with credsStore configured
+	configJSON := `{
+	"credsStore": "test-store",
+	"auths": {}
+}`
+	configPath := filepath.Join(tmpDir, "config.json")
+	err := os.WriteFile(configPath, []byte(configJSON), 0644)
+	require.NoError(t, err)
+
+	t.Run("withCli preserves credsStore when no registries provided", func(t *testing.T) {
+		// Set the Docker config directory to the temp dir
+		config.SetDir(tmpDir)
+
+		var capturedCredsStore string
+		var capturedAuthConfigs map[string]configtypes.AuthConfig
+
+		err = withCli(ctx, libstack.Options{}, func(ctx context.Context, cli *command.DockerCli) error {
+			// Capture the state after withCli sets up credentials
+			capturedCredsStore = cli.ConfigFile().CredentialsStore
+			capturedAuthConfigs = cli.ConfigFile().AuthConfigs
+			return nil
+		})
+		require.NoError(t, err)
+
+		// Verify the fix: credsStore should be preserved when no registries are provided
+		require.Equal(t, "test-store", capturedCredsStore,
+			"credsStore should be preserved when no registries are provided")
+
+		// Verify registry credentials were not set
+		require.Empty(t, capturedAuthConfigs,
+			"no registry credentials should be configured in AuthConfigs")
+	})
+
+	t.Run("withCli clears credsStore when registries provided", func(t *testing.T) {
+		// Set the Docker config directory to the temp dir
+		config.SetDir(tmpDir)
+
+		// Test with registries provided
+		registries := []configtypes.AuthConfig{
+			{
+				Username:      "testuser",
+				Password:      "testpass",
+				ServerAddress: "registry.example.com",
+			},
+		}
+		var capturedCredsStore string
+		var capturedAuthConfigs map[string]configtypes.AuthConfig
+
+		err = withCli(ctx, libstack.Options{Registries: registries}, func(ctx context.Context, cli *command.DockerCli) error {
+			// Capture the state after withCli sets up credentials
+			capturedCredsStore = cli.ConfigFile().CredentialsStore
+			capturedAuthConfigs = cli.ConfigFile().AuthConfigs
+			return nil
+		})
+		require.NoError(t, err)
+
+		// Verify the fix: credsStore should be empty when registries are provided
+		require.Empty(t, capturedCredsStore,
+			"credsStore should be cleared when registries are provided to force Docker to use inline credentials")
+
+		// Verify registry credentials were set
+		require.Contains(t, capturedAuthConfigs, "registry.example.com",
+			"custom registry credentials should be configured in AuthConfigs")
+		require.Equal(t, "testuser", capturedAuthConfigs["registry.example.com"].Username,
+			"custom registry username should match")
+	})
+}
+
+func createMockComposeService(command.Cli, ...compose.Option) api.Compose {
 	return &mockComposeService{}
 }
 
 type mockComposeService struct {
-	api.Service
+	api.Compose
 	maxConcurrency int
 }
 

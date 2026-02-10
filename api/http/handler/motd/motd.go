@@ -42,20 +42,29 @@ func (handler *Handler) motd(w http.ResponseWriter, r *http.Request) {
 	return // AIP MOD
 	if err := libclient.ExternalRequestDisabled(portainer.MessageOfTheDayURL); err != nil {
 		log.Debug().Err(err).Msg("External request disabled: MOTD")
-		response.JSON(w, &motdResponse{Message: ""})
+
+		if err := response.JSON(w, &motdResponse{Message: ""}); err != nil {
+			log.Warn().Err(err).Msg("failed to send MOTD response")
+		}
+
 		return
 	}
 
 	motd, err := client.Get(portainer.MessageOfTheDayURL, 0)
 	if err != nil {
-		response.JSON(w, &motdResponse{Message: ""})
+		if err := response.JSON(w, &motdResponse{Message: ""}); err != nil {
+			log.Error().Err(err).Msg("failed to send MOTD response")
+		}
+
 		return
 	}
 
 	var data motdData
-	err = json.Unmarshal(motd, &data)
-	if err != nil {
-		response.JSON(w, &motdResponse{Message: ""})
+	if err := json.Unmarshal(motd, &data); err != nil {
+		if err := response.JSON(w, &motdResponse{Message: ""}); err != nil {
+			log.Error().Err(err).Msg("failed to send MOTD response")
+		}
+
 		return
 	}
 
@@ -70,5 +79,7 @@ func (handler *Handler) motd(w http.ResponseWriter, r *http.Request) {
 		Style:         data.Style,
 	}
 
-	response.JSON(w, &resp)
+	if err := response.JSON(w, &resp); err != nil {
+		log.Warn().Err(err).Msg("failed to send MOTD response")
+	}
 }

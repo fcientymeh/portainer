@@ -24,8 +24,8 @@ var (
 	// NodejsVersion is the version of Node.js used in the build.
 	NodejsVersion string
 
-	// YarnVersion is the version of Yarn used in the build.
-	YarnVersion string
+	// PnpmVersion is the version of pnpm used in the build.
+	PnpmVersion string
 
 	// WebpackVersion is the version of Webpack used in the build.
 	WebpackVersion string
@@ -44,6 +44,9 @@ var (
 
 	// DepKubectlVersion is the version of the Kubectl binary shipped with the application.
 	DepKubectlVersion string
+
+	// DepHelmVersion is the version of the Helm binary shipped with the application.
+	DepHelmVersion string
 )
 
 type (
@@ -52,7 +55,7 @@ type (
 		BuildNumber    string
 		ImageTag       string
 		NodejsVersion  string
-		YarnVersion    string
+		PnpmVersion    string
 		WebpackVersion string
 		GoVersion      string
 		GitCommit      string
@@ -78,7 +81,7 @@ func GetBuildInfo() BuildInfo {
 		BuildNumber:    BuildNumber,
 		ImageTag:       ImageTag,
 		NodejsVersion:  NodejsVersion,
-		YarnVersion:    YarnVersion,
+		PnpmVersion:    PnpmVersion,
 		WebpackVersion: WebpackVersion,
 		GoVersion:      GoVersion,
 		GitCommit:      GitCommit,
@@ -89,8 +92,9 @@ func GetBuildInfo() BuildInfo {
 func GetDependenciesInfo() DependenciesInfo {
 	return DependenciesInfo{
 		DockerVersion:  DepDockerVersion,
-		KubectlVersion: DepKubectlVersion,
 		ComposeVersion: DepComposeVersion,
+		KubectlVersion: DepKubectlVersion,
+		HelmVersion:    DepHelmVersion,
 	}
 }
 

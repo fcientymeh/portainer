@@ -28,7 +28,7 @@ type PortainerApplicationResources struct {
 // if the user is an admin, all namespaces in the current k8s environment(endpoint) are fetched using the fetchApplications function.
 // otherwise, namespaces the non-admin user has access to will be used to filter the applications based on the allowed namespaces.
 func (kcl *KubeClient) GetApplications(namespace, nodeName string) ([]models.K8sApplication, error) {
-	if kcl.IsKubeAdmin {
+	if kcl.GetIsKubeAdmin() {
 		return kcl.fetchApplications(namespace, nodeName)
 	}
 
@@ -64,9 +64,13 @@ func (kcl *KubeClient) fetchApplications(namespace, nodeName string) ([]models.K
 // fetchApplicationsForNonAdmin fetches the applications in the namespaces the user has access to.
 // This function is called when the user is not an admin.
 func (kcl *KubeClient) fetchApplicationsForNonAdmin(namespace, nodeName string) ([]models.K8sApplication, error) {
-	log.Debug().Msgf("Fetching applications for non-admin user: %v", kcl.NonAdminNamespaces)
+	nonAdminNamespaces := kcl.GetClientNonAdminNamespaces()
 
-	if len(kcl.NonAdminNamespaces) == 0 {
+	log.Debug().
+		Strs("non_admin_namespaces", nonAdminNamespaces).
+		Msg("fetching applications for non-admin user")
+
+	if len(nonAdminNamespaces) == 0 {
 		return nil, nil
 	}
 
@@ -259,6 +263,7 @@ func populateApplicationFromDeployment(application *models.K8sApplication, deplo
 	application.ApplicationOwner = deployment.Labels["io.portainer.kubernetes.application.owner"]
 	application.StackID = deployment.Labels["io.portainer.kubernetes.application.stackid"]
 	application.StackName = deployment.Labels["io.portainer.kubernetes.application.stack"]
+	application.StackKind = deployment.Labels["io.portainer.kubernetes.application.stackKind"]
 	application.Labels = deployment.Labels
 	application.MatchLabels = deployment.Spec.Selector.MatchLabels
 	application.CreationDate = deployment.CreationTimestamp.Time
@@ -269,7 +274,8 @@ func populateApplicationFromDeployment(application *models.K8sApplication, deplo
 	application.RunningPodsCount = int(deployment.Status.ReadyReplicas)
 	application.DeploymentType = "Replicated"
 	application.Metadata = &models.Metadata{
-		Labels: deployment.Labels,
+		Labels:      deployment.Labels,
+		Annotations: deployment.Annotations,
 	}
 
 	// If the deployment has containers, use the first container's image
@@ -287,6 +293,7 @@ func populateApplicationFromStatefulSet(application *models.K8sApplication, stat
 	application.ApplicationOwner = statefulSet.Labels["io.portainer.kubernetes.application.owner"]
 	application.StackID = statefulSet.Labels["io.portainer.kubernetes.application.stackid"]
 	application.StackName = statefulSet.Labels["io.portainer.kubernetes.application.stack"]
+	application.StackKind = statefulSet.Labels["io.portainer.kubernetes.application.stackKind"]
 	application.Labels = statefulSet.Labels
 	application.MatchLabels = statefulSet.Spec.Selector.MatchLabels
 	application.CreationDate = statefulSet.CreationTimestamp.Time
@@ -297,7 +304,8 @@ func populateApplicationFromStatefulSet(application *models.K8sApplication, stat
 	application.RunningPodsCount = int(statefulSet.Status.ReadyReplicas)
 	application.DeploymentType = "Replicated"
 	application.Metadata = &models.Metadata{
-		Labels: statefulSet.Labels,
+		Labels:      statefulSet.Labels,
+		Annotations: statefulSet.Annotations,
 	}
 
 	// If the statefulSet has containers, use the first container's image
@@ -315,6 +323,7 @@ func populateApplicationFromDaemonSet(application *models.K8sApplication, daemon
 	application.ApplicationOwner = daemonSet.Labels["io.portainer.kubernetes.application.owner"]
 	application.StackID = daemonSet.Labels["io.portainer.kubernetes.application.stackid"]
 	application.StackName = daemonSet.Labels["io.portainer.kubernetes.application.stack"]
+	application.StackKind = daemonSet.Labels["io.portainer.kubernetes.application.stackKind"]
 	application.Labels = daemonSet.Labels
 	application.MatchLabels = daemonSet.Spec.Selector.MatchLabels
 	application.CreationDate = daemonSet.CreationTimestamp.Time
@@ -322,7 +331,8 @@ func populateApplicationFromDaemonSet(application *models.K8sApplication, daemon
 	application.RunningPodsCount = int(daemonSet.Status.NumberReady)
 	application.DeploymentType = "Global"
 	application.Metadata = &models.Metadata{
-		Labels: daemonSet.Labels,
+		Labels:      daemonSet.Labels,
+		Annotations: daemonSet.Annotations,
 	}
 
 	if len(daemonSet.Spec.Template.Spec.Containers) > 0 {
@@ -344,6 +354,7 @@ func populateApplicationFromPod(application *models.K8sApplication, pod corev1.P
 	application.ApplicationOwner = pod.Labels["io.portainer.kubernetes.application.owner"]
 	application.StackID = pod.Labels["io.portainer.kubernetes.application.stackid"]
 	application.StackName = pod.Labels["io.portainer.kubernetes.application.stack"]
+	application.StackKind = pod.Labels["io.portainer.kubernetes.application.stackKind"]
 	application.Labels = pod.Labels
 	application.MatchLabels = pod.Labels
 	application.CreationDate = pod.CreationTimestamp.Time
@@ -351,7 +362,8 @@ func populateApplicationFromPod(application *models.K8sApplication, pod corev1.P
 	application.RunningPodsCount = runningPodsCount
 	application.DeploymentType = string(pod.Status.Phase)
 	application.Metadata = &models.Metadata{
-		Labels: pod.Labels,
+		Labels:      pod.Labels,
+		Annotations: pod.Annotations,
 	}
 
 	// If the pod has containers, use the first container's image
@@ -537,7 +549,7 @@ func addRelatedResourcesToApplication(app *models.K8sApplication, resources Port
 // hasNoScheduledPods checks if a workload has completely failed to schedule any pods
 // it checks for no replicas desired, i.e. nothing to schedule and see if any pods are running
 // if any pods exist at all (even if not ready), it returns false
-func hasNoScheduledPods(obj interface{}) bool {
+func hasNoScheduledPods(obj any) bool {
 	switch resource := obj.(type) {
 	case appsv1.Deployment:
 		if resource.Status.Replicas > 0 {

@@ -91,7 +91,7 @@ func initFileService(dataStorePath string) portainer.FileService {
 }
 
 func initDataStore(flags *portainer.CLIFlags, secretKey []byte, fileService portainer.FileService, shutdownCtx context.Context) dataservices.DataStore {
-	connection, err := database.NewDatabase("boltdb", *flags.Data, secretKey)
+	connection, err := database.NewDatabase("boltdb", *flags.Data, secretKey, *flags.CompactDB)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed creating database connection")
 	}
@@ -141,15 +141,16 @@ func initDataStore(flags *portainer.CLIFlags, secretKey []byte, fileService port
 			InstanceID:    instanceId.String(),
 			MigratorCount: migratorCount,
 		}
-		store.VersionService.UpdateVersion(&v)
+
+		if err := store.VersionService.UpdateVersion(&v); err != nil {
+			log.Fatal().Err(err).Msg("failed to update version")
+		}
 
 		if err := updateSettingsFromFlags(store, flags); err != nil {
 			log.Fatal().Err(err).Msg("failed updating settings from flags")
 		}
-	} else {
-		if err := store.MigrateData(); err != nil {
-			log.Fatal().Err(err).Msg("failed migration")
-		}
+	} else if err := store.MigrateData(); err != nil {
+		log.Fatal().Err(err).Msg("failed migration")
 	}
 
 	if err := updateSettingsFromFlags(store, flags); err != nil {
@@ -160,7 +161,7 @@ func initDataStore(flags *portainer.CLIFlags, secretKey []byte, fileService port
 	go func() {
 		<-shutdownCtx.Done()
 
-		defer connection.Close()
+		defer logs.CloseAndLogErr(connection)
 	}()
 
 	return store
@@ -316,13 +317,13 @@ func initKeyPair(fileService portainer.FileService, signatureService portainer.D
 
 // dbSecretPath build the path to the file that contains the db encryption
 // secret. Normally in Docker this is built from the static path inside
-// /run/portainer for example: /run/portainer/<keyFilenameFlag> but for ease of
+// /run/secrets for example: /run/secrets/<keyFilenameFlag> but for ease of
 // use outside Docker it also accepts an absolute path
 func dbSecretPath(keyFilenameFlag string) string {
 	if path.IsAbs(keyFilenameFlag) {
 		return keyFilenameFlag
 	}
-	return path.Join("/run/portainer", keyFilenameFlag)
+	return path.Join("/run/secrets", keyFilenameFlag)
 }
 
 func loadEncryptionSecretKey(keyfilename string) []byte {
@@ -354,7 +355,7 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 	trustedOrigins := []string{}
 	if *flags.TrustedOrigins != "" {
 		// validate if the trusted origins are valid urls
-		for _, origin := range strings.Split(*flags.TrustedOrigins, ",") {
+		for origin := range strings.SplitSeq(*flags.TrustedOrigins, ",") {
 			if !validate.IsTrustedOrigin(origin) {
 				log.Fatal().Str("trusted_origin", origin).Msg("invalid url for trusted origin. Please check the trusted origins flag.")
 			}
@@ -415,7 +416,7 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 
 	edgeStacksService := edgestacks.NewService(dataStore)
 
-	sslService, err := initSSLService(*flags.AddrHTTPS, *flags.SSLCert, *flags.SSLKey, fileService, dataStore, shutdownTrigger)
+	sslService, err := initSSLService(*flags.AddrHTTPS, *flags.TLSCert, *flags.TLSKey, fileService, dataStore, shutdownTrigger)
 	if err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
@@ -536,7 +537,9 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 
 	scheduler := scheduler.NewScheduler(shutdownCtx)
 	stackDeployer := deployments.NewStackDeployer(swarmStackManager, composeStackManager, kubernetesDeployer, dockerClientFactory, dataStore)
-	deployments.StartStackSchedules(scheduler, stackDeployer, dataStore, gitService)
+	if err := deployments.StartStackSchedules(scheduler, stackDeployer, dataStore, gitService); err != nil {
+		log.Fatal().Err(err).Msg("failed to start stack scheduler")
+	}
 
 	sslDBSettings, err := dataStore.SSLSettings().Settings()
 	if err != nil {
@@ -735,7 +738,7 @@ func main() {
 			Str("build_number", build.BuildNumber).
 			Str("image_tag", build.ImageTag).
 			Str("nodejs_version", build.NodejsVersion).
-			Str("yarn_version", build.YarnVersion).
+			Str("pnpm_version", build.PnpmVersion).
 			Str("webpack_version", build.WebpackVersion).
 			Str("go_version", build.GoVersion).
 			Msg("starting Portainer")
