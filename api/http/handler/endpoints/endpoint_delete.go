@@ -203,7 +203,7 @@ func (handler *Handler) deleteEndpoint(tx dataservices.DataStoreTx, endpointID p
 			err = tx.Tag().Update(tagID, tag)
 		}
 
-		if handler.DataStore.IsErrObjectNotFound(err) {
+		if tx.IsErrObjectNotFound(err) {
 			log.Warn().Err(err).Msg("Unable to find tag inside the database")
 		} else if err != nil {
 			log.Warn().Err(err).Msg("Unable to delete tag relation from the database")
@@ -251,7 +251,7 @@ func (handler *Handler) deleteEndpoint(tx dataservices.DataStoreTx, endpointID p
 	}
 
 	if endpointutils.IsEdgeEndpoint(endpoint) {
-		edgeJobs, err := handler.DataStore.EdgeJob().ReadAll()
+		edgeJobs, err := tx.EdgeJob().ReadAll()
 		if err != nil {
 			log.Warn().Err(err).Msg("Unable to retrieve edge jobs from the database")
 		}

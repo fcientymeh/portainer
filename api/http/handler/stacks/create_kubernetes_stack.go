@@ -214,7 +214,7 @@ func (handler *Handler) createKubernetesStackFromGitRepository(w http.ResponseWr
 
 	// Make sure the webhook ID is unique
 	if payload.AutoUpdate != nil && payload.AutoUpdate.Webhook != "" {
-		if isUnique, err := handler.checkUniqueWebhookID(payload.AutoUpdate.Webhook); err != nil {
+		if isUnique, err := handler.checkUniqueWebhookID(handler.DataStore, payload.AutoUpdate.Webhook); err != nil {
 			return httperror.InternalServerError("Unable to check for webhook ID collision", err)
 		} else if !isUnique {
 			return httperror.Conflict(fmt.Sprintf("Webhook ID: %s already exists", payload.AutoUpdate.Webhook), stackutils.ErrWebhookIDAlreadyExists)

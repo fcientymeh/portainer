@@ -68,9 +68,9 @@ export function ApplicationsDatatable({
   const filteredApplications = tableState.showSystemResources
     ? applications
     : applications.filter(
-        (application) =>
-          !isSystemNamespace(application.ResourcePool, namespaceListQuery.data)
-      );
+      (application) =>
+        !isSystemNamespace(application.ResourcePool, namespaceListQuery.data)
+    );
   const stacks = getStacksFromApplications(filteredApplications);
   const removeApplicationsMutation = useDeleteApplicationsMutation({
     environmentId,
@@ -168,9 +168,8 @@ function separateHelmApps(applications: Application[]): ApplicationRowData[] {
     applications,
     (app) =>
       app.Metadata?.labels &&
-      (app.Metadata.labels[PodKubernetesInstanceLabel] ||
-        // 'meta.helm.sh/release-name' annotation fallback
-        app.Metadata.annotations?.[HelmReleaseNameAnnotation]) &&
+      (app.Metadata.annotations?.[HelmReleaseNameAnnotation] ||
+        app.Metadata.labels[PodKubernetesInstanceLabel]) &&
       app.Metadata.labels[PodManagedByLabel] === 'Helm'
   );
 
@@ -178,9 +177,11 @@ function separateHelmApps(applications: Application[]): ApplicationRowData[] {
     helmApps,
     (app) =>
       `${app.ResourcePool}/${
-        app.Metadata?.labels[PodKubernetesInstanceLabel] ??
-        app.Metadata?.annotations?.[HelmReleaseNameAnnotation] ??
-        ''
+      // Prioritize the official Helm annotation over the instance label
+      // meta.helm.sh/release-name is the authoritative source for Helm release names
+      app.Metadata?.annotations?.[HelmReleaseNameAnnotation] ??
+      app.Metadata?.labels[PodKubernetesInstanceLabel] ??
+      ''
       }`
   );
 

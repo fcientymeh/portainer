@@ -206,9 +206,9 @@ func (handler *Handler) checkUniqueStackNameInDocker(endpoint *portainer.Endpoin
 	return isUniqueStackName, nil
 }
 
-func (handler *Handler) checkUniqueWebhookID(webhookID string) (bool, error) {
-	_, err := handler.DataStore.Stack().StackByWebhookID(webhookID)
-	if handler.DataStore.IsErrObjectNotFound(err) {
+func (handler *Handler) checkUniqueWebhookID(tx dataservices.DataStoreTx, webhookID string) (bool, error) {
+	_, err := tx.Stack().StackByWebhookID(webhookID)
+	if tx.IsErrObjectNotFound(err) {
 		return true, nil
 	}
 	return false, err
