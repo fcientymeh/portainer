@@ -1,7 +1,6 @@
 package backup
 
 import (
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -50,7 +49,7 @@ func (h *Handler) backup(w http.ResponseWriter, r *http.Request) *httperror.Hand
 	teamMemberships, _ := h.dataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
 	team, err := h.dataStore.Team().TeamByName("READONLY")
 	if err != nil {
-		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE] - backup.go:52", uzer.Username)
 	}
 	for _, membership := range teamMemberships {
 		if membership.TeamID == team.ID {
@@ -78,7 +77,7 @@ func (h *Handler) backup(w http.ResponseWriter, r *http.Request) *httperror.Hand
 	//
 	if errorek == nil {
 		if r.Method != http.MethodGet {
-			log.Printf("[AIP AUDIT] [%s] [GENERATE PORTAINER BACKUP]     [%s]", uzer.Username, r)
+			log.Printf("[AIP AUDIT] [%s] [GENERATE PORTAINER BACKUP]     [%s] - backup.go:80", uzer.Username, r)
 		}
 	}
 	//
