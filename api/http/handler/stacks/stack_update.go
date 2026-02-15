@@ -87,7 +87,7 @@ func (handler *Handler) stackUpdate(w http.ResponseWriter, r *http.Request) *htt
 		return httperror.BadRequest("Invalid stack identifier route variable", err)
 	}
 
-	stack, err := handler.DataStore.Stack().Read(portainer.StackID(stackID))
+	//stack, err := handler.DataStore.Stack().Read(portainer.StackID(stackID))
 	if handler.DataStore.IsErrObjectNotFound(err) {
 		return httperror.NotFound("Unable to find a stack with the specified identifier inside the database", err)
 
@@ -95,6 +95,9 @@ func (handler *Handler) stackUpdate(w http.ResponseWriter, r *http.Request) *htt
 		return httperror.InternalServerError("Unable to find a stack with the specified identifier inside the database", err)
 	}
 	uzer, errorek := security.RetrieveTokenData(r)
+	if errorek != nil {
+		return httperror.InternalServerError("Cannot get active usernema logged in!", err)
+	}
 	//--- AIS: Read-Only user management ---
 	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
 	team, err := handler.DataStore.Team().TeamByName("READONLY")

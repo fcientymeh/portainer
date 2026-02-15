@@ -62,7 +62,6 @@ func (handler *Handler) tagCreate(w http.ResponseWriter, r *http.Request) *httpe
 	}
 	//------------------------
 	var tag *portainer.Tag
-	var err error
 	err = handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		tag, err = createTag(tx, payload)
 		return err

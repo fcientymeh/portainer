@@ -80,8 +80,7 @@ func (handler *Handler) endpointGroupUpdate(w http.ResponseWriter, r *http.Reque
 	var endpointGroup *portainer.EndpointGroup
 
 	err = handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		endpointGroup, err = handler.updateEndpointGroup(tx, portainer.EndpointGroupID(endpointGroupID), payload)
-		//endpointGroup, err = handler.updateEndpointGroup(tx, portainer.EndpointGroupID(endpointGroupID), payload, r)
+		endpointGroup, err = handler.updateEndpointGroup(tx, portainer.EndpointGroupID(endpointGroupID), payload, r)
 		return err
 	})
 

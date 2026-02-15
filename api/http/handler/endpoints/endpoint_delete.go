@@ -79,8 +79,7 @@ func (handler *Handler) endpointDelete(w http.ResponseWriter, r *http.Request) *
 	}
 
 	err = handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		return handler.deleteEndpoint(tx, portainer.EndpointID(endpointID), deleteCluster)
-		//return handler.deleteEndpoint(tx, portainer.EndpointID(endpointID), deleteCluster, r)
+		return handler.deleteEndpoint(tx, portainer.EndpointID(endpointID), deleteCluster, r)
 	})
 
 	return response.TxEmptyResponse(w, err)
