@@ -31,10 +31,12 @@ export function CreateStackInnerForm({
   isSwarm = false,
   isDeploying,
   isSaved,
+  webhookId,
 }: {
   isSwarm: boolean | undefined;
   isDeploying: boolean;
   isSaved: boolean;
+  webhookId: string;
 }) {
   const environmentQuery = useCurrentEnvironment();
   const schemaQuery = useDockerComposeSchema();
@@ -79,7 +81,7 @@ export function CreateStackInnerForm({
       {values.method === 'upload' && <UploadSection isSwarm={isSwarm} />}
 
       {values.method === 'repository' && (
-        <GitSection isDockerStandalone={!isSwarm} />
+        <GitSection isDockerStandalone={!isSwarm} webhookId={webhookId} />
       )}
 
       {values.method === 'template' && (
@@ -100,8 +102,9 @@ export function CreateStackInnerForm({
 
       {values.method !== 'repository' && (
         <WebhookFieldset
-          value={values.webhookId}
-          onChange={(value) => setFieldValue('webhookId', value)}
+          value={values.enableWebhook}
+          onChange={(value) => setFieldValue('enableWebhook', value)}
+          webhookId={webhookId}
         />
       )}
 

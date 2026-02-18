@@ -358,13 +358,15 @@ type (
 	// HelmConfig represents the Helm configuration for an edge stack
 	HelmConfig struct {
 		// Path to a Helm chart folder for Helm git deployments
-		ChartPath string `json:"HelmChartPath,omitempty" example:"charts/my-app"`
+		ChartPath string `json:"ChartPath,omitempty" example:"charts/my-app"`
 		// Array of paths to Helm values YAML files for Helm git deployments
-		ValuesFiles []string `json:"HelmValuesFiles,omitempty" example:"['values/prod.yaml', 'values/secrets.yaml']"`
+		ValuesFiles []string `json:"ValuesFiles,omitempty" example:"['values/prod.yaml', 'values/secrets.yaml']"`
 		// Helm chart version from Chart.yaml (read-only, extracted during Git sync)
-		Version string `json:"HelmVersion,omitempty" example:"1.2.3"`
+		Version string `json:"Version,omitempty" example:"1.2.3"`
 		// Enable automatic rollback on deployment failure (equivalent to helm --atomic flag)
-		Atomic bool `json:"HelmAtomic,omitempty" example:"true"`
+		Atomic bool `json:"Atomic" example:"true"`
+		// Timeout for Helm operations (equivalent to helm --timeout flag)
+		Timeout string `json:"Timeout,omitempty" example:"5m0s"`
 	}
 
 	EdgeStackStatusForEnv struct {

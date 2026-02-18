@@ -79,6 +79,7 @@ export type SwarmCreatePayload =
         git: GitFormModel;
         relativePathSettings?: RelativePathModel;
         fromAppTemplate?: boolean;
+        webhook?: string;
       };
     };
 
@@ -108,6 +109,7 @@ type StandaloneCreatePayload =
         git: GitFormModel;
         relativePathSettings?: RelativePathModel;
         fromAppTemplate?: boolean;
+        webhook?: string;
       };
     };
 
@@ -126,6 +128,7 @@ type KubernetesCreatePayload =
       payload: KubernetesBasePayload & {
         git: GitFormModel;
         relativePathSettings?: RelativePathModel;
+        webhook?: string;
       };
     }
   | {
@@ -198,7 +201,10 @@ function createSwarmStack({ method, payload }: SwarmCreatePayload) {
         filesystemPath: payload.relativePathSettings?.FilesystemPath,
         supportRelativePath: payload.relativePathSettings?.SupportRelativePath,
         tlsSkipVerify: payload.git.TLSSkipVerify,
-        autoUpdate: transformAutoUpdateViewModel(payload.git.AutoUpdate),
+        autoUpdate: transformAutoUpdateViewModel(
+          payload.git.AutoUpdate,
+          payload.webhook
+        ),
         environmentId: payload.environmentId,
         swarmID: payload.swarmId,
         additionalFiles: payload.git.AdditionalFiles,
@@ -246,7 +252,10 @@ function createStandaloneStack({ method, payload }: StandaloneCreatePayload) {
         filesystemPath: payload.relativePathSettings?.FilesystemPath,
         supportRelativePath: payload.relativePathSettings?.SupportRelativePath,
         tlsSkipVerify: payload.git.TLSSkipVerify,
-        autoUpdate: transformAutoUpdateViewModel(payload.git.AutoUpdate),
+        autoUpdate: transformAutoUpdateViewModel(
+          payload.git.AutoUpdate,
+          payload.webhook
+        ),
         environmentId: payload.environmentId,
         additionalFiles: payload.git.AdditionalFiles,
         fromAppTemplate: payload.fromAppTemplate,
@@ -291,7 +300,10 @@ function createKubernetesStack({ method, payload }: KubernetesCreatePayload) {
         repositoryGitCredentialId: payload.git.RepositoryGitCredentialID,
 
         tlsSkipVerify: payload.git.TLSSkipVerify,
-        autoUpdate: transformAutoUpdateViewModel(payload.git.AutoUpdate),
+        autoUpdate: transformAutoUpdateViewModel(
+          payload.git.AutoUpdate,
+          payload.webhook
+        ),
         environmentId: payload.environmentId,
         additionalFiles: payload.git.AdditionalFiles,
         composeFormat: payload.composeFormat,

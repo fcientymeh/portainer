@@ -15,7 +15,8 @@ export function StickyFooter({
     <div
       className={clsx(
         styles.actionBar,
-        'fixed bottom-0 right-0 z-50 h-16',
+        // The sticky footer should be below the modal overlay `Modal.tsx` and react select menu `ReactSelect.css` (z-50)
+        'fixed bottom-0 right-0 z-10 h-16',
         'flex items-center px-6',
         'bg-[var(--bg-widget-color)] border-t border-[var(--border-widget-color)]',
         'shadow-[0_-2px_10px_rgba(0,0,0,0.1)]',
