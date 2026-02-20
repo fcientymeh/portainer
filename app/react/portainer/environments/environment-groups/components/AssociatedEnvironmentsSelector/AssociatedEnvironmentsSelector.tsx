@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useEnvironmentList } from '@/react/portainer/environments/queries';
 
@@ -11,6 +11,8 @@ import { AssociatedEnvironmentsTable } from './AssociatedEnvironmentsTable';
 import { AvailableEnvironmentsTable } from './AvailableEnvironmentsTable';
 
 interface Props {
+  /** Group ID when editing an existing group */
+  groupId?: number;
   /** IDs of currently associated environments */
   associatedEnvironmentIds: Array<EnvironmentId>;
   /** IDs of initially associated environments for tracking unsaved changes */
@@ -20,6 +22,7 @@ interface Props {
 }
 
 export function AssociatedEnvironmentsSelector({
+  groupId,
   associatedEnvironmentIds,
   initialAssociatedEnvironmentIds,
   onChange,
@@ -31,24 +34,37 @@ export function AssociatedEnvironmentsSelector({
 
   // Fetch initially associated environments to populate the cache
   const initialEnvsQuery = useEnvironmentList(
+    groupId
+      ? {
+          groupIds: [groupId],
+          pageLimit: 0,
+        }
+      : {
+          endpointIds: initialAssociatedEnvironmentIds,
+        },
     {
-      endpointIds: initialAssociatedEnvironmentIds,
-    },
-    {
-      enabled: initialAssociatedEnvironmentIds.length > 0,
+      enabled: groupId
+        ? groupId !== 1
+        : initialAssociatedEnvironmentIds.length > 0,
     }
   );
 
-  const environmentMap = buildEnvironmentMap(
-    environmentCache,
-    initialEnvsQuery.environments
+  const environmentMap = useMemo(
+    () => buildEnvironmentMap(environmentCache, initialEnvsQuery.environments),
+    [environmentCache, initialEnvsQuery.environments]
   );
-  const addedIds = associatedEnvironmentIds.filter(
-    (id) => !initialAssociatedEnvironmentIds.includes(id)
-  );
+  const associatedSet = new Set(associatedEnvironmentIds);
+  const initialSet = new Set(initialAssociatedEnvironmentIds);
+
+  const addedIds = associatedEnvironmentIds.filter((id) => !initialSet.has(id));
   const removedIds = initialAssociatedEnvironmentIds.filter(
-    (id) => !associatedEnvironmentIds.includes(id)
+    (id) => !associatedSet.has(id)
   );
+
+  const excludeIdsForAvailableEnvironments = groupId
+    ? addedIds
+    : associatedEnvironmentIds;
+
   const associatedEnvironments = associatedEnvironmentIds
     .map((id) => environmentMap.get(id))
     .filter((env): env is Environment => env !== undefined);
@@ -65,8 +81,9 @@ export function AssociatedEnvironmentsSelector({
         <div className="w-1/2 flex flex-col">
           <AvailableEnvironmentsTable
             title="Available environments"
-            excludeIds={associatedEnvironmentIds}
+            excludeIds={excludeIdsForAvailableEnvironments}
             includeIds={removedIds}
+            highlightIds={removedIds}
             onClickRow={handleAddEnvironment}
             data-cy="group-availableEndpoints"
           />

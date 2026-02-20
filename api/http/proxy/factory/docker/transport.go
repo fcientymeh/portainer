@@ -797,7 +797,7 @@ func (transport *Transport) decorateGenericResourceCreationResponse(response *ht
 
 	responseObject = decorateObject(responseObject, resourceControl)
 
-	return utils.RewriteResponse(response, responseObject, http.StatusOK)
+	return utils.RewriteResponse(response, responseObject, response.StatusCode)
 }
 
 func (transport *Transport) decorateGenericResourceCreationOperation(request *http.Request, resourceIdentifierAttribute string, resourceType portainer.ResourceControlType) (*http.Response, error) {

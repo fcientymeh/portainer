@@ -37,35 +37,38 @@ export function WidgetTabs({
     <nav
       aria-label={ariaLabel}
       className={clsx(
-        'flex max-w-fit items-center gap-1 p-1 overflow-x-scroll rounded-xl',
+        'max-w-fit overflow-hidden rounded-xl',
         'bg-[var(--bg-widget-color)] border border-solid border-[var(--border-widget)]'
       )}
     >
-      {tabs.map(({ name, icon }, index) => (
-        <Link
-          to="."
-          params={{ tab: tabs[index].selectedTabParam }}
-          key={index}
-          className={clsx(
-            'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
-            'hover:no-underline focus:no-underline text-gray-7 th-highcontrast:text-white th-dark:text-gray-6',
-            'transition-colors duration-200',
-            {
-              'border-inherit !bg-graphite-50 !text-graphite-900 hover:text-graphite-900 th-dark:!bg-graphite-600 th-dark:!text-white th-highcontrast:!bg-white th-highcontrast:!text-black':
-                currentTabIndex === index,
-            },
-            {
-              'bg-transparent hover:bg-graphite-50 th-dark:hover:bg-graphite-600 th-highcontrast:hover:bg-white hover:text-gray-7 th-dark:hover:text-gray-6 th-highcontrast:hover:text-black':
-                currentTabIndex !== index,
-            }
-          )}
-          data-cy={`tab-${index}`}
-          aria-current={currentTabIndex === index ? 'page' : undefined}
-        >
-          {icon && <Icon icon={icon} />}
-          {name}
-        </Link>
-      ))}
+      {/* additional div, so that the scrollbar doesn't overlap with rounded corners of the nav parent */}
+      <div className="flex items-center gap-1 p-1 overflow-x-auto">
+        {tabs.map(({ name, icon }, index) => (
+          <Link
+            to="."
+            params={{ tab: tabs[index].selectedTabParam }}
+            key={index}
+            className={clsx(
+              'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
+              'hover:no-underline focus:no-underline text-gray-7 th-highcontrast:text-white th-dark:text-gray-6',
+              'transition-colors duration-200',
+              {
+                'border-inherit !bg-graphite-50 !text-graphite-900 hover:text-graphite-900 th-dark:!bg-graphite-600 th-dark:!text-white th-highcontrast:!bg-white th-highcontrast:!text-black':
+                  currentTabIndex === index,
+              },
+              {
+                'bg-transparent hover:bg-graphite-50 th-dark:hover:bg-graphite-600 th-highcontrast:hover:bg-white hover:text-gray-7 th-dark:hover:text-gray-6 th-highcontrast:hover:text-black':
+                  currentTabIndex !== index,
+              }
+            )}
+            data-cy={`tab-${index}`}
+            aria-current={currentTabIndex === index ? 'page' : undefined}
+          >
+            {icon && <Icon icon={icon} />}
+            {name}
+          </Link>
+        ))}
+      </div>
     </nav>
   );
 

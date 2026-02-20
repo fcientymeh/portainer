@@ -28,6 +28,8 @@ interface Props extends AutomationTestingProps {
   excludeIds: Array<EnvironmentId>;
   /** IDs to include in the query (e.g., recently removed from associated - will be highlighted) */
   includeIds?: Array<EnvironmentId>;
+  /** IDs to highlight (unsaved badge) */
+  highlightIds?: Array<EnvironmentId>;
   onClickRow?: (env: EnvironmentTableData) => void;
 }
 
@@ -35,12 +37,16 @@ export function AvailableEnvironmentsTable({
   title,
   excludeIds,
   includeIds = [],
+  highlightIds = [],
   onClickRow,
   'data-cy': dataCy,
 }: Props) {
   const tableState = useTableState(settingsStore, tableKey);
   const [page, setPage] = useState(0);
-  const columns = useMemo(() => buildColumns(includeIds), [includeIds]);
+  const columns = useMemo(
+    () => buildColumns(new Set(highlightIds)),
+    [highlightIds]
+  );
 
   // Query unassigned environments (group 1)
   const unassignedQuery = useEnvironmentList({
@@ -63,14 +69,13 @@ export function AvailableEnvironmentsTable({
   );
 
   // Merge results: removed environments + unassigned environments (deduped)
-  // Only use removedQuery data when includeIds is non-empty to avoid stale cache
-  const environments = useMemo(() => {
+  const { environments, uniqueRemovedCount } = useMemo(() => {
     const unassigned = unassignedQuery.environments || [];
     const removed =
       includeIds.length > 0 ? removedQuery.environments || [] : [];
 
     if (removed.length === 0) {
-      return unassigned;
+      return { environments: unassigned, uniqueRemovedCount: 0 };
     }
 
     const unassignedIds = new Set(unassigned.map((e) => e.Id));
@@ -82,12 +87,18 @@ export function AvailableEnvironmentsTable({
     // useTypeGuard on tableState.sortBy.id to use as a key for sorting
     const sortKey = getSortKey(tableState.sortBy?.id);
     if (sortKey) {
-      return combined.sort((a, b) => {
-        const cmp = semverCompare(a[sortKey].toString(), b[sortKey].toString());
-        return isDesc ? -cmp : cmp;
-      });
+      return {
+        environments: combined.sort((a, b) => {
+          const cmp = semverCompare(
+            a[sortKey].toString(),
+            b[sortKey].toString()
+          );
+          return isDesc ? -cmp : cmp;
+        }),
+        uniqueRemovedCount: uniqueRemoved.length,
+      };
     }
-    return combined;
+    return { environments: combined, uniqueRemovedCount: uniqueRemoved.length };
   }, [
     unassignedQuery.environments,
     removedQuery.environments,
@@ -96,9 +107,7 @@ export function AvailableEnvironmentsTable({
     tableState.sortBy?.id,
   ]);
 
-  const totalCount =
-    unassignedQuery.totalCount +
-    (includeIds.length > 0 ? removedQuery.environments?.length || 0 : 0);
+  const totalCount = unassignedQuery.totalCount + uniqueRemovedCount;
 
   return (
     <Widget className="flex-1 flex flex-col">
@@ -134,7 +143,7 @@ export function AvailableEnvironmentsTable({
   );
 }
 
-function buildColumns(highlightIds: Array<EnvironmentId>) {
+function buildColumns(highlightIds: Set<EnvironmentId>) {
   return [
     columnHelper.accessor('Name', {
       header: 'Name',
@@ -142,7 +151,7 @@ function buildColumns(highlightIds: Array<EnvironmentId>) {
       cell: ({ getValue, row }) => (
         <span className="flex items-center gap-2">
           <span title={getValue()}>{truncate(getValue(), { length: 64 })}</span>
-          {highlightIds.includes(row.original.Id) && (
+          {highlightIds.has(row.original.Id) && (
             <Badge type="muted" data-cy="unsaved-badge">
               Unsaved
             </Badge>

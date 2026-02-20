@@ -23,7 +23,7 @@ export function EditGroupView() {
   // Fetch associated environments for this group (not for unassigned group)
   const isUnassignedGroup = groupId === 1;
   const environmentsQuery = useEnvironmentList(
-    { groupIds: [groupId] },
+    { groupIds: [groupId], pageLimit: 0 },
     { enabled: !!groupId && !isUnassignedGroup }
   );
 

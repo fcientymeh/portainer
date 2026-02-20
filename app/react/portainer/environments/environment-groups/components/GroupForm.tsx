@@ -150,6 +150,7 @@ function InnerForm({
         </FormSection>
       ) : (
         <AssociatedEnvironmentsSelector
+          groupId={groupId}
           associatedEnvironmentIds={values.associatedEnvironments}
           initialAssociatedEnvironmentIds={initialValues.associatedEnvironments}
           onChange={(ids) => setFieldValue('associatedEnvironments', ids)}

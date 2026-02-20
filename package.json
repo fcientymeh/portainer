@@ -2,7 +2,7 @@
   "author": "Portainer.io",
   "name": "@portainer/ce",
   "homepage": "http://portainer.io",
-  "version": "2.38.0",
+  "version": "2.39.0",
   "repository": {
     "type": "git",
     "url": "git@github.com:portainer/portainer.git"
@@ -77,7 +77,7 @@
     "angular-utils-pagination": "~0.11.1",
     "angularjs-scroll-glue": "^2.2.0",
     "angularjs-slider": "^6.4.0",
-    "axios": "^1.7",
+    "axios": "^1.13.5",
     "axios-cache-interceptor": "^1.11.2",
     "axios-progress-bar": "git://github.com/portainer/progress-bar-4-axios",
     "babel-plugin-angularjs-annotate": "^0.10.0",
@@ -258,7 +258,8 @@
       "@types/react-dom": "^17.0.11",
       "@types/node": "^25",
       "@open-amt-cloud-toolkit/ui-toolkit>ws": "^7.5.10",
-      "ngtemplate-loader>loader-utils": "^1.4.2"
+      "ngtemplate-loader>loader-utils": "^1.4.2",
+      "braces": "^3.0.3"
     },
     "configDependencies": {
       "@pnpm/plugin-types-fixer": "0.1.0+sha512-bLww63gRHi7siYTqFJb5qNdcXadU0jv20Et6z5AryMZ7FlLolbEJOrXLpg8+amQZNHHNW1dfFUBGVw/9ezQbFg=="

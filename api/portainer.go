@@ -558,11 +558,14 @@ type (
 	}
 
 	PolicyChartStatus struct {
-		ChartName   string            `json:"chartName"`
-		Fingerprint string            `json:"fingerprint"`
-		Status      HelmInstallStatus `json:"status"`
-		Message     string            `json:"message"`
-		Namespace   string            `json:"namespace"`
+		// EnvironmentID is the endpoint this status belongs to.
+		// Stored so that ReadAll can group statuses by endpoint without parsing keys.
+		EnvironmentID EndpointID        `json:"environmentID,omitempty"`
+		ChartName     string            `json:"chartName"`
+		Fingerprint   string            `json:"fingerprint"`
+		Status        HelmInstallStatus `json:"status"`
+		Message       string            `json:"message"`
+		Namespace     string            `json:"namespace"`
 		// Unix timestamp
 		LastAttemptTime int64 `json:"lastAttemptTime"`
 	}
@@ -1871,9 +1874,9 @@ type (
 
 const (
 	// APIVersion is the version number of the Portainer API
-	APIVersion = "2.38.0"
+	APIVersion = "2.39.0"
 	// Support annotation for the API version ("STS" for Short-Term Support or "LTS" for Long-Term Support)
-	APIVersionSupport = "STS"
+	APIVersionSupport = "LTS"
 	// Edition is what this edition of Portainer is called
 	Edition = PortainerCE
 	// ComposeSyntaxMaxVersion is a maximum supported version of the docker compose syntax
