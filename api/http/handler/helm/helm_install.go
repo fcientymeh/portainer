@@ -95,7 +95,7 @@ func (p *installChartPayload) Validate(_ *http.Request) error {
 		return fmt.Errorf("required field(s) missing: %s", strings.Join(required, ", "))
 	}
 
-	if errs := validation.IsDNS1123Subdomain(p.Name); len(errs) > 0 {
+	if err := validation.IsDNS1123Subdomain(p.Name); err != nil {
 		return errChartNameInvalid
 	}
 

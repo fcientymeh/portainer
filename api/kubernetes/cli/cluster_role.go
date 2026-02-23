@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	models "github.com/portainer/portainer/api/http/models/kubernetes"
-	"github.com/portainer/portainer/api/internal/errorlist"
 	"github.com/rs/zerolog/log"
 	rbacv1 "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -50,7 +49,7 @@ func parseClusterRole(clusterRole rbacv1.ClusterRole) models.K8sClusterRole {
 }
 
 func (kcl *KubeClient) DeleteClusterRoles(req models.K8sClusterRoleDeleteRequests) error {
-	var errors []error
+	var errs error
 	for _, name := range req {
 		client := kcl.cli.RbacV1().ClusterRoles()
 
@@ -70,11 +69,11 @@ func (kcl *KubeClient) DeleteClusterRoles(req models.K8sClusterRoleDeleteRequest
 		err = client.Delete(context.Background(), name, meta.DeleteOptions{})
 		if err != nil {
 			log.Err(err).Str("role_name", name).Msg("unable to delete the cluster role")
-			errors = append(errors, err)
+			errs = errors.Join(errs, err)
 		}
 	}
 
-	return errorlist.Combine(errors)
+	return errs
 }
 
 func isSystemClusterRole(role *rbacv1.ClusterRole) bool {

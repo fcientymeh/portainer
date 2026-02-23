@@ -4,6 +4,7 @@ package validation
 // https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -16,31 +17,31 @@ const DNS1123SubdomainMaxLength int = 253
 var dns1123SubdomainRegexp = regexp.MustCompile("^" + dns1123SubdomainFmt + "$")
 
 // IsDNS1123Subdomain tests for a string that conforms to the definition of a subdomain in DNS (RFC 1123).
-func IsDNS1123Subdomain(value string) []string {
-	var errs []string
+func IsDNS1123Subdomain(value string) error {
+	var errs error
 	if len(value) > DNS1123SubdomainMaxLength {
-		errs = append(errs, MaxLenError(DNS1123SubdomainMaxLength))
+		errs = errors.Join(errs, MaxLenError(DNS1123SubdomainMaxLength))
 	}
 	if !dns1123SubdomainRegexp.MatchString(value) {
-		errs = append(errs, RegexError(dns1123SubdomainFmt, "example.com"))
+		errs = errors.Join(errs, RegexError(dns1123SubdomainFmt, "example.com"))
 	}
 	return errs
 }
 
 // MaxLenError returns a string explanation of a "string too long" validation failure.
-func MaxLenError(length int) string {
-	return fmt.Sprintf("must be no more than %d characters", length)
+func MaxLenError(length int) error {
+	return fmt.Errorf("must be no more than %d characters", length)
 }
 
 // RegexError returns a string explanation of a regex validation failure.
-func RegexError(fmt string, examples ...string) string {
+func RegexError(fmt string, examples ...string) error {
 	var s strings.Builder
 
 	_, _ = s.WriteString("must match the regex ")
 	_, _ = s.WriteString(fmt)
 
 	if len(examples) == 0 {
-		return s.String()
+		return errors.New(s.String())
 	}
 
 	s.WriteString(" (e.g. ")
@@ -56,5 +57,5 @@ func RegexError(fmt string, examples ...string) string {
 
 	_, _ = s.WriteRune(')')
 
-	return s.String()
+	return errors.New(s.String())
 }
