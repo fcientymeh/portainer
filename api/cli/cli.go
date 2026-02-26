@@ -32,7 +32,7 @@ func CLIFlags() *portainer.CLIFlags {
 		Assets:                    kingpin.Flag("assets", "Path to the assets").Default(defaultAssetsDirectory).Short('a').String(),
 		Data:                      kingpin.Flag("data", "Path to the folder where the data is stored").Default(defaultDataDirectory).Short('d').String(),
 		EndpointURL:               kingpin.Flag("host", "Environment URL").Short('H').String(),
-		FeatureFlags:              kingpin.Flag("feat", "List of feature flags").Strings(),
+		FeatureFlags:              kingpin.Flag("feat", "List of feature flags").Envar(portainer.FeatureFlagEnvVar).Strings(),
 		EnableEdgeComputeFeatures: kingpin.Flag("edge-compute", "Enable Edge Compute features").Bool(),
 		NoAnalytics:               kingpin.Flag("no-analytics", "Disable Analytics in app (deprecated)").Bool(),
 		TLSSkipVerify:             kingpin.Flag("tlsskipverify", "Disable TLS server verification").Default(defaultTLSSkipVerify).Bool(),

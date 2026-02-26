@@ -361,8 +361,6 @@ type (
 		ChartPath string `json:"ChartPath,omitempty" example:"charts/my-app"`
 		// Array of paths to Helm values YAML files for Helm git deployments
 		ValuesFiles []string `json:"ValuesFiles,omitempty" example:"['values/prod.yaml', 'values/secrets.yaml']"`
-		// Helm chart version from Chart.yaml (read-only, extracted during Git sync)
-		Version string `json:"Version,omitempty" example:"1.2.3"`
 		// Enable automatic rollback on deployment failure (equivalent to helm --atomic flag)
 		Atomic bool `json:"Atomic" example:"true"`
 		// Timeout for Helm operations (equivalent to helm --timeout flag)
@@ -1930,6 +1928,8 @@ const (
 	KubectlShellImageEnvVar = "KUBECTL_SHELL_IMAGE"
 	// PullLimitCheckDisabledEnvVar is the environment variable used to disable the pull limit check
 	PullLimitCheckDisabledEnvVar = "PULL_LIMIT_CHECK_DISABLED"
+	// FeatureFlagEnvVar is the environment variable used to set the list of enabled feature flags
+	FeatureFlagEnvVar = "FEATURE_FLAG"
 	// LicenseServerBaseURL represents the base URL of the API used to validate
 	// an extension license.
 	LicenseServerBaseURL = "https://api.portainer.io"

@@ -102,6 +102,9 @@ type (
 
 	// EndpointService represents a service for managing environment(endpoint) data
 	EndpointService interface {
+		// partial dataservices.BaseCRUD[portainer.Endpoint, portainer.EndpointID]
+		ReadAll(predicates ...func(endpoint portainer.Endpoint) bool) ([]portainer.Endpoint, error)
+
 		Endpoint(ID portainer.EndpointID) (*portainer.Endpoint, error)
 		EndpointIDByEdgeID(edgeID string) (portainer.EndpointID, bool)
 		EndpointsByTeamID(teamID portainer.TeamID) ([]portainer.Endpoint, error)

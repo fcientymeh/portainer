@@ -223,3 +223,15 @@ func TestIsInConfigDir(t *testing.T) {
 	f(DirEntry{Name: "edgestacktest/edge-configs/standalone-edge-agent-async"}, "edgestacktest/edge-configs", true)
 	f(DirEntry{Name: "edgestacktest/edge-configs/abc.txt"}, "edgestacktest/edge-configs", true)
 }
+
+func TestShouldIncludeDir(t *testing.T) {
+	f := func(dirEntry DirEntry, deviceName, configPath string, expect bool) {
+		t.Helper()
+
+		actual := shouldIncludeDir(dirEntry, deviceName, configPath)
+		assert.Equal(t, expect, actual)
+	}
+
+	f(DirEntry{Name: "app/blue-app", IsFile: false}, "blue-app", "app", true)
+	f(DirEntry{Name: "app/blue-app/values.yaml", IsFile: true}, "blue-app", "app", true)
+}
