@@ -12,8 +12,8 @@ const DEFAULT_USER_FILTER = '(objectClass=inetOrgPerson)';
 
 export default class LdapSettingsController {
   /* @ngInject */
-  constructor(LDAPService) {
-    Object.assign(this, { LDAPService, SERVER_TYPES });
+  constructor(LDAPService, $scope) {
+    Object.assign(this, { LDAPService, SERVER_TYPES, $scope });
 
     this.tlscaCert = null;
     this.settingsDrafts = {};
@@ -24,8 +24,15 @@ export default class LdapSettingsController {
     this.searchUsers = this.searchUsers.bind(this);
     this.searchGroups = this.searchGroups.bind(this);
     this.onChangeServerType = this.onChangeServerType.bind(this);
+    this.onAutoUserProvisionChange = this.onAutoUserProvisionChange.bind(this);
+    this.onAutoUserProvisionChange = this.onAutoUserProvisionChange.bind(this);
   }
 
+  onAutoUserProvisionChange(value) {
+    this.$scope.$evalAsync(() => {
+      this.settings.AutoCreateUsers = value;
+    });
+  }
   onTlscaCertChange(file) {
     this.tlscaCert = file;
   }

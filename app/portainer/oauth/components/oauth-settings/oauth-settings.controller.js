@@ -31,6 +31,13 @@ export default class OAuthSettingsController {
     this.removeTeamMembership = this.removeTeamMembership.bind(this);
     this.onToggleAutoTeamMembership = this.onToggleAutoTeamMembership.bind(this);
     this.onChangeAuthStyle = this.onChangeAuthStyle.bind(this);
+    this.onAutoUserProvisionChange = this.onAutoUserProvisionChange.bind(this);
+  }
+
+  onAutoUserProvisionChange(value) {
+    this.$scope.$evalAsync(() => {
+      this.settings.OAuthAutoCreateUsers = value;
+    });
   }
 
   onMicrosoftTenantIDChange() {

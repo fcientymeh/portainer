@@ -5,8 +5,9 @@ import { isLimitedToBE } from '@/react/portainer/feature-flags/feature-flags.ser
 
 export default class AdSettingsController {
   /* @ngInject */
-  constructor(LDAPService) {
+  constructor(LDAPService, $scope) {
     this.LDAPService = LDAPService;
+    this.$scope = $scope;
 
     this.domainSuffix = '';
     this.limitedFeatureId = FeatureId.HIDE_INTERNAL_AUTH;
@@ -15,6 +16,14 @@ export default class AdSettingsController {
     this.searchGroups = this.searchGroups.bind(this);
     this.parseDomainName = this.parseDomainName.bind(this);
     this.onAccountChange = this.onAccountChange.bind(this);
+    this.onAutoUserProvisionChange = this.onAutoUserProvisionChange.bind(this);
+    this.onAutoUserProvisionChange = this.onAutoUserProvisionChange.bind(this);
+  }
+
+  onAutoUserProvisionChange(value) {
+    this.$scope.$evalAsync(() => {
+      this.settings.AutoCreateUsers = value;
+    });
   }
 
   parseDomainName(account) {

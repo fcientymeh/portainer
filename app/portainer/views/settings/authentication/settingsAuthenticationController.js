@@ -2,7 +2,6 @@ import angular from 'angular';
 import _ from 'lodash-es';
 
 import { buildLdapSettingsModel, buildAdSettingsModel } from '@/portainer/settings/authentication/ldap/ldap-settings.model';
-import { options } from '@/react/portainer/settings/AuthenticationView/InternalAuth/options';
 import { SERVER_TYPES } from '@/react/portainer/settings/AuthenticationView/ldap-options';
 import { AuthenticationMethod } from '@/react/portainer/settings/types';
 
@@ -52,24 +51,23 @@ function SettingsAuthenticationController($q, $scope, $state, Notifications, Set
     },
   };
 
-  $scope.authOptions = options;
-
   $scope.onChangeAuthMethod = function onChangeAuthMethod(value) {
-    $scope.authMethod = value;
+    $scope.$evalAsync(() => {
+      $scope.authMethod = value;
 
-    if (value === 4) {
-      $scope.settings.AuthenticationMethod = AuthenticationMethod.LDAP;
-      $scope.formValues.ldap.serverType = SERVER_TYPES.AD;
-      return;
-    }
+      if (value === 4) {
+        $scope.settings.AuthenticationMethod = AuthenticationMethod.LDAP;
+        $scope.formValues.ldap.serverType = SERVER_TYPES.AD;
+        return;
+      }
 
-    if (value === 2) {
-      $scope.settings.AuthenticationMethod = AuthenticationMethod.LDAP;
-      $scope.formValues.ldap.serverType = $scope.formValues.ldap.ldapSettings.ServerType;
-      return;
-    }
-
-    $scope.settings.AuthenticationMethod = value;
+      if (value === 2) {
+        $scope.settings.AuthenticationMethod = AuthenticationMethod.LDAP;
+        $scope.formValues.ldap.serverType = $scope.formValues.ldap.ldapSettings.ServerType;
+        return;
+      }
+      $scope.settings.AuthenticationMethod = value;
+    });
   };
 
   $scope.onChangePasswordLength = function onChangePasswordLength(value) {

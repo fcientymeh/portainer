@@ -2,6 +2,7 @@ import angular from 'angular';
 
 import { SettingsOpenAMT } from '@/react/portainer/settings/EdgeComputeView/SettingsOpenAMT';
 import { InternalAuth } from '@/react/portainer/settings/AuthenticationView/InternalAuth';
+import { AuthenticationMethodSelector } from '@/react/portainer/settings/AuthenticationView/AuthenticationMethodSelector';
 import { r2a } from '@/react-tools/react2angular';
 import { withReactQuery } from '@/react-tools/withReactQuery';
 import { withUIRouter } from '@/react-tools/withUIRouter';
@@ -13,6 +14,7 @@ import { HelmCertPanel } from '@/react/portainer/settings/SettingsView/HelmCertP
 import { HiddenContainersPanel } from '@/react/portainer/settings/SettingsView/HiddenContainersPanel/HiddenContainersPanel';
 import { SSLSettingsPanelWrapper } from '@/react/portainer/settings/SettingsView/SSLSettingsPanel/SSLSettingsPanel';
 import { AuthStyleField } from '@/react/portainer/settings/AuthenticationView/OAuth';
+import { AutoUserProvisionToggle } from '@/react/portainer/settings/AuthenticationView/AutoUserProvisionToggle/AutoUserProvisionToggle';
 
 export const settingsModule = angular
   .module('portainer.app.react.components.settings', [])
@@ -20,6 +22,10 @@ export const settingsModule = angular
   .component(
     'internalAuth',
     r2a(InternalAuth, ['onSaveSettings', 'isLoading', 'value', 'onChange'])
+  )
+  .component(
+    'authenticationMethodSelector',
+    r2a(AuthenticationMethodSelector, ['value', 'onChange'])
   )
   .component('ldapUsersDatatable', r2a(LDAPUsersTable, ['dataset']))
   .component('ldapGroupsDatatable', r2a(LDAPGroupsTable, ['dataset']))
@@ -49,5 +55,14 @@ export const settingsModule = angular
       'tooltip',
       'readonly',
       'size',
+    ])
+  )
+  .component(
+    'autoUserProvisionToggle',
+    r2a(AutoUserProvisionToggle, [
+      'value',
+      'onChange',
+      'description',
+      'data-cy',
     ])
   ).name;

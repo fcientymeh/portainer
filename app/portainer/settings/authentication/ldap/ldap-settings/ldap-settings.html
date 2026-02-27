@@ -1,10 +1,9 @@
 <div>
-  <auto-user-provision-toggle ng-model="$ctrl.settings.AutoCreateUsers">
-    <field-description>
-      With automatic user provisioning enabled, Portainer will create user(s) automatically with standard user role and assign them to team(s) which matches to LDAP group name(s).
-      If disabled, users must be created in Portainer beforehand.
-    </field-description>
-  </auto-user-provision-toggle>
+  <auto-user-provision-toggle
+    value="$ctrl.settings.AutoCreateUsers"
+    on-change="($ctrl.onAutoUserProvisionChange)"
+    description="'With automatic user provisioning enabled, Portainer will create user(s) automatically with standard user role and assign them to team(s) which matches to LDAP group name(s). If disabled, users must be created in Portainer beforehand.'"
+  ></auto-user-provision-toggle>
 
   <div class="col-sm-12 form-section-title"> Server Type </div>
 
