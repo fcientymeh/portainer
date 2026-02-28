@@ -6,12 +6,12 @@ import (
 	"time"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/filesystem"
 	gittypes "github.com/portainer/portainer/api/git/types"
 	"github.com/portainer/portainer/api/scheduler"
 	"github.com/portainer/portainer/api/stacks/deployments"
 	"github.com/portainer/portainer/api/stacks/stackutils"
-	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 )
 
 type GitMethodStackBuildProcess interface {
@@ -21,14 +21,16 @@ type GitMethodStackBuildProcess interface {
 	SetUniqueInfo(payload *StackPayload) GitMethodStackBuildProcess
 	// Deploy stack based on the configuration
 	Deploy(payload *StackPayload, endpoint *portainer.Endpoint) GitMethodStackBuildProcess
-	// Save the stack information to database and return the stack object
-	SaveStack() (*portainer.Stack, *httperror.HandlerError)
+	// Save the stack information to database
+	SaveStack() (*portainer.Stack, error)
 	// Get response from HTTP request. Use if it is needed
 	GetResponse() string
 	// Set git repository configuration
 	SetGitRepository(payload *StackPayload) GitMethodStackBuildProcess
 	// Set auto update setting
 	SetAutoUpdate(payload *StackPayload) GitMethodStackBuildProcess
+	UpdateStack(stack *portainer.Stack) (*portainer.Stack, error)
+	Error() error
 }
 
 type GitMethodStackBuilder struct {
@@ -91,7 +93,7 @@ func (b *GitMethodStackBuilder) SetGitRepository(payload *StackPayload) GitMetho
 
 	commitHash, err := stackutils.DownloadGitRepository(repoConfig, b.gitService, getProjectPath)
 	if err != nil {
-		b.err = httperror.InternalServerError(err.Error(), err)
+		b.err = fmt.Errorf("failed to download git repository: %w", err)
 		return b
 	}
 
@@ -108,13 +110,32 @@ func (b *GitMethodStackBuilder) Deploy(payload *StackPayload, endpoint *portaine
 	}
 
 	// Deploy the stack
-	err := b.deploymentConfiger.Deploy()
-	if err != nil {
-		b.err = httperror.InternalServerError(err.Error(), err)
-		return b
-	}
+	b.err = b.deploymentConfiger.Deploy()
 
 	return b
+}
+
+func (b *GitMethodStackBuilder) UpdateStack(stack *portainer.Stack) (*portainer.Stack, error) {
+	if b.hasError() {
+		return nil, b.err
+	}
+
+	b.stack = stack
+
+	// Ideally, we should replace b.dataStore with b.tx and manage the transaction
+	// at a higher layer. However, that would require significant changes to other
+	// logic unrelated to this builder.
+	// To keep this change focused and minimize the scope, we will retain b.dataStore
+	// and perform the update within a transaction here for now.
+	b.err = b.dataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		if err := tx.Stack().Update(b.stack.ID, b.stack); err != nil {
+			return fmt.Errorf("Unable to update the stack inside the database: %w", err)
+		}
+
+		return nil
+	})
+
+	return b.stack, b.err
 }
 
 func (b *GitMethodStackBuilder) SetAutoUpdate(payload *StackPayload) GitMethodStackBuildProcess {

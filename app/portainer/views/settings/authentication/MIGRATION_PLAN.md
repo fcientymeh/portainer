@@ -144,7 +144,7 @@ BE-6604 (Parent: Authentication Settings Migration)
 
 ### Session & Page Structure (Parallel - No Dependencies)
 
-- [ ] PR 1: [BE-12583](https://linear.app/portainer/issue/BE-12583) SessionLifetimeSelect → react2angular bridge
+- [x] PR 1: [BE-12583](https://linear.app/portainer/issue/BE-12583) SessionLifetimeSelect → react2angular bridge
 - [x] PR 2: [BE-12584](https://linear.app/portainer/issue/BE-12584) AuthenticationMethodSelector wrapper (BoxSelector is already React)
 
 ### Internal Auth (Already Done!)

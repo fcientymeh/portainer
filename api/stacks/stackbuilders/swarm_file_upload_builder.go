@@ -6,7 +6,6 @@ import (
 	"github.com/portainer/portainer/api/filesystem"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/stacks/deployments"
-	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 )
 
 type SwarmStackFileUploadBuilder struct {
@@ -65,7 +64,7 @@ func (b *SwarmStackFileUploadBuilder) Deploy(payload *StackPayload, endpoint *po
 
 	swarmDeploymentConfig, err := deployments.CreateSwarmStackDeploymentConfig(b.SecurityContext, b.stack, endpoint, b.dataStore, b.fileService, b.stackDeployer, false, true)
 	if err != nil {
-		b.err = httperror.InternalServerError(err.Error(), err)
+		b.err = err
 		return b
 	}
 

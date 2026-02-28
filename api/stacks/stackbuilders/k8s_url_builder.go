@@ -1,6 +1,7 @@
 package stackbuilders
 
 import (
+	"fmt"
 	"strconv"
 	"sync"
 
@@ -11,7 +12,6 @@ import (
 	k "github.com/portainer/portainer/api/kubernetes"
 	"github.com/portainer/portainer/api/stacks/deployments"
 	"github.com/portainer/portainer/api/stacks/stackutils"
-	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 )
 
 type KubernetesStackUrlBuilder struct {
@@ -65,7 +65,7 @@ func (b *KubernetesStackUrlBuilder) SetURL(payload *StackPayload) UrlMethodStack
 
 	manifestContent, err := client.Get(payload.ManifestURL, 30)
 	if err != nil {
-		b.err = httperror.InternalServerError("Unable to retrieve manifest from URL", err)
+		b.err = fmt.Errorf("Unable to retrieve manifest from URL: %w", err)
 
 		return b
 	}
@@ -73,7 +73,7 @@ func (b *KubernetesStackUrlBuilder) SetURL(payload *StackPayload) UrlMethodStack
 	stackFolder := strconv.Itoa(int(b.stack.ID))
 	projectPath, err := b.fileService.StoreStackFileFromBytes(stackFolder, b.stack.EntryPoint, manifestContent)
 	if err != nil {
-		b.err = httperror.InternalServerError("Unable to persist Kubernetes manifest file on disk", err)
+		b.err = fmt.Errorf("Unable to persist Kubernetes manifest file on disk: %w", err)
 
 		return b
 	}
@@ -99,7 +99,7 @@ func (b *KubernetesStackUrlBuilder) Deploy(payload *StackPayload, endpoint *port
 
 	k8sDeploymentConfig, err := deployments.CreateKubernetesStackDeploymentConfig(b.stack, b.KuberneteDeployer, k8sAppLabel, b.user, endpoint)
 	if err != nil {
-		b.err = httperror.InternalServerError("failed to create temp kub deployment files", err)
+		b.err = fmt.Errorf("failed to create temp kub deployment files: %w", err)
 
 		return b
 	}

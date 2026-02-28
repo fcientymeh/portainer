@@ -1,6 +1,7 @@
 package stackbuilders
 
 import (
+	"fmt"
 	"sync"
 
 	portainer "github.com/portainer/portainer/api"
@@ -9,7 +10,6 @@ import (
 	"github.com/portainer/portainer/api/scheduler"
 	"github.com/portainer/portainer/api/stacks/deployments"
 	"github.com/portainer/portainer/api/stacks/stackutils"
-	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 )
 
 type KubernetesStackGitBuilder struct {
@@ -83,7 +83,7 @@ func (b *KubernetesStackGitBuilder) Deploy(payload *StackPayload, endpoint *port
 
 	k8sDeploymentConfig, err := deployments.CreateKubernetesStackDeploymentConfig(b.stack, b.KuberneteDeployer, k8sAppLabel, b.user, endpoint)
 	if err != nil {
-		b.err = httperror.InternalServerError("failed to create temp kub deployment files", err)
+		b.err = fmt.Errorf("failed to create temp kub deployment files: %w", err)
 		return b
 	}
 

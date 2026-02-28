@@ -1,10 +1,11 @@
 package stackbuilders
 
 import (
+	"fmt"
+
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/stacks/deployments"
-	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 
 	"github.com/rs/zerolog/log"
 )
@@ -15,7 +16,7 @@ type StackBuilder struct {
 	fileService        portainer.FileService
 	stackDeployer      deployments.StackDeployer
 	deploymentConfiger deployments.StackDeploymentConfiger
-	err                *httperror.HandlerError
+	err                error
 	doCleanUp          bool
 }
 
@@ -29,7 +30,7 @@ func CreateStackBuilder(dataStore dataservices.DataStore, fileService portainer.
 	}
 }
 
-func (b *StackBuilder) SaveStack() (*portainer.Stack, *httperror.HandlerError) {
+func (b *StackBuilder) SaveStack() (*portainer.Stack, error) {
 	defer func() { _ = b.cleanUp() }()
 
 	if b.hasError() {
@@ -38,7 +39,7 @@ func (b *StackBuilder) SaveStack() (*portainer.Stack, *httperror.HandlerError) {
 
 	if err := b.dataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		if err := tx.Stack().Create(b.stack); err != nil {
-			b.err = httperror.InternalServerError("Unable to persist the stack inside the database", err)
+			b.err = fmt.Errorf("Unable to persist the stack inside the database: %w", err)
 			return b.err
 		}
 
@@ -49,7 +50,11 @@ func (b *StackBuilder) SaveStack() (*portainer.Stack, *httperror.HandlerError) {
 
 	b.doCleanUp = false
 
-	return b.stack, b.err
+	return b.stack, nil
+}
+
+func (b *StackBuilder) Error() error {
+	return b.err
 }
 
 func (b *StackBuilder) cleanUp() error {

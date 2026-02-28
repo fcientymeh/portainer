@@ -4,7 +4,6 @@ import (
 	"time"
 
 	portainer "github.com/portainer/portainer/api"
-	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 )
 
 type FileContentMethodStackBuildProcess interface {
@@ -15,11 +14,12 @@ type FileContentMethodStackBuildProcess interface {
 	// Deploy stack based on the configuration
 	Deploy(payload *StackPayload, endpoint *portainer.Endpoint) FileContentMethodStackBuildProcess
 	// Save the stack information to database
-	SaveStack() (*portainer.Stack, *httperror.HandlerError)
+	SaveStack() (*portainer.Stack, error)
 	// Get response from HTTP request. Use if it is needed
 	GetResponse() string
 	// Process the file content
 	SetFileContent(payload *StackPayload) FileContentMethodStackBuildProcess
+	Error() error
 }
 
 type FileContentMethodStackBuilder struct {
@@ -50,13 +50,15 @@ func (b *FileContentMethodStackBuilder) Deploy(payload *StackPayload, endpoint *
 	}
 
 	// Deploy the stack
-	if err := b.deploymentConfiger.Deploy(); err != nil {
-		b.err = httperror.InternalServerError(err.Error(), err)
-	}
+	b.err = b.deploymentConfiger.Deploy()
 
 	return b
 }
 
 func (b *FileContentMethodStackBuilder) GetResponse() string {
 	return ""
+}
+
+func (b *FileContentMethodStackBuilder) Error() error {
+	return b.err
 }

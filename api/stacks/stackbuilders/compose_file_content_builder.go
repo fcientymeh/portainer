@@ -1,6 +1,7 @@
 package stackbuilders
 
 import (
+	"fmt"
 	"strconv"
 
 	portainer "github.com/portainer/portainer/api"
@@ -8,7 +9,6 @@ import (
 	"github.com/portainer/portainer/api/filesystem"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/stacks/deployments"
-	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 )
 
 type ComposeStackFileContentBuilder struct {
@@ -55,7 +55,7 @@ func (b *ComposeStackFileContentBuilder) SetFileContent(payload *StackPayload) F
 	stackFolder := strconv.Itoa(int(b.stack.ID))
 	projectPath, err := b.fileService.StoreStackFileFromBytes(stackFolder, b.stack.EntryPoint, []byte(payload.StackFileContent))
 	if err != nil {
-		b.err = httperror.InternalServerError("Unable to persist Compose file on disk", err)
+		b.err = fmt.Errorf("Unable to persist Compose file on disk: %w", err)
 		return b
 	}
 	b.stack.ProjectPath = projectPath
@@ -70,7 +70,7 @@ func (b *ComposeStackFileContentBuilder) Deploy(payload *StackPayload, endpoint 
 
 	composeDeploymentConfig, err := deployments.CreateComposeStackDeploymentConfig(b.SecurityContext, b.stack, endpoint, b.dataStore, b.fileService, b.stackDeployer, false, false)
 	if err != nil {
-		b.err = httperror.InternalServerError(err.Error(), err)
+		b.err = err
 		return b
 	}
 

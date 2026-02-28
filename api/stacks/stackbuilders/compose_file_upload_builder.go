@@ -6,7 +6,6 @@ import (
 	"github.com/portainer/portainer/api/filesystem"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/stacks/deployments"
-	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 )
 
 type ComposeStackFileUploadBuilder struct {
@@ -61,7 +60,7 @@ func (b *ComposeStackFileUploadBuilder) Deploy(payload *StackPayload, endpoint *
 
 	composeDeploymentConfig, err := deployments.CreateComposeStackDeploymentConfig(b.SecurityContext, b.stack, endpoint, b.dataStore, b.fileService, b.stackDeployer, false, false)
 	if err != nil {
-		b.err = httperror.InternalServerError(err.Error(), err)
+		b.err = err
 		return b
 	}
 

@@ -1,11 +1,11 @@
 package stackbuilders
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
 	portainer "github.com/portainer/portainer/api"
-	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 )
 
 type FileUploadMethodStackBuildProcess interface {
@@ -16,11 +16,12 @@ type FileUploadMethodStackBuildProcess interface {
 	// Deploy stack based on the configuration
 	Deploy(payload *StackPayload, endpoint *portainer.Endpoint) FileUploadMethodStackBuildProcess
 	// Save the stack information to database
-	SaveStack() (*portainer.Stack, *httperror.HandlerError)
+	SaveStack() (*portainer.Stack, error)
 	// Get response from HTTP request. Use if it is needed
 	GetResponse() string
 	// Process the upload file
 	SetUploadedFile(payload *StackPayload) FileUploadMethodStackBuildProcess
+	Error() error
 }
 
 type FileUploadMethodStackBuilder struct {
@@ -49,7 +50,7 @@ func (b *FileUploadMethodStackBuilder) SetUploadedFile(payload *StackPayload) Fi
 	stackFolder := strconv.Itoa(int(b.stack.ID))
 	projectPath, err := b.fileService.StoreStackFileFromBytes(stackFolder, b.stack.EntryPoint, payload.StackFileContentBytes)
 	if err != nil {
-		b.err = httperror.InternalServerError("Unable to persist Compose file on disk", err)
+		b.err = fmt.Errorf("Unable to persist file on disk: %w", err)
 		return b
 	}
 
@@ -65,7 +66,7 @@ func (b *FileUploadMethodStackBuilder) Deploy(payload *StackPayload, endpoint *p
 
 	// Deploy the stack
 	if err := b.deploymentConfiger.Deploy(); err != nil {
-		b.err = httperror.InternalServerError(err.Error(), err)
+		b.err = err
 
 		return b
 	}
