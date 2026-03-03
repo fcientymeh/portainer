@@ -58,9 +58,9 @@ export interface Props<D extends DefaultType> extends AutomationTestingProps {
   getRowId?(row: D): string;
   isRowSelectable?(row: Row<D>): boolean;
   emptyContentLabel?: string;
-  title?: React.ReactNode;
-  titleIcon?: IconProps['icon'];
+  title?: ReactNode;
   titleId?: string;
+  titleIcon?: IconProps['icon'];
   initialTableState?: Partial<TableState>;
   isLoading?: boolean;
   description?: ReactNode;
@@ -85,8 +85,8 @@ export function Datatable<D extends DefaultType>({
   getRowId = defaultGetRowId,
   isRowSelectable = () => true,
   title,
-  titleId,
   titleIcon,
+  titleId,
   emptyContentLabel,
   initialTableState = {},
   isLoading,
@@ -344,9 +344,6 @@ function filterPrimitive(value: unknown, filterValueLower: string) {
   return false;
 }
 
-function getColumnCanGlobalFilter<D>(column: Column<D, unknown>): boolean {
-  if (column.id === 'select') {
-    return false;
-  }
-  return true;
+function getColumnCanGlobalFilter<D>(column: Column<D>): boolean {
+  return column.id !== 'select';
 }

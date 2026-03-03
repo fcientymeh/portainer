@@ -1,7 +1,3 @@
-.root input {
-  display: none;
-}
-
 .root label {
   @apply border border-solid;
   @apply border-gray-5 bg-gray-2 text-black;

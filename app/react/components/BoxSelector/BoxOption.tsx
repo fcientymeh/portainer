@@ -43,6 +43,7 @@ export function BoxOption<T extends Value>({
         value={option.value.toString()}
         disabled={disabled}
         onChange={() => onSelect(option.value)}
+        className="sr-only"
       />
 
       <label htmlFor={option.id} data-cy={`${radioName}_${option.value}`}>

@@ -1,6 +1,8 @@
 package oauth
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
@@ -108,6 +110,39 @@ func Test_getResource(t *testing.T) {
 			t.Errorf("getResource should succeed if correct access token provided in auth bearer header")
 		}
 	})
+}
+
+func Test_getResource_malformedContentType(t *testing.T) {
+	body := `{"username":"test-oauth-user"}`
+
+	tests := []struct {
+		name        string
+		contentType string
+	}{
+		{
+			name:        "duplicate mime types separated by comma",
+			contentType: "application/json; charset=utf-8, application/json",
+		},
+		{
+			name:        "missing mime type with only parameters",
+			contentType: "; charset=utf-8",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", tc.contentType)
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(body))
+			}))
+			defer srv.Close()
+
+			result, err := GetResource(t.Context(), "any-token", srv.URL)
+			require.NoError(t, err, "GetResource should succeed despite malformed Content-Type header")
+			assert.Equal(t, "test-oauth-user", result["username"])
+		})
+	}
 }
 
 func Test_Authenticate(t *testing.T) {

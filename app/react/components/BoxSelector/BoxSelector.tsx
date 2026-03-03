@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 
 import { FormError } from '@@/form-components/FormError';
+import { FormSectionTitle } from '@@/form-components/FormSectionTitle';
 
 import { BoxSelectorItem } from './BoxSelectorItem';
 import { BoxSelectorOption, Value } from './types';
@@ -27,6 +28,7 @@ export type Props<T extends Value> = Union<T> & {
   error?: string;
   useGridLayout?: boolean;
   className?: string;
+  label?: string;
 };
 
 export function BoxSelector<T extends Value>({
@@ -37,6 +39,7 @@ export function BoxSelector<T extends Value>({
   error,
   useGridLayout,
   className,
+  label,
   ...props
 }: Props<T>) {
   const rootClassName = clsx(
@@ -47,32 +50,39 @@ export function BoxSelector<T extends Value>({
   );
 
   return (
-    <div className='form-group after:clear-both after:table after:content-[""]'>
-      <div className="col-sm-12">
-        <div className={rootClassName} role="radiogroup">
-          {options
-            .filter((option) => !option.hide)
-            .map((option) => (
-              <BoxSelectorItem
-                key={option.id}
-                radioName={radioName}
-                option={option}
-                onSelect={handleSelect}
-                disabled={option.disabled && option.disabled()}
-                tooltip={option.tooltip && option.tooltip()}
-                type={props.isMulti ? 'checkbox' : 'radio'}
-                isSelected={isSelected}
-                slim={slim}
-              />
-            ))}
-          {hiddenSpacingCount &&
-            Array.from(Array(hiddenSpacingCount)).map((_, index) => (
-              <div key={index} className="flex-1" />
-            ))}
+    <>
+      {!!label && <FormSectionTitle>{label}</FormSectionTitle>}
+      <div className='form-group after:clear-both after:table after:content-[""]'>
+        <div className="col-sm-12">
+          <div
+            className={rootClassName}
+            role={props.isMulti ? 'group' : 'radiogroup'}
+            aria-label={label}
+          >
+            {options
+              .filter((option) => !option.hide)
+              .map((option) => (
+                <BoxSelectorItem
+                  key={option.id}
+                  radioName={radioName}
+                  option={option}
+                  onSelect={handleSelect}
+                  disabled={option.disabled && option.disabled()}
+                  tooltip={option.tooltip && option.tooltip()}
+                  type={props.isMulti ? 'checkbox' : 'radio'}
+                  isSelected={isSelected}
+                  slim={slim}
+                />
+              ))}
+            {hiddenSpacingCount &&
+              Array.from(Array(hiddenSpacingCount)).map((_, index) => (
+                <div key={index} className="flex-1" />
+              ))}
+          </div>
+          {!!error && <FormError>{error}</FormError>}
         </div>
-        {error && <FormError>{error}</FormError>}
       </div>
-    </div>
+    </>
   );
 
   function handleSelect(optionValue: T, limitedToBE: boolean) {

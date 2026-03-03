@@ -12,7 +12,7 @@ export type ZustandSetFunc<T> = (
 ) => void;
 
 // pagination (page size dropdown)
-// for both backend and frontend paginations
+// for both backend and frontend pagination
 export interface PaginationTableSettings {
   pageSize: number;
   setPageSize: (pageSize: number) => void;

@@ -6,7 +6,6 @@ import Ldap from '@/assets/ico/ldap.svg?c';
 import OAuth from '@/assets/ico/oauth.svg?c';
 
 import { BoxSelector } from '@@/BoxSelector';
-import { FormSection } from '@@/form-components/FormSection';
 
 import { AuthenticationMethod } from '../types';
 
@@ -45,13 +44,12 @@ export function AuthenticationMethodSelector({
   onChange: (value: number) => void;
 }) {
   return (
-    <FormSection title="Authentication method">
-      <BoxSelector
-        radioName="authOptions"
-        options={options}
-        value={value}
-        onChange={onChange}
-      />
-    </FormSection>
+    <BoxSelector
+      radioName="authOptions"
+      options={options}
+      value={value}
+      onChange={onChange}
+      label="Authentication method"
+    />
   );
 }

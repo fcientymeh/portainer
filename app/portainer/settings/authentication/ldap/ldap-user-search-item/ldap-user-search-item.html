@@ -1,4 +1,4 @@
-<div class="w-full px-5 pt-3">
+<div class="w-full px-5 pt-3" data-cy="ldap-user-search-config">
   <div ng-if="$ctrl.index > 0" style="margin-bottom: 10px">
     <span class="text-muted small"> Extra search configuration </span>
     <button
@@ -92,7 +92,7 @@
 
   <div class="form-group">
     <label class="col-sm-4 control-label text-left"> User Filter </label>
-    <div class="col-sm-8">
+    <div class="col-sm-8" data-cy="ldap-user-filter-display">
       {{ $ctrl.config.Filter }}
     </div>
   </div>

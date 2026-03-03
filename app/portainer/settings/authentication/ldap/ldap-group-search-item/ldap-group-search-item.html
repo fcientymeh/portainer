@@ -1,4 +1,4 @@
-<div class="w-full px-5 pt-3">
+<div class="w-full px-5 pt-3" data-cy="ldap-group-search-config">
   <div ng-if="$ctrl.index > 0" style="margin-bottom: 10px">
     <span class="text-muted small"> Extra search configuration </span>
     <button
@@ -28,10 +28,10 @@
   <div class="form-group">
     <div class="col-sm-12 vertical-center" style="margin-bottom: 5px">
       <label class="control-label !pt-0 text-left">Groups</label>
-      <span class="label label-default interactive vertical-center" style="margin-left: 10px" ng-click="$ctrl.addGroup()">
+      <button class="label label-default interactive vertical-center border-0" style="margin-left: 10px" ng-click="$ctrl.addGroup()">
         <pr-icon icon="'plus-circle'"></pr-icon>
         add another group
-      </span>
+      </button>
     </div>
     <div class="col-sm-12" ng-if="$ctrl.groups.length">
       <div class="w-full px-5 pt-3">
@@ -76,6 +76,6 @@
 
   <div class="form-group no-margin-last-child">
     <label class="col-sm-4 col-md-2 control-label text-left"> Group Filter </label>
-    <div class="col-sm-8 col-md-10"> {{ $ctrl.config.GroupFilter }} </div>
+    <div class="col-sm-8 col-md-10" data-cy="ldap-group-filter-display"> {{ $ctrl.config.GroupFilter }} </div>
   </div>
 </div>
