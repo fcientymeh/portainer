@@ -54,6 +54,8 @@ export function ItemView() {
       <PageHeader
         title="Stack details"
         breadcrumbs={[{ label: 'Stacks', link: '^' }, stackName]}
+        reload
+        onReload={() => queryClient.invalidateQueries(queryKeys.base())}
       />
       <StackDetails
         isExternal={isExternal}
