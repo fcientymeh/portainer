@@ -1,4 +1,4 @@
-import { FontWeight } from 'xterm';
+import { FontWeight } from '@xterm/xterm';
 
 import { type TextColor } from './colors';
 

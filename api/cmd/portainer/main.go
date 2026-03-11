@@ -59,10 +59,13 @@ import (
 	"github.com/portainer/portainer/pkg/validate"
 
 	gelf_udp "github.com/Graylog2/go-gelf/gelf"
-	"github.com/gofrs/uuid"
+	// "github.com/gofrs/uuid"
+	"github.com/google/uuid"
+	//"github.com/rs/zerolog"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	// "github.com/rs/zerolog/log"
 
+	"github.com/rs/zerolog/log"
 	gelf_tcp "gopkg.in/Graylog2/go-gelf.v2/gelf"
 )
 
@@ -126,7 +129,7 @@ func initDataStore(flags *portainer.CLIFlags, secretKey []byte, fileService port
 	}
 
 	if isNew {
-		instanceId, err := uuid.NewV4()
+		instanceId, err := uuid.NewRandom()
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed generating instance id")
 		}

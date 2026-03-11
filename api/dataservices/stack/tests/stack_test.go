@@ -8,13 +8,13 @@ import (
 	"github.com/portainer/portainer/api/datastore"
 	"github.com/portainer/portainer/api/filesystem"
 
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func newGuidString(t *testing.T) string {
-	uuid, err := uuid.NewV4()
+	uuid, err := uuid.NewRandom()
 	require.NoError(t, err)
 
 	return uuid.String()

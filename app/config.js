@@ -1,5 +1,3 @@
-import { Terminal } from 'xterm';
-import * as fit from 'xterm/lib/addons/fit/fit';
 import { csrfInterceptor, csrfTokenReaderInterceptorAngular } from './portainer/services/csrf';
 import { agentInterceptor } from './portainer/services/axios';
 import { dispatchCacheRefreshEventIfNeeded } from './portainer/services/http-request.helper';
@@ -32,8 +30,6 @@ export function configApp($urlRouterProvider, $httpProvider, localStorageService
     response: csrfTokenReaderInterceptorAngular,
     request: csrfInterceptor,
   }));
-
-  Terminal.applyAddon(fit);
 
   $uibTooltipProvider.setTriggers({
     mouseenter: 'mouseleave',

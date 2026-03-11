@@ -10,7 +10,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,7 +29,7 @@ func secretToEncryptionKey(passphrase string) []byte {
 func Test_MarshalObjectUnencrypted(t *testing.T) {
 	is := assert.New(t)
 
-	uuid := uuid.Must(uuid.NewV4())
+	uuid := uuid.New()
 
 	tests := []struct {
 		object   any

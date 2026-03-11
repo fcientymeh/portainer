@@ -9,15 +9,15 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Masterminds/semver"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/database/boltdb"
 	"github.com/portainer/portainer/api/database/models"
 	"github.com/portainer/portainer/api/datastore/migrator"
-	"github.com/stretchr/testify/require"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/google/go-cmp/cmp"
 	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMigrateData(t *testing.T) {

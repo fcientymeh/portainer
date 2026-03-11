@@ -54,8 +54,28 @@ linters:
               desc: github.com/ProtonMail/go-crypto/openpgp is not allowed because of FIPS mode
             - pkg: github.com/cosi-project/runtime
               desc: github.com/cosi-project/runtime is not allowed because of FIPS mode
+            - pkg: gopkg.in/yaml.v2
+              desc: use go.yaml.in/yaml/v3 instead
             - pkg: gopkg.in/yaml.v3
               desc: use go.yaml.in/yaml/v3 instead
+            - pkg: github.com/golang-jwt/jwt/v4
+              desc: use github.com/golang-jwt/jwt/v5 instead
+            - pkg: github.com/mitchellh/mapstructure
+              desc: use github.com/go-viper/mapstructure/v2 instead
+            - pkg: gopkg.in/alecthomas/kingpin.v2
+              desc: use github.com/alecthomas/kingpin/v2 instead
+            - pkg: github.com/jcmturner/gokrb5$
+              desc: use github.com/jcmturner/gokrb5/v8 instead
+            - pkg: github.com/gofrs/uuid
+              desc: use github.com/google/uuid
+            - pkg: github.com/Masterminds/semver$
+              desc: use github.com/Masterminds/semver/v3
+            - pkg: github.com/blang/semver
+              desc: use github.com/Masterminds/semver/v3
+            - pkg: github.com/coreos/go-semver
+              desc: use github.com/Masterminds/semver/v3
+            - pkg: github.com/hashicorp/go-version
+              desc: use github.com/Masterminds/semver/v3
     forbidigo:
       forbid:
         - pattern: ^tls\.Config$

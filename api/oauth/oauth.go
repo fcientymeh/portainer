@@ -12,7 +12,7 @@ import (
 
 	portainer "github.com/portainer/portainer/api"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/encoding/json"
@@ -87,7 +87,7 @@ func GetIdToken(token *oauth2.Token) (map[string]any, error) {
 		return tokenData, nil
 	}
 
-	jwtParser := jwt.Parser{SkipClaimsValidation: true}
+	jwtParser := jwt.NewParser(jwt.WithoutClaimsValidation())
 
 	t, _, err := jwtParser.ParseUnverified(idToken.(string), jwt.MapClaims{})
 	if err != nil {

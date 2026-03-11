@@ -114,6 +114,12 @@ importers:
       '@wojtekmaj/react-daterange-picker':
         specifier: ^5.5.0
         version: 5.5.0(@types/react-dom@17.0.25)(@types/react@17.0.75)(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
+      '@xterm/addon-fit':
+        specifier: ^0.11.0
+        version: 0.11.0
+      '@xterm/xterm':
+        specifier: ^6.0.0
+        version: 6.0.0
       angular:
         specifier: 1.8.2
         version: 1.8.2
@@ -330,9 +336,6 @@ importers:
       uuid:
         specifier: ^3.3.2
         version: 3.4.0
-      xterm:
-        specifier: ^3.8.0
-        version: 3.14.5
       yaml:
         specifier: ^1.10.2
         version: 1.10.2
@@ -3549,6 +3552,12 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  '@xterm/addon-fit@0.11.0':
+    resolution: {integrity: sha512-jYcgT6xtVYhnhgxh3QgYDnnNMYTcf8ElbxxFzX0IZo+vabQqSPAjC3c1wJrKB5E19VwQei89QCiZZP86DCPF7g==}
+
+  '@xterm/xterm@6.0.0':
+    resolution: {integrity: sha512-TQwDdQGtwwDt+2cgKDLn0IRaSxYu1tSUjgKarSDkUM0ZNiSRXFpjxEsvc/Zgc5kq5omJ+V0a8/kIM2WD3sMOYg==}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -8486,10 +8495,6 @@ packages:
   xmlchars@2.2.0:
     resolution: {integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==}
 
-  xterm@3.14.5:
-    resolution: {integrity: sha512-DVmQ8jlEtL+WbBKUZuMxHMBgK/yeIZwkXB81bH+MGaKKnJGYwA+770hzhXPfwEIokK9On9YIFPRleVp/5G7z9g==}
-    deprecated: This package is now deprecated. Move to @xterm/xterm instead.
-
   xterm@4.16.0:
     resolution: {integrity: sha512-nAbuigL9CYkI075mdfqpnB8cHZNKxENCj1CQ9Tm5gSvWkMtkanmRN2mkHGjSaET1/3+X9BqISFFo7Pd2mXVjiQ==}
     deprecated: This package is now deprecated. Move to @xterm/xterm instead.
@@ -11809,6 +11814,10 @@ snapshots:
       '@types/react': 17.0.75
     transitivePeerDependencies:
       - '@types/react-dom'
+
+  '@xterm/addon-fit@0.11.0': {}
+
+  '@xterm/xterm@6.0.0': {}
 
   '@xtuc/ieee754@1.2.0': {}
 
@@ -17241,8 +17250,6 @@ snapshots:
   xml-name-validator@5.0.0: {}
 
   xmlchars@2.2.0: {}
-
-  xterm@3.14.5: {}
 
   xterm@4.16.0: {}
 

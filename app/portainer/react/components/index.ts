@@ -30,6 +30,7 @@ import { FallbackImage } from '@@/FallbackImage';
 import { BadgeIcon } from '@@/BadgeIcon';
 import { TeamsSelector } from '@@/TeamsSelector';
 import { TerminalTooltip } from '@@/TerminalTooltip';
+import { Terminal } from '@@/Terminal/Terminal';
 import { PortainerSelect } from '@@/form-components/PortainerSelect';
 import { Slider } from '@@/form-components/Slider';
 import { TagButton } from '@@/TagButton';
@@ -269,7 +270,17 @@ export const ngModule = angular
     'inlineLoader',
     r2a(InlineLoader, ['children', 'className', 'size'])
   )
-  .component('annotationsBeTeaser', r2a(AnnotationsBeTeaser, []));
+  .component('annotationsBeTeaser', r2a(AnnotationsBeTeaser, []))
+  .component(
+    'shellTerminal',
+    r2a(Terminal, [
+      'url',
+      'connect',
+      'onStateChange',
+      'onResize',
+      'initialCommands',
+    ])
+  );
 
 export const componentsModule = ngModule.name;
 

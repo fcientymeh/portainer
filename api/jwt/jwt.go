@@ -9,8 +9,8 @@ import (
 	"github.com/portainer/portainer/api/apikey"
 	"github.com/portainer/portainer/api/dataservices"
 
-	"github.com/gofrs/uuid"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
@@ -185,7 +185,7 @@ func (service *Service) generateSignedToken(data *portainer.TokenData, expiresAt
 		expiresAt = time.Now().Add(99 * year)
 	}
 
-	uuid, err := uuid.NewV4()
+	uuid, err := uuid.NewRandom()
 	if err != nil {
 		return "", fmt.Errorf("unable to generate the JWT ID: %w", err)
 	}

@@ -193,7 +193,10 @@ func initUpgradeClient(actionConfig *action.Configuration, upgradeOpts options.I
 		upgradeClient.Namespace = upgradeOpts.Namespace
 	}
 
-	if upgradeOpts.PostRenderer != "" {
+	switch {
+	case len(upgradeOpts.HelmAppLabels) > 0:
+		upgradeClient.PostRenderer = &appLabelsPostRenderer{labels: upgradeOpts.HelmAppLabels}
+	case upgradeOpts.PostRenderer != "":
 		postRenderer, err := postrender.NewExec(upgradeOpts.PostRenderer)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create post renderer")

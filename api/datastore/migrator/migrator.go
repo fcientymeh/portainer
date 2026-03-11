@@ -29,7 +29,7 @@ import (
 	"github.com/portainer/portainer/api/dataservices/version"
 	"github.com/portainer/portainer/api/internal/authorization"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	"github.com/rs/zerolog/log"
 )
 

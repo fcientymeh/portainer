@@ -1,10 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState } from 'react';
 import { useCurrentStateAndParams } from '@uirouter/react';
 import { Terminal as TerminalIcon } from 'lucide-react';
-import { Terminal } from 'xterm';
 
 import { baseHref } from '@/portainer/helpers/pathHelper';
-import { notifyError } from '@/portainer/services/notifications';
 import { TerminalTooltip } from '@/react/components/TerminalTooltip';
 
 import { PageHeader } from '@@/PageHeader';
@@ -12,10 +10,12 @@ import { Widget, WidgetBody } from '@@/Widget';
 import { Icon } from '@@/Icon';
 import { Button } from '@@/buttons';
 import { Input } from '@@/form-components/Input';
-
-interface StringDictionary {
-  [index: string]: string;
-}
+import {
+  Terminal,
+  isLinuxTerminalCommand,
+  LINUX_SHELL_INIT_COMMANDS,
+} from '@@/Terminal/Terminal';
+import type { ShellState } from '@@/Terminal/Terminal';
 
 export function ConsoleView() {
   const {
@@ -29,24 +29,17 @@ export function ConsoleView() {
   } = useCurrentStateAndParams();
 
   const [command, setCommand] = useState('/bin/sh');
-  const [connectionStatus, setConnectionStatus] = useState('closed');
-  const [terminal, setTerminal] = useState(null as Terminal | null);
-  const [socket, setSocket] = useState(null as WebSocket | null);
+  const [connect, setConnect] = useState(false);
+  const [shellState, setShellState] = useState<ShellState>('idle');
 
   const breadcrumbs = [
-    {
-      label: 'Namespaces',
-      link: 'kubernetes.resourcePools',
-    },
+    { label: 'Namespaces', link: 'kubernetes.resourcePools' },
     {
       label: namespace,
       link: 'kubernetes.resourcePools.resourcePool',
       linkParams: { id: namespace },
     },
-    {
-      label: 'Applications',
-      link: 'kubernetes.applications',
-    },
+    { label: 'Applications', link: 'kubernetes.applications' },
     {
       label: appName,
       link: 'kubernetes.applications.application',
@@ -58,51 +51,6 @@ export function ConsoleView() {
     container,
     'Console',
   ];
-
-  const disconnectConsole = useCallback(() => {
-    socket?.close();
-    terminal?.dispose();
-    setTerminal(null);
-    setSocket(null);
-    setConnectionStatus('closed');
-  }, [socket, terminal, setConnectionStatus]);
-
-  useEffect(() => {
-    if (socket) {
-      socket.onopen = () => {
-        const terminalContainer = document.getElementById('terminal-container');
-        if (terminalContainer) {
-          terminal?.open(terminalContainer);
-          terminal?.setOption('cursorBlink', true);
-          terminal?.focus();
-          setConnectionStatus('open');
-          socket.send('export LANG=C.UTF-8\n');
-          socket.send('export LC_ALL=C.UTF-8\n');
-          socket.send('clear\n');
-        }
-      };
-
-      socket.onmessage = (msg) => {
-        const encoded = new TextEncoder().encode(msg.data);
-        terminal?.writeUtf8(encoded);
-      };
-
-      socket.onerror = () => {
-        disconnectConsole();
-        notifyError('Websocket connection error');
-      };
-
-      socket.onclose = () => {
-        disconnectConsole();
-      };
-    }
-  }, [disconnectConsole, setConnectionStatus, socket, terminal]);
-
-  useEffect(() => {
-    terminal?.onData((data) => {
-      socket?.send(data);
-    });
-  }, [terminal, socket]);
 
   return (
     <>
@@ -137,9 +85,7 @@ export function ConsoleView() {
                     value={command}
                     onChange={(e) => setCommand(e.target.value)}
                     id="consoleCommand"
-                    // disable eslint because we want to autofocus
-                    // this is ok because we only have one input on the page
-                    // https://portainer.atlassian.net/browse/EE-5752
+                    disabled={connect}
                     // eslint-disable-next-line jsx-a11y/no-autofocus
                     autoFocus
                     data-cy="console-command-input"
@@ -150,17 +96,13 @@ export function ConsoleView() {
                 <Button
                   className="btn btn-primary !ml-0"
                   data-cy="connect-console-button"
-                  onClick={
-                    connectionStatus === 'closed'
-                      ? connectConsole
-                      : disconnectConsole
-                  }
-                  disabled={connectionStatus === 'connecting'}
+                  onClick={connect ? handleDisconnect : handleConnect}
+                  disabled={shellState === 'connecting'}
                 >
-                  {connectionStatus === 'open' && 'Disconnect'}
-                  {connectionStatus === 'connecting' && 'Connecting'}
-                  {connectionStatus !== 'connecting' &&
-                    connectionStatus !== 'open' &&
+                  {shellState === 'connected' && 'Disconnect'}
+                  {shellState === 'connecting' && 'Connecting'}
+                  {shellState !== 'connecting' &&
+                    shellState !== 'connected' &&
                     'Connect'}
                 </Button>
               </div>
@@ -168,7 +110,16 @@ export function ConsoleView() {
           </Widget>
           <div className="row">
             <div className="col-sm-12 p-0">
-              <div id="terminal-container" className="terminal-container" />
+              <Terminal
+                url={buildUrl()}
+                connect={connect}
+                onStateChange={handleStateChange}
+                initialCommands={
+                  isLinuxTerminalCommand(command)
+                    ? LINUX_SHELL_INIT_COMMANDS
+                    : undefined
+                }
+              />
             </div>
           </div>
         </div>
@@ -176,8 +127,23 @@ export function ConsoleView() {
     </>
   );
 
-  function connectConsole() {
-    const params: StringDictionary = {
+  function handleConnect() {
+    setConnect(true);
+  }
+
+  function handleDisconnect() {
+    setConnect(false);
+  }
+
+  function handleStateChange(state: ShellState) {
+    if (state === 'disconnected') {
+      setConnect(false);
+    }
+    setShellState(state);
+  }
+
+  function buildUrl() {
+    const params: Record<string, string> = {
       endpointId: environmentId,
       namespace,
       podName: podID,
@@ -197,11 +163,6 @@ export function ConsoleView() {
     } else {
       url = url.replace('http://', 'ws://');
     }
-
-    setConnectionStatus('connecting');
-    const term = new Terminal();
-    setTerminal(term);
-    const socket = new WebSocket(url);
-    setSocket(socket);
+    return url;
   }
 }

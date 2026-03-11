@@ -287,11 +287,6 @@ input[type='checkbox'] {
   margin: 0 !important;
 }
 
-.terminal-container {
-  width: 100%;
-  padding: 10px 0;
-}
-
 .interactive {
   cursor: pointer;
 }

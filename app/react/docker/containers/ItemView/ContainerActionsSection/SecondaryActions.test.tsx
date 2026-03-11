@@ -76,6 +76,7 @@ describe('SecondaryActions', () => {
               allowPrivilegedModeForRegularUsers: true,
               allowVolumeBrowserForRegularUsers: true,
               allowStackManagementForRegularUsers: true,
+              allowSecurityOptForRegularUsers: true,
               enableHostManagementFeatures: false,
             },
           })

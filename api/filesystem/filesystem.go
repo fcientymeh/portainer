@@ -14,7 +14,7 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/logs"
 
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/encoding/json"
 )
@@ -812,7 +812,7 @@ func (service *Service) getEdgeJobTaskLogPath(edgeJobID string, taskID string) s
 
 // GetTemporaryPath returns a temp folder
 func (service *Service) GetTemporaryPath() (string, error) {
-	uid, err := uuid.NewV4()
+	uid, err := uuid.NewRandom()
 	if err != nil {
 		return "", err
 	}

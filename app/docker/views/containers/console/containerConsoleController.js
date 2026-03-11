@@ -1,23 +1,20 @@
-import { Terminal } from 'xterm';
 import { baseHref } from '@/portainer/helpers/pathHelper';
 import { commandStringToArray } from '@/docker/helpers/containers';
+import { isLinuxTerminalCommand, LINUX_SHELL_INIT_COMMANDS } from '@@/Terminal/Terminal';
 
 angular.module('portainer.docker').controller('ContainerConsoleController', [
   '$scope',
   '$state',
   '$transition$',
   'ContainerService',
+  'ExecService',
   'ImageService',
   'Notifications',
-  'ExecService',
   'HttpRequestHelper',
   'CONSOLE_COMMANDS_LABEL_PREFIX',
-  'SidebarService',
   'endpoint',
-  function ($scope, $state, $transition$, ContainerService, ImageService, Notifications, ExecService, HttpRequestHelper, CONSOLE_COMMANDS_LABEL_PREFIX, SidebarService, endpoint) {
-    var socket, term;
-
-    let states = Object.freeze({
+  function ($scope, $state, $transition$, ContainerService, ExecService, ImageService, Notifications, HttpRequestHelper, CONSOLE_COMMANDS_LABEL_PREFIX, endpoint) {
+    const states = Object.freeze({
       disconnected: 0,
       connecting: 1,
       connected: 2,
@@ -26,14 +23,28 @@ angular.module('portainer.docker').controller('ContainerConsoleController', [
     $scope.loaded = false;
     $scope.states = states;
     $scope.state = states.disconnected;
-
     $scope.formValues = {};
     $scope.containerCommands = [];
 
-    // Ensure the socket is closed before leaving the view
+    $scope.shellUrl = '';
+    $scope.shellConnect = false;
+    $scope.onShellResize = null;
+    $scope.shellInitCommands = null;
+
     $scope.$on('$destroy', function () {
       $scope.disconnect();
     });
+
+    $scope.onShellStateChange = function (state) {
+      $scope.$evalAsync(function () {
+        if (state === 'connected') {
+          $scope.state = states.connected;
+        } else if (state === 'disconnected') {
+          $scope.state = states.disconnected;
+          $scope.shellConnect = false;
+        }
+      });
+    };
 
     $scope.connectAttach = function () {
       if ($scope.state > states.disconnected) {
@@ -42,7 +53,7 @@ angular.module('portainer.docker').controller('ContainerConsoleController', [
 
       $scope.state = states.connecting;
 
-      let attachId = $transition$.params().id;
+      const attachId = $transition$.params().id;
 
       ContainerService.container(endpoint.Id, attachId)
         .then((details) => {
@@ -52,22 +63,13 @@ angular.module('portainer.docker').controller('ContainerConsoleController', [
             return;
           }
 
-          const params = {
-            endpointId: $state.params.endpointId,
-            id: attachId,
+          $scope.onShellResize = function ({ rows, cols }) {
+            ContainerService.resizeTTY(endpoint.Id, attachId, cols, rows);
           };
-
-          const base = window.location.origin.startsWith('http') ? `${window.location.origin}${baseHref()}` : baseHref();
-          var url =
-            base +
-            'api/websocket/attach?' +
-            Object.keys(params)
-              .map((k) => k + '=' + params[k])
-              .join('&');
-
-          initTerm(url, ContainerService.resizeTTY.bind(this, endpoint.Id, attachId));
+          $scope.shellUrl = buildShellUrl('api/websocket/attach', { endpointId: $state.params.endpointId, id: attachId });
+          $scope.shellConnect = true;
         })
-        .catch(function error(err) {
+        .catch(function (err) {
           Notifications.error('Error', err, 'Unable to retrieve container details');
           $scope.disconnect();
         });
@@ -79,8 +81,9 @@ angular.module('portainer.docker').controller('ContainerConsoleController', [
       }
 
       $scope.state = states.connecting;
-      var command = $scope.formValues.isCustomCommand ? $scope.formValues.customCommand : $scope.formValues.command;
-      var execConfig = {
+
+      const command = $scope.formValues.isCustomCommand ? $scope.formValues.customCommand : $scope.formValues.command;
+      const execConfig = {
         AttachStdin: true,
         AttachStdout: true,
         AttachStderr: true,
@@ -90,171 +93,48 @@ angular.module('portainer.docker').controller('ContainerConsoleController', [
       };
 
       ContainerService.createExec(endpoint.Id, $transition$.params().id, execConfig)
-        .then(function success(data) {
-          const params = {
-            endpointId: $state.params.endpointId,
-            id: data.Id,
+        .then(function (data) {
+          $scope.onShellResize = function ({ rows, cols }) {
+            ExecService.resizeTTY(data.Id, cols, rows);
           };
-
-          const base = window.location.origin.startsWith('http') ? `${window.location.origin}${baseHref()}` : baseHref();
-          var url =
-            base +
-            'api/websocket/exec?' +
-            Object.keys(params)
-              .map((k) => k + '=' + params[k])
-              .join('&');
-
-          const isLinuxCommand = execConfig.Cmd ? isLinuxTerminalCommand(execConfig.Cmd[0]) : false;
-          initTerm(url, ExecService.resizeTTY.bind(this, params.id), isLinuxCommand);
+          if (isLinuxTerminalCommand(execConfig.Cmd[0])) {
+            $scope.shellInitCommands = LINUX_SHELL_INIT_COMMANDS;
+          }
+          $scope.shellUrl = buildShellUrl('api/websocket/exec', { endpointId: $state.params.endpointId, id: data.Id });
+          $scope.shellConnect = true;
         })
-        .catch(function error(err) {
+        .catch(function (err) {
           Notifications.error('Failure', err, 'Unable to exec into container');
           $scope.disconnect();
         });
     };
 
     $scope.disconnect = function () {
-      if (socket) {
-        socket.close();
-      }
-      if ($scope.state > states.disconnected) {
-        $scope.state = states.disconnected;
-        if (term) {
-          term.write('\n\r(connection closed)');
-          term.dispose();
-        }
-      }
+      $scope.shellConnect = false;
+      $scope.state = states.disconnected;
+      $scope.onShellResize = null;
+      $scope.shellInitCommands = null;
     };
 
     $scope.autoconnectAttachView = function () {
-      return $scope.initView().then(function success() {
+      return $scope.initView().then(function () {
         if ($scope.container.State.Running) {
           $scope.connectAttach();
         }
       });
     };
 
-    function resize(restcall, add) {
-      if ($scope.state != states.connected) {
-        return;
-      }
-
-      add = add || 0;
-
-      term.fit();
-      var termWidth = term.cols;
-      var termHeight = 30;
-      term.resize(termWidth, termHeight);
-
-      restcall(termWidth + add, termHeight + add, 1);
-    }
-
-    function isLinuxTerminalCommand(command) {
-      const validShellCommands = ['ash', 'bash', 'dash', 'sh'];
-      return validShellCommands.includes(command);
-    }
-
-    function initTerm(url, resizeRestCall, isLinuxTerm = false) {
-      let resizefun = resize.bind(this, resizeRestCall);
-
-      if ($transition$.params().nodeName) {
-        url += '&nodeName=' + $transition$.params().nodeName;
-      }
-
-      if (url.indexOf('https') > -1) {
-        url = url.replace('https://', 'wss://');
-      } else {
-        url = url.replace('http://', 'ws://');
-      }
-
-      socket = new WebSocket(url);
-
-      socket.onopen = function () {
-        let closeTerminal = false;
-        let commandBuffer = '';
-
-        $scope.state = states.connected;
-        term = new Terminal();
-
-        if (isLinuxTerm) {
-          // linux terminals support xterm
-          socket.send('export LANG=C.UTF-8\n');
-          socket.send('export LC_ALL=C.UTF-8\n');
-          socket.send('export TERM="xterm-256color"\n');
-          socket.send('alias ls="ls --color=auto"\n');
-          socket.send('echo -e "\\033[2J\\033[H"\n');
-        }
-
-        term.onData(function (data) {
-          socket.send(data);
-
-          // This code is detect whether the user has
-          // typed CTRL+D or exit in the terminal
-          if (data === '\x04') {
-            // If the user types CTRL+D, close the terminal
-            closeTerminal = true;
-          } else if (data === '\r') {
-            if (commandBuffer.trim() === 'exit') {
-              closeTerminal = true;
-            }
-            commandBuffer = '';
-          } else {
-            commandBuffer += data;
-          }
-        });
-
-        var terminal_container = document.getElementById('terminal-container');
-        term.open(terminal_container);
-        term.focus();
-        term.setOption('cursorBlink', true);
-
-        window.onresize = function () {
-          resizefun();
-          $scope.$apply();
-        };
-
-        $scope.$watch(SidebarService.isSidebarOpen, function () {
-          setTimeout(resizefun, 400);
-        });
-
-        socket.onmessage = function (e) {
-          term.write(e.data);
-        };
-
-        socket.onerror = function (err) {
-          if (closeTerminal) {
-            $scope.disconnect();
-          } else {
-            Notifications.error('Failure', err, 'Connection error');
-          }
-          $scope.$apply();
-        };
-
-        socket.onclose = function () {
-          if (closeTerminal) {
-            $scope.disconnect();
-          }
-          $scope.$apply();
-        };
-
-        resizefun(1);
-        $scope.$apply();
-      };
-    }
-
     $scope.initView = function () {
       HttpRequestHelper.setPortainerAgentTargetHeader($transition$.params().nodeName);
       return ContainerService.container(endpoint.Id, $transition$.params().id)
-        .then(function success(data) {
-          var container = data;
-          $scope.container = container;
-          return ImageService.image(container.Image);
+        .then(function (data) {
+          $scope.container = data;
+          return ImageService.image(data.Image);
         })
-        .then(function success(data) {
-          var image = data;
-          var containerLabels = $scope.container.Config.Labels;
-          $scope.imageOS = image.Os;
-          $scope.formValues.command = image.Os === 'windows' ? 'powershell' : 'bash';
+        .then(function (data) {
+          const containerLabels = $scope.container.Config.Labels;
+          $scope.imageOS = data.Os;
+          $scope.formValues.command = data.Os === 'windows' ? 'powershell' : 'bash';
           $scope.containerCommands = Object.keys(containerLabels)
             .filter(function (label) {
               return label.indexOf(CONSOLE_COMMANDS_LABEL_PREFIX) === 0;
@@ -267,7 +147,7 @@ angular.module('portainer.docker').controller('ContainerConsoleController', [
             });
           $scope.loaded = true;
         })
-        .catch(function error(err) {
+        .catch(function (err) {
           Notifications.error('Error', err, 'Unable to retrieve container details');
         });
     };
@@ -277,5 +157,20 @@ angular.module('portainer.docker').controller('ContainerConsoleController', [
         $scope.formValues.isCustomCommand = enabled;
       });
     };
+
+    function buildShellUrl(path, params) {
+      const base = window.location.origin.startsWith('http') ? `${window.location.origin}${baseHref()}` : baseHref();
+      let url =
+        base +
+        path +
+        '?' +
+        Object.keys(params)
+          .map((k) => k + '=' + params[k])
+          .join('&');
+      if ($transition$.params().nodeName) {
+        url += '&nodeName=' + $transition$.params().nodeName;
+      }
+      return url.startsWith('https') ? url.replace('https://', 'wss://') : url.replace('http://', 'ws://');
+    }
   },
 ]);

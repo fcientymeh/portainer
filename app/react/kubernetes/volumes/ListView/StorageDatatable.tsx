@@ -67,6 +67,7 @@ export function StorageDatatable() {
           />
         </TableSettingsMenu>
       )}
+      getRowId={(row) => row.Name}
       getRowCanExpand={(row) => row.original.Volumes.length > 0}
       renderSubRow={(row) => <SubRow item={row.original} />}
       data-cy="k8s-storage-datatable"

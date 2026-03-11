@@ -42,7 +42,7 @@ export function notifyWarning(title: string, text: string) {
   toastr.warning(sanitize(_.escape(text)), sanitize(title), { timeOut: 6000 });
 }
 
-export function notifyError(title: string, e?: Error, fallbackText = '') {
+export function notifyError(title: string, e?: unknown, fallbackText = '') {
   const msg = pickErrorMsg(e) || fallbackText;
   saveNotification(title, msg, 'error');
 
@@ -69,7 +69,7 @@ export function Notifications() {
   };
 }
 
-function pickErrorMsg(e?: Error) {
+function pickErrorMsg(e?: unknown) {
   if (!e) {
     return '';
   }

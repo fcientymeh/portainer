@@ -3,11 +3,12 @@ package sdk
 import (
 	"os"
 
-	"github.com/pkg/errors"
 	"github.com/portainer/portainer/pkg/libhelm/options"
 	"github.com/portainer/portainer/pkg/libhelm/release"
+
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"gopkg.in/yaml.v2"
+	"go.yaml.in/yaml/v3"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chartutil"
 )

@@ -13,13 +13,13 @@ import (
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/testhelpers"
 
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/segmentio/encoding/json"
 	"github.com/stretchr/testify/require"
 )
 
 func TestStackUpdateGitWebhookUniqueness(t *testing.T) {
-	webhook, err := uuid.NewV4()
+	webhook, err := uuid.NewRandom()
 	require.NoError(t, err)
 
 	_, store := datastore.MustNewTestStore(t, false, false)

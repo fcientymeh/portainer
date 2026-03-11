@@ -172,7 +172,10 @@ func initInstallClient(actionConfig *action.Configuration, installOpts options.I
 		installClient.Namespace = installOpts.Namespace
 	}
 
-	if installOpts.PostRenderer != "" {
+	switch {
+	case len(installOpts.HelmAppLabels) > 0:
+		installClient.PostRenderer = &appLabelsPostRenderer{labels: installOpts.HelmAppLabels}
+	case installOpts.PostRenderer != "":
 		postRenderer, err := postrender.NewExec(installOpts.PostRenderer)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create post renderer")

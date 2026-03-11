@@ -9,7 +9,7 @@ import (
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
 
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 )
 
 // @id WebhookInvoke
@@ -56,7 +56,7 @@ func retrieveUUIDRouteVariableValue(r *http.Request, name string) (uuid.UUID, er
 		return uuid.Nil, err
 	}
 
-	uid, err := uuid.FromString(webhookID)
+	uid, err := uuid.Parse(webhookID)
 	if err != nil {
 		return uuid.Nil, err
 	}

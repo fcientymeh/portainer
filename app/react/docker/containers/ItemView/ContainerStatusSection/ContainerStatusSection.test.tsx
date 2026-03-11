@@ -39,6 +39,7 @@ describe('ContainerStatusSection', () => {
               allowPrivilegedModeForRegularUsers: true,
               allowStackManagementForRegularUsers: true,
               allowVolumeBrowserForRegularUsers: true,
+              allowSecurityOptForRegularUsers: true,
               enableHostManagementFeatures: true,
             },
           })

@@ -81,7 +81,6 @@ func WriteReaderToWebSocket(websocketConn *websocket.Conn, mu *sync.Mutex, reade
 	defer logs.CloseAndLogErr(websocketConn)
 
 	mu.Lock()
-	websocketConn.SetReadLimit(ReaderBufferSize)
 	websocketConn.SetPongHandler(func(string) error {
 		return nil
 	})

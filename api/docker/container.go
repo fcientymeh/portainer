@@ -10,7 +10,7 @@ import (
 	"github.com/portainer/portainer/api/docker/images"
 	"github.com/portainer/portainer/api/logs"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	"github.com/docker/docker/api/types"
 	dockercontainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
