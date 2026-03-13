@@ -21,7 +21,6 @@ type InstallOptions struct {
 	// ValuesFile is a path to a YAML file with Helm values to apply.
 	// File values are applied first; Values take precedence on conflicts.
 	ValuesFile              string
-	PostRenderer            string
 	HelmAppLabels           map[string]string
 	Atomic                  bool
 	DryRun                  bool

@@ -5,7 +5,7 @@ import (
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/rs/zerolog/log"
-	"helm.sh/helm/v3/pkg/registry"
+	"helm.sh/helm/v4/pkg/registry"
 )
 
 var (

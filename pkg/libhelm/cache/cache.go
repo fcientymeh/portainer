@@ -7,7 +7,7 @@ import (
 	"github.com/patrickmn/go-cache"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/rs/zerolog/log"
-	"helm.sh/helm/v3/pkg/registry"
+	"helm.sh/helm/v4/pkg/registry"
 )
 
 // Cache manages Helm registry clients with TTL-based expiration

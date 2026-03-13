@@ -7,7 +7,7 @@ import (
 	"github.com/portainer/portainer/pkg/libhelm/cache"
 	"github.com/portainer/portainer/pkg/libhelm/options"
 	"github.com/rs/zerolog/log"
-	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v4/pkg/action"
 )
 
 var errRequiredShowOptions = errors.New("chart, output format and either repo or registry are required")
@@ -107,7 +107,7 @@ func (hspm *HelmSDKPackageManager) Show(showOpts options.ShowOptions) ([]byte, e
 // initShowClient initializes the show client with the given options
 // and return the show client.
 func initShowClient(actionConfig *action.Configuration, showOpts options.ShowOptions) (*action.Show, error) {
-	showClient := action.NewShowWithConfig(action.ShowAll, actionConfig)
+	showClient := action.NewShow(action.ShowAll, actionConfig)
 	err := configureChartPathOptions(&showClient.ChartPathOptions, showOpts.Version, showOpts.Repo, showOpts.Registry)
 	if err != nil {
 		return nil, fmt.Errorf("failed to configure chart path options: %w", err)

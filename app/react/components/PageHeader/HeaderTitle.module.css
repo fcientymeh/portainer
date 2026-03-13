@@ -38,7 +38,7 @@
   line-height: 1.42857143;
   white-space: nowrap;
   font-size: 14px;
-  color: var(--text-dropdown-menu-color);
+  color: var(--text-dropdown-menu-color) !important;
   text-decoration: none !important;
   border-radius: 5px;
 }

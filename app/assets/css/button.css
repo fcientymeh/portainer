@@ -152,8 +152,8 @@ fieldset[disabled] .btn {
 
 .btn.btn-link {
   @apply text-blue-8 hover:text-blue-9 disabled:text-gray-5;
-  @apply th-dark:text-blue-8 th-dark:hover:text-blue-7;
-  @apply th-highcontrast:text-blue-8 th-highcontrast:hover:text-blue-7;
+  @apply th-dark:text-blue-7 th-dark:hover:text-blue-8;
+  @apply th-highcontrast:text-blue-5 th-highcontrast:hover:text-blue-6;
 }
 
 .btn-group {
@@ -177,14 +177,14 @@ fieldset[disabled] .btn {
 
 a.no-link,
 a[ng-click] {
-  @apply text-current;
+  @apply text-current th-dark:text-current th-highcontrast:text-current;
   @apply hover:text-current hover:no-underline;
   @apply focus:text-current focus:no-underline;
 }
 
 a,
 a.hyperlink {
-  @apply text-blue-8 hover:text-blue-9;
+  @apply text-blue-8 hover:text-blue-9 th-dark:text-blue-7 th-dark:hover:text-blue-8 th-highcontrast:text-blue-5 th-highcontrast:hover:text-blue-6;
   @apply cursor-pointer hover:underline;
 }
 

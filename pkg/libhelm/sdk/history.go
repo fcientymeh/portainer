@@ -5,10 +5,9 @@ import (
 
 	"github.com/portainer/portainer/pkg/libhelm/options"
 	"github.com/portainer/portainer/pkg/libhelm/release"
-	"github.com/portainer/portainer/pkg/libhelm/time"
 	"github.com/rs/zerolog/log"
-	"helm.sh/helm/v3/pkg/action"
-	sdkrelease "helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v4/pkg/action"
+	sdkrelease "helm.sh/helm/v4/pkg/release"
 )
 
 // GetHistory implements the HelmPackageManager interface by using the Helm SDK to get a release.
@@ -43,7 +42,11 @@ func (hspm *HelmSDKPackageManager) GetHistory(historyOptions options.HistoryOpti
 
 	var result []*release.Release
 	for _, r := range history {
-		result = append(result, convertHistory(r))
+		converted, err := convertHistory(r)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, converted)
 	}
 
 	// sort the result by version (latest first)
@@ -54,22 +57,27 @@ func (hspm *HelmSDKPackageManager) GetHistory(historyOptions options.HistoryOpti
 	return result, nil
 }
 
-func convertHistory(sdkRelease *sdkrelease.Release) *release.Release {
+func convertHistory(r sdkrelease.Releaser) (*release.Release, error) {
+	v1Release, err := releaserToV1Release(r)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to convert release")
+		return nil, err
+	}
 	return &release.Release{
-		Name:      sdkRelease.Name,
-		Namespace: sdkRelease.Namespace,
-		Version:   sdkRelease.Version,
+		Name:      v1Release.Name,
+		Namespace: v1Release.Namespace,
+		Version:   v1Release.Version,
 		Info: &release.Info{
-			Status:       release.Status(sdkRelease.Info.Status),
-			Notes:        sdkRelease.Info.Notes,
-			LastDeployed: time.Time(sdkRelease.Info.LastDeployed),
+			Status:       release.Status(v1Release.Info.Status),
+			Notes:        v1Release.Info.Notes,
+			LastDeployed: v1Release.Info.LastDeployed,
 		},
 		Chart: release.Chart{
 			Metadata: &release.Metadata{
-				Name:       sdkRelease.Chart.Metadata.Name,
-				Version:    sdkRelease.Chart.Metadata.Version,
-				AppVersion: sdkRelease.Chart.Metadata.AppVersion,
+				Name:       v1Release.Chart.Metadata.Name,
+				Version:    v1Release.Chart.Metadata.Version,
+				AppVersion: v1Release.Chart.Metadata.AppVersion,
 			},
 		},
-	}
+	}, nil
 }

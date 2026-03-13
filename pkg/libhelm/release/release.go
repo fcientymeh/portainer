@@ -1,7 +1,8 @@
 package release
 
 import (
-	"github.com/portainer/portainer/pkg/libhelm/time"
+	"time"
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 

@@ -34,7 +34,7 @@ export function JobsView() {
   return (
     <>
       <PageHeader
-        title="Cron Jobs & Jobs lists"
+        title="Cron Job & Job lists"
         breadcrumbs="Cron Jobs & Jobs"
         reload
       />

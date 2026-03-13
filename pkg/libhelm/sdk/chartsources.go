@@ -29,6 +29,8 @@ package sdk
 //    - RBAC security is enforced BEFORE reaching this caching layer (handler.getRegistryWithAccess)
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -37,8 +39,8 @@ import (
 	"github.com/portainer/portainer/pkg/libhelm/options"
 	"github.com/portainer/portainer/pkg/registryhttp"
 	"github.com/rs/zerolog/log"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/registry"
+	"helm.sh/helm/v4/pkg/action"
+	"helm.sh/helm/v4/pkg/registry"
 )
 
 // IsOCIRegistry returns true if the registry is an OCI registry (not nil), false if it's an HTTP repository (nil)
@@ -116,9 +118,21 @@ func shouldFlushCacheOnError(err error, registryID portainer.RegistryID) bool {
 }
 
 // authenticateChartSource handles both HTTP repositories and OCI registries
-func authenticateChartSource(actionConfig *action.Configuration, registry *portainer.Registry) error {
-	// For HTTP repositories, no authentication needed (CE and EE)
-	if IsHTTPRepository(registry) {
+func authenticateChartSource(actionConfig *action.Configuration, reg *portainer.Registry) error {
+	// For HTTP repositories, no authentication needed (CE and EE) so return default client
+	if IsHTTPRepository(reg) {
+		if actionConfig.RegistryClient != nil {
+			return nil
+		}
+		// Use a non-existent path so Helm initializes an empty credentials store
+		noCredsPath := filepath.Join(os.TempDir(), "portainer-helm-registry-no-creds")
+		defaultClient, err := registry.NewClient(
+			registry.ClientOptCredentialsFile(noCredsPath),
+		)
+		if err != nil {
+			return errors.Wrap(err, "failed to create default registry client")
+		}
+		actionConfig.RegistryClient = defaultClient
 		return nil
 	}
 
@@ -131,7 +145,7 @@ func authenticateChartSource(actionConfig *action.Configuration, registry *porta
 	}
 
 	// Validate registry credentials first
-	err := validateRegistryCredentials(registry)
+	err := validateRegistryCredentials(reg)
 	if err != nil {
 		log.Error().
 			Str("context", "HelmClient").
@@ -154,10 +168,10 @@ func authenticateChartSource(actionConfig *action.Configuration, registry *porta
 	// 4. Credential files add complexity without solving the core rate limiting issue
 
 	// Try to get cached registry client (registry ID-based key)
-	if cachedClient, found := cache.GetCachedRegistryClientByID(registry.ID); found {
+	if cachedClient, found := cache.GetCachedRegistryClientByID(reg.ID); found {
 		log.Debug().
-			Int("registry_id", int(registry.ID)).
-			Str("registry_url", registry.URL).
+			Int("registry_id", int(reg.ID)).
+			Str("registry_url", reg.URL).
 			Str("context", "HelmClient").
 			Msg("Using cached registry client")
 
@@ -167,16 +181,16 @@ func authenticateChartSource(actionConfig *action.Configuration, registry *porta
 
 	// Cache miss - perform login and cache the result
 	log.Debug().
-		Int("registry_id", int(registry.ID)).
-		Str("registry_url", registry.URL).
+		Int("registry_id", int(reg.ID)).
+		Str("registry_url", reg.URL).
 		Str("context", "HelmClient").
 		Msg("Cache miss - creating new registry client")
 
-	registryClient, err := createOCIRegistryClient(registry)
+	registryClient, err := createOCIRegistryClient(reg)
 	if err != nil {
 		log.Error().
 			Str("context", "HelmClient").
-			Str("registry_url", registry.URL).
+			Str("registry_url", reg.URL).
 			Err(err).
 			Msg("Failed to create registry client")
 		return errors.Wrap(err, "failed to create registry client")
@@ -184,10 +198,10 @@ func authenticateChartSource(actionConfig *action.Configuration, registry *porta
 
 	// Cache the client if login was successful (registry ID-based key)
 	if registryClient != nil {
-		cache.SetCachedRegistryClientByID(registry.ID, registryClient)
+		cache.SetCachedRegistryClientByID(reg.ID, registryClient)
 		log.Debug().
-			Int("registry_id", int(registry.ID)).
-			Str("registry_url", registry.URL).
+			Int("registry_id", int(reg.ID)).
+			Str("registry_url", reg.URL).
 			Str("context", "HelmClient").
 			Msg("Registry client cached successfully")
 	}

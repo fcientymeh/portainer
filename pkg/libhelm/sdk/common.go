@@ -15,13 +15,16 @@ import (
 	"github.com/portainer/portainer/pkg/libhelm/options"
 	"github.com/portainer/portainer/pkg/libhelm/release"
 	"github.com/rs/zerolog/log"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/cli"
-	"helm.sh/helm/v3/pkg/downloader"
-	"helm.sh/helm/v3/pkg/getter"
-	"helm.sh/helm/v3/pkg/repo"
+	"helm.sh/helm/v4/pkg/action"
+	"helm.sh/helm/v4/pkg/chart"
+	v2chart "helm.sh/helm/v4/pkg/chart/v2"
+	"helm.sh/helm/v4/pkg/chart/v2/loader"
+	"helm.sh/helm/v4/pkg/cli"
+	"helm.sh/helm/v4/pkg/downloader"
+	"helm.sh/helm/v4/pkg/getter"
+	sdkrelease "helm.sh/helm/v4/pkg/release"
+	releasev1 "helm.sh/helm/v4/pkg/release/v1"
+	repo "helm.sh/helm/v4/pkg/repo/v1"
 )
 
 // Helm chart reference label constants
@@ -35,7 +38,7 @@ const (
 // loadAndValidateChartWithPathOptions locates and loads the chart, and validates it.
 // it also checks for chart dependencies and updates them if necessary.
 // it returns the chart information.
-func (hspm *HelmSDKPackageManager) loadAndValidateChartWithPathOptions(chartPathOptions *action.ChartPathOptions, chartName, version string, repoURL string, dependencyUpdate bool, operation string) (*chart.Chart, error) {
+func (hspm *HelmSDKPackageManager) loadAndValidateChartWithPathOptions(chartPathOptions *action.ChartPathOptions, chartName, version string, repoURL string, dependencyUpdate bool, operation string) (*v2chart.Chart, error) {
 	chartPath, err := chartPathOptions.LocateChart(chartName, hspm.settings)
 	if err != nil {
 		log.Error().
@@ -60,9 +63,18 @@ func (hspm *HelmSDKPackageManager) loadAndValidateChartWithPathOptions(chartPath
 			Msg("Failed to load chart for helm " + operation)
 		return nil, errors.Wrap(err, "failed to load chart for helm "+operation)
 	}
+	chartAcessor, err := chart.NewDefaultAccessor(chartReq)
+	if err != nil {
+		log.Error().
+			Str("context", "HelmClient").
+			Str("chart_path", chartPath).
+			Err(err).
+			Msg("Failed to make chart accessor for helm " + operation)
+		return nil, errors.Wrap(err, "failed to make chart accessor for helm "+operation)
+	}
 
 	// Check chart dependencies to make sure all are present in /charts
-	if chartDependencies := chartReq.Metadata.Dependencies; chartDependencies != nil {
+	if chartDependencies := chartAcessor.MetaDependencies(); chartDependencies != nil {
 		if err := action.CheckDependencies(chartReq, chartDependencies); err != nil {
 			err = errors.Wrap(err, "failed to check chart dependencies for helm "+operation)
 			if !dependencyUpdate {
@@ -208,8 +220,8 @@ func ensureHelmDirectoriesExist(settings *cli.EnvSettings) error {
 				return errors.Wrapf(err, "failed to create directory: %s", dir)
 			}
 
-			// Create an empty registry config file
-			if _, err := os.Create(settings.RegistryConfig); err != nil {
+			// Create an empty registry config file with default yaml structure
+			if err := os.WriteFile(settings.RegistryConfig, []byte("{}"), 0600); err != nil {
 				log.Error().
 					Str("context", "helm_sdk_dirs").
 					Str("file", settings.RegistryConfig).
@@ -294,5 +306,17 @@ func extractChartReferenceAnnotations(annotations map[string]string) release.Cha
 		ChartPath:  annotations[ChartPathAnnotation],
 		RepoURL:    annotations[RepoURLAnnotation],
 		RegistryID: int64(registryID),
+	}
+}
+
+// releaserToV1Release converts a release.Releaser interface to a concrete v1.Release type
+func releaserToV1Release(rel sdkrelease.Releaser) (*releasev1.Release, error) {
+	switch r := rel.(type) {
+	case releasev1.Release:
+		return &r, nil
+	case *releasev1.Release:
+		return r, nil
+	default:
+		return nil, fmt.Errorf("unsupported release type: %T", rel)
 	}
 }

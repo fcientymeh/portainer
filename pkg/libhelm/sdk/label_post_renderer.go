@@ -5,11 +5,11 @@ import (
 
 	"github.com/portainer/portainer/api/kubernetes"
 	"github.com/rs/zerolog/log"
-	"helm.sh/helm/v3/pkg/postrender"
+	"helm.sh/helm/v4/pkg/postrenderer"
 )
 
 // Ensure appLabelsPostRenderer implements the postrender.PostRenderer interface.
-var _ postrender.PostRenderer = &appLabelsPostRenderer{}
+var _ postrenderer.PostRenderer = &appLabelsPostRenderer{}
 
 // appLabelsPostRenderer is an in-process Helm post-renderer that injects
 // Portainer app labels into every Kubernetes resource in the rendered manifests.

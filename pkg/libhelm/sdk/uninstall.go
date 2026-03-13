@@ -6,8 +6,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/portainer/portainer/pkg/libhelm/options"
 	"github.com/rs/zerolog/log"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/storage/driver"
+	"helm.sh/helm/v4/pkg/action"
+	"helm.sh/helm/v4/pkg/kube"
+	"helm.sh/helm/v4/pkg/storage/driver"
 )
 
 // Uninstall implements the HelmPackageManager interface by using the Helm SDK to uninstall a release.
@@ -37,7 +38,11 @@ func (hspm *HelmSDKPackageManager) Uninstall(uninstallOpts options.UninstallOpti
 	uninstallClient := action.NewUninstall(actionConfig)
 	// 'foreground' means the parent object remains in a "terminating" state until all of its children are deleted. This ensures that all dependent resources are completely removed before finalizing the deletion of the parent resource.
 	uninstallClient.DeletionPropagation = "foreground" // "background" or "orphan"
-	uninstallClient.Wait = uninstallOpts.Wait
+	if uninstallOpts.Wait {
+		uninstallClient.WaitStrategy = kube.StatusWatcherStrategy
+	} else {
+		uninstallClient.WaitStrategy = kube.HookOnlyStrategy
+	}
 	if uninstallOpts.Timeout == 0 {
 		uninstallClient.Timeout = 15 * time.Minute
 	} else {
@@ -63,10 +68,19 @@ func (hspm *HelmSDKPackageManager) Uninstall(uninstallOpts options.UninstallOpti
 	}
 
 	if result != nil {
+		releaseV1, err := releaserToV1Release(result.Release)
+		if err != nil {
+			log.Error().
+				Str("context", "HelmClient").
+				Str("release", uninstallOpts.Name).
+				Err(err).
+				Msg("Failed to convert release to v1")
+			return errors.Wrap(err, "failed to convert release to v1")
+		}
 		log.Debug().
 			Str("context", "HelmClient").
 			Str("release", uninstallOpts.Name).
-			Str("release_info", result.Release.Info.Description).
+			Str("release_info", releaseV1.Info.Description).
 			Msg("Uninstall result details")
 	}
 
@@ -109,8 +123,18 @@ func (hspm *HelmSDKPackageManager) ForceRemoveRelease(uninstallOpts options.Unin
 
 	// Delete each release version from storage
 	for _, v := range versions {
-		if _, err := actionConfig.Releases.Delete(v.Name, v.Version); err != nil {
-			return errors.Wrapf(err, "failed to delete release version %d for force-remove", v.Version)
+		releaseV1, err := releaserToV1Release(v)
+		if err != nil {
+			log.Error().
+				Str("context", "HelmClient").
+				Str("release", uninstallOpts.Name).
+				Int("version", releaseV1.Version).
+				Err(err).
+				Msg("Failed to convert releaser version to v1 for force-remove, skipping deletion of this version")
+			continue
+		}
+		if _, err := actionConfig.Releases.Delete(releaseV1.Name, releaseV1.Version); err != nil {
+			return errors.Wrapf(err, "failed to delete release version %d for force-remove", releaseV1.Version)
 		}
 	}
 

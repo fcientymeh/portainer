@@ -9,8 +9,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.yaml.in/yaml/v3"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chartutil"
+	"helm.sh/helm/v4/pkg/action"
+	"helm.sh/helm/v4/pkg/chart/common"
 )
 
 // GetHelmValuesFromFile reads the values file and parses it into a map[string]any
@@ -49,9 +49,9 @@ func GetHelmValuesFromFile(valuesFile string) (map[string]any, error) {
 
 // parseValues parses YAML values data into a map
 func parseValues(data []byte) (map[string]any, error) {
-	// Use Helm's built-in chartutil.ReadValues which properly handles the conversion
+	// Use Helm's built-in common.ReadValues which properly handles the conversion
 	// from map[interface{}]interface{} to map[string]interface{}
-	return chartutil.ReadValues(data)
+	return common.ReadValues(data)
 }
 
 // MergeValues merges two maps recursively, with values from the override map taking precedence

@@ -11,8 +11,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/registry"
+	"helm.sh/helm/v4/pkg/action"
+	"helm.sh/helm/v4/pkg/registry"
 )
 
 func init() {
@@ -281,12 +281,12 @@ func TestLoginToOCIRegistry(t *testing.T) {
 }
 
 func TestAuthenticateChartSource(t *testing.T) {
-	t.Run("should do nothing for HTTP repo (nil registry)", func(t *testing.T) {
+	t.Run("should do return default client for HTTP repo", func(t *testing.T) {
 		is := assert.New(t)
 		actionConfig := &action.Configuration{}
 		err := authenticateChartSource(actionConfig, nil)
 		require.NoError(t, err)
-		is.Nil(actionConfig.RegistryClient)
+		is.NotNil(actionConfig.RegistryClient)
 	})
 
 	t.Run("should do nothing if registry client already set", func(t *testing.T) {

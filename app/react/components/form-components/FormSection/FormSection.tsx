@@ -13,6 +13,7 @@ interface Props {
   className?: string;
   htmlFor?: string;
   setIsDefaultFolded?: (isDefaultFolded: boolean) => void;
+  id?: string;
 }
 
 export function FormSection({
@@ -25,22 +26,26 @@ export function FormSection({
   className,
   htmlFor = '',
   setIsDefaultFolded,
+  id,
 }: PropsWithChildren<Props>) {
   const [isExpanded, setIsExpanded] = useState(!defaultFolded);
-  const id = `foldingButton${title}`;
+  const collapsibleIdSuffix = typeof title === 'string' ? title : id;
+  const collapsibleId = collapsibleIdSuffix
+    ? `foldingButton${collapsibleIdSuffix}`
+    : undefined;
 
   return (
-    <div className={className}>
+    <div className={className} id={id}>
       <FormSectionTitle
-        htmlFor={isFoldable ? id : htmlFor}
+        htmlFor={isFoldable ? collapsibleId : htmlFor}
         titleSize={titleSize}
         className={titleClassName}
       >
         {isFoldable && (
           <CollapseExpandButton
             isExpanded={isExpanded}
-            data-cy={id}
-            id={id}
+            data-cy={collapsibleId}
+            id={collapsibleId}
             onClick={() => {
               setIsExpanded((isExpanded) => !isExpanded);
               setIsDefaultFolded?.(isExpanded);

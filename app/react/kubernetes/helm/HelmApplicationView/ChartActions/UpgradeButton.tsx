@@ -73,7 +73,7 @@ export function UpgradeButton({
 
   const currentRepo = versions?.find(
     (v) =>
-      v.Chart === release?.chart.metadata?.name &&
+      v.Repo === release?.chartReference?.repoURL &&
       v.AppVersion === release?.chart.metadata?.appVersion &&
       v.Version === release?.chart.metadata?.version
   )?.Repo;

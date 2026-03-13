@@ -2452,14 +2452,15 @@ const (
 
 const (
 	// PolicyType constants
-	RbacK8s        PolicyType = "rbac-k8s"
-	SecurityK8s    PolicyType = "security-k8s"
-	SetupK8s       PolicyType = "setup-k8s"
-	RegistryK8s    PolicyType = "registry-k8s"
-	RbacDocker     PolicyType = "rbac-docker"
-	SecurityDocker PolicyType = "security-docker"
-	SetupDocker    PolicyType = "setup-docker"
-	RegistryDocker PolicyType = "registry-docker"
+	RbacK8s            PolicyType = "rbac-k8s"
+	SecurityK8s        PolicyType = "security-k8s"
+	SetupK8s           PolicyType = "setup-k8s"
+	RegistryK8s        PolicyType = "registry-k8s"
+	RbacDocker         PolicyType = "rbac-docker"
+	SecurityDocker     PolicyType = "security-docker"
+	SetupDocker        PolicyType = "setup-docker"
+	RegistryDocker     PolicyType = "registry-docker"
+	ChangeConfirmation PolicyType = "change-confirmation"
 )
 
 type HelmInstallStatus string

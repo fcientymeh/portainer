@@ -3,8 +3,8 @@ package types
 import (
 	"github.com/portainer/portainer/pkg/libhelm/options"
 	"github.com/portainer/portainer/pkg/libhelm/release"
-	"helm.sh/helm/v3/pkg/cli"
-	"helm.sh/helm/v3/pkg/repo"
+	"helm.sh/helm/v4/pkg/cli"
+	repo "helm.sh/helm/v4/pkg/repo/v1"
 )
 
 // HelmPackageManager represents a service that interfaces with Helm

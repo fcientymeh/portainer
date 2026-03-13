@@ -64,7 +64,7 @@ export function useColumns() {
                         params={{ id: item.Name, tab: 'events' }}
                         data-cy={`namespace-warning-link-${item.Name}`}
                         // use the badge text and hover color
-                        className="text-inherit hover:text-inherit"
+                        className="!text-inherit hover:text-inherit"
                         title="View events"
                       >
                         {item.UnhealthyEventCount}{' '}

@@ -19,11 +19,14 @@ export function EndpointProvider() {
     pingInterval: null,
   };
 
-  environmentStore.subscribe((state) => {
-    if (!state.environmentId) {
-      setCurrentEndpoint(null);
+  environmentStore.subscribe(
+    (state) => state.environmentId,
+    (environmentId) => {
+      if (!environmentId) {
+        setCurrentEndpoint(null);
+      }
     }
-  });
+  );
 
   return { endpointID, setCurrentEndpoint, currentEndpoint, clean };
 
@@ -50,9 +53,7 @@ export function EndpointProvider() {
       );
     }
 
-    document.title = endpoint
-      ? `${DEFAULT_TITLE} | ${endpoint.Name}`
-      : `${DEFAULT_TITLE}`;
+    document.title = endpoint ? `${endpoint.Name}` : `${DEFAULT_TITLE}`;
   }
 
   function currentEndpoint() {

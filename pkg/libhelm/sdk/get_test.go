@@ -5,22 +5,22 @@ import (
 
 	libhelmrelease "github.com/portainer/portainer/pkg/libhelm/release"
 	"github.com/stretchr/testify/assert"
-	"helm.sh/helm/v3/pkg/chart"
-	sdkrelease "helm.sh/helm/v3/pkg/release"
+	chartv2 "helm.sh/helm/v4/pkg/chart/v2"
+	releasev1 "helm.sh/helm/v4/pkg/release/v1"
 )
 
 func Test_Convert(t *testing.T) {
 	t.Run("successfully maps a sdk release to a release", func(t *testing.T) {
 		is := assert.New(t)
 
-		release := sdkrelease.Release{
+		release := releasev1.Release{
 			Name:    "releaseName",
 			Version: 1,
-			Info: &sdkrelease.Info{
+			Info: &releasev1.Info{
 				Status: "deployed",
 			},
-			Chart: &chart.Chart{
-				Metadata: &chart.Metadata{
+			Chart: &chartv2.Chart{
+				Metadata: &chartv2.Metadata{
 					Name:       "chartName",
 					Version:    "chartVersion",
 					AppVersion: "chartAppVersion",
@@ -40,15 +40,15 @@ func Test_Convert(t *testing.T) {
 	t.Run("extracts stack ID from annotations", func(t *testing.T) {
 		is := assert.New(t)
 
-		release := sdkrelease.Release{
+		release := releasev1.Release{
 			Name:      "stack-release",
 			Namespace: "app-namespace",
 			Version:   2,
-			Info: &sdkrelease.Info{
+			Info: &releasev1.Info{
 				Status: "deployed",
 			},
-			Chart: &chart.Chart{
-				Metadata: &chart.Metadata{
+			Chart: &chartv2.Chart{
+				Metadata: &chartv2.Metadata{
 					Name:    "myapp",
 					Version: "2.1.0",
 					Annotations: map[string]string{
@@ -71,15 +71,15 @@ func Test_Convert(t *testing.T) {
 	t.Run("handles invalid stack ID gracefully", func(t *testing.T) {
 		is := assert.New(t)
 
-		release := sdkrelease.Release{
+		release := releasev1.Release{
 			Name:      "release",
 			Namespace: "default",
 			Version:   1,
-			Info: &sdkrelease.Info{
+			Info: &releasev1.Info{
 				Status: "deployed",
 			},
-			Chart: &chart.Chart{
-				Metadata: &chart.Metadata{
+			Chart: &chartv2.Chart{
+				Metadata: &chartv2.Metadata{
 					Name:    "chart",
 					Version: "1.0.0",
 					Annotations: map[string]string{
@@ -99,15 +99,15 @@ func Test_Convert(t *testing.T) {
 	t.Run("handles empty stack ID annotation", func(t *testing.T) {
 		is := assert.New(t)
 
-		release := sdkrelease.Release{
+		release := releasev1.Release{
 			Name:      "release",
 			Namespace: "default",
 			Version:   1,
-			Info: &sdkrelease.Info{
+			Info: &releasev1.Info{
 				Status: "deployed",
 			},
-			Chart: &chart.Chart{
-				Metadata: &chart.Metadata{
+			Chart: &chartv2.Chart{
+				Metadata: &chartv2.Metadata{
 					Name:    "chart",
 					Version: "1.0.0",
 					Annotations: map[string]string{
@@ -126,15 +126,15 @@ func Test_Convert(t *testing.T) {
 	t.Run("handles missing annotations", func(t *testing.T) {
 		is := assert.New(t)
 
-		release := sdkrelease.Release{
+		release := releasev1.Release{
 			Name:      "release",
 			Namespace: "default",
 			Version:   1,
-			Info: &sdkrelease.Info{
+			Info: &releasev1.Info{
 				Status: "deployed",
 			},
-			Chart: &chart.Chart{
-				Metadata: &chart.Metadata{
+			Chart: &chartv2.Chart{
+				Metadata: &chartv2.Metadata{
 					Name:        "chart",
 					Version:     "1.0.0",
 					Annotations: nil,
@@ -155,15 +155,15 @@ func Test_Convert(t *testing.T) {
 	t.Run("extracts registry ID from annotations", func(t *testing.T) {
 		is := assert.New(t)
 
-		release := sdkrelease.Release{
+		release := releasev1.Release{
 			Name:      "release",
 			Namespace: "default",
 			Version:   1,
-			Info: &sdkrelease.Info{
+			Info: &releasev1.Info{
 				Status: "deployed",
 			},
-			Chart: &chart.Chart{
-				Metadata: &chart.Metadata{
+			Chart: &chartv2.Chart{
+				Metadata: &chartv2.Metadata{
 					Name:    "chart",
 					Version: "1.0.0",
 					Annotations: map[string]string{

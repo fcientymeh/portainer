@@ -8,8 +8,8 @@ import (
 	"github.com/portainer/portainer/pkg/libhelm/options"
 	"github.com/portainer/portainer/pkg/libhelm/release"
 	"github.com/rs/zerolog/log"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/postrender"
+	"helm.sh/helm/v4/pkg/action"
+	"helm.sh/helm/v4/pkg/kube"
 )
 
 // Install implements the HelmPackageManager interface by using the Helm SDK to install a chart.
@@ -125,21 +125,32 @@ func (hspm *HelmSDKPackageManager) install(installOpts options.InstallOptions) (
 		}
 		return nil, errors.Wrap(err, "helm was not able to install the chart for helm release installation")
 	}
+	v1Release, err := releaserToV1Release(helmRelease)
+	if err != nil {
+		log.Error().
+			Str("context", "HelmClient").
+			Str("chart", installOpts.Chart).
+			Str("name", installOpts.Name).
+			Str("namespace", installOpts.Namespace).
+			Err(err).
+			Msg("Failed to convert helm release to v1 release for helm release installation")
+		return nil, errors.Wrap(err, "helm was not able to convert helm release to v1 release")
+	}
 
 	return &release.Release{
-		Name:      helmRelease.Name,
-		Namespace: helmRelease.Namespace,
+		Name:      v1Release.Name,
+		Namespace: v1Release.Namespace,
 		Chart: release.Chart{
 			Metadata: &release.Metadata{
-				Name:        helmRelease.Chart.Metadata.Name,
-				Version:     helmRelease.Chart.Metadata.Version,
-				AppVersion:  helmRelease.Chart.Metadata.AppVersion,
-				Annotations: helmRelease.Chart.Metadata.Annotations,
+				Name:        v1Release.Chart.Metadata.Name,
+				Version:     v1Release.Chart.Metadata.Version,
+				AppVersion:  v1Release.Chart.Metadata.AppVersion,
+				Annotations: v1Release.Chart.Metadata.Annotations,
 			},
 		},
-		Labels:   helmRelease.Labels,
-		Version:  helmRelease.Version,
-		Manifest: helmRelease.Manifest,
+		Labels:   v1Release.Labels,
+		Version:  v1Release.Version,
+		Manifest: v1Release.Manifest,
 	}, nil
 }
 
@@ -149,10 +160,16 @@ func initInstallClient(actionConfig *action.Configuration, installOpts options.I
 	installClient := action.NewInstall(actionConfig)
 	installClient.DependencyUpdate = true
 	installClient.ReleaseName = installOpts.Name
-	installClient.Wait = installOpts.Wait
+	if installOpts.Wait {
+		installClient.WaitStrategy = kube.StatusWatcherStrategy
+	} else {
+		installClient.WaitStrategy = kube.HookOnlyStrategy
+	}
 	installClient.Timeout = installOpts.Timeout
 	installClient.Version = installOpts.Version
-	installClient.DryRun = installOpts.DryRun
+	if installOpts.DryRun {
+		installClient.DryRunStrategy = action.DryRunClient
+	}
 	installClient.TakeOwnership = installOpts.TakeOwnership
 	installClient.CreateNamespace = installOpts.CreateNamespace
 	err := configureChartPathOptions(&installClient.ChartPathOptions, installOpts.Version, installOpts.Repo, installOpts.Registry)
@@ -172,15 +189,8 @@ func initInstallClient(actionConfig *action.Configuration, installOpts options.I
 		installClient.Namespace = installOpts.Namespace
 	}
 
-	switch {
-	case len(installOpts.HelmAppLabels) > 0:
+	if len(installOpts.HelmAppLabels) > 0 {
 		installClient.PostRenderer = &appLabelsPostRenderer{labels: installOpts.HelmAppLabels}
-	case installOpts.PostRenderer != "":
-		postRenderer, err := postrender.NewExec(installOpts.PostRenderer)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to create post renderer")
-		}
-		installClient.PostRenderer = postRenderer
 	}
 
 	return installClient, nil

@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"helm.sh/helm/v3/pkg/chart"
-	sdkrelease "helm.sh/helm/v3/pkg/release"
+	"github.com/stretchr/testify/require"
+	chart "helm.sh/helm/v4/pkg/chart/v2"
+	sdkrelease "helm.sh/helm/v4/pkg/release/v1"
 )
 
 func Test_ConvertHistory(t *testing.T) {
@@ -27,7 +28,8 @@ func Test_ConvertHistory(t *testing.T) {
 			},
 		}
 
-		result := convertHistory(&release)
+		result, err := convertHistory(&release)
+		require.NoError(t, err)
 		is.Equal(release.Name, result.Name)
 	})
 }

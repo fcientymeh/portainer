@@ -146,7 +146,7 @@ export function UpgradeHelmModal({
             </FormControl>
             <FormControl
               label="Rollback on failure"
-              tooltip="Enables automatic rollback on failure (equivalent to the helm --atomic flag). It may increase the time to upgrade."
+              tooltip="Enables automatic rollback on failure. It may increase the time to upgrade."
               inputId="atomic-input"
               size="medium"
             >

@@ -12,9 +12,7 @@ import { CodeEditor } from '@@/CodeEditor';
 
 import { FormSectionTitle } from './form-components/FormSectionTitle';
 import { FormError } from './form-components/FormError';
-import { confirm } from './modals/confirm';
-import { ModalType } from './modals';
-import { buildConfirmButton } from './modals/utils';
+import { confirmWebEditorDiscard } from './modals/confirm';
 import { ShortcutsTooltip } from './CodeEditor/ShortcutsTooltip';
 
 type CodeEditorProps = ComponentProps<typeof CodeEditor>;
@@ -93,13 +91,7 @@ export function usePreventExit(
     if (!preventExit) {
       return true;
     }
-    const confirmed = await confirm({
-      modalType: ModalType.Warn,
-      title: 'Are you sure?',
-      message:
-        'You currently have unsaved changes in the text editor. Are you sure you want to leave?',
-      confirmButton: buildConfirmButton('Yes', 'danger'),
-    });
+    const confirmed = await confirmWebEditorDiscard();
     return confirmed;
   });
 

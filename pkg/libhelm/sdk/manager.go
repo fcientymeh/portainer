@@ -3,7 +3,7 @@ package sdk
 import (
 	"time"
 
-	"helm.sh/helm/v3/pkg/cli"
+	"helm.sh/helm/v4/pkg/cli"
 )
 
 // HelmSDKPackageManager is a wrapper for the helm SDK which implements HelmPackageManager

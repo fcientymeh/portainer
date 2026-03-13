@@ -8,8 +8,8 @@ import (
 	"github.com/portainer/portainer/pkg/libhelm/options"
 	"github.com/portainer/portainer/pkg/libhelm/release"
 	"github.com/rs/zerolog/log"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/postrender"
+	"helm.sh/helm/v4/pkg/action"
+	"helm.sh/helm/v4/pkg/kube"
 )
 
 // Upgrade implements the HelmPackageManager interface by using the Helm SDK to upgrade a chart.
@@ -144,21 +144,32 @@ func (hspm *HelmSDKPackageManager) Upgrade(upgradeOpts options.InstallOptions) (
 			Msg("Failed to upgrade helm chart for helm release upgrade")
 		return nil, errors.Wrap(err, "helm was not able to upgrade the chart for helm release upgrade")
 	}
+	releaseV1, err := releaserToV1Release(helmRelease)
+	if err != nil {
+		log.Error().
+			Str("context", "HelmClient").
+			Str("chart", upgradeOpts.Chart).
+			Str("name", upgradeOpts.Name).
+			Str("namespace", upgradeOpts.Namespace).
+			Err(err).
+			Msg("Failed to convert helm release to v1 release for helm release upgrade")
+		return nil, errors.Wrap(err, "Failed to convert helm release to v1 release for helm release upgrade")
+	}
 
 	return &release.Release{
-		Name:      helmRelease.Name,
-		Namespace: helmRelease.Namespace,
+		Name:      releaseV1.Name,
+		Namespace: releaseV1.Namespace,
 		Chart: release.Chart{
 			Metadata: &release.Metadata{
-				Name:        helmRelease.Chart.Metadata.Name,
-				Version:     helmRelease.Chart.Metadata.Version,
-				AppVersion:  helmRelease.Chart.Metadata.AppVersion,
-				Annotations: helmRelease.Chart.Metadata.Annotations,
+				Name:        releaseV1.Chart.Metadata.Name,
+				Version:     releaseV1.Chart.Metadata.Version,
+				AppVersion:  releaseV1.Chart.Metadata.AppVersion,
+				Annotations: releaseV1.Chart.Metadata.Annotations,
 			},
 		},
-		Labels:   helmRelease.Labels,
-		Version:  helmRelease.Version,
-		Manifest: helmRelease.Manifest,
+		Labels:   releaseV1.Labels,
+		Version:  releaseV1.Version,
+		Manifest: releaseV1.Manifest,
 	}, nil
 }
 
@@ -167,10 +178,16 @@ func (hspm *HelmSDKPackageManager) Upgrade(upgradeOpts options.InstallOptions) (
 func initUpgradeClient(actionConfig *action.Configuration, upgradeOpts options.InstallOptions) (*action.Upgrade, error) {
 	upgradeClient := action.NewUpgrade(actionConfig)
 	upgradeClient.DependencyUpdate = true
-	upgradeClient.Atomic = upgradeOpts.Atomic
-	upgradeClient.Wait = upgradeOpts.Wait
+	upgradeClient.RollbackOnFailure = upgradeOpts.Atomic
 	upgradeClient.Version = upgradeOpts.Version
-	upgradeClient.DryRun = upgradeOpts.DryRun
+	if upgradeOpts.DryRun {
+		upgradeClient.DryRunStrategy = action.DryRunClient
+	}
+	if upgradeOpts.Wait {
+		upgradeClient.WaitStrategy = kube.StatusWatcherStrategy
+	} else {
+		upgradeClient.WaitStrategy = kube.HookOnlyStrategy
+	}
 	upgradeClient.TakeOwnership = upgradeOpts.TakeOwnership // Equivalent to --take-ownership flag
 	err := configureChartPathOptions(&upgradeClient.ChartPathOptions, upgradeOpts.Version, upgradeOpts.Repo, upgradeOpts.Registry)
 	if err != nil {
@@ -179,7 +196,7 @@ func initUpgradeClient(actionConfig *action.Configuration, upgradeOpts options.I
 
 	// Set default values if not specified
 	if upgradeOpts.Timeout == 0 {
-		if upgradeClient.Atomic {
+		if upgradeClient.RollbackOnFailure {
 			upgradeClient.Timeout = 30 * time.Minute // the atomic flag significantly increases the upgrade time
 		} else {
 			upgradeClient.Timeout = 15 * time.Minute
@@ -193,15 +210,8 @@ func initUpgradeClient(actionConfig *action.Configuration, upgradeOpts options.I
 		upgradeClient.Namespace = upgradeOpts.Namespace
 	}
 
-	switch {
-	case len(upgradeOpts.HelmAppLabels) > 0:
+	if len(upgradeOpts.HelmAppLabels) > 0 {
 		upgradeClient.PostRenderer = &appLabelsPostRenderer{labels: upgradeOpts.HelmAppLabels}
-	case upgradeOpts.PostRenderer != "":
-		postRenderer, err := postrender.NewExec(upgradeOpts.PostRenderer)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to create post renderer")
-		}
-		upgradeClient.PostRenderer = postRenderer
 	}
 
 	return upgradeClient, nil

@@ -1,13 +1,14 @@
+import { useRouter } from '@uirouter/react';
 import { Edit2, List } from 'lucide-react';
 import _ from 'lodash';
+import { useMemo } from 'react';
 
-import { useParamState } from '@/react/hooks/useParamState';
 import { useEnvironmentId } from '@/react/hooks/useEnvironmentId';
 import { Stack } from '@/react/common/stacks/types';
 import { useStackFile } from '@/react/common/stacks/queries/useStackFile';
 
-import { NavTabs } from '@@/NavTabs';
 import { WidgetBody, Widget } from '@@/Widget';
+import { Tab, useCurrentTabIndex, WidgetTabs } from '@@/Widget/WidgetTabs';
 
 import { useContainers } from '../../containers/queries/useContainers';
 import { validateYAML } from '../common/stackYamlValidation';
@@ -16,7 +17,19 @@ import { extractContainerNames } from '../common/container-names';
 import { StackEditorTab } from './StackEditorTab/StackEditorTab';
 import { StackInfoTab } from './StackInfoTab/StackInfoTab';
 
-type Tab = 'info' | 'editor';
+function showEditorTab(
+  isExternal: boolean,
+  stack: Stack | undefined,
+  fileQueryLoading: boolean
+) {
+  return (
+    !isExternal &&
+    !isExternal &&
+    !!stack &&
+    !fileQueryLoading &&
+    (!stack.GitConfig || stack.FromAppTemplate)
+  );
+}
 
 export function StackDetails({
   isExternal,
@@ -24,7 +37,6 @@ export function StackDetails({
   isOrphanedRunning,
   isRegular,
   stackName,
-
   stack,
 }: {
   isOrphaned: boolean;
@@ -34,14 +46,12 @@ export function StackDetails({
   stackName: string;
   stack: Stack | undefined;
 }) {
+  const router = useRouter();
   const envId = useEnvironmentId();
   const containerNamesQuery = useContainers(envId, {
     select: (containers) =>
       containers.flatMap((c) => c.Names).map((n) => _.trimStart(n, '/')),
   });
-  const [tab, setTab] = useParamState<Tab>('tab', (param) =>
-    param === 'editor' ? param : 'info'
-  );
   const fileQuery = useStackFile(stack?.Id, {
     version: stack?.StackFileVersion,
     commitHash: stack?.GitConfig?.ConfigHash,
@@ -54,60 +64,86 @@ export function StackDetails({
     originalContainerNames
   );
 
-  return (
-    <div className="row">
-      <div className="col-sm-12">
+  const tabs: Tab[] = useMemo(() => {
+    const infoTab: Tab = {
+      name: 'Stack',
+      icon: List,
+      widget: (
         <Widget>
           <WidgetBody>
-            <NavTabs<Tab>
-              selectedId={tab}
-              onSelect={(tab) => {
-                setTab(tab);
-              }}
-              options={_.compact([
-                {
-                  id: 'info',
-                  label: 'Stack',
-                  icon: List,
-                  children: (
-                    <StackInfoTab
-                      environmentId={envId}
-                      isExternal={isExternal}
-                      isOrphaned={isOrphaned}
-                      isOrphanedRunning={isOrphanedRunning}
-                      stackName={stackName}
-                      isRegular={isRegular}
-                      stack={stack}
-                      stackFileContent={stackFileContent}
-                      yamlError={yamlError}
-                    />
-                  ),
-                },
-                !isExternal &&
-                !!stack &&
-                !fileQuery.isLoading &&
-                (!stack.GitConfig || stack.FromAppTemplate)
-                  ? {
-                      id: 'editor',
-                      icon: Edit2,
-                      label: 'Editor',
-                      children: (
-                        <StackEditorTab
-                          stack={stack}
-                          isOrphaned={isOrphaned}
-                          originalFileContent={stackFileContent || ''}
-                          containerNames={containerNamesQuery.data}
-                          originalContainerNames={originalContainerNames}
-                          onSubmitSuccess={() => setTab('info')}
-                        />
-                      ),
-                    }
-                  : undefined,
-              ])}
+            <StackInfoTab
+              environmentId={envId}
+              isExternal={isExternal}
+              isOrphaned={isOrphaned}
+              isOrphanedRunning={isOrphanedRunning}
+              stackName={stackName}
+              isRegular={isRegular}
+              stack={stack}
+              stackFileContent={stackFileContent}
+              yamlError={yamlError}
             />
           </WidgetBody>
         </Widget>
+      ),
+      selectedTabParam: 'info',
+    };
+
+    const editorTab: Tab = {
+      name: 'Editor',
+      icon: Edit2,
+      widget: (
+        <Widget>
+          <WidgetBody>
+            <StackEditorTab
+              stack={stack!}
+              isOrphaned={isOrphaned}
+              originalFileContent={stackFileContent || ''}
+              containerNames={containerNamesQuery.data}
+              originalContainerNames={originalContainerNames}
+              onSubmitSuccess={() =>
+                router.stateService.go('.', { tab: 'info' })
+              }
+            />
+          </WidgetBody>
+        </Widget>
+      ),
+      selectedTabParam: 'editor',
+    };
+
+    const withEditor = showEditorTab(isExternal, stack, fileQuery.isLoading);
+    return withEditor ? [infoTab, editorTab] : [infoTab];
+  }, [
+    envId,
+    isExternal,
+    isOrphaned,
+    isOrphanedRunning,
+    stackName,
+    isRegular,
+    stack,
+    stackFileContent,
+    yamlError,
+    fileQuery.isLoading,
+    containerNamesQuery.data,
+    originalContainerNames,
+    router.stateService,
+  ]);
+
+  const currentTabIndex = useCurrentTabIndex(tabs);
+
+  if (tabs.length === 1) {
+    return (
+      <div className="row">
+        <div className="col-sm-12">{tabs[0].widget}</div>
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <>
+      <WidgetTabs tabs={tabs} currentTabIndex={currentTabIndex} />
+      <div className="row">
+        <div className="col-sm-12">{tabs[currentTabIndex].widget}</div>
+      </div>
+    </>
   );
 }

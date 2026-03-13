@@ -1,44 +1,66 @@
 import { ListIcon, WrenchIcon } from 'lucide-react';
 
 import { useIdParam } from '@/react/hooks/useIdParam';
-import { useParamState } from '@/react/hooks/useParamState';
 
 import { PageHeader } from '@@/PageHeader';
 import { Widget } from '@@/Widget';
-import { NavTabs } from '@@/NavTabs';
+import { Tab, useCurrentTabIndex, WidgetTabs } from '@@/Widget/WidgetTabs';
 
 import { useEdgeJob } from '../queries/useEdgeJob';
 
 import { UpdateEdgeJobForm } from './UpdateEdgeJobForm/UpdateEdgeJobForm';
 import { ResultsDatatable } from './ResultsDatatable/ResultsDatatable';
 
-const tabs = [
+const TABS_FOR_INDEX: Tab[] = [
   {
-    id: 0,
-    label: 'Configuration',
+    name: 'Configuration',
     icon: WrenchIcon,
+    widget: null,
+    selectedTabParam: 'configuration',
   },
   {
-    id: 1,
-    label: 'Results',
+    name: 'Results',
     icon: ListIcon,
+    widget: null,
+    selectedTabParam: 'results',
   },
-] as const;
+];
 
 export function ItemView() {
   const id = useIdParam();
-
-  const [tabId = 0, setTabId] = useParamState('tab', (param) =>
-    param ? parseInt(param, 10) : 0
-  );
-
   const edgeJobQuery = useEdgeJob(id);
+  const currentTabIndex = useCurrentTabIndex(TABS_FOR_INDEX);
 
   if (!edgeJobQuery.data) {
     return null;
   }
 
   const edgeJob = edgeJobQuery.data;
+
+  const tabs: Tab[] = [
+    {
+      name: 'Configuration',
+      icon: WrenchIcon,
+      widget: (
+        <div className="row">
+          <div className="col-sm-12">
+            <Widget>
+              <Widget.Body>
+                <UpdateEdgeJobForm edgeJob={edgeJob} />
+              </Widget.Body>
+            </Widget>
+          </div>
+        </div>
+      ),
+      selectedTabParam: 'configuration',
+    },
+    {
+      name: 'Results',
+      icon: ListIcon,
+      widget: <ResultsDatatable jobId={edgeJob.Id} />,
+      selectedTabParam: 'results',
+    },
+  ];
 
   return (
     <>
@@ -47,29 +69,16 @@ export function ItemView() {
         breadcrumbs={[{ label: 'Edge jobs', link: 'edge.jobs' }, edgeJob.Name]}
       />
 
-      <div className="row">
-        <div className="col-sm-12">
-          <Widget>
-            <Widget.Body>
-              <NavTabs
-                selectedId={tabId}
-                onSelect={(id) => {
-                  setTabId(id);
-                }}
-                options={tabs}
-              />
-
-              {tabId === tabs[0].id && <UpdateEdgeJobForm edgeJob={edgeJob} />}
-
-              {tabId === tabs[1].id && (
-                <div className="mt-4">
-                  <ResultsDatatable jobId={edgeJob.Id} />
-                </div>
-              )}
-            </Widget.Body>
-          </Widget>
+      {tabs.length === 1 ? (
+        <div className="row">
+          <div className="col-sm-12">{tabs[0].widget}</div>
         </div>
-      </div>
+      ) : (
+        <>
+          <WidgetTabs tabs={tabs} currentTabIndex={currentTabIndex} />
+          {tabs[currentTabIndex].widget}
+        </>
+      )}
     </>
   );
 }

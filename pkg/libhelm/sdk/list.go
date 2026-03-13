@@ -8,8 +8,9 @@ import (
 	"github.com/portainer/portainer/pkg/libhelm/options"
 	"github.com/portainer/portainer/pkg/libhelm/release"
 	"github.com/rs/zerolog/log"
-	"helm.sh/helm/v3/pkg/action"
-	sdkrelease "helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v4/pkg/action"
+	sdkrelease "helm.sh/helm/v4/pkg/release"
+	releasev1 "helm.sh/helm/v4/pkg/release/v1"
 )
 
 // List implements the HelmPackageManager interface by using the Helm SDK to list releases.
@@ -36,6 +37,7 @@ func (hspm *HelmSDKPackageManager) List(listOpts options.ListOptions) ([]release
 			Str("context", "HelmClient").
 			Err(err).
 			Msg("Failed to initialize helm list client")
+		return nil, errors.Wrap(err, "failed to initialize helm list client")
 	}
 
 	// Run the list operation
@@ -49,14 +51,22 @@ func (hspm *HelmSDKPackageManager) List(listOpts options.ListOptions) ([]release
 	}
 
 	// Convert from SDK release type to our release element type and return
-	return convertToReleaseElements(releases), nil
+	return convertToReleaseElements(releases)
 }
 
 // convertToReleaseElements converts from the SDK release type to our release element type
-func convertToReleaseElements(releases []*sdkrelease.Release) []release.ReleaseElement {
-	elements := make([]release.ReleaseElement, len(releases))
+func convertToReleaseElements(ls []sdkrelease.Releaser) ([]release.ReleaseElement, error) {
+	rls := make([]*releasev1.Release, 0, len(ls))
+	for _, val := range ls {
+		rel, err := releaserToV1Release(val)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to convert releaser to v1 release")
+		}
+		rls = append(rls, rel)
+	}
+	elements := make([]release.ReleaseElement, len(rls))
 
-	for i, rel := range releases {
+	for i, rel := range rls {
 		chartName := fmt.Sprintf("%s-%s", rel.Chart.Metadata.Name, rel.Chart.Metadata.Version)
 
 		elements[i] = release.ReleaseElement{
@@ -70,7 +80,7 @@ func convertToReleaseElements(releases []*sdkrelease.Release) []release.ReleaseE
 		}
 	}
 
-	return elements
+	return elements, nil
 }
 
 // initListClient initializes the list client with the given options
