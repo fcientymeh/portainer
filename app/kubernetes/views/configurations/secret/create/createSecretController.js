@@ -5,7 +5,6 @@ import { KubernetesConfigurationKinds, KubernetesSecretTypeOptions } from 'Kuber
 import KubernetesConfigurationHelper from 'Kubernetes/helpers/configurationHelper';
 import KubernetesNamespaceHelper from 'Kubernetes/helpers/namespaceHelper';
 import { getServiceAccounts } from 'Kubernetes/rest/serviceAccount';
-import { typeOptions } from '@/react/kubernetes/configs/CreateView/options';
 
 import { confirmWebEditorDiscard } from '@@/modals/confirm';
 import { isConfigurationFormValid } from '../../validation';
@@ -24,8 +23,6 @@ class KubernetesCreateSecretController {
     this.KubernetesResourcePoolService = KubernetesResourcePoolService;
     this.KubernetesConfigurationKinds = KubernetesConfigurationKinds;
     this.KubernetesSecretTypeOptions = KubernetesSecretTypeOptions;
-
-    this.typeOptions = typeOptions;
 
     this.onInit = this.onInit.bind(this);
     this.createConfigurationAsync = this.createConfigurationAsync.bind(this);

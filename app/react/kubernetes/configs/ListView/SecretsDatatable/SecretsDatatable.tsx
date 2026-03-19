@@ -92,22 +92,29 @@ export function SecretsDatatable() {
   );
 }
 
-// useSecretRowData appends the `inUse` property to the secret data (for the unused badge in the name column)
-// and wraps with useMemo to prevent unnecessary calculations
+// useSecretRowData appends derived display properties to the secret data
 function useSecretRowData(
   secrets: Configuration[],
   namespaces?: PortainerNamespace[]
 ): SecretRowData[] {
   return useMemo(
     () =>
-      secrets?.map((secret) => ({
-        ...secret,
-        inUse: secret.IsUsed,
-        isSystem: namespaces
-          ? namespaces.find((namespace) => namespace.Name === secret.Namespace)
-              ?.IsSystem ?? false
-          : false,
-      })) || [],
+      secrets?.map((secret) => {
+        const registryIdStr = secret.Annotations?.['portainer.io/registry.id'];
+        const registryId = registryIdStr
+          ? parseInt(registryIdStr, 10) || undefined
+          : undefined;
+        return {
+          ...secret,
+          inUse: secret.IsUsed,
+          isSystem: namespaces
+            ? namespaces.find(
+                (namespace) => namespace.Name === secret.Namespace
+              )?.IsSystem ?? false
+            : false,
+          registryId,
+        };
+      }) || [],
     [secrets, namespaces]
   );
 }

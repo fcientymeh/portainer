@@ -15,7 +15,9 @@ import { HiddenContainersPanel } from '@/react/portainer/settings/SettingsView/H
 import { SSLSettingsPanelWrapper } from '@/react/portainer/settings/SettingsView/SSLSettingsPanel/SSLSettingsPanel';
 import { AuthStyleField } from '@/react/portainer/settings/AuthenticationView/OAuth';
 import { AutoUserProvisionToggle } from '@/react/portainer/settings/AuthenticationView/AutoUserProvisionToggle/AutoUserProvisionToggle';
+import { LdapSettingsTestLogin } from '@/react/portainer/settings/AuthenticationView/LDAPAuth/LdapSettingsTestLogin/LdapSettingsTestLogin';
 import { SessionLifetimeSelect } from '@/react/portainer/settings/AuthenticationView/SessionLifetimeSelect';
+import { LdapSecurityFieldset } from '@/react/portainer/settings/AuthenticationView/LDAPAuth/LdapSecurityFieldset/LdapSecurityFieldset';
 
 export const settingsModule = angular
   .module('portainer.app.react.components.settings', [])
@@ -69,5 +71,25 @@ export const settingsModule = angular
       'onChange',
       'description',
       'data-cy',
+    ])
+  )
+  .component(
+    'ldapSettingsTestLogin',
+    r2a(withReactQuery(LdapSettingsTestLogin), [
+      'settings',
+      'limitedFeatureId',
+      'showBeIndicatorIfNeeded',
+      'isLimitedFeatureSelfContained',
+    ])
+  )
+  .component(
+    'ldapSecurityFieldset',
+    r2a(LdapSecurityFieldset, [
+      'values',
+      'onChange',
+      'errors',
+      'uploadState',
+      'limitedFeatureId',
+      'title',
     ])
   ).name;

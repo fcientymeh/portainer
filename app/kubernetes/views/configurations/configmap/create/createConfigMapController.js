@@ -5,7 +5,6 @@ import { KubernetesConfigurationKinds } from 'Kubernetes/models/configuration/mo
 import KubernetesConfigurationHelper from 'Kubernetes/helpers/configurationHelper';
 import KubernetesNamespaceHelper from 'Kubernetes/helpers/namespaceHelper';
 import { getServiceAccounts } from 'Kubernetes/rest/serviceAccount';
-import { typeOptions } from '@/react/kubernetes/configs/CreateView/options';
 
 import { confirmWebEditorDiscard } from '@@/modals/confirm';
 import { isConfigurationFormValid } from '../../validation';
@@ -23,8 +22,6 @@ class KubernetesCreateConfigMapController {
     this.KubernetesConfigurationService = KubernetesConfigurationService;
     this.KubernetesResourcePoolService = KubernetesResourcePoolService;
     this.KubernetesConfigurationKinds = KubernetesConfigurationKinds;
-
-    this.typeOptions = typeOptions;
 
     this.onInit = this.onInit.bind(this);
     this.createConfigurationAsync = this.createConfigurationAsync.bind(this);

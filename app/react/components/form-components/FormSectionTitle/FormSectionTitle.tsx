@@ -5,6 +5,7 @@ interface Props {
   htmlFor?: string;
   titleSize?: 'sm' | 'md' | 'lg';
   className?: string;
+  id?: string;
 }
 
 const tailwindTitleSize = {
@@ -18,6 +19,7 @@ export function FormSectionTitle({
   htmlFor,
   titleSize = 'md',
   className,
+  id,
 }: PropsWithChildren<Props>) {
   if (htmlFor) {
     return (
@@ -28,6 +30,7 @@ export function FormSectionTitle({
           tailwindTitleSize[titleSize],
           className
         )}
+        id={id}
       >
         {children}
       </label>
@@ -40,6 +43,7 @@ export function FormSectionTitle({
         tailwindTitleSize[titleSize],
         className
       )}
+      id={id}
     >
       {children}
     </div>

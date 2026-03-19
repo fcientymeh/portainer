@@ -157,8 +157,8 @@ BE-6604 (Parent: Authentication Settings Migration)
 - **LDAP Shared Components** (Parallel - No Dependencies)
   - [ ] PR 4: [BE-12586](https://linear.app/portainer/issue/BE-12586) LdapSettingsDnBuilder
   - [ ] PR 5: [BE-12587](https://linear.app/portainer/issue/BE-12587) LdapSettingsGroupDnBuilder
-  - [ ] PR 6: [BE-12588](https://linear.app/portainer/issue/BE-12588) Extend TLSFieldset with StartTLS
-  - [ ] PR 7: [BE-12589](https://linear.app/portainer/issue/BE-12589) LdapSettingsTestLogin
+  - [x] PR 6: [BE-12588](https://linear.app/portainer/issue/BE-12588) Extend TLSFieldset with StartTLS
+  - [x] PR 7: [BE-12589](https://linear.app/portainer/issue/BE-12589) LdapSettingsTestLogin
 - **LDAP Variants** (Blocked by PR 4-7)
   - [ ] PR 8: [BE-12590](https://linear.app/portainer/issue/BE-12590) LdapSettingsCustom
   - [ ] PR 9: [BE-12591](https://linear.app/portainer/issue/BE-12591) LdapSettingsOpenLdap

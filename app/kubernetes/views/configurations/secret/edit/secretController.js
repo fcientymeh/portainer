@@ -12,11 +12,13 @@ import { pluralize } from '@/portainer/helpers/strings';
 
 import { confirmUpdate, confirmWebEditorDiscard } from '@@/modals/confirm';
 import { isConfigurationFormValid } from '../../validation';
+import { getConfigurationActions } from '../../../../../react/kubernetes/configs/secrets/summary-utils';
 
 class KubernetesSecretController {
   /* @ngInject */
   constructor(
     $async,
+    $scope,
     $state,
     $window,
     clipboard,
@@ -29,6 +31,7 @@ class KubernetesSecretController {
     KubernetesEventService
   ) {
     this.$async = $async;
+    this.$scope = $scope;
     this.$state = $state;
     this.$window = $window;
     this.clipboard = clipboard;
@@ -54,6 +57,11 @@ class KubernetesSecretController {
 
   isSystemNamespace() {
     return KubernetesNamespaceHelper.isSystemNamespace(this.configuration.Namespace);
+  }
+
+  getRegistryId() {
+    const annotation = this.configuration?.Annotations?.find((a) => a.key === 'portainer.io/registry.id');
+    return annotation ? parseInt(annotation.value, 10) || undefined : undefined;
   }
 
   isSystemConfig() {
@@ -242,6 +250,7 @@ class KubernetesSecretController {
         isEditorDirty: false,
         isDockerConfig: false,
         secretWarningMessage: '',
+        summaryActions: [],
       };
 
       this.state.activeTab = this.LocalStorage.getActiveTab('configuration');
@@ -275,6 +284,19 @@ class KubernetesSecretController {
       }
 
       this.tagUsedDataKeys();
+
+      // Watch formValues for changes and cache the computed summary actions
+      // Use $watchCollection to avoid infinite digest loops
+      this.$scope.$watchCollection(
+        () => this.formValues?.Data,
+        () => {
+          this.state.summaryActions = getConfigurationActions({
+            isCreate: !this.configuration.Id,
+            secretName: this.formValues.Name,
+            secretType: this.formValues.Type,
+          });
+        }
+      );
     } catch (err) {
       this.Notifications.error('Failure', err, 'Unable to load view data');
     } finally {

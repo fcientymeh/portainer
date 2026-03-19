@@ -392,7 +392,10 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
 
     const secret = {
       name: 'kubernetes.secrets.secret',
-      url: '/:namespace/:name',
+      url: '/:namespace/:name?tab',
+      params: {
+        tab: { dynamic: true },
+      },
       views: {
         'content@': {
           component: 'kubernetesSecretView',

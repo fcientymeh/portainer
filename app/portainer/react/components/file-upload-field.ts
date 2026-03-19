@@ -10,6 +10,11 @@ export const fileUploadField = r2a(FileUploadField, [
   'accept',
   'inputId',
   'data-cy',
+  'className',
   'color',
   'name',
+  'hideFilename',
+  'tooltip',
+  'disabled',
+  'state',
 ]);

@@ -6,8 +6,10 @@ import { SystemBadge } from '@@/Badge/SystemBadge';
 import { ExternalBadge } from '@@/Badge/ExternalBadge';
 import { UnusedBadge } from '@@/Badge/UnusedBadge';
 import { Link } from '@@/Link';
+import { Tooltip } from '@@/Tip/Tooltip';
 
 import { SecretRowData } from '../types';
+import { RegistryBadge } from '../../../secrets/RegistryBadge';
 
 import { columnHelper } from './helper';
 
@@ -21,7 +23,9 @@ export const name = columnHelper.accessor(
       row.ConfigurationOwner || row.ConfigurationOwnerId
     );
     return `${name} ${isSystemConfigMap ? 'system' : ''} ${
-      !isSystemToken && !hasConfigurationOwner ? 'external' : ''
+      !isSystemToken && !hasConfigurationOwner && !row.registryId
+        ? 'external'
+        : ''
     } ${!row.inUse && !isSystemConfigMap ? 'unused' : ''}`;
   },
   {
@@ -58,8 +62,15 @@ function Cell({ row }: CellContext<SecretRowData, string>) {
         </Link>
         <div className="ml-auto flex gap-2">
           {isSystemSecret && <SystemBadge />}
-          {!isSystemToken && !hasConfigurationOwner && <ExternalBadge />}
+          {!isSystemToken &&
+            !hasConfigurationOwner &&
+            !row.original.registryId && <ExternalBadge />}
           {!row.original.inUse && !isSystemSecret && <UnusedBadge />}
+          {row.original.registryId && (
+            <RegistryBadge registryId={row.original.registryId}>
+              <Tooltip message="This registry secret was created by Portainer to allow pulling images." />
+            </RegistryBadge>
+          )}
         </div>
       </div>
     </Authorized>

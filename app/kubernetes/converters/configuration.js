@@ -30,6 +30,7 @@ class KubernetesConfigurationConverter {
         res.ServiceAccountName = undefined;
       }
     }
+    res.Annotations = secret.Annotations;
     res.Labels = secret.Labels;
     return res;
   }

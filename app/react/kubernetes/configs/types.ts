@@ -15,6 +15,8 @@ export interface Configuration {
   SecretType?: string;
   IsRegistrySecret?: boolean;
   IsSecret?: boolean;
+  Annotations?: Record<string, string>;
+  Labels?: Record<string, string>;
 }
 
 // Workaround for the TS error `Type 'ConfigMap' does not satisfy the constraint 'Record<string, unknown>'` for the datatable

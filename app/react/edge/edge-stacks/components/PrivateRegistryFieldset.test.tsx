@@ -51,7 +51,9 @@ describe('Switch interaction', () => {
     const onChange = vi.fn();
     renderComponent({ value: REGISTRY_CREDENTIALS_ENABLED, onChange });
 
-    expect(screen.queryByLabelText('Registry')).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText('Registry', { selector: 'input' })
+    ).toBeInTheDocument();
 
     const checkbox = screen.getByRole('checkbox', { name: /use credentials/i });
     await user.click(checkbox);
@@ -72,9 +74,11 @@ describe('Registry selection', () => {
     const user = userEvent.setup();
     renderComponent({ value: REGISTRY_CREDENTIALS_ENABLED });
 
-    expect(screen.getByLabelText('Registry')).toBeVisible();
+    expect(
+      screen.getByLabelText('Registry', { selector: 'input' })
+    ).toBeVisible();
 
-    const selector = screen.getByLabelText('Registry');
+    const selector = screen.getByLabelText('Registry', { selector: 'input' });
     await user.click(selector);
 
     await waitFor(() => {
@@ -87,7 +91,7 @@ describe('Registry selection', () => {
   it('should show selected registry when value is provided', async () => {
     renderComponent({ value: 1 });
 
-    const selector = screen.getByLabelText('Registry');
+    const selector = screen.getByLabelText('Registry', { selector: 'input' });
     expect(selector).toBeVisible();
 
     expect(screen.getByText('Docker Hub')).toBeVisible();
@@ -99,7 +103,7 @@ describe('Registry selection', () => {
     renderComponent({ value: REGISTRY_CREDENTIALS_ENABLED, onChange });
 
     // Find the react-select input using the combobox role
-    const input = screen.getByLabelText('Registry');
+    const input = screen.getByLabelText('Registry', { selector: 'input' });
     await selectEvent.select(input, 'Azure Container Registry', { user });
 
     await waitFor(() => {
@@ -132,7 +136,7 @@ describe('Registry selection', () => {
 
     expect(screen.getByText('Docker Hub')).toBeVisible();
 
-    const input = screen.getByLabelText('Registry');
+    const input = screen.getByLabelText('Registry', { selector: 'input' });
     await selectEvent.select(input, 'Azure Container Registry', { user });
 
     await waitFor(() => {
@@ -222,7 +226,9 @@ describe('Error handling', () => {
     const errorMessage = 'Images need to be from a single registry';
     renderComponent({ value: REGISTRY_CREDENTIALS_ENABLED, errorMessage });
 
-    expect(screen.queryByLabelText('Registry')).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText('Registry', { selector: 'input' })
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -237,7 +243,7 @@ describe('Edge cases', () => {
       onChange,
     });
 
-    const input = screen.getByLabelText('Registry');
+    const input = screen.getByLabelText('Registry', { selector: 'input' });
     await selectEvent.select(input, 'Docker Hub', { user });
 
     await waitFor(() => {
@@ -248,13 +254,17 @@ describe('Edge cases', () => {
   it('should handle empty registries array', () => {
     renderComponent({ registries: [], value: REGISTRY_CREDENTIALS_ENABLED });
 
-    expect(screen.getByLabelText('Registry')).toBeVisible();
+    expect(
+      screen.getByLabelText('Registry', { selector: 'input' })
+    ).toBeVisible();
   });
 
   it('should handle undefined value', () => {
     renderComponent({ value: undefined });
 
-    expect(screen.queryByLabelText('Registry')).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText('Registry', { selector: 'input' })
+    ).not.toBeInTheDocument();
   });
 
   it('should handle value changing from undefined to defined', async () => {
@@ -308,14 +318,16 @@ describe('Edge cases', () => {
     // Registry selector should be hidden when value is undefined
     await waitFor(() => {
       expect(screen.queryByText('Docker Hub')).not.toBeInTheDocument();
-      expect(screen.queryByLabelText('Registry')).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText('Registry', { selector: 'input' })
+      ).not.toBeInTheDocument();
     });
   });
 
   it('should handle registry ID that does not exist in registries array', () => {
     renderComponent({ value: 999 }); // Non-existent ID
 
-    const selector = screen.getByLabelText('Registry');
+    const selector = screen.getByLabelText('Registry', { selector: 'input' });
     expect(selector).toBeVisible();
 
     // Should not crash, selector should be empty (no selection shown)
