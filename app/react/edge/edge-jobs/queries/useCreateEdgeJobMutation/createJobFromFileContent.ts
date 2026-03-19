@@ -1,4 +1,4 @@
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { EdgeGroup } from '@/react/edge/edge-groups/types';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 

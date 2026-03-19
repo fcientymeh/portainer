@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Service } from 'docker-types';
 
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { withGlobalError } from '@/react-tools/react-query';
 import { ServiceId } from '@/react/docker/services/types';
 import { queryKeys } from '@/react/docker/services/queries/query-keys';

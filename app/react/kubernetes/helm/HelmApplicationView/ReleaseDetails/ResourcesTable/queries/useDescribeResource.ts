@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { useEnvironmentId } from '@/react/hooks/useEnvironmentId';
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { withGlobalError } from '@/react-tools/react-query';
 
 type DescribeAPIParams = {

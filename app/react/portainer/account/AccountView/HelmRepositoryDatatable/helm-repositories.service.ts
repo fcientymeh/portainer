@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { success as notifySuccess } from '@/portainer/services/notifications';
 import { withError } from '@/react-tools/react-query';
 import { pluralize } from '@/portainer/helpers/strings';

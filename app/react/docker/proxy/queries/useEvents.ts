@@ -1,11 +1,9 @@
 import { EventMessage } from 'docker-types';
 import { useQuery } from '@tanstack/react-query';
 
-import axios, {
-  jsonObjectsToArrayHandler,
-  parseAxiosError,
-} from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
+import { jsonObjectsToArrayHandler } from '@/portainer/helpers/json';
 
 import { buildDockerProxyUrl } from './buildDockerProxyUrl';
 import { queryKeys } from './query-keys';

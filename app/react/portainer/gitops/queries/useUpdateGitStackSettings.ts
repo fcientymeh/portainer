@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { GitStackPayload } from '@/react/common/stacks/types';
 import { buildStackUrl } from '@/react/common/stacks/queries/buildUrl';
 import { queryKeys } from '@/react/common/stacks/queries/query-keys';

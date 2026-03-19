@@ -1,5 +1,5 @@
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 
 import { buildContainerGroupUrl } from '../queries/utils';
 import { ContainerGroup, ContainerInstanceFormValues } from '../types';

@@ -1,5 +1,5 @@
 import { csrfInterceptor, csrfTokenReaderInterceptorAngular } from './portainer/services/csrf';
-import { agentInterceptor } from './portainer/services/axios';
+import { agentInterceptor } from './portainer/services/axios/axios';
 import { dispatchCacheRefreshEventIfNeeded } from './portainer/services/http-request.helper';
 
 /* @ngInject */

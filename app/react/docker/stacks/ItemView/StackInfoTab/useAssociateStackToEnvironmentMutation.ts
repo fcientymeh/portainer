@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import PortainerError from '@/portainer/error';
 import { applyResourceControl } from '@/react/portainer/access-control/access-control.service';
 import { AccessControlFormData } from '@/react/portainer/access-control/types';
-import axios from '@/portainer/services/axios';
+import axios from '@/portainer/services/axios/axios';
 import { buildStackUrl } from '@/react/common/stacks/queries/buildUrl';
 import { Stack } from '@/react/common/stacks/types';
 import { withGlobalError } from '@/react-tools/react-query';

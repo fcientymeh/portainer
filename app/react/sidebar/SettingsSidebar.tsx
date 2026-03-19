@@ -181,13 +181,13 @@ export function SettingsSidebar({
           <SidebarItem.Wrapper label="Get Help">
             <a
               href={
-                process.env.PORTAINER_EDITION === 'CE'
-                  ? 'https://www.portainer.io/community_help'
-                  : 'https://documentation.portainer.io/r/business-support'
+                isBE
+                  ? 'https://documentation.portainer.io/r/business-support'
+                  : 'https://www.portainer.io/community_help'
               }
               target="_blank"
               rel="noreferrer"
-              className="hover:!underline focus:no-underline text-sm flex h-8 w-full items-center rounded px-3 transition-colors duration-200 hover:bg-blue-5/20 be:hover:bg-gray-5/20 th-dark:hover:bg-gray-true-5/20"
+              className="!text-inherit hover:!underline focus:no-underline text-sm flex h-8 w-full items-center rounded px-3 transition-colors duration-200 hover:bg-blue-5/20 be:hover:bg-gray-5/20 th-dark:hover:bg-gray-true-5/20"
             >
               Get Help
             </a>

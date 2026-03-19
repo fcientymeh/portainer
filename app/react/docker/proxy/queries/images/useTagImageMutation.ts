@@ -1,5 +1,5 @@
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { ImageId, ImageName } from '@/docker/models/image';
 
 import { buildDockerProxyUrl } from '../buildDockerProxyUrl';

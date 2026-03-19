@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { useCurrentEnvironment } from '@/react/hooks/useCurrentEnvironment';
 import { useCurrentUser } from '@/react/hooks/useUser';
 import { buildUrl } from '@/react/portainer/environments/environment.service/utils';

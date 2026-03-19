@@ -1,6 +1,6 @@
 import { Config } from 'docker-types';
 
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
 import { PortainerResponse } from '../../types';

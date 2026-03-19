@@ -6,7 +6,7 @@ import {
 
 import { withGlobalError } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import axios from '@/portainer/services/axios';
+import axios from '@/portainer/services/axios/axios';
 
 import type { Application } from '../types';
 import { parseKubernetesAxiosError } from '../../axiosError';

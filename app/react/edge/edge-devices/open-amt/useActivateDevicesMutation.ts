@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { promiseSequence } from '@/portainer/helpers/promise-utils';
 import { mutationOptions, withError } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 
 export function useActivateDevicesMutation() {
   return useMutation(

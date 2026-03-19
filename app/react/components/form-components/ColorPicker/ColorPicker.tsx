@@ -1,4 +1,5 @@
-import { ChangeEvent, useEffect, useState } from 'react';
+import { debounce } from 'lodash';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 
 import { Input } from '../Input';
 
@@ -21,13 +22,25 @@ export function ColorPicker({
   'data-cy': dataCy = 'color-picker-input',
 }: Props) {
   const [localHex, setLocalHex] = useState(value);
-  const [isFocused, setIsFocused] = useState(false);
+
+  // Tracks the last value emitted by this component so the sync effect below
+  // doesn't reset localHex when the parent echoes our own change back.
+  const lastEmitted = useRef(value);
+
+  // Debounce only the swatch - useDebounce can't be used here because the text
+  // input shows a different value (#abc) than what's emitted (#aabbcc).
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const debouncedOnChange = useRef(
+    debounce((hex: string) => onChangeRef.current(hex), 80)
+  ).current;
 
   useEffect(() => {
-    if (!isFocused) {
+    if (value !== lastEmitted.current) {
       setLocalHex(value);
+      lastEmitted.current = value;
     }
-  }, [value, isFocused]);
+  }, [value]);
 
   const swatchColor = getSwatchColor(localHex, value);
 
@@ -52,7 +65,6 @@ export function ColorPicker({
         id={id}
         value={localHex}
         onChange={handleTextChange}
-        onFocus={() => setIsFocused(true)}
         onBlur={handleBlur}
         className="w-28 uppercase"
         maxLength={7}
@@ -66,7 +78,8 @@ export function ColorPicker({
   function handleColorChange(e: ChangeEvent<HTMLInputElement>) {
     const hex = e.target.value;
     setLocalHex(hex);
-    onChange(hex);
+    lastEmitted.current = hex;
+    debouncedOnChange(hex);
   }
 
   function handleTextChange(e: ChangeEvent<HTMLInputElement>) {
@@ -74,12 +87,13 @@ export function ColorPicker({
     const normalized = raw.startsWith('#') ? raw : `#${raw}`;
     setLocalHex(normalized);
     if (isValidHex(normalized)) {
-      onChange(expandHex(normalized));
+      const expanded = expandHex(normalized);
+      lastEmitted.current = expanded;
+      onChange(expanded);
     }
   }
 
   function handleBlur() {
-    setIsFocused(false);
     if (!isValidHex(localHex)) {
       setLocalHex(value);
     }

@@ -2,7 +2,7 @@ import { compact } from 'lodash';
 import { useQuery } from '@tanstack/react-query';
 
 import { withGlobalError } from '@/react-tools/react-query';
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
 import { ClusterRole } from '../types';

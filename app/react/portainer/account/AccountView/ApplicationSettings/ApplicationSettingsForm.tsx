@@ -2,7 +2,7 @@ import { Form, Formik } from 'formik';
 
 import { useCurrentUser } from '@/react/hooks/useUser';
 import { notifySuccess } from '@/portainer/services/notifications';
-import { updateAxiosAdapter } from '@/portainer/services/axios';
+import { updateAxiosAdapter } from '@/portainer/services/axios/axios';
 import { withError } from '@/react-tools/react-query';
 
 import { TextTip } from '@@/Tip/TextTip';

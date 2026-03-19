@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { RestartPolicy } from 'docker-types';
 
-import { PorImageRegistryModel } from 'Docker/models/porImageRegistry';
+import { PorImageRegistryModel } from '@/docker/models/porImageRegistry';
 
 import { Pair } from '../../settings/types';
 import { Platform } from '../types';

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Secret, SecretList } from 'kubernetes-types/core/v1';
 
 import { withGlobalError } from '@/react-tools/react-query';
-import axios from '@/portainer/services/axios';
+import axios from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
 import { parseKubernetesAxiosError } from '../../axiosError';

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import { notifyError } from '@/portainer/services/notifications';
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 
 type K8sNodeLimits = {
   CPU: number;

@@ -1,9 +1,9 @@
 import { EnvironmentStatus } from '@/react/portainer/environments/types';
 
-import { updateAxiosAdapter } from '@/portainer/services/axios';
+import { updateAxiosAdapter } from 'Portainer/services/axios/axios';
 import { PortainerEndpointTypes } from 'Portainer/models/endpoint/models';
+import { cache } from 'Portainer/services/axios/axios';
 import { CACHE_REFRESH_EVENT, CACHE_DURATION } from '../portainer/services/http-request.helper';
-import { cache } from '../portainer/services/axios';
 
 import registriesModule from './registries';
 import customTemplateModule from './custom-templates';

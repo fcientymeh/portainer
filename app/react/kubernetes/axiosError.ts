@@ -4,7 +4,7 @@ import { AxiosError } from 'axios';
 import {
   defaultErrorParser,
   parseAxiosError,
-} from '@/portainer/services/axios';
+} from '@/portainer/services/axios/axios';
 
 export function kubernetesErrorParser(axiosError: AxiosError) {
   const responseStatus = axiosError.response?.data as Status;

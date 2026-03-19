@@ -1,6 +1,6 @@
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { notifyError, notifySuccess } from '@/portainer/services/notifications';
 import { GitAuthModel } from '@/react/portainer/gitops/types';
 import { useCurrentUser } from '@/react/hooks/useUser';

@@ -54,6 +54,9 @@ type (
 		// Used only for EE
 		AlwaysCloneGitRepoForRelativePath bool
 
+		// Whether the edge stack supports per device configs
+		SupportPerDeviceConfigs bool
+
 		// Mount point for relative path
 		FilesystemPath string
 		// Used only for EE

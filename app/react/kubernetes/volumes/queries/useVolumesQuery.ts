@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import { humanize } from '@/portainer/filters/filters';
 import { withGlobalError } from '@/react-tools/react-query';
-import axios from '@/portainer/services/axios';
+import axios from '@/portainer/services/axios/axios';
 import { Volume } from '@/kubernetes/models/volume/Volume';
 
 import { parseKubernetesAxiosError } from '../../axiosError';

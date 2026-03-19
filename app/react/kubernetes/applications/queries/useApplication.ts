@@ -5,7 +5,7 @@ import { Pod } from 'kubernetes-types/core/v1';
 import { withGlobalError } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import { isFulfilled } from '@/portainer/helpers/promise-utils';
-import axios from '@/portainer/services/axios';
+import axios from '@/portainer/services/axios/axios';
 
 import { AppKind, Application } from '../types';
 import { parseKubernetesAxiosError } from '../../axiosError';

@@ -1,4 +1,4 @@
-import axios, { parseAxiosError } from '../axios';
+import axios, { parseAxiosError } from '../axios/axios';
 
 interface StatusResponse {
   Failed: boolean;

@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"context"
 	"net"
 	"net/http"
 	"net/url"
@@ -93,42 +92,17 @@ func (handler *Handler) doProxyWebsocketRequest(
 		handler.ReverseTunnelService.KeepTunnelAlive(params.endpoint.ID, r.Context(), portainer.WebSocketKeepAlive)
 	}
 
-	abortProxyOnLogout(r.Context(), proxy, tokenData.Token)
-
-	proxy.ServeHTTP(w, r)
-
-	return nil
-}
-
-func abortProxyOnLogout(ctx context.Context, proxy *websocketproxy.WebsocketProxy, token string) {
-	var wsConn net.Conn
-
 	proxy.Dialer.NetDial = func(network, addr string) (net.Conn, error) {
 		netDialer := &net.Dialer{}
 
-		conn, err := netDialer.DialContext(context.Background(), network, addr)
-		wsConn = conn
+		logoutCtx := logoutcontext.GetContext(tokenData.Token)
+
+		conn, err := netDialer.DialContext(logoutCtx, network, addr)
 
 		return conn, err
 	}
 
-	logoutCtx := logoutcontext.GetContext(token)
+	proxy.ServeHTTP(w, r)
 
-	go func() {
-		log.Debug().Msg("logout watcher for websocket proxy started")
-
-		select {
-		case <-logoutCtx.Done():
-			log.Debug().Msg("logout watcher for websocket proxy stopped as user logged out")
-			if wsConn != nil {
-				if err := wsConn.Close(); err != nil {
-					log.Warn().
-						Err(err).
-						Msg("failed to close websocket connection on logout")
-				}
-			}
-		case <-ctx.Done():
-			log.Debug().Msg("logout watcher for websocket proxy stopped as the ws connection closed")
-		}
-	}()
+	return nil
 }

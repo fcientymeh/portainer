@@ -2,7 +2,7 @@ import { RawAxiosRequestHeaders } from 'axios';
 import { useMutation } from '@tanstack/react-query';
 import { saveAs } from 'file-saver';
 
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import { useEnvironmentId } from '@/react/hooks/useEnvironmentId';
 

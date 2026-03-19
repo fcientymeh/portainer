@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 
-import axios from '@/portainer/services/axios';
+import axios from '@/portainer/services/axios/axios';
 import { buildStackUrl } from '@/react/common/stacks/queries/buildUrl';
 import { Stack } from '@/react/common/stacks/types';
 import { Registry } from '@/react/portainer/registries/types/registry';

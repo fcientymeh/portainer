@@ -32,13 +32,11 @@
       // paths relative to the baseUrl
       "@@/*": ["react/components/*"],
       "@/*": ["./*", "../app/*"],
-      "Agent/*": ["agent/*"],
-      "Azure/*": ["azure/*"],
+      // https://github.com/jsonnext/codemirror-json-schema/issues/107#issuecomment-2144584296
+      "yaml-schema": ["../node_modules/codemirror-json-schema/dist/yaml"],
       "Docker/*": ["docker/*"],
       "Kubernetes/*": ["kubernetes/*"],
-      "Portainer/*": ["portainer/*"],
-      // https://github.com/jsonnext/codemirror-json-schema/issues/107#issuecomment-2144584296
-      "yaml-schema": ["../node_modules/codemirror-json-schema/dist/yaml"]
+      "Portainer/*": ["portainer/*"]
     },
     "types": ["vitest/globals", "@testing-library/jest-dom", "node"]
   },

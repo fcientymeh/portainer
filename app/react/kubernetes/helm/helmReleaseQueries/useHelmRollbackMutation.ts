@@ -6,7 +6,7 @@ import {
   withInvalidate,
   withGlobalError,
 } from '@/react-tools/react-query';
-import axios from '@/portainer/services/axios';
+import axios from '@/portainer/services/axios/axios';
 import { queryKeys as applicationsQueryKeys } from '@/react/kubernetes/applications/queries/query-keys';
 
 import { queryKeys } from './query-keys';

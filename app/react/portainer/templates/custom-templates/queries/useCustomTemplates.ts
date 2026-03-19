@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { withGlobalError } from '@/react-tools/react-query';
 import { StackType } from '@/react/common/stacks/types';
 

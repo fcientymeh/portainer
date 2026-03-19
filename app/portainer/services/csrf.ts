@@ -2,7 +2,7 @@ import { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { CacheAxiosResponse } from 'axios-cache-interceptor';
 import { IHttpResponse } from 'angular';
 
-import axios from './axios';
+import axios from './axios/axios';
 
 axios.interceptors.response.use(csrfTokenReaderInterceptor);
 axios.interceptors.request.use(csrfInterceptor);

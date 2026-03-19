@@ -9,7 +9,7 @@ import {
 } from 'docker-types';
 
 import { PortainerResponse } from '@/react/docker/types';
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { ContainerId } from '@/react/docker/containers/types';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import { queryClient, withGlobalError } from '@/react-tools/react-query';

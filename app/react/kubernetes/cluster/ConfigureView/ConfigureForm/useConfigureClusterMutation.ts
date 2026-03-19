@@ -8,7 +8,7 @@ import {
   UpdateEnvironmentPayload,
   updateEnvironment,
 } from '@/react/portainer/environments/queries/useUpdateEnvironmentMutation';
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 
 import { updateIngressControllerClassMap } from '../../ingressClass/useIngressControllerClassMap';
 import { IngressControllerClassMap } from '../../ingressClass/types';

@@ -1,10 +1,8 @@
 import { useMutation } from '@tanstack/react-query';
 
-import axios, {
-  isAxiosError,
-  parseAxiosError,
-} from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { withError } from '@/react-tools/react-query';
+import { isAxiosError } from '@/portainer/services/axios/utils/isAxiosError';
 
 import { buildUrl } from './build-url';
 

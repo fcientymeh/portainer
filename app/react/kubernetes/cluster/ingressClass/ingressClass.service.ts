@@ -1,6 +1,6 @@
 import { IngressClassList } from 'kubernetes-types/networking/v1';
 
-import axios from '@/portainer/services/axios';
+import axios from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
 import { parseKubernetesAxiosError } from '../../axiosError';

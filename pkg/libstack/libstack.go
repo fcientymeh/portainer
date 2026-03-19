@@ -57,6 +57,10 @@ type Options struct {
 	// ConfigOptions is a list of options to pass to the docker-compose config command
 	ConfigOptions []string
 	Registries    []configtypes.AuthConfig
+	// BindMountHashEnabled controls whether bind mount hash labels are set for services.
+	// This option is primarily used by libstack internals and advanced callers that need
+	// to manage bind mount hash behavior explicitly. This is not an option that users can set.
+	BindMountHashEnabled bool
 }
 
 type DeployOptions struct {

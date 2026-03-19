@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { compact, flatMap } from 'lodash';
 
 import { withGlobalError } from '@/react-tools/react-query';
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 
 import { queryKeys } from './query-keys';
 

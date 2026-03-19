@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { compact } from 'lodash';
 
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { UserId } from '@/portainer/users/types';
 import { withGlobalError } from '@/react-tools/react-query';
 import { useCurrentUser } from '@/react/hooks/useUser';

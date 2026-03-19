@@ -1,4 +1,4 @@
-import axios, { parseAxiosError } from '../services/axios';
+import axios, { parseAxiosError } from '../services/axios/axios';
 
 import { Tag, TagId } from './types';
 

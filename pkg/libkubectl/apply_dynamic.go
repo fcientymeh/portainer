@@ -166,7 +166,7 @@ func (c *Client) applyResource(ctx context.Context, dynamicClient dynamic.Interf
 	// that were removed (e.g. by Helm uninstall).
 	patchOptions := metav1.PatchOptions{
 		FieldManager: "portainer",
-		Force:        boolPtr(true),
+		Force:        new(true),
 	}
 
 	_, err = resourceClient.Patch(
@@ -205,8 +205,4 @@ func resolveNamespace(configuredNamespace, manifestNamespace string) (string, er
 		return manifestNamespace, nil
 	}
 	return "default", nil
-}
-
-func boolPtr(b bool) *bool {
-	return &b
 }

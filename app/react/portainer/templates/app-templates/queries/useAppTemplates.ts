@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { useRegistries } from '@/react/portainer/registries/queries/useRegistries';
 import { DockerHubViewModel } from '@/portainer/models/dockerhub';
 import { Registry } from '@/react/portainer/registries/types/registry';

@@ -1,10 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 
-import axios, {
-  isAxiosError,
-  parseAxiosError,
-} from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
+import { isAxiosError } from '@/portainer/services/axios/utils/isAxiosError';
 
 import { buildDockerProxyUrl } from '../../proxy/queries/buildDockerProxyUrl';
 

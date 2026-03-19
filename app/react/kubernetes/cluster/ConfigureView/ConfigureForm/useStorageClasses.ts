@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { StorageClass, StorageClassList } from 'kubernetes-types/storage/v1';
 
-import axios from '@/portainer/services/axios';
+import axios from '@/portainer/services/axios/axios';
 import {
   Environment,
   EnvironmentId,

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { promiseSequence } from '@/portainer/helpers/promise-utils';
 import { UserId } from '@/portainer/users/types';
-import axios, { parseAxiosError } from '@/portainer/services/axios';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
 
 import { TeamId, TeamMembership, TeamMembershipId } from '../types';

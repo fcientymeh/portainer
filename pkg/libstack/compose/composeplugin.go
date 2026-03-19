@@ -408,5 +408,14 @@ func createProject(ctx context.Context, configFilepaths []string, options libsta
 		return nil, fmt.Errorf("failed to resolve services environment: %w", err)
 	}
 
+	if options.BindMountHashEnabled {
+		// Set per-service label for bind mount hashes under each service
+		if project, err = project.WithServicesTransform(addBindMountHashLabel); err != nil {
+			log.Warn().
+				Err(err).
+				Msg("Failed to set bind mount hash labels, proceeding without them. Stack updates may not be detected when bind-mounted files change")
+		}
+	}
+
 	return project, nil
 }
