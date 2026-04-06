@@ -46,8 +46,8 @@ interface Props {
 const storageKey = 'home_endpoints';
 
 export function EnvironmentList({ onClickBrowse, onRefresh }: Props) {
-  const isPureAdmin = useIsPureAdmin();
   const currentEnvStore = useStore(environmentStore);
+  const isPureAdmin = useIsPureAdmin();
 
   const [platformTypes, setPlatformTypes] = useHomePageFilter<PlatformType[]>(
     'platformType',

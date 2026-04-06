@@ -6,6 +6,7 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/http/security"
+	"github.com/portainer/portainer/api/internal/registryutils"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
@@ -119,27 +120,41 @@ func (handler *Handler) updateRegistryAccess(tx dataservices.DataStoreTx, r *htt
 }
 
 func (handler *Handler) updateKubeAccess(endpoint *portainer.Endpoint, registry *portainer.Registry, oldNamespaces, newNamespaces []string) error {
+	cli, err := handler.K8sClientFactory.GetPrivilegedKubeClient(endpoint)
+	if err != nil {
+		return err
+	}
+
+	return applyKubeRegistryAccess(cli, registry, oldNamespaces, newNamespaces)
+}
+
+func applyKubeRegistryAccess(cli portainer.KubeClient, registry *portainer.Registry, oldNamespaces, newNamespaces []string) error {
 	oldNamespacesSet := toSet(oldNamespaces)
 	newNamespacesSet := toSet(newNamespaces)
 
 	namespacesToRemove := setDifference(oldNamespacesSet, newNamespacesSet)
 	namespacesToAdd := setDifference(newNamespacesSet, oldNamespacesSet)
 
-	cli, err := handler.K8sClientFactory.GetPrivilegedKubeClient(endpoint)
-	if err != nil {
-		return err
-	}
-
 	for namespace := range namespacesToRemove {
-		err := cli.DeleteRegistrySecret(registry.ID, namespace)
-		if err != nil {
+		secretName := registryutils.RegistrySecretName(registry.ID)
+
+		if err := cli.RemoveImagePullSecretFromServiceAccount(namespace, "default", secretName); err != nil {
+			return err
+		}
+
+		if err := cli.DeleteRegistrySecret(registry.ID, namespace); err != nil {
 			return err
 		}
 	}
 
 	for namespace := range namespacesToAdd {
-		err := cli.CreateRegistrySecret(registry, namespace)
-		if err != nil {
+		secretName := registryutils.RegistrySecretName(registry.ID)
+
+		if err := cli.CreateRegistrySecret(registry, namespace); err != nil {
+			return err
+		}
+
+		if err := cli.AddImagePullSecretToServiceAccount(namespace, "default", secretName); err != nil {
 			return err
 		}
 	}

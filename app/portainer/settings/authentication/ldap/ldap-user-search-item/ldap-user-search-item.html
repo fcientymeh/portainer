@@ -50,9 +50,9 @@
   </div>
 
   <ldap-settings-dn-builder
-    ng-model="$ctrl.config.BaseDN"
-    label="User Search Path (optional)"
-    suffix="{{ $ctrl.domainSuffix }}"
+    value="$ctrl.config.BaseDN"
+    label="'User Search Path (optional)'"
+    suffix="$ctrl.domainSuffix"
     on-change="($ctrl.onBaseDNChange)"
     limited-feature-id="$ctrl.limitedFeatureId"
   ></ldap-settings-dn-builder>

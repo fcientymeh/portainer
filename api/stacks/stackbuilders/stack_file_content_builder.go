@@ -1,6 +1,7 @@
 package stackbuilders
 
 import (
+	"context"
 	"time"
 
 	portainer "github.com/portainer/portainer/api"
@@ -12,7 +13,7 @@ type FileContentMethodStackBuildProcess interface {
 	// Set unique stack information, e.g. swarm stack has swarmID, kubernetes stack has namespace
 	SetUniqueInfo(payload *StackPayload) FileContentMethodStackBuildProcess
 	// Deploy stack based on the configuration
-	Deploy(payload *StackPayload, endpoint *portainer.Endpoint) FileContentMethodStackBuildProcess
+	Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) FileContentMethodStackBuildProcess
 	// Save the stack information to database
 	SaveStack() (*portainer.Stack, error)
 	// Get response from HTTP request. Use if it is needed
@@ -44,13 +45,13 @@ func (b *FileContentMethodStackBuilder) SetFileContent(payload *StackPayload) Fi
 	return b
 }
 
-func (b *FileContentMethodStackBuilder) Deploy(payload *StackPayload, endpoint *portainer.Endpoint) FileContentMethodStackBuildProcess {
+func (b *FileContentMethodStackBuilder) Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) FileContentMethodStackBuildProcess {
 	if b.hasError() {
 		return b
 	}
 
 	// Deploy the stack
-	b.err = b.deploymentConfiger.Deploy()
+	b.err = b.deploymentConfiger.Deploy(ctx)
 
 	return b
 }

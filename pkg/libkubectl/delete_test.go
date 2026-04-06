@@ -1,7 +1,6 @@
 package libkubectl
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -29,10 +28,8 @@ data:
   key: value`,
 	}
 
-	ctx := context.Background()
-
 	// Apply the manifest once BEFORE the benchmark loop
-	_, err = client.ApplyDynamic(ctx, manifests)
+	_, err = client.ApplyDynamic(b.Context(), manifests)
 	if err != nil {
 		b.Fatalf("Failed to apply initial manifest: %v", err)
 	}
@@ -45,14 +42,14 @@ data:
 	for b.Loop() {
 		// Recreate the resource before each delete to ensure it always exists
 		b.StopTimer()
-		_, err = client.ApplyDynamic(ctx, manifests)
+		_, err = client.ApplyDynamic(b.Context(), manifests)
 		if err != nil {
 			b.Fatalf("Failed to apply manifest: %v", err)
 		}
 		b.StartTimer()
 
 		// Delete the resource (always exists)
-		_, err = client.DeleteDynamic(ctx, manifests)
+		_, err = client.DeleteDynamic(b.Context(), manifests)
 		if err != nil {
 			b.Errorf("Failed to delete dynamic manifests: %v", err)
 		}
@@ -99,10 +96,9 @@ data:
 
 	manifests := []string{manifestFile}
 	manifestsInline := []string{manifestContent}
-	ctx := context.Background()
 
 	// Apply the manifest once BEFORE the benchmark loop using ApplyDynamic
-	_, err = client.ApplyDynamic(ctx, manifestsInline)
+	_, err = client.ApplyDynamic(b.Context(), manifestsInline)
 	if err != nil {
 		b.Fatalf("Failed to apply initial manifest: %v", err)
 	}
@@ -115,14 +111,14 @@ data:
 	for b.Loop() {
 		// Recreate the resource before each delete to ensure it always exists
 		b.StopTimer()
-		_, err = client.ApplyDynamic(ctx, manifestsInline)
+		_, err = client.ApplyDynamic(b.Context(), manifestsInline)
 		if err != nil {
 			b.Fatalf("Failed to apply manifest: %v", err)
 		}
 		b.StartTimer()
 
 		// Delete the resource using Delete (file-based, always exists)
-		_, err = client.Delete(ctx, manifests)
+		_, err = client.Delete(b.Context(), manifests)
 		if err != nil {
 			b.Errorf("Failed to delete manifests: %v", err)
 		}

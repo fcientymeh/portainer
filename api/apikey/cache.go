@@ -71,7 +71,7 @@ func (c *ApiKeyCache[T]) InvalidateUserKeyCache(userId portainer.UserID) bool {
 	for _, k := range c.cache.Keys() {
 		user, _, _ := c.Get(k.(string))
 		if c.userCmpFn(user, userId) {
-			present = c.cache.Remove(k)
+			present = c.cache.Remove(k) || present
 		}
 	}
 

@@ -1,5 +1,5 @@
 import { useCurrentStateAndParams, useRouter } from '@uirouter/react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import _ from 'lodash';
 import { Wand2 } from 'lucide-react';
 
@@ -21,7 +21,6 @@ import {
   EnvironmentOptionValue,
   environmentTypes,
   formTitles,
-  EnvironmentOption,
 } from '../EnvironmentTypeSelectView/environment-types';
 
 import { WizardDocker } from './WizardDocker';
@@ -34,7 +33,7 @@ import { WizardPodman } from './WizardPodman';
 
 export function EnvironmentCreationView() {
   const {
-    params: { localEndpointId: localEndpointIdParam, referrer },
+    params: { localEndpointId: localEndpointIdParam, referrer, step: urlStep },
   } = useCurrentStateAndParams();
 
   const [environmentIds, setEnvironmentIds] = useState<EnvironmentId[]>(() => {
@@ -49,21 +48,27 @@ export function EnvironmentCreationView() {
 
   const envTypes = useParamEnvironmentTypes();
   const router = useRouter();
-  const steps = _.compact(
-    envTypes.map((id) => environmentTypes.find((eType) => eType.id === id))
+
+  const steps = useMemo(
+    () =>
+      _.compact(
+        envTypes.map((id) => environmentTypes.find((eType) => eType.id === id))
+      ).map((step) => ({ ...step, enabled: true })),
+    [envTypes]
   );
+
   const { setAnalytics } = useAnalyticsState();
 
-  const {
-    currentStep,
-    onNextClick,
-    onPreviousClick,
-    onStepClick,
-    currentStepIndex,
-    Component,
-    isFirstStep,
-    isLastStep,
-  } = useStepper(steps, handleFinish);
+  const currentStepIndex = useMemo(() => {
+    if (!urlStep) return 0;
+    const idx = steps.findIndex((s) => s.id === urlStep);
+    return idx >= 0 ? idx : 0;
+  }, [urlStep, steps]);
+
+  const currentStep = steps[currentStepIndex];
+  const isFirstStep = currentStepIndex === 0;
+  const isLastStep = currentStepIndex === steps.length - 1;
+  const Component = getComponent(currentStep.id);
 
   const isDockerStandalone = currentStep.id === 'dockerStandalone';
 
@@ -132,6 +137,30 @@ export function EnvironmentCreationView() {
     </div>
   );
 
+  function navigateToStep(index: number, replace = false) {
+    router.stateService.go(
+      '.',
+      { step: steps[index]?.id ?? null },
+      { location: replace ? 'replace' : true }
+    );
+  }
+
+  function onNextClick() {
+    if (isLastStep) {
+      handleFinish();
+      return;
+    }
+    navigateToStep(currentStepIndex + 1);
+  }
+
+  function onPreviousClick() {
+    navigateToStep(currentStepIndex - 1, true);
+  }
+
+  function onStepClick(index: number) {
+    navigateToStep(index, index < currentStepIndex);
+  }
+
   function handleCreateEnvironment(
     environment: Environment,
     analytics: AnalyticsStateKey
@@ -164,57 +193,19 @@ function useParamEnvironmentTypes(): EnvironmentOptionValue[] {
   return Array.isArray(envType) ? envType : [envType];
 }
 
-function useStepper(
-  steps: EnvironmentOption[][number][],
-  onFinish: () => void
-) {
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const isFirstStep = currentStepIndex === 0;
-  const isLastStep = currentStepIndex === steps.length - 1;
-  const currentStep = steps[currentStepIndex];
-
-  return {
-    currentStep,
-    onNextClick,
-    onPreviousClick,
-    onStepClick,
-    isFirstStep,
-    isLastStep,
-    currentStepIndex,
-    Component: getComponent(currentStep.id),
-  };
-
-  function onNextClick() {
-    if (!isLastStep) {
-      setCurrentStepIndex(currentStepIndex + 1);
-      return;
-    }
-
-    onFinish();
-  }
-
-  function onPreviousClick() {
-    setCurrentStepIndex(currentStepIndex - 1);
-  }
-
-  function onStepClick(stepIndex: number) {
-    setCurrentStepIndex(stepIndex);
-  }
-
-  function getComponent(id: EnvironmentOptionValue) {
-    switch (id) {
-      case 'dockerStandalone':
-      case 'dockerSwarm':
-        return WizardDocker;
-      case 'podman':
-        return WizardPodman;
-      case 'aci':
-        return WizardAzure;
-      case 'kubernetes':
-        return WizardKubernetes;
-      default:
-        throw new Error(`Unknown environment type ${id}`);
-    }
+function getComponent(id: EnvironmentOptionValue) {
+  switch (id) {
+    case 'dockerStandalone':
+    case 'dockerSwarm':
+      return WizardDocker;
+    case 'podman':
+      return WizardPodman;
+    case 'aci':
+      return WizardAzure;
+    case 'kubernetes':
+      return WizardKubernetes;
+    default:
+      throw new Error(`Unknown environment type ${id}`);
   }
 }
 

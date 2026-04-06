@@ -1,6 +1,7 @@
 package edgestacks
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -34,8 +35,6 @@ type edgeStackFromGitRepositoryPayload struct {
 	RepositoryUsername string `example:"myGitUsername"`
 	// Password used in basic authentication. Required when RepositoryAuthentication is true.
 	RepositoryPassword string `example:"myGitPassword"`
-	// RepositoryAuthorizationType is the authorization type to use
-	RepositoryAuthorizationType gittypes.GitCredentialAuthType `example:"0"`
 	// Path to the Stack file inside the Git repository
 	FilePathInRepository string `example:"docker-compose.yml" default:"docker-compose.yml"`
 	// List of identifiers of EdgeGroups
@@ -128,9 +127,8 @@ func (handler *Handler) createEdgeStackFromGitRepository(r *http.Request, tx dat
 
 	if payload.RepositoryAuthentication {
 		repoConfig.Authentication = &gittypes.GitAuthentication{
-			Username:          payload.RepositoryUsername,
-			Password:          payload.RepositoryPassword,
-			AuthorizationType: payload.RepositoryAuthorizationType,
+			Username: payload.RepositoryUsername,
+			Password: payload.RepositoryPassword,
 		}
 	}
 
@@ -138,11 +136,11 @@ func (handler *Handler) createEdgeStackFromGitRepository(r *http.Request, tx dat
 	stack.CreatedBy = stackutils.SanitizeLabel(tokenData.Username)
 
 	return handler.edgeStacksService.PersistEdgeStack(tx, stack, func(stackFolder string, relatedEndpointIds []portainer.EndpointID) (composePath string, manifestPath string, projectPath string, err error) {
-		return handler.storeManifestFromGitRepository(tx, stackFolder, relatedEndpointIds, payload.DeploymentType, tokenData.ID, repoConfig)
+		return handler.storeManifestFromGitRepository(context.TODO(), tx, stackFolder, relatedEndpointIds, payload.DeploymentType, tokenData.ID, repoConfig)
 	})
 }
 
-func (handler *Handler) storeManifestFromGitRepository(tx dataservices.DataStoreTx, stackFolder string, relatedEndpointIds []portainer.EndpointID, deploymentType portainer.EdgeStackDeploymentType, currentUserID portainer.UserID, repositoryConfig gittypes.RepoConfig) (composePath, manifestPath, projectPath string, err error) {
+func (handler *Handler) storeManifestFromGitRepository(ctx context.Context, tx dataservices.DataStoreTx, stackFolder string, relatedEndpointIds []portainer.EndpointID, deploymentType portainer.EdgeStackDeploymentType, currentUserID portainer.UserID, repositoryConfig gittypes.RepoConfig) (composePath, manifestPath, projectPath string, err error) {
 	if hasWrongType, err := hasWrongEnvironmentType(tx.Endpoint(), relatedEndpointIds, deploymentType); err != nil {
 		return "", "", "", fmt.Errorf("unable to check for existence of non fitting environments: %w", err)
 	} else if hasWrongType {
@@ -152,20 +150,18 @@ func (handler *Handler) storeManifestFromGitRepository(tx dataservices.DataStore
 	projectPath = handler.FileService.GetEdgeStackProjectPath(stackFolder)
 	repositoryUsername := ""
 	repositoryPassword := ""
-	repositoryAuthType := gittypes.GitCredentialAuthType_Basic
 	if repositoryConfig.Authentication != nil && repositoryConfig.Authentication.Password != "" {
 		repositoryUsername = repositoryConfig.Authentication.Username
 		repositoryPassword = repositoryConfig.Authentication.Password
-		repositoryAuthType = repositoryConfig.Authentication.AuthorizationType
 	}
 
 	if err := handler.GitService.CloneRepository(
+		ctx,
 		projectPath,
 		repositoryConfig.URL,
 		repositoryConfig.ReferenceName,
 		repositoryUsername,
 		repositoryPassword,
-		repositoryAuthType,
 		repositoryConfig.TLSSkipVerify,
 	); err != nil {
 		return "", "", "", err

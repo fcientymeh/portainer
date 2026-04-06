@@ -1,6 +1,7 @@
 package deployments
 
 import (
+	"context"
 	"fmt"
 
 	portainer "github.com/portainer/portainer/api"
@@ -22,16 +23,17 @@ type ComposeStackDeploymentConfig struct {
 	ForceCreate    bool
 	FileService    portainer.FileService
 	StackDeployer  StackDeployer
+	prune          bool
 }
 
-func CreateComposeStackDeploymentConfig(securityContext *security.RestrictedRequestContext, stack *portainer.Stack, endpoint *portainer.Endpoint, dataStore dataservices.DataStore, fileService portainer.FileService, deployer StackDeployer, forcePullImage, forceCreate bool) (*ComposeStackDeploymentConfig, error) {
-	return CreateComposeStackDeploymentConfigTx(dataStore, securityContext, stack, endpoint, fileService, deployer, forcePullImage, forceCreate)
+func CreateComposeStackDeploymentConfig(securityContext *security.RestrictedRequestContext, stack *portainer.Stack, endpoint *portainer.Endpoint, dataStore dataservices.DataStore, fileService portainer.FileService, deployer StackDeployer, prune, forcePullImage, forceCreate bool) (*ComposeStackDeploymentConfig, error) {
+	return CreateComposeStackDeploymentConfigTx(dataStore, securityContext, stack, endpoint, fileService, deployer, prune, forcePullImage, forceCreate)
 }
 
 // Alternate function that works within a transaction
 // We didn't update the original function to use a transaction because it would be a breaking change for many other files.
 // Let's do this only where necessary for now. This is also planed to be refactored in the future, but not prioritized right now.
-func CreateComposeStackDeploymentConfigTx(tx dataservices.DataStoreTx, securityContext *security.RestrictedRequestContext, stack *portainer.Stack, endpoint *portainer.Endpoint, fileService portainer.FileService, deployer StackDeployer, forcePullImage, forceCreate bool) (*ComposeStackDeploymentConfig, error) {
+func CreateComposeStackDeploymentConfigTx(tx dataservices.DataStoreTx, securityContext *security.RestrictedRequestContext, stack *portainer.Stack, endpoint *portainer.Endpoint, fileService portainer.FileService, deployer StackDeployer, prune, forcePullImage, forceCreate bool) (*ComposeStackDeploymentConfig, error) {
 	user, err := tx.User().Read(securityContext.UserID)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load user information from the database: %w", err)
@@ -48,6 +50,7 @@ func CreateComposeStackDeploymentConfigTx(tx dataservices.DataStoreTx, securityC
 		stack:          stack,
 		endpoint:       endpoint,
 		registries:     filteredRegistries,
+		prune:          prune,
 		isAdmin:        securityContext.IsAdmin,
 		user:           user,
 		forcePullImage: forcePullImage,
@@ -66,7 +69,7 @@ func (config *ComposeStackDeploymentConfig) GetUsername() string {
 	return ""
 }
 
-func (config *ComposeStackDeploymentConfig) Deploy() error {
+func (config *ComposeStackDeploymentConfig) Deploy(ctx context.Context) error {
 	if config.FileService == nil || config.StackDeployer == nil {
 		log.Debug().Msg("file service or stack deployer is not initialized")
 		return errors.New("file service or stack deployer cannot be nil")
@@ -86,10 +89,10 @@ func (config *ComposeStackDeploymentConfig) Deploy() error {
 	}
 
 	if stackutils.IsRelativePathStack(config.stack) {
-		return config.StackDeployer.DeployRemoteComposeStack(config.stack, config.endpoint, config.registries, config.forcePullImage, config.ForceCreate)
+		return config.StackDeployer.DeployRemoteComposeStack(ctx, config.stack, config.endpoint, config.registries, config.prune, config.forcePullImage, config.ForceCreate)
 	}
 
-	return config.StackDeployer.DeployComposeStack(config.stack, config.endpoint, config.registries, config.forcePullImage, config.ForceCreate)
+	return config.StackDeployer.DeployComposeStack(ctx, config.stack, config.endpoint, config.registries, config.prune, config.forcePullImage, config.ForceCreate)
 }
 
 func (config *ComposeStackDeploymentConfig) GetResponse() string {

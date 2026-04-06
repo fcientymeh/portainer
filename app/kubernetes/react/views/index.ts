@@ -16,6 +16,7 @@ import { ApplicationDetailsView } from '@/react/kubernetes/applications/DetailsV
 import { ConfigureView } from '@/react/kubernetes/cluster/ConfigureView';
 import { NamespacesView } from '@/react/kubernetes/namespaces/ListView/NamespacesView';
 import { ServiceAccountsView } from '@/react/kubernetes/more-resources/ServiceAccountsView/ServiceAccountsView';
+import { ServiceAccountView } from '@/react/kubernetes/more-resources/ServiceAccountsView/ItemView/ServiceAccountView';
 import { ClusterRolesView } from '@/react/kubernetes/more-resources/ClusterRolesView';
 import { RolesView } from '@/react/kubernetes/more-resources/RolesView';
 import { VolumesView } from '@/react/kubernetes/volumes/ListView/VolumesView';
@@ -122,6 +123,10 @@ export const viewsModule = angular
   .component(
     'serviceAccountsView',
     r2a(withUIRouter(withReactQuery(withCurrentUser(ServiceAccountsView))), [])
+  )
+  .component(
+    'serviceAccountView',
+    r2a(withUIRouter(withReactQuery(withCurrentUser(ServiceAccountView))), [])
   )
   .component(
     'clusterRolesView',

@@ -19,24 +19,22 @@ const RedirectReasonAdminInitTimeout string = "AdminInitTimeout"
 type Monitor struct {
 	timeout           time.Duration
 	datastore         dataservices.DataStore
-	shutdownCtx       context.Context
 	cancellationFunc  context.CancelFunc
 	mu                sync.RWMutex
 	adminInitDisabled bool
 }
 
 // New creates a monitor that when started will wait for the timeout duration and then shutdown the application unless it has been initialized.
-func New(timeout time.Duration, datastore dataservices.DataStore, shutdownCtx context.Context) *Monitor {
+func New(timeout time.Duration, datastore dataservices.DataStore) *Monitor {
 	return &Monitor{
 		timeout:           timeout,
 		datastore:         datastore,
-		shutdownCtx:       shutdownCtx,
 		adminInitDisabled: false,
 	}
 }
 
-// Starts starts the monitor. Active monitor could be stopped or shuttted down by cancelling the shutdown context.
-func (m *Monitor) Start() {
+// Start starts the monitor. The monitor will stop when ctx is cancelled, or when Stop is called.
+func (m *Monitor) Start(ctx context.Context) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -44,7 +42,7 @@ func (m *Monitor) Start() {
 		return
 	}
 
-	cancellationCtx, cancellationFunc := context.WithCancel(context.Background())
+	cancellationCtx, cancellationFunc := context.WithCancel(ctx)
 	m.cancellationFunc = cancellationFunc
 
 	go func() {
@@ -69,8 +67,6 @@ func (m *Monitor) Start() {
 			}
 		case <-cancellationCtx.Done():
 			log.Debug().Msg("canceling initialization monitor")
-		case <-m.shutdownCtx.Done():
-			log.Debug().Msg("shutting down initialization monitor")
 		}
 	}()
 }

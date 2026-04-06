@@ -18,6 +18,7 @@ import { AutoUserProvisionToggle } from '@/react/portainer/settings/Authenticati
 import { LdapSettingsTestLogin } from '@/react/portainer/settings/AuthenticationView/LDAPAuth/LdapSettingsTestLogin/LdapSettingsTestLogin';
 import { SessionLifetimeSelect } from '@/react/portainer/settings/AuthenticationView/SessionLifetimeSelect';
 import { LdapSecurityFieldset } from '@/react/portainer/settings/AuthenticationView/LDAPAuth/LdapSecurityFieldset/LdapSecurityFieldset';
+import { DnBuilder } from '@/react/portainer/settings/AuthenticationView/LDAPAuth/DnEntriesField/DnBuilder';
 
 export const settingsModule = angular
   .module('portainer.app.react.components.settings', [])
@@ -36,6 +37,10 @@ export const settingsModule = angular
   )
   .component('ldapUsersDatatable', r2a(LDAPUsersTable, ['dataset']))
   .component('ldapGroupsDatatable', r2a(LDAPGroupsTable, ['dataset']))
+  .component(
+    'ldapSettingsDnBuilder',
+    r2a(DnBuilder, ['value', 'onChange', 'suffix', 'label', 'limitedFeatureId'])
+  )
   .component(
     'applicationSettingsPanel',
     r2a(withReactQuery(ApplicationSettingsPanel), ['onSuccess', 'settings'])

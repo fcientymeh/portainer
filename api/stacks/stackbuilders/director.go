@@ -1,6 +1,7 @@
 package stackbuilders
 
 import (
+	"context"
 	"errors"
 
 	portainer "github.com/portainer/portainer/api"
@@ -22,7 +23,7 @@ func NewStackBuilderDirector(b any) *StackBuilderDirector {
 // created stack and any error encountered during the process.
 // The returned error is of type *httperror.HandlerError, which could be a BadRequest
 // or InternalServerError depending on the error encountered during the stack build process.
-func (d *StackBuilderDirector) Build(payload *StackPayload, endpoint *portainer.Endpoint) (*portainer.Stack, *httperror.HandlerError) {
+func (d *StackBuilderDirector) Build(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) (*portainer.Stack, *httperror.HandlerError) {
 	var (
 		stack *portainer.Stack
 		err   error
@@ -34,7 +35,7 @@ func (d *StackBuilderDirector) Build(payload *StackPayload, endpoint *portainer.
 	case GitMethodStackBuildProcess:
 		stack, err = builder.SetGeneralInfo(payload, endpoint).
 			SetUniqueInfo(payload).
-			SetGitRepository(payload).
+			SetGitRepository(ctx, payload).
 			SaveStack()
 		if err != nil {
 			return nil, httperror.InternalServerError("Failed to save stack via Git repository method", err)
@@ -42,7 +43,7 @@ func (d *StackBuilderDirector) Build(payload *StackPayload, endpoint *portainer.
 
 		// Since AutoUpdate job for stack is created after a successful
 		// deployment, we need to update the stack with the new generated job ID
-		stack, err = builder.Deploy(payload, endpoint).
+		stack, err = builder.Deploy(ctx, payload, endpoint).
 			SetAutoUpdate(payload).
 			UpdateStack(stack)
 
@@ -55,7 +56,7 @@ func (d *StackBuilderDirector) Build(payload *StackPayload, endpoint *portainer.
 			return nil, httperror.InternalServerError("Failed to save stack via File Upload method", err)
 		}
 
-		builder.Deploy(payload, endpoint)
+		builder.Deploy(ctx, payload, endpoint)
 		err = builder.Error()
 
 	case FileContentMethodStackBuildProcess:
@@ -67,7 +68,7 @@ func (d *StackBuilderDirector) Build(payload *StackPayload, endpoint *portainer.
 			return nil, httperror.InternalServerError("Failed to save stack via File Content method", err)
 		}
 
-		builder.Deploy(payload, endpoint)
+		builder.Deploy(ctx, payload, endpoint)
 		err = builder.Error()
 
 	case UrlMethodStackBuildProcess:
@@ -79,7 +80,7 @@ func (d *StackBuilderDirector) Build(payload *StackPayload, endpoint *portainer.
 			return nil, httperror.InternalServerError("Failed to save stack via URL method", err)
 		}
 
-		builder.Deploy(payload, endpoint)
+		builder.Deploy(ctx, payload, endpoint)
 		err = builder.Error()
 
 	default:

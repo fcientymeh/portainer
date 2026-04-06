@@ -1,6 +1,8 @@
 package stackbuilders
 
 import (
+	"context"
+
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/filesystem"
@@ -57,7 +59,7 @@ func (b *SwarmStackFileUploadBuilder) SetUploadedFile(payload *StackPayload) Fil
 	return b
 }
 
-func (b *SwarmStackFileUploadBuilder) Deploy(payload *StackPayload, endpoint *portainer.Endpoint) FileUploadMethodStackBuildProcess {
+func (b *SwarmStackFileUploadBuilder) Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) FileUploadMethodStackBuildProcess {
 	if b.hasError() {
 		return b
 	}
@@ -71,5 +73,5 @@ func (b *SwarmStackFileUploadBuilder) Deploy(payload *StackPayload, endpoint *po
 	b.deploymentConfiger = swarmDeploymentConfig
 	b.stack.CreatedBy = b.deploymentConfiger.GetUsername()
 
-	return b.FileUploadMethodStackBuilder.Deploy(payload, endpoint)
+	return b.FileUploadMethodStackBuilder.Deploy(ctx, payload, endpoint)
 }

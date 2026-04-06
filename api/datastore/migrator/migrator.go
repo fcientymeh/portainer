@@ -258,6 +258,8 @@ func (m *Migrator) initMigrations() {
 
 	m.addMigrations("2.33.1", m.migrateEdgeGroupEndpointsToRoars_2_33_0)
 
+	m.addMigrations("2.40.0", m.migrateRegistryAccessSASecrets_2_40_0)
+
 	// WARNING: do not change migrations that have already been released!
 
 	// Add new migrations above...

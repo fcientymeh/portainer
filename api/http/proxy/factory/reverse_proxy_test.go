@@ -1,7 +1,6 @@
 package factory
 
 import (
-	"context"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -147,8 +146,8 @@ func Test_createRewriteFn(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			rewriteFn := createRewriteFn(tc.target)
 			proxyRequest := httputil.ProxyRequest{
-				In:  tc.req.Clone(context.Background()),
-				Out: tc.req.Clone(context.Background()),
+				In:  tc.req.Clone(t.Context()),
+				Out: tc.req.Clone(t.Context()),
 			}
 			rewriteFn(&proxyRequest)
 

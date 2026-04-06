@@ -1,6 +1,7 @@
 package stackbuilders
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"sync"
@@ -76,7 +77,7 @@ func (b *K8sStackFileContentBuilder) SetFileContent(payload *StackPayload) FileC
 	return b
 }
 
-func (b *K8sStackFileContentBuilder) Deploy(payload *StackPayload, endpoint *portainer.Endpoint) FileContentMethodStackBuildProcess {
+func (b *K8sStackFileContentBuilder) Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) FileContentMethodStackBuildProcess {
 	if b.hasError() {
 		return b
 	}
@@ -100,7 +101,7 @@ func (b *K8sStackFileContentBuilder) Deploy(payload *StackPayload, endpoint *por
 
 	b.deploymentConfiger = k8sDeploymentConfig
 
-	return b.FileContentMethodStackBuilder.Deploy(payload, endpoint)
+	return b.FileContentMethodStackBuilder.Deploy(ctx, payload, endpoint)
 }
 
 func (b *K8sStackFileContentBuilder) GetResponse() string {

@@ -1,9 +1,9 @@
 import angular from 'angular';
-import PortainerError from 'Portainer/error';
-import { KubernetesCommonParams } from 'Kubernetes/models/common/params';
-import KubernetesNamespaceConverter from 'Kubernetes/converters/namespace';
-import KubernetesNamespaceHelper from 'Kubernetes/helpers/namespaceHelper';
-import { updateNamespaces } from 'Kubernetes/store/namespace';
+import PortainerError from '@/portainer/error';
+import { KubernetesCommonParams } from '@/kubernetes/models/common/params';
+import KubernetesNamespaceConverter from '@/kubernetes/converters/namespace';
+import KubernetesNamespaceHelper from '@/kubernetes/helpers/namespaceHelper';
+import { updateNamespaces } from '@/kubernetes/store/namespace';
 
 class KubernetesNamespaceService {
   /* @ngInject */

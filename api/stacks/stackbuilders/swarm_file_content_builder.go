@@ -1,6 +1,7 @@
 package stackbuilders
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -64,7 +65,7 @@ func (b *SwarmStackFileContentBuilder) SetFileContent(payload *StackPayload) Fil
 	return b
 }
 
-func (b *SwarmStackFileContentBuilder) Deploy(payload *StackPayload, endpoint *portainer.Endpoint) FileContentMethodStackBuildProcess {
+func (b *SwarmStackFileContentBuilder) Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) FileContentMethodStackBuildProcess {
 	if b.hasError() {
 		return b
 	}
@@ -78,5 +79,5 @@ func (b *SwarmStackFileContentBuilder) Deploy(payload *StackPayload, endpoint *p
 	b.deploymentConfiger = swarmDeploymentConfig
 	b.stack.CreatedBy = b.deploymentConfiger.GetUsername()
 
-	return b.FileContentMethodStackBuilder.Deploy(payload, endpoint)
+	return b.FileContentMethodStackBuilder.Deploy(ctx, payload, endpoint)
 }

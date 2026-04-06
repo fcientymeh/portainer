@@ -1,7 +1,6 @@
 package git
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -10,7 +9,9 @@ import (
 	gittypes "github.com/portainer/portainer/api/git/types"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,7 +21,7 @@ func setup(t *testing.T) string {
 	dir := t.TempDir()
 	bareRepoDir := filepath.Join(dir, "test-clone.git")
 
-	file, err := os.OpenFile("./testdata/test-clone-git-repo.tar.gz", os.O_RDONLY, 0755)
+	file, err := os.OpenFile("./testdata/test-clone-git-repo.tar.gz", os.O_RDONLY, 0o755)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "failed to open an archive"))
 	}
@@ -32,6 +33,42 @@ func setup(t *testing.T) string {
 	return bareRepoDir
 }
 
+func Test_checkGitError(t *testing.T) {
+	tests := []struct {
+		name     string
+		err      error
+		expected error
+	}{
+		{
+			name:     "exact repository not found",
+			err:      errors.New("repository not found"),
+			expected: gittypes.ErrIncorrectRepositoryURL,
+		},
+		{
+			name:     "repository not found with html body",
+			err:      errors.New("repository not found: <html><body>404 Not Found</body></html>"),
+			expected: gittypes.ErrIncorrectRepositoryURL,
+		},
+		{
+			name:     "authentication required",
+			err:      errors.New("authentication required"),
+			expected: gittypes.ErrAuthenticationFailure,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := checkGitError(tt.err)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+
+	t.Run("other error is unchanged", func(t *testing.T) {
+		err := errors.New("some other git error")
+		assert.EqualError(t, checkGitError(err), "some other git error")
+	})
+}
+
 func Test_ClonePublicRepository_Shallow(t *testing.T) {
 	service := Service{git: NewGitClient(true)} // no need for http client since the test access the repo via file system.
 	repositoryURL := setup(t)
@@ -39,7 +76,7 @@ func Test_ClonePublicRepository_Shallow(t *testing.T) {
 
 	dir := t.TempDir()
 	t.Logf("Cloning into %s", dir)
-	err := service.CloneRepository(dir, repositoryURL, referenceName, "", "", gittypes.GitCredentialAuthType_Basic, false)
+	err := service.CloneRepository(t.Context(), dir, repositoryURL, referenceName, "", "", false)
 	require.NoError(t, err)
 	assert.Equal(t, 1, getCommitHistoryLength(t, dir), "cloned repo has incorrect depth")
 }
@@ -51,32 +88,9 @@ func Test_ClonePublicRepository_NoGitDirectory(t *testing.T) {
 
 	dir := t.TempDir()
 	t.Logf("Cloning into %s", dir)
-	err := service.CloneRepository(dir, repositoryURL, referenceName, "", "", gittypes.GitCredentialAuthType_Basic, false)
+	err := service.CloneRepository(t.Context(), dir, repositoryURL, referenceName, "", "", false)
 	require.NoError(t, err)
 	assert.NoDirExists(t, filepath.Join(dir, ".git"))
-}
-
-func Test_cloneRepository(t *testing.T) {
-	service := Service{git: NewGitClient(true)} // no need for http client since the test access the repo via file system.
-
-	repositoryURL := setup(t)
-	referenceName := "refs/heads/main"
-
-	dir := t.TempDir()
-	t.Logf("Cloning into %s", dir)
-
-	err := service.cloneRepository(dir, cloneOption{
-		fetchOption: fetchOption{
-			baseOption: baseOption{
-				repositoryUrl: repositoryURL,
-			},
-			referenceName: referenceName,
-		},
-		depth: 10,
-	})
-
-	require.NoError(t, err)
-	assert.Equal(t, 4, getCommitHistoryLength(t, dir), "cloned repo has incorrect depth")
 }
 
 func Test_latestCommitID(t *testing.T) {
@@ -85,7 +99,7 @@ func Test_latestCommitID(t *testing.T) {
 	repositoryURL := setup(t)
 	referenceName := "refs/heads/main"
 
-	id, err := service.LatestCommitID(repositoryURL, referenceName, "", "", gittypes.GitCredentialAuthType_Basic, false)
+	id, err := service.LatestCommitID(t.Context(), repositoryURL, referenceName, "", "", false)
 
 	require.NoError(t, err)
 	assert.Equal(t, "68dcaa7bd452494043c64252ab90db0f98ecf8d2", id)
@@ -96,7 +110,7 @@ func Test_ListRefs(t *testing.T) {
 
 	repositoryURL := setup(t)
 
-	fs, err := service.ListRefs(repositoryURL, "", "", gittypes.GitCredentialAuthType_Basic, false, false)
+	fs, err := service.ListRefs(t.Context(), repositoryURL, "", "", false, false)
 
 	require.NoError(t, err)
 	assert.Equal(t, []string{"refs/heads/main"}, fs)
@@ -109,11 +123,11 @@ func Test_ListFiles(t *testing.T) {
 	referenceName := "refs/heads/main"
 
 	fs, err := service.ListFiles(
+		t.Context(),
 		repositoryURL,
 		referenceName,
 		"",
 		"",
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 		false,
 		[]string{".yml"},
@@ -154,6 +168,12 @@ func Test_listRefsPrivateRepository(t *testing.T) {
 
 	client := NewGitClient(false)
 
+	type args struct {
+		repositoryUrl string
+		username      string
+		password      string
+	}
+
 	type expectResult struct {
 		err       error
 		refsCount int
@@ -161,12 +181,12 @@ func Test_listRefsPrivateRepository(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		args   baseOption
+		args   args
 		expect expectResult
 	}{
 		{
 			name: "list refs of a real private repository",
-			args: baseOption{
+			args: args{
 				repositoryUrl: privateGitRepoURL,
 				username:      username,
 				password:      accessToken,
@@ -178,7 +198,7 @@ func Test_listRefsPrivateRepository(t *testing.T) {
 		},
 		{
 			name: "list refs of a real private repository with incorrect credential",
-			args: baseOption{
+			args: args{
 				repositoryUrl: privateGitRepoURL,
 				username:      "test-username",
 				password:      "test-token",
@@ -189,7 +209,7 @@ func Test_listRefsPrivateRepository(t *testing.T) {
 		},
 		{
 			name: "list refs of a fake repository without providing credential",
-			args: baseOption{
+			args: args{
 				repositoryUrl: privateGitRepoURL + "fake",
 				username:      "",
 				password:      "",
@@ -200,7 +220,7 @@ func Test_listRefsPrivateRepository(t *testing.T) {
 		},
 		{
 			name: "list refs of a fake repository",
-			args: baseOption{
+			args: args{
 				repositoryUrl: privateGitRepoURL + "fake",
 				username:      username,
 				password:      accessToken,
@@ -213,7 +233,14 @@ func Test_listRefsPrivateRepository(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			refs, err := client.listRefs(context.TODO(), tt.args)
+			option := &git.ListOptions{}
+			if tt.args.username != "" || tt.args.password != "" {
+				option.Auth = &githttp.BasicAuth{
+					Username: tt.args.username,
+					Password: tt.args.password,
+				}
+			}
+			refs, err := client.ListRefs(t.Context(), tt.args.repositoryUrl, option)
 			if tt.expect.err == nil {
 				require.NoError(t, err)
 				if tt.expect.refsCount > 0 {
@@ -232,6 +259,13 @@ func Test_listFilesPrivateRepository(t *testing.T) {
 
 	client := NewGitClient(false)
 
+	type args struct {
+		repositoryUrl string
+		referenceName string
+		username      string
+		password      string
+	}
+
 	type expectResult struct {
 		shouldFail   bool
 		err          error
@@ -243,18 +277,16 @@ func Test_listFilesPrivateRepository(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		args   fetchOption
+		args   args
 		expect expectResult
 	}{
 		{
 			name: "list tree with real repository and head ref but incorrect credential",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateGitRepoURL,
-					username:      "test-username",
-					password:      "test-token",
-				},
+			args: args{
+				repositoryUrl: privateGitRepoURL,
 				referenceName: "refs/heads/main",
+				username:      "test-username",
+				password:      "test-token",
 			},
 			expect: expectResult{
 				shouldFail: true,
@@ -263,13 +295,11 @@ func Test_listFilesPrivateRepository(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository and head ref but no credential",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateGitRepoURL,
-					username:      "",
-					password:      "",
-				},
+			args: args{
+				repositoryUrl: privateGitRepoURL,
 				referenceName: "refs/heads/main",
+				username:      "",
+				password:      "",
 			},
 			expect: expectResult{
 				shouldFail: true,
@@ -278,13 +308,11 @@ func Test_listFilesPrivateRepository(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository and head ref",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateGitRepoURL,
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateGitRepoURL,
 				referenceName: "refs/heads/main",
+				username:      username,
+				password:      accessToken,
 			},
 			expect: expectResult{
 				err:          nil,
@@ -293,13 +321,11 @@ func Test_listFilesPrivateRepository(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository but non-existing ref",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateGitRepoURL,
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateGitRepoURL,
 				referenceName: "refs/fake/feature",
+				username:      username,
+				password:      accessToken,
 			},
 			expect: expectResult{
 				shouldFail: true,
@@ -307,13 +333,11 @@ func Test_listFilesPrivateRepository(t *testing.T) {
 		},
 		{
 			name: "list tree with fake repository ",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateGitRepoURL + "fake",
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateGitRepoURL + "fake",
 				referenceName: "refs/fake/feature",
+				username:      username,
+				password:      accessToken,
 			},
 			expect: expectResult{
 				shouldFail: true,
@@ -324,7 +348,17 @@ func Test_listFilesPrivateRepository(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths, err := client.listFiles(context.TODO(), tt.args)
+			option := &git.CloneOptions{
+				URL:           tt.args.repositoryUrl,
+				ReferenceName: plumbing.ReferenceName(tt.args.referenceName),
+			}
+			if tt.args.username != "" || tt.args.password != "" {
+				option.Auth = &githttp.BasicAuth{
+					Username: tt.args.username,
+					Password: tt.args.password,
+				}
+			}
+			paths, err := client.ListFiles(t.Context(), false, option)
 			if tt.expect.shouldFail {
 				require.Error(t, err)
 				if tt.expect.err != nil {

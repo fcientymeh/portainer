@@ -3,7 +3,8 @@ import { useState } from 'react';
 
 import { Input, Select } from '../Input';
 
-import { DefaultType, InputList } from './InputList';
+import { InputList } from './InputList';
+import { DefaultType } from './types';
 
 const meta: Meta = {
   title: 'Components/Form/InputList',

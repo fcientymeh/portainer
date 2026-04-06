@@ -2,7 +2,6 @@ package backup
 
 import (
 	"bytes"
-	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -57,7 +56,7 @@ func Test_backupHandlerWithoutPassword_shouldCreateATarballArchive(t *testing.T)
 	w := httptest.NewRecorder()
 
 	gate := offlinegate.NewOfflineGate()
-	adminMonitor := adminmonitor.New(time.Hour, nil, context.Background())
+	adminMonitor := adminmonitor.New(time.Hour, nil)
 
 	handlerErr := NewHandler(
 		testhelpers.NewTestRequestBouncer(),
@@ -102,7 +101,7 @@ func Test_backupHandlerWithPassword_shouldCreateEncryptedATarballArchive(t *test
 	w := httptest.NewRecorder()
 
 	gate := offlinegate.NewOfflineGate()
-	adminMonitor := adminmonitor.New(time.Hour, nil, nil)
+	adminMonitor := adminmonitor.New(time.Hour, nil)
 
 	handlerErr := NewHandler(
 		testhelpers.NewTestRequestBouncer(),

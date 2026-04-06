@@ -52,10 +52,22 @@ export function StackDetails({
     select: (containers) =>
       containers.flatMap((c) => c.Names).map((n) => _.trimStart(n, '/')),
   });
-  const fileQuery = useStackFile(stack?.Id, {
-    version: stack?.StackFileVersion,
-    commitHash: stack?.GitConfig?.ConfigHash,
-  });
+  const gitSettingsPendingRedeploy = !!(
+    stack?.GitConfig &&
+    stack?.CurrentDeploymentInfo &&
+    (stack.GitConfig.URL !== stack.CurrentDeploymentInfo.RepositoryURL ||
+      stack.GitConfig.ConfigFilePath !==
+        stack.CurrentDeploymentInfo.ConfigFilePath)
+  );
+
+  const fileQuery = useStackFile(
+    stack?.Id,
+    {
+      version: stack?.StackFileVersion,
+      commitHash: stack?.GitConfig?.ConfigHash,
+    },
+    { enabled: !gitSettingsPendingRedeploy }
+  );
   const stackFileContent = fileQuery.data?.StackFileContent;
   const originalContainerNames = extractContainerNames(stackFileContent);
   const yamlError = validateYAML(

@@ -2,6 +2,7 @@ package customtemplates
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"io/fs"
@@ -41,12 +42,12 @@ type TestGitService struct {
 }
 
 func (g *TestGitService) CloneRepository(
+	_ context.Context,
 	destination string,
 	repositoryURL,
 	referenceName string,
 	username,
 	password string,
-	authType gittypes.GitCredentialAuthType,
 	tlsSkipVerify bool,
 ) error {
 	time.Sleep(100 * time.Millisecond)
@@ -55,11 +56,11 @@ func (g *TestGitService) CloneRepository(
 }
 
 func (g *TestGitService) LatestCommitID(
+	_ context.Context,
 	repositoryURL,
 	referenceName,
 	username,
 	password string,
-	authType gittypes.GitCredentialAuthType,
 	tlsSkipVerify bool,
 ) (string, error) {
 	return "", nil
@@ -79,23 +80,23 @@ type InvalidTestGitService struct {
 }
 
 func (g *InvalidTestGitService) CloneRepository(
+	_ context.Context,
 	dest,
 	repoUrl,
 	refName,
 	username,
 	password string,
-	authType gittypes.GitCredentialAuthType,
 	tlsSkipVerify bool,
 ) error {
 	return errors.New("simulate network error")
 }
 
 func (g *InvalidTestGitService) LatestCommitID(
+	_ context.Context,
 	repositoryURL,
 	referenceName,
 	username,
 	password string,
-	authType gittypes.GitCredentialAuthType,
 	tlsSkipVerify bool,
 ) (string, error) {
 	return "", nil
@@ -187,7 +188,7 @@ func Test_customTemplateGitFetch(t *testing.T) {
 	jwtService, err := jwt.NewService("1h", store)
 	require.NoError(t, err, "Error initiating jwt service")
 
-	requestBouncer := security.NewRequestBouncer(store, jwtService, nil)
+	requestBouncer := security.NewRequestBouncer(t.Context(), store, jwtService, nil)
 
 	gitService := &TestGitService{
 		targetFilePath: filepath.Join(template1.ProjectPath, template1.GitConfig.ConfigFilePath),

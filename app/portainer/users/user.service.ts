@@ -1,4 +1,4 @@
-import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
+import axios, { parseAxiosError } from '@/react/portainer/services/axios/axios';
 import { TeamMembership } from '@/react/portainer/users/teams/types';
 
 import { User, UserId } from './types';

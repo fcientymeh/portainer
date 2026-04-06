@@ -1,4 +1,4 @@
-import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
+import axios, { parseAxiosError } from '@/react/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import {
   OpenAMTConfiguration,

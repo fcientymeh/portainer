@@ -1,10 +1,10 @@
 import _ from 'lodash-es';
-import { KubernetesSecretCreatePayload, KubernetesSecretUpdatePayload } from 'Kubernetes/models/secret/payloads';
-import { KubernetesApplicationSecret } from 'Kubernetes/models/secret/models';
-import { KubernetesPortainerConfigurationDataAnnotation } from 'Kubernetes/models/configuration/models';
+import { KubernetesSecretCreatePayload, KubernetesSecretUpdatePayload } from '@/kubernetes/models/secret/payloads';
+import { KubernetesApplicationSecret } from '@/kubernetes/models/secret/models';
+import { KubernetesPortainerConfigurationDataAnnotation } from '@/kubernetes/models/configuration/models';
 import { ConfigurationOwnerUsernameLabel } from '@/react/kubernetes/configs/constants';
-import { KubernetesConfigurationFormValuesEntry } from 'Kubernetes/models/configuration/formvalues';
-import { KubernetesSecretTypeOptions } from 'Kubernetes/models/configuration/models';
+import { KubernetesConfigurationFormValuesEntry } from '@/kubernetes/models/configuration/formvalues';
+import { KubernetesSecretTypeOptions } from '@/kubernetes/models/configuration/models';
 class KubernetesSecretConverter {
   static createPayload(secret) {
     const res = new KubernetesSecretCreatePayload();

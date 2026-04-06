@@ -211,12 +211,17 @@ function InnerForm({
       />
 
       <FormSection title="Update from git repository">
-        <InfoPanel
-          className="text-muted small"
-          url={gitUrl}
-          type="Edge stack"
-          configFilePath={gitPath}
-        />
+        <div className="row small">
+          <div className="col-sm-12">
+            <InfoPanel
+              type="Edge stack"
+              currentDeployment={{
+                repositoryUrl: gitUrl,
+                configFilePath: gitPath,
+              }}
+            />
+          </div>
+        </div>
 
         <AutoUpdateFieldset
           webhookId={webhookId}

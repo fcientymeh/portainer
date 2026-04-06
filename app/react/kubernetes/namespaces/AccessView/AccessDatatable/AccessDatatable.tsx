@@ -59,7 +59,7 @@ export function AccessDatatable() {
 
   return (
     <Datatable
-      data-cy="kube-namespace-access-datatable"
+      data-cy="access-datatable"
       title="Namespace access"
       titleIcon={UserX}
       dataset={namespaceAccesses}

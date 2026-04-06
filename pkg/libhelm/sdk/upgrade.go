@@ -124,7 +124,7 @@ func (hspm *HelmSDKPackageManager) Upgrade(upgradeOpts options.InstallOptions) (
 	if upgradeOpts.Registry != nil {
 		registryID = int(upgradeOpts.Registry.ID)
 	}
-	chart.Metadata.Annotations = appendChartReferenceAnnotations(upgradeOpts.Chart, upgradeOpts.Repo, registryID, upgradeOpts.StackID, upgradeOpts.GitConfig, upgradeOpts.AutoUpdate, chart.Metadata.Annotations)
+	chart.Metadata.Annotations = appendChartReferenceAnnotations(upgradeOpts.Chart, upgradeOpts.Repo, registryID, upgradeOpts.StackID, upgradeOpts.AutoUpdate, chart.Metadata.Annotations)
 
 	log.Info().
 		Str("context", "HelmClient").

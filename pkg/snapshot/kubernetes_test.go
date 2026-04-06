@@ -1,7 +1,6 @@
 package snapshot
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -59,11 +58,11 @@ func TestKubernetesSnapshotNodes(t *testing.T) {
 	}
 
 	// Add nodes to fake client
-	_, err := fakeClient.CoreV1().Nodes().Create(context.TODO(), node1, metav1.CreateOptions{})
+	_, err := fakeClient.CoreV1().Nodes().Create(t.Context(), node1, metav1.CreateOptions{})
 	require.NoError(t, err)
-	_, err = fakeClient.CoreV1().Nodes().Create(context.TODO(), node2, metav1.CreateOptions{})
+	_, err = fakeClient.CoreV1().Nodes().Create(t.Context(), node2, metav1.CreateOptions{})
 	require.NoError(t, err)
-	_, err = fakeClient.CoreV1().Nodes().Create(context.TODO(), node3, metav1.CreateOptions{})
+	_, err = fakeClient.CoreV1().Nodes().Create(t.Context(), node3, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	snapshot := &portainer.KubernetesSnapshot{}
@@ -129,9 +128,9 @@ func TestCreateKubernetesSnapshotIntegration(t *testing.T) {
 	}
 
 	// Add nodes to fake client
-	_, err := fakeClient.CoreV1().Nodes().Create(context.TODO(), node1, metav1.CreateOptions{})
+	_, err := fakeClient.CoreV1().Nodes().Create(t.Context(), node1, metav1.CreateOptions{})
 	require.NoError(t, err)
-	_, err = fakeClient.CoreV1().Nodes().Create(context.TODO(), node2, metav1.CreateOptions{})
+	_, err = fakeClient.CoreV1().Nodes().Create(t.Context(), node2, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	// Test that kubernetesSnapshotVersion would work
@@ -199,7 +198,7 @@ func TestKubernetesSnapshotNodesSingleNode(t *testing.T) {
 		},
 	}
 
-	_, err := fakeClient.CoreV1().Nodes().Create(context.TODO(), node, metav1.CreateOptions{})
+	_, err := fakeClient.CoreV1().Nodes().Create(t.Context(), node, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	snapshot := &portainer.KubernetesSnapshot{}
@@ -231,7 +230,7 @@ func TestKubernetesSnapshotNodesZeroResources(t *testing.T) {
 		},
 	}
 
-	_, err := fakeClient.CoreV1().Nodes().Create(context.TODO(), node, metav1.CreateOptions{})
+	_, err := fakeClient.CoreV1().Nodes().Create(t.Context(), node, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	snapshot := &portainer.KubernetesSnapshot{}

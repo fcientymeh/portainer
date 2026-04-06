@@ -1,6 +1,7 @@
 package stacks
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"time"
@@ -26,6 +27,8 @@ type updateComposeStackPayload struct {
 	Env []portainer.Pair
 	// RepullImageAndRedeploy indicates whether to force repulling images and redeploying the stack
 	RepullImageAndRedeploy bool
+	// Prune services that are no longer referenced
+	Prune bool `example:"true"`
 
 	// Deprecated(2.36): use RepullImageAndRedeploy instead for cleaner responsibility
 	// Force a pulling to current image with the original tag though the image is already the latest
@@ -45,7 +48,7 @@ type updateSwarmStackPayload struct {
 	StackFileContent string `example:"version: 3\n services:\n web:\n image:nginx"`
 	// A list of environment(endpoint) variables used during stack deployment
 	Env []portainer.Pair
-	// Prune services that are no longer referenced (only available for Swarm stacks)
+	// Prune services that are no longer referenced
 	Prune bool `example:"true"`
 	// RepullImageAndRedeploy indicates whether to force repulling images and redeploying the stack
 	RepullImageAndRedeploy bool
@@ -272,6 +275,7 @@ func (handler *Handler) updateComposeStack(tx dataservices.DataStoreTx, r *http.
 		endpoint,
 		handler.FileService,
 		handler.StackDeployer,
+		payload.Prune,
 		payload.RepullImageAndRedeploy,
 		payload.RepullImageAndRedeploy)
 	if err != nil {
@@ -282,8 +286,16 @@ func (handler *Handler) updateComposeStack(tx dataservices.DataStoreTx, r *http.
 		return httperror.InternalServerError(err.Error(), err)
 	}
 
+	if stack.Option != nil {
+		stack.Option.Prune = payload.Prune
+	} else {
+		stack.Option = &portainer.StackOption{
+			Prune: payload.Prune,
+		}
+	}
+
 	// Deploy the stack
-	if err := composeDeploymentConfig.Deploy(); err != nil {
+	if err := composeDeploymentConfig.Deploy(context.TODO()); err != nil {
 		if rollbackErr := handler.FileService.RollbackStackFile(stackFolder, stack.EntryPoint); rollbackErr != nil {
 			log.Warn().Err(rollbackErr).Msg("rollback stack file error")
 		}
@@ -362,7 +374,7 @@ func (handler *Handler) updateSwarmStack(tx dataservices.DataStoreTx, r *http.Re
 	}
 
 	// Deploy the stack
-	if err := swarmDeploymentConfig.Deploy(); err != nil {
+	if err := swarmDeploymentConfig.Deploy(context.TODO()); err != nil {
 		if rollbackErr := handler.FileService.RollbackStackFile(stackFolder, stack.EntryPoint); rollbackErr != nil {
 			log.Warn().Err(rollbackErr).Msg("rollback stack file error")
 		}

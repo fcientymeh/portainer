@@ -1,12 +1,15 @@
 package stacks
 
 import (
+	"cmp"
+	"context"
 	"net/http"
 	"time"
 
 	"github.com/rs/zerolog/log"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
 	gittypes "github.com/portainer/portainer/api/git/types"
 	"github.com/portainer/portainer/api/git/update"
 	httperrors "github.com/portainer/portainer/api/http/errors"
@@ -21,15 +24,17 @@ import (
 )
 
 type stackGitUpdatePayload struct {
-	AutoUpdate                  *portainer.AutoUpdateSettings
-	Env                         []portainer.Pair
-	Prune                       bool
-	RepositoryReferenceName     string
-	RepositoryAuthentication    bool
-	RepositoryUsername          string
-	RepositoryPassword          string
-	RepositoryAuthorizationType gittypes.GitCredentialAuthType
-	TLSSkipVerify               bool
+	AutoUpdate               *portainer.AutoUpdateSettings
+	Env                      []portainer.Pair
+	Prune                    bool
+	RepositoryURL            string
+	ConfigFilePath           string
+	AdditionalFiles          []string
+	RepositoryReferenceName  string
+	RepositoryAuthentication bool
+	RepositoryUsername       string
+	RepositoryPassword       string
+	TLSSkipVerify            bool
 }
 
 func (payload *stackGitUpdatePayload) Validate(r *http.Request) error {
@@ -154,9 +159,30 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 		deployments.StopAutoupdate(stack.ID, stack.AutoUpdate.JobID, handler.Scheduler)
 	}
 
+	if stack.CurrentDeploymentInfo == nil && stack.GitConfig != nil {
+		stack.CurrentDeploymentInfo = &portainer.StackDeploymentInfo{
+			RepositoryURL:   stack.GitConfig.URL,
+			ConfigFilePath:  stack.GitConfig.ConfigFilePath,
+			AdditionalFiles: stack.AdditionalFiles,
+			ConfigHash:      stack.GitConfig.ConfigHash,
+		}
+	}
+
 	//update retrieved stack data based on the payload
 	stack.GitConfig.ReferenceName = payload.RepositoryReferenceName
 	stack.GitConfig.TLSSkipVerify = payload.TLSSkipVerify
+	if payload.RepositoryURL != "" {
+		stack.GitConfig.URL = payload.RepositoryURL
+	}
+	if payload.ConfigFilePath != "" {
+		stack.GitConfig.ConfigFilePath = payload.ConfigFilePath
+	}
+	if payload.AdditionalFiles != nil {
+		stack.AdditionalFiles = payload.AdditionalFiles
+	}
+
+	stack.EntryPoint = cmp.Or(payload.ConfigFilePath, stack.EntryPoint)
+
 	stack.AutoUpdate = payload.AutoUpdate
 	stack.Env = payload.Env
 	stack.UpdatedBy = user.Username
@@ -176,17 +202,16 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 		}
 
 		stack.GitConfig.Authentication = &gittypes.GitAuthentication{
-			Username:          payload.RepositoryUsername,
-			Password:          password,
-			AuthorizationType: payload.RepositoryAuthorizationType,
+			Username: payload.RepositoryUsername,
+			Password: password,
 		}
 
 		if _, err := handler.GitService.LatestCommitID(
+			context.TODO(),
 			stack.GitConfig.URL,
 			stack.GitConfig.ReferenceName,
 			stack.GitConfig.Authentication.Username,
 			stack.GitConfig.Authentication.Password,
-			stack.GitConfig.Authentication.AuthorizationType,
 			stack.GitConfig.TLSSkipVerify,
 		); err != nil {
 			return httperror.InternalServerError("Unable to fetch git repository", err)
@@ -196,7 +221,7 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 	}
 
 	if payload.AutoUpdate != nil && payload.AutoUpdate.Interval != "" {
-		if jobID, err := deployments.StartAutoupdate(stack.ID, stack.AutoUpdate.Interval, handler.Scheduler, handler.StackDeployer, handler.DataStore, handler.GitService); err != nil {
+		if jobID, err := deployments.StartAutoupdate(context.TODO(), stack.ID, stack.AutoUpdate.Interval, handler.Scheduler, handler.StackDeployer, handler.DataStore, handler.GitService); err != nil {
 			return err
 		} else {
 			stack.AutoUpdate.JobID = jobID
@@ -204,7 +229,9 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 	}
 
 	// Save the updated stack to DB
-	if err := handler.DataStore.Stack().Update(stack.ID, stack); err != nil {
+	if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		return tx.Stack().Update(stack.ID, stack)
+	}); err != nil {
 		return httperror.InternalServerError("Unable to persist the stack changes inside the database", err)
 	}
 

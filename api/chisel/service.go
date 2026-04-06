@@ -11,6 +11,7 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/http/proxy"
+	"github.com/portainer/portainer/pkg/schedule"
 
 	chserver "github.com/jpillora/chisel/server"
 	"github.com/jpillora/chisel/share/ccrypto"
@@ -233,23 +234,13 @@ func (service *Service) startTunnelVerificationLoop() {
 		Float64("check_interval_seconds", tunnelCleanupInterval.Seconds()).
 		Msg("starting tunnel management process")
 
-	ticker := time.NewTicker(tunnelCleanupInterval)
+	schedule.RunOnInterval(service.shutdownCtx, tunnelCleanupInterval, service.checkTunnels, func() {
+		log.Debug().Msg("shutting down tunnel service")
 
-	for {
-		select {
-		case <-ticker.C:
-			service.checkTunnels()
-		case <-service.shutdownCtx.Done():
-			log.Debug().Msg("shutting down tunnel service")
-
-			if err := service.StopTunnelServer(); err != nil {
-				log.Debug().Err(err).Msg("stopped tunnel service")
-			}
-
-			ticker.Stop()
-			return
+		if err := service.StopTunnelServer(); err != nil {
+			log.Debug().Err(err).Msg("stopped tunnel service")
 		}
-	}
+	})
 }
 
 // checkTunnels finds the first tunnel that has not had any activity recently

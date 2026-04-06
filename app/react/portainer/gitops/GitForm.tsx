@@ -66,9 +66,19 @@ export function GitForm({
 
       <GitFormUrlField
         value={value.RepositoryURL}
-        onChange={(value) => handleChange({ RepositoryURL: value })}
-        onChangeRepositoryValid={(value) =>
-          handleChange({ RepositoryURLValid: value })
+        onChange={(value) => {
+          handleChange({
+            RepositoryURL: value,
+            RepositoryReferenceName: initialValue.RepositoryReferenceName,
+            ComposeFilePathInRepository:
+              initialValue.ComposeFilePathInRepository,
+            RepositoryURLValid: false,
+          });
+        }}
+        onChangeRepositoryValid={(isValid) =>
+          handleChange({
+            RepositoryURLValid: isValid,
+          })
         }
         model={value}
         createdFromCustomTemplateId={createdFromCustomTemplateId}

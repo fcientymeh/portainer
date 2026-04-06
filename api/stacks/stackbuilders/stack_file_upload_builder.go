@@ -1,6 +1,7 @@
 package stackbuilders
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -14,7 +15,7 @@ type FileUploadMethodStackBuildProcess interface {
 	// Set unique stack information, e.g. swarm stack has swarmID, kubernetes stack has namespace
 	SetUniqueInfo(payload *StackPayload) FileUploadMethodStackBuildProcess
 	// Deploy stack based on the configuration
-	Deploy(payload *StackPayload, endpoint *portainer.Endpoint) FileUploadMethodStackBuildProcess
+	Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) FileUploadMethodStackBuildProcess
 	// Save the stack information to database
 	SaveStack() (*portainer.Stack, error)
 	// Get response from HTTP request. Use if it is needed
@@ -59,13 +60,13 @@ func (b *FileUploadMethodStackBuilder) SetUploadedFile(payload *StackPayload) Fi
 	return b
 }
 
-func (b *FileUploadMethodStackBuilder) Deploy(payload *StackPayload, endpoint *portainer.Endpoint) FileUploadMethodStackBuildProcess {
+func (b *FileUploadMethodStackBuilder) Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) FileUploadMethodStackBuildProcess {
 	if b.hasError() {
 		return b
 	}
 
 	// Deploy the stack
-	if err := b.deploymentConfiger.Deploy(); err != nil {
+	if err := b.deploymentConfiger.Deploy(ctx); err != nil {
 		b.err = err
 
 		return b

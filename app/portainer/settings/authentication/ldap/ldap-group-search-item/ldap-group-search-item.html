@@ -13,9 +13,9 @@
   </div>
 
   <ldap-settings-dn-builder
-    label="Group Search Path (optional)"
-    suffix="{{ $ctrl.domainSuffix }}"
-    ng-model="$ctrl.config.GroupBaseDN"
+    label="'Group Search Path (optional)'"
+    suffix="$ctrl.domainSuffix"
+    value="$ctrl.config.GroupBaseDN"
     on-change="($ctrl.onChangeBaseDN)"
     limited-feature-id="$ctrl.limitedFeatureId"
   ></ldap-settings-dn-builder>

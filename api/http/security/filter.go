@@ -2,6 +2,7 @@ package security
 
 import (
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/slicesx"
 )
 
 // FilterUserTeams filters teams based on user role.
@@ -29,10 +30,8 @@ func FilterUserTeams(teams []portainer.Team, context *RestrictedRequestContext) 
 // FilterLeaderTeams filters teams based on user role.
 // Team leaders only have access to team they lead.
 func FilterLeaderTeams(teams []portainer.Team, context *RestrictedRequestContext) []portainer.Team {
-	n := 0
-
 	if !context.IsTeamLeader {
-		return teams[:n]
+		return teams[:0]
 	}
 
 	leaderSet := map[portainer.TeamID]bool{}
@@ -42,14 +41,9 @@ func FilterLeaderTeams(teams []portainer.Team, context *RestrictedRequestContext
 		}
 	}
 
-	for _, team := range teams {
-		if leaderSet[team.ID] {
-			teams[n] = team
-			n++
-		}
-	}
-
-	return teams[:n]
+	return slicesx.FilterInPlace(teams, func(team portainer.Team) bool {
+		return leaderSet[team.ID]
+	})
 }
 
 // FilterUsers filters users based on user role.
@@ -59,15 +53,9 @@ func FilterUsers(users []portainer.User, context *RestrictedRequestContext) []po
 		return users
 	}
 
-	n := 0
-	for _, user := range users {
-		if user.Role != portainer.AdministratorRole {
-			users[n] = user
-			n++
-		}
-	}
-
-	return users[:n]
+	return slicesx.FilterInPlace(users, func(u portainer.User) bool {
+		return u.Role != portainer.AdministratorRole
+	})
 }
 
 // FilterRegistries filters registries based on user role and team memberships.
@@ -77,15 +65,9 @@ func FilterRegistries(registries []portainer.Registry, user *portainer.User, tea
 		return registries
 	}
 
-	n := 0
-	for _, registry := range registries {
-		if AuthorizedRegistryAccess(&registry, user, teamMemberships, endpointID) {
-			registries[n] = registry
-			n++
-		}
-	}
-
-	return registries[:n]
+	return slicesx.FilterInPlace(registries, func(r portainer.Registry) bool {
+		return AuthorizedRegistryAccess(&r, user, teamMemberships, endpointID)
+	})
 }
 
 // FilterEndpoints filters environments(endpoints) based on user role and team memberships.
@@ -119,15 +101,9 @@ func FilterEndpointGroups(endpointGroups []portainer.EndpointGroup, context *Res
 		return endpointGroups
 	}
 
-	n := 0
-	for _, group := range endpointGroups {
-		if authorizedEndpointGroupAccess(&group, context.UserID, context.UserMemberships) {
-			endpointGroups[n] = group
-			n++
-		}
-	}
-
-	return endpointGroups[:n]
+	return slicesx.FilterInPlace(endpointGroups, func(group portainer.EndpointGroup) bool {
+		return authorizedEndpointGroupAccess(&group, context.UserID, context.UserMemberships)
+	})
 }
 
 func getAssociatedGroup(endpoint *portainer.Endpoint, groups []portainer.EndpointGroup) *portainer.EndpointGroup {

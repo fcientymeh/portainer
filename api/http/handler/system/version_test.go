@@ -39,7 +39,7 @@ func Test_getSystemVersion(t *testing.T) {
 	require.NoError(t, err, "Error initiating jwt service")
 
 	apiKeyService := apikey.NewAPIKeyService(store.APIKeyRepository(), store.User())
-	requestBouncer := security.NewRequestBouncer(store, jwtService, apiKeyService)
+	requestBouncer := security.NewRequestBouncer(t.Context(), store, jwtService, apiKeyService)
 
 	h := NewHandler(requestBouncer, &portainer.Status{}, store, nil, nil)
 

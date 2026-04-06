@@ -28,6 +28,9 @@ func (service *Service) BucketName() string {
 func (service *Service) RegisterUpdateStackFunction(
 	updateFuncTx func(portainer.Transaction, portainer.EdgeStackID, func(*portainer.EdgeStack)) error,
 ) {
+	service.mu.Lock()
+	defer service.mu.Unlock()
+
 	service.updateStackFnTx = updateFuncTx
 }
 

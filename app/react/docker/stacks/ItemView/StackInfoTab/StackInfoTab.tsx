@@ -1,17 +1,20 @@
+import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import { Stack, StackStatus, StackType } from '@/react/common/stacks/types';
 import { Authorized } from '@/react/hooks/useUser';
+import { InfoPanel } from '@/react/portainer/gitops/InfoPanel';
 
 import { Icon } from '@@/Icon';
+import { Button } from '@@/buttons';
 import { FormSection } from '@@/form-components/FormSection';
 
 import { useSwarmStackResources } from '../useSwarmStackServices';
 import { useComposeStackContainers } from '../useComposeStackContainers';
 
 import { StackDuplicationForm } from './StackDuplicationForm/StackDuplicationForm';
-import { StackRedeployGitForm } from './StackRedeployGitForm/StackRedeployGitForm';
+import { EditGitSettingsModal } from './EditGitSettings/EditGitSettingsModal';
 import { StackActions } from './StackActions';
 import { AssociateStackForm } from './AssociateStackForm';
 
@@ -38,6 +41,7 @@ export function StackInfoTab({
   environmentId,
   yamlError,
 }: StackInfoTabProps) {
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const status = useStackStatus({
     status: stack?.Status,
     environmentId,
@@ -83,16 +87,66 @@ export function StackInfoTab({
           ) : (
             <>
               {stack.GitConfig && !stack.FromAppTemplate && (
-                <Authorized authorizations="PortainerStackUpdate">
-                  <StackRedeployGitForm stack={stack} />
-                </Authorized>
+                <>
+                  <InfoPanel
+                    type="stack"
+                    currentDeployment={
+                      stack.CurrentDeploymentInfo
+                        ? {
+                            repositoryUrl:
+                              stack.CurrentDeploymentInfo.RepositoryURL ??
+                              stack.GitConfig.URL,
+                            configFilePath:
+                              stack.CurrentDeploymentInfo.ConfigFilePath ??
+                              stack.GitConfig.ConfigFilePath,
+                            additionalFiles:
+                              stack.CurrentDeploymentInfo.AdditionalFiles,
+                            commitHash:
+                              stack.CurrentDeploymentInfo.ConfigHash ??
+                              stack.GitConfig.ConfigHash,
+                          }
+                        : {
+                            repositoryUrl: stack.GitConfig.URL,
+                            configFilePath: stack.GitConfig.ConfigFilePath,
+                            additionalFiles: stack.AdditionalFiles ?? [],
+                            commitHash: stack.GitConfig.ConfigHash,
+                          }
+                    }
+                    nextDeployment={
+                      stack.CurrentDeploymentInfo
+                        ? {
+                            repositoryUrl: stack.GitConfig.URL,
+                            configFilePath: stack.GitConfig.ConfigFilePath,
+                            additionalFiles: stack.AdditionalFiles ?? [],
+                            commitHash: stack.GitConfig.ConfigHash,
+                          }
+                        : undefined
+                    }
+                  />
+                  <Authorized authorizations="PortainerStackUpdate">
+                    <Button
+                      size="small"
+                      color="default"
+                      onClick={() => setIsEditOpen(true)}
+                      data-cy="edit-git-settings-button"
+                    >
+                      Edit Git settings
+                    </Button>
+                  </Authorized>
+                  {isEditOpen && (
+                    <EditGitSettingsModal
+                      onClose={() => setIsEditOpen(false)}
+                      stack={stack}
+                    />
+                  )}
+                </>
               )}
 
-              {isRegular && (
+              {isRegular && !!stackFileContent && (
                 <StackDuplicationForm
                   yamlError={yamlError}
                   currentEnvironmentId={environmentId}
-                  originalFileContent={stackFileContent || ''}
+                  originalFileContent={stackFileContent}
                   stack={stack}
                 />
               )}

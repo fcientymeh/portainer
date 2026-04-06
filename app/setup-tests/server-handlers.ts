@@ -20,6 +20,7 @@ import { endpointsHandlers } from './setup-handlers/endpoints';
 import { settingsHandlers } from './setup-handlers/settings';
 import { templatesHandlers } from './setup-handlers/templates';
 import { edgeHandlers } from './setup-handlers/edge';
+import { gitopsHandlers } from './setup-handlers/gitops';
 
 const tags: Tag[] = [
   { ID: 1, Name: 'tag1', Endpoints: {} },
@@ -56,6 +57,7 @@ export const handlers = [
   ...userHandlers,
   ...kubernetesHandlers,
   ...edgeHandlers,
+  ...gitopsHandlers,
   http.get('/api/stacks', () => HttpResponse.json([])),
   http.get('/api/licenses/info', () => HttpResponse.json(licenseInfo)),
   http.get('/api/status/nodes', () => HttpResponse.json({ nodes: 3 })),

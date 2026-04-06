@@ -17,6 +17,7 @@ export function useSecrets(environmentId: EnvironmentId, namespace?: string) {
     {
       ...withGlobalError(`Unable to get secrets in namespace '${namespace}'`),
       enabled: !!namespace,
+      retry: 1,
     }
   );
 }

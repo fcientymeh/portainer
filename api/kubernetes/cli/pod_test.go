@@ -29,7 +29,7 @@ func Test_waitForPodStatus(t *testing.T) {
 			},
 		}
 
-		ctx, cancel := context.WithCancel(context.TODO())
+		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 		err := k.waitForPodStatus(ctx, v1.PodRunning, podSpec)
 		if !errors.Is(err, context.Canceled) {
@@ -52,16 +52,16 @@ func Test_waitForPodStatus(t *testing.T) {
 			},
 		}
 
-		pod, err := k.cli.CoreV1().Pods(defaultNamespace).Create(context.Background(), podSpec, metav1.CreateOptions{})
+		pod, err := k.cli.CoreV1().Pods(defaultNamespace).Create(t.Context(), podSpec, metav1.CreateOptions{})
 		if err != nil {
 			t.Errorf("failed to create pod; err=%s", err)
 		}
 		defer func() {
-			err := k.cli.CoreV1().Pods(defaultNamespace).Delete(context.Background(), pod.Name, metav1.DeleteOptions{})
+			err := k.cli.CoreV1().Pods(defaultNamespace).Delete(t.Context(), pod.Name, metav1.DeleteOptions{})
 			require.NoError(t, err)
 		}()
 
-		ctx, cancelFunc := context.WithTimeout(context.TODO(), 0*time.Second)
+		ctx, cancelFunc := context.WithTimeout(t.Context(), 0*time.Second)
 		defer cancelFunc()
 
 		err = k.waitForPodStatus(ctx, v1.PodRunning, podSpec)

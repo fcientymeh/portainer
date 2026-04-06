@@ -1,6 +1,8 @@
 package stackbuilders
 
 import (
+	"context"
+
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/http/security"
@@ -49,13 +51,13 @@ func (b *SwarmStackGitBuilder) SetUniqueInfo(payload *StackPayload) GitMethodSta
 	return b
 }
 
-func (b *SwarmStackGitBuilder) SetGitRepository(payload *StackPayload) GitMethodStackBuildProcess {
-	b.GitMethodStackBuilder.SetGitRepository(payload)
+func (b *SwarmStackGitBuilder) SetGitRepository(ctx context.Context, payload *StackPayload) GitMethodStackBuildProcess {
+	b.GitMethodStackBuilder.SetGitRepository(ctx, payload)
 	return b
 }
 
 // Deploy creates deployment configuration for swarm stack
-func (b *SwarmStackGitBuilder) Deploy(payload *StackPayload, endpoint *portainer.Endpoint) GitMethodStackBuildProcess {
+func (b *SwarmStackGitBuilder) Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) GitMethodStackBuildProcess {
 	if b.hasError() {
 		return b
 	}
@@ -69,7 +71,7 @@ func (b *SwarmStackGitBuilder) Deploy(payload *StackPayload, endpoint *portainer
 	b.deploymentConfiger = swarmDeploymentConfig
 	b.stack.CreatedBy = b.deploymentConfiger.GetUsername()
 
-	return b.GitMethodStackBuilder.Deploy(payload, endpoint)
+	return b.GitMethodStackBuilder.Deploy(ctx, payload, endpoint)
 }
 
 func (b *SwarmStackGitBuilder) SetAutoUpdate(payload *StackPayload) GitMethodStackBuildProcess {

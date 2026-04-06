@@ -4,13 +4,13 @@
 
 Portainer maintains both Short-Term Support (STS) and Long-Term Support (LTS) versions in accordance with our official [Portainer Lifecycle Policy](https://docs.portainer.io/start/lifecycle).
 
-| Version Type | Support Status |
-| --- | --- |
-| LTS (Long-Term Support) | Supported for critical security fixes |
+| Version Type             | Support Status                              |
+| ------------------------ | ------------------------------------------- |
+| LTS (Long-Term Support)  | Supported for critical security fixes       |
 | STS (Short-Term Support) | Supported until the next STS or LTS release |
-| Legacy / EOL | Not supported |
+| Legacy / EOL             | Not supported                               |
 
-For a detailed breakdown of current versions and their specific End of Life (EOL) dates, 
+For a detailed breakdown of current versions and their specific End of Life (EOL) dates,
 please refer to the [Portainer Lifecycle Policy](https://docs.portainer.io/start/lifecycle).
 
 ## Reporting a Vulnerability
@@ -23,17 +23,17 @@ The Portainer team takes the security of our products seriously. If you believe 
 
 1. **Report**: You can report in one of two ways:
 
-    - **GitHub**: Use the **Report a vulnerability** button on the **Security** tab of this repository.
+   - **GitHub**: Use the **Report a vulnerability** button on the **Security** tab of this repository.
 
-    - **Email**: Send your findings to security@portainer.io.
+   - **Email**: Send your findings to security@portainer.io.
 
 2. **Details**: To help us verify the issue, please include:
 
-    - A description of the vulnerability and its potential impact.
+   - A description of the vulnerability and its potential impact.
 
-    - Step-by-step instructions to reproduce the issue (e.g. proof-of-concept code, scripts, or screenshots).
+   - Step-by-step instructions to reproduce the issue (e.g. proof-of-concept code, scripts, or screenshots).
 
-    - The version of the software and the environment in which it was found.
+   - The version of the software and the environment in which it was found.
 
 3. **Acknowledge**: We will acknowledge receipt of your report and provide an initial assessment.
 
@@ -50,7 +50,6 @@ If you follow the responsible disclosure process, we will:
 - Notify you when the vulnerability has been patched.
 
 - Give credit for the discovery (if desired) once the fix is public.
-
 
 We will make every effort to promptly address any security weaknesses. Security advisories and fixes will be published through GitHub Security Advisories and other channels as needed.
 

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 
 import { ResourceControlViewModel } from '@/react/portainer/access-control/models/ResourceControlViewModel';
-import { useIsStandAlone } from '@/react/docker/proxy/queries/useInfo';
+import { useIsStandalone } from '@/react/docker/proxy/queries/useInfo';
 import { Environment } from '@/react/portainer/environments/types';
 
 import { ContainerListViewModel, ContainerStatus } from './types';
@@ -29,7 +29,7 @@ export function toListViewModel(
     labels['com.docker.compose.project'] ||
     labels['com.docker.stack.namespace'];
 
-  const status = createStatus(response.Status);
+  const status = createStatus(response.State, response.Status);
 
   const ports = _.compact(
     response.Ports?.map(
@@ -65,46 +65,43 @@ export function toListViewModel(
   };
 }
 
-function createStatus(statusText = ''): ContainerStatus {
-  const status = statusText.toLowerCase();
+function createStatus(state = '', statusText = ''): ContainerStatus {
+  const statusLower = statusText.toLowerCase();
 
-  if (status.includes(ContainerStatus.Paused)) {
-    return ContainerStatus.Paused;
-  }
-
-  if (status.includes(ContainerStatus.Dead)) {
-    return ContainerStatus.Dead;
-  }
-
-  if (status.includes(ContainerStatus.Created)) {
-    return ContainerStatus.Created;
-  }
-
-  if (status.includes(ContainerStatus.Stopped)) {
-    return ContainerStatus.Stopped;
-  }
-
-  if (status.includes(ContainerStatus.Exited)) {
-    return ContainerStatus.Exited;
-  }
-
-  if (status.includes('(healthy)')) {
+  // Health check status is only present in the human-readable Status field, not in State
+  if (statusLower.includes('(healthy)')) {
     return ContainerStatus.Healthy;
   }
 
-  if (status.includes('(unhealthy)')) {
+  if (statusLower.includes('(unhealthy)')) {
     return ContainerStatus.Unhealthy;
   }
 
-  if (status.includes('(health: starting)')) {
+  if (statusLower.includes('(health: starting)')) {
     return ContainerStatus.Starting;
   }
 
-  return ContainerStatus.Running;
+  // Use the standardized State field for all other states
+  switch (state.toLowerCase()) {
+    case ContainerStatus.Paused:
+      return ContainerStatus.Paused;
+    case ContainerStatus.Dead:
+      return ContainerStatus.Dead;
+    case ContainerStatus.Created:
+      return ContainerStatus.Created;
+    case ContainerStatus.Exited:
+      return ContainerStatus.Exited;
+    case ContainerStatus.Restarting:
+      return ContainerStatus.Restarting;
+    case ContainerStatus.Removing:
+      return ContainerStatus.Removing;
+    default:
+      return ContainerStatus.Running;
+  }
 }
 
 export function useShowGPUsColumn(environment: Environment | undefined) {
-  const isDockerStandalone = useIsStandAlone(environment?.Id);
+  const isDockerStandalone = useIsStandalone(environment?.Id);
   const enableGPUManagement = !!environment?.EnableGPUManagement;
   return isDockerStandalone && enableGPUManagement;
 }

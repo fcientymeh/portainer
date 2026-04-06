@@ -1,15 +1,15 @@
 import * as JsonPatch from 'fast-json-patch';
-import { KubernetesDaemonSet } from 'Kubernetes/models/daemon-set/models';
-import { KubernetesDaemonSetCreatePayload } from 'Kubernetes/models/daemon-set/payloads';
+import { KubernetesDaemonSet } from '@/kubernetes/models/daemon-set/models';
+import { KubernetesDaemonSetCreatePayload } from '@/kubernetes/models/daemon-set/payloads';
 import {
   KubernetesPortainerApplicationStackNameLabel,
   KubernetesPortainerApplicationNameLabel,
   KubernetesPortainerApplicationNote,
   KubernetesPortainerApplicationOwnerLabel,
-} from 'Kubernetes/models/application/models';
-import KubernetesApplicationHelper from 'Kubernetes/helpers/application';
-import KubernetesResourceReservationHelper from 'Kubernetes/helpers/resourceReservationHelper';
-import KubernetesCommonHelper from 'Kubernetes/helpers/commonHelper';
+} from '@/kubernetes/models/application/models';
+import KubernetesApplicationHelper from '@/kubernetes/helpers/application';
+import KubernetesResourceReservationHelper from '@/kubernetes/helpers/resourceReservationHelper';
+import KubernetesCommonHelper from '@/kubernetes/helpers/commonHelper';
 import { buildImageFullURIFromModel } from '@/react/docker/images/utils';
 
 class KubernetesDaemonSetConverter {

@@ -1,6 +1,7 @@
 package deployments
 
 import (
+	"context"
 	"time"
 
 	portainer "github.com/portainer/portainer/api"
@@ -11,14 +12,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func StartAutoupdate(stackID portainer.StackID, interval string, scheduler *scheduler.Scheduler, stackDeployer StackDeployer, datastore dataservices.DataStore, gitService portainer.GitService) (jobID string, e *httperror.HandlerError) {
+func StartAutoupdate(ctx context.Context, stackID portainer.StackID, interval string, scheduler *scheduler.Scheduler, stackDeployer StackDeployer, datastore dataservices.DataStore, gitService portainer.GitService) (jobID string, e *httperror.HandlerError) {
 	d, err := time.ParseDuration(interval)
 	if err != nil {
 		return "", httperror.BadRequest("Unable to parse stack's auto update interval", err)
 	}
 
 	jobID = scheduler.StartJobEvery(d, func() error {
-		return RedeployWhenChanged(stackID, stackDeployer, datastore, gitService)
+		return RedeployWhenChanged(ctx, stackID, stackDeployer, datastore, gitService)
 	})
 
 	return jobID, nil

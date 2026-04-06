@@ -78,7 +78,7 @@ func TestCalculateContainerStats(t *testing.T) {
 
 	// Call the function and measure time
 	startTime := time.Now()
-	stats, err := CalculateContainerStats(context.Background(), mockClient, false, containers)
+	stats, err := CalculateContainerStats(t.Context(), mockClient, false, containers)
 	require.NoError(t, err, "failed to calculate container stats")
 	duration := time.Since(startTime)
 
@@ -118,7 +118,7 @@ func TestCalculateContainerStatsAllErrors(t *testing.T) {
 	mockClient.On("ContainerInspect", mock.Anything, "container2").Return(container.InspectResponse{}, errors.New("permission denied"))
 
 	// Call the function
-	stats, err := CalculateContainerStats(context.Background(), mockClient, false, containers)
+	stats, err := CalculateContainerStats(t.Context(), mockClient, false, containers)
 
 	// Assert that an error was returned
 	require.Error(t, err, "should return error when all containers fail to inspect")

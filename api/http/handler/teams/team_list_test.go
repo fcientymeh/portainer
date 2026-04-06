@@ -35,7 +35,7 @@ func Test_teamList(t *testing.T) {
 	jwtService, err := jwt.NewService("1h", store)
 	require.NoError(t, err, "Error initiating jwt service")
 	apiKeyService := apikey.NewAPIKeyService(store.APIKeyRepository(), store.User())
-	requestBouncer := security.NewRequestBouncer(store, jwtService, apiKeyService)
+	requestBouncer := security.NewRequestBouncer(t.Context(), store, jwtService, apiKeyService)
 
 	h := NewHandler(requestBouncer)
 	h.DataStore = store

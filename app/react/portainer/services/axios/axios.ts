@@ -1,8 +1,4 @@
-import Axios, {
-  AxiosError,
-  AxiosInstance,
-  InternalAxiosRequestConfig,
-} from 'axios';
+import Axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import {
   AxiosCacheInstance,
   buildMemoryStorage,
@@ -15,7 +11,6 @@ import { loadProgressBar } from 'axios-progress-bar';
 import 'axios-progress-bar/dist/nprogress.css';
 import qs from 'qs';
 
-import PortainerError from '@/portainer/error';
 import {
   CACHE_DURATION,
   dispatchCacheRefreshEventIfNeeded,
@@ -25,7 +20,7 @@ import {
 import { dockerMaxAPIVersionInterceptor } from '@/portainer/services/dockerMaxApiVersionInterceptor';
 import { MAX_DOCKER_API_VERSION } from '@/portainer/services/dockerMaxApiVersion';
 
-import { isAxiosError } from './utils/isAxiosError';
+export { parseAxiosError } from './utils/parseAxiosError';
 
 const portainerCacheHeader = 'X-Portainer-Cache';
 
@@ -157,104 +152,5 @@ const UNAUTHENTICATED_ROUTES = [
 function isTransitionRequiresAuthentication() {
   return !UNAUTHENTICATED_ROUTES.some((route) =>
     window.location.hash.includes(route)
-  );
-}
-
-/**
- * Parses an Axios error and returns a PortainerError.
- * @param err The original error.
- * @param msg An optional error message to prepend.
- * @param parseError A function to parse AxiosErrors. Defaults to defaultErrorParser.
- * @returns A PortainerError with the parsed error message and details.
- */
-export function parseAxiosError(
-  err: unknown,
-  msg = '',
-  parseError = defaultErrorParser
-) {
-  if (err instanceof PortainerError) {
-    return err;
-  }
-
-  let resultErr = err;
-  let resultMsg = msg;
-
-  if (isAxiosError(err)) {
-    const { error, details } = parseError(err);
-    resultErr = error;
-    if (msg && details) {
-      resultMsg = `${msg}: ${details}`;
-    } else {
-      resultMsg = msg || details;
-    }
-  }
-
-  return new PortainerError(resultMsg, resultErr);
-}
-
-type DefaultAxiosErrorType = {
-  message: string;
-  details?: string;
-};
-
-export function defaultErrorParser(axiosError: AxiosError<unknown>) {
-  // If we have an "errors" array, just add the first error message (better than showing [Object object])
-  if (isMultipleErrorsResponse(axiosError.response?.data)) {
-    const message = axiosError.response.data.errors[0].message || '';
-    const details = axiosError.response.data.errors[0].details || message;
-    const error = new Error(message);
-    return { error, details };
-  }
-
-  if (isDefaultResponse(axiosError.response?.data)) {
-    const message = axiosError.response?.data.message || '';
-    const details = axiosError.response?.data.details || message;
-    const error = new Error(message);
-    return { error, details };
-  }
-
-  if (isArrayResponse(axiosError.response?.data)) {
-    const message = axiosError.response?.data[0].message || '';
-    const details = axiosError.response?.data[0].details || message;
-    const error = new Error(message);
-    return { error, details };
-  }
-
-  const details = axiosError.response?.data
-    ? axiosError.response?.data.toString()
-    : '';
-  const error = new Error('Axios error');
-  return { error, details };
-}
-
-// handle jsonObjectsToArrayHandler transformation
-function isArrayResponse(data: unknown): data is DefaultAxiosErrorType[] {
-  return (
-    !!data &&
-    Array.isArray(data) &&
-    'message' in data[0] &&
-    typeof data[0].message === 'string'
-  );
-}
-
-function isMultipleErrorsResponse(data: unknown): data is {
-  errors: DefaultAxiosErrorType[];
-} {
-  return (
-    !!data &&
-    typeof data === 'object' &&
-    'errors' in data &&
-    Array.isArray(data.errors)
-  );
-}
-
-export function isDefaultResponse(
-  data: unknown
-): data is DefaultAxiosErrorType {
-  return (
-    !!data &&
-    typeof data === 'object' &&
-    'message' in data &&
-    typeof data.message === 'string'
   );
 }

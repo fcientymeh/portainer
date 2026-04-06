@@ -2,7 +2,7 @@ import { groupBy } from 'lodash';
 
 import { getUniqueTagListFromImages } from '@/react/docker/images/utils';
 import { getImage } from '@/react/docker/proxy/queries/images/useImage';
-import { parseAxiosError } from 'Portainer/services/axios/axios';
+import { parseAxiosError } from '@/react/portainer/services/axios/axios';
 import { getImages } from '@/react/docker/proxy/queries/images/useImages';
 import { getContainers } from '@/react/docker/containers/queries/useContainers';
 import { getImageHistory } from '@/react/docker/proxy/queries/images/useImageHistory';

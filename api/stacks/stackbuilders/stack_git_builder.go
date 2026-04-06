@@ -1,6 +1,7 @@
 package stackbuilders
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -20,13 +21,13 @@ type GitMethodStackBuildProcess interface {
 	// Set unique stack information, e.g. swarm stack has swarmID, kubernetes stack has namespace
 	SetUniqueInfo(payload *StackPayload) GitMethodStackBuildProcess
 	// Deploy stack based on the configuration
-	Deploy(payload *StackPayload, endpoint *portainer.Endpoint) GitMethodStackBuildProcess
+	Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) GitMethodStackBuildProcess
 	// Save the stack information to database
 	SaveStack() (*portainer.Stack, error)
 	// Get response from HTTP request. Use if it is needed
 	GetResponse() string
 	// Set git repository configuration
-	SetGitRepository(payload *StackPayload) GitMethodStackBuildProcess
+	SetGitRepository(ctx context.Context, payload *StackPayload) GitMethodStackBuildProcess
 	// Set auto update setting
 	SetAutoUpdate(payload *StackPayload) GitMethodStackBuildProcess
 	UpdateStack(stack *portainer.Stack) (*portainer.Stack, error)
@@ -55,7 +56,7 @@ func (b *GitMethodStackBuilder) SetUniqueInfo(payload *StackPayload) GitMethodSt
 	return b
 }
 
-func (b *GitMethodStackBuilder) SetGitRepository(payload *StackPayload) GitMethodStackBuildProcess {
+func (b *GitMethodStackBuilder) SetGitRepository(ctx context.Context, payload *StackPayload) GitMethodStackBuildProcess {
 	if b.hasError() {
 		return b
 	}
@@ -91,7 +92,7 @@ func (b *GitMethodStackBuilder) SetGitRepository(payload *StackPayload) GitMetho
 		return b.fileService.GetStackProjectPath(stackFolder)
 	}
 
-	commitHash, err := stackutils.DownloadGitRepository(repoConfig, b.gitService, getProjectPath)
+	commitHash, err := stackutils.DownloadGitRepository(ctx, repoConfig, b.gitService, getProjectPath)
 	if err != nil {
 		b.err = fmt.Errorf("failed to download git repository: %w", err)
 		return b
@@ -104,13 +105,13 @@ func (b *GitMethodStackBuilder) SetGitRepository(payload *StackPayload) GitMetho
 	return b
 }
 
-func (b *GitMethodStackBuilder) Deploy(payload *StackPayload, endpoint *portainer.Endpoint) GitMethodStackBuildProcess {
+func (b *GitMethodStackBuilder) Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) GitMethodStackBuildProcess {
 	if b.hasError() {
 		return b
 	}
 
 	// Deploy the stack
-	b.err = b.deploymentConfiger.Deploy()
+	b.err = b.deploymentConfiger.Deploy(ctx)
 
 	return b
 }
@@ -144,7 +145,7 @@ func (b *GitMethodStackBuilder) SetAutoUpdate(payload *StackPayload) GitMethodSt
 	}
 
 	if payload.AutoUpdate != nil && payload.AutoUpdate.Interval != "" {
-		jobID, err := deployments.StartAutoupdate(b.stack.ID,
+		jobID, err := deployments.StartAutoupdate(context.TODO(), b.stack.ID,
 			b.stack.AutoUpdate.Interval,
 			b.scheduler,
 			b.stackDeployer,

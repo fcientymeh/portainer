@@ -126,7 +126,7 @@ func (handler *Handler) stackStart(w http.ResponseWriter, r *http.Request) *http
 	if stack.AutoUpdate != nil && stack.AutoUpdate.Interval != "" {
 		deployments.StopAutoupdate(stack.ID, stack.AutoUpdate.JobID, handler.Scheduler)
 
-		jobID, e := deployments.StartAutoupdate(stack.ID, stack.AutoUpdate.Interval, handler.Scheduler, handler.StackDeployer, handler.DataStore, handler.GitService)
+		jobID, e := deployments.StartAutoupdate(context.TODO(), stack.ID, stack.AutoUpdate.Interval, handler.Scheduler, handler.StackDeployer, handler.DataStore, handler.GitService)
 		if e != nil {
 			return e
 		}
@@ -134,7 +134,7 @@ func (handler *Handler) stackStart(w http.ResponseWriter, r *http.Request) *http
 		stack.AutoUpdate.JobID = jobID
 	}
 
-	err = handler.startStack(stack, endpoint, securityContext)
+	err = handler.startStack(context.TODO(), stack, endpoint, securityContext)
 	if err != nil {
 		return httperror.InternalServerError("Unable to start stack", err)
 	}
@@ -159,6 +159,7 @@ func (handler *Handler) stackStart(w http.ResponseWriter, r *http.Request) *http
 }
 
 func (handler *Handler) startStack(
+	ctx context.Context,
 	stack *portainer.Stack,
 	endpoint *portainer.Endpoint,
 	securityContext *security.RestrictedRequestContext,
@@ -180,7 +181,7 @@ func (handler *Handler) startStack(
 		stack.Name = handler.ComposeStackManager.NormalizeStackName(stack.Name)
 
 		if stackutils.IsRelativePathStack(stack) {
-			return handler.StackDeployer.StartRemoteComposeStack(stack, endpoint, filteredRegistries)
+			return handler.StackDeployer.StartRemoteComposeStack(ctx, stack, endpoint, filteredRegistries)
 		}
 
 		options := portainer.ComposeUpOptions{
@@ -189,15 +190,15 @@ func (handler *Handler) startStack(
 			},
 		}
 
-		return handler.ComposeStackManager.Up(context.TODO(), stack, endpoint, options)
+		return handler.ComposeStackManager.Up(ctx, stack, endpoint, options)
 	case portainer.DockerSwarmStack:
 		stack.Name = handler.SwarmStackManager.NormalizeStackName(stack.Name)
 
 		if stackutils.IsRelativePathStack(stack) {
-			return handler.StackDeployer.StartRemoteSwarmStack(stack, endpoint, filteredRegistries)
+			return handler.StackDeployer.StartRemoteSwarmStack(ctx, stack, endpoint, filteredRegistries)
 		}
 
-		return handler.StackDeployer.DeploySwarmStack(stack, endpoint, filteredRegistries, true, true)
+		return handler.StackDeployer.DeploySwarmStack(ctx, stack, endpoint, filteredRegistries, true, true)
 	}
 
 	return nil

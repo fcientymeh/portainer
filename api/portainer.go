@@ -322,6 +322,15 @@ type (
 		Endpoints      []EndpointID `json:"Endpoints"`
 	}
 
+	// StackDeploymentStatus records one status transition in the current deployment lifecycle.
+	// The slice is reset at the start of each new deployment, so it represents the
+	// progression of the most recent deployment only (e.g. Deploying -> Active).
+	StackDeploymentStatus struct {
+		Status  StackStatus `json:"Status"`
+		Time    int64       `json:"Time"`
+		Message string      `json:"Message,omitempty"` // populated on Error entries
+	}
+
 	// StackDeploymentInfo records the information of a deployed stack
 	StackDeploymentInfo struct {
 		// Version is the version of the stack and also is the deployed version in edge agent
@@ -330,6 +339,12 @@ type (
 		FileVersion int `json:"FileVersion"`
 		// ConfigHash is the commit hash of the git repository used for deploying the stack
 		ConfigHash string `json:"ConfigHash,omitempty"`
+		// RepositoryURL is the git repository URL used for deploying the stack
+		RepositoryURL string `json:"RepositoryURL,omitempty"`
+		// ConfigFilePath is the path to the config file in the git repository used for deploying the stack
+		ConfigFilePath string `json:"ConfigFilePath,omitempty"`
+		// AdditionalFiles are the additional files used for deploying the stack
+		AdditionalFiles []string `json:"AdditionalFiles,omitempty"`
 	}
 
 	// EdgeStack represents an edge stack
@@ -365,6 +380,8 @@ type (
 		Atomic bool `json:"Atomic" example:"true"`
 		// Timeout for Helm operations (equivalent to helm --timeout flag)
 		Timeout string `json:"Timeout,omitempty" example:"5m0s"`
+		// Namespace to deploy the Helm chart into
+		Namespace string `json:"Namespace,omitempty" example:"default"`
 	}
 
 	EdgeStackStatusForEnv struct {
@@ -662,8 +679,9 @@ type (
 
 	// EndpointPostInitMigrations
 	EndpointPostInitMigrations struct {
-		MigrateIngresses bool `json:"MigrateIngresses"`
-		MigrateGPUs      bool `json:"MigrateGPUs"`
+		MigrateIngresses         bool `json:"MigrateIngresses"`
+		MigrateGPUs              bool `json:"MigrateGPUs"`
+		MigrateRegistrySASecrets bool `json:"MigrateRegistrySASecrets"`
 	}
 
 	// Extension represents a deprecated Portainer extension
@@ -1168,7 +1186,10 @@ type (
 		EndpointID EndpointID `json:"EndpointId" example:"1"`
 		// Cluster identifier of the Swarm cluster where the stack is deployed
 		SwarmID string `json:"SwarmId" example:"jpofkc0i9uo9wtx1zesuk649w"`
-		// Path to the Stack file
+		// EntryPoint is the path to the config file relative to the project root.
+		// NOTE: For git stacks this mirrors GitConfig.ConfigFilePath and the two are kept in sync
+		// by stackUpdateGit. The deploy command builder (compose_unpacker_cmd_builder) uses this
+		// field directly; Kubernetes deploy and git clone operations use GitConfig.ConfigFilePath.
 		EntryPoint string `json:"EntryPoint" example:"docker-compose.yml"`
 		// A list of environment(endpoint) variables used during stack deployment
 		Env []Pair `json:"Env"`
@@ -1194,10 +1215,15 @@ type (
 		Option *StackOption `json:"Option"`
 		// The git config of this stack
 		GitConfig *gittypes.RepoConfig
+		// CurrentDeploymentInfo records the git repository state at the time of the last actual deployment.
+		CurrentDeploymentInfo *StackDeploymentInfo `json:"CurrentDeploymentInfo,omitempty"`
 		// Whether the stack is from a app template
 		FromAppTemplate bool `example:"false"`
 		// Kubernetes namespace if stack is a kube application
 		Namespace string `example:"default"`
+		// DeploymentStatus records the status progression of the current deployment.
+		// Cleared when a new deployment starts.
+		DeploymentStatus []StackDeploymentStatus `json:"DeploymentStatus,omitempty"`
 	}
 
 	// StackOption represents the options for stack deployment
@@ -1634,36 +1660,36 @@ type (
 	// GitService represents a service for managing Git
 	GitService interface {
 		CloneRepository(
+			ctx context.Context,
 			destination string,
 			repositoryURL,
 			referenceName,
 			username,
 			password string,
-			authType gittypes.GitCredentialAuthType,
 			tlsSkipVerify bool,
 		) error
 		LatestCommitID(
+			ctx context.Context,
 			repositoryURL,
 			referenceName,
 			username,
 			password string,
-			authType gittypes.GitCredentialAuthType,
 			tlsSkipVerify bool,
 		) (string, error)
 		ListRefs(
+			ctx context.Context,
 			repositoryURL,
 			username,
 			password string,
-			authType gittypes.GitCredentialAuthType,
 			hardRefresh bool,
 			tlsSkipVerify bool,
 		) ([]string, error)
 		ListFiles(
+			ctx context.Context,
 			repositoryURL,
 			referenceName,
 			username,
 			password string,
-			authType gittypes.GitCredentialAuthType,
 			dirOnly,
 			hardRefresh bool,
 			includeExts []string,
@@ -1789,6 +1815,8 @@ type (
 		// ServiceAccount
 		GetServiceAccounts(namespace string) ([]models.K8sServiceAccount, error)
 		DeleteServiceAccounts(reqs models.K8sServiceAccountDeleteRequests) error
+		AddImagePullSecretToServiceAccount(namespace, serviceAccountName, secretName string) error
+		RemoveImagePullSecretFromServiceAccount(namespace, serviceAccountName, secretName string) error
 		SetupUserServiceAccount(int, []int, bool) error
 		GetPortainerUserServiceAccount(tokendata *TokenData) (*corev1.ServiceAccount, error)
 		GetServiceAccountBearerToken(userID int) (string, error)
@@ -1814,8 +1842,8 @@ type (
 
 	// KubernetesDeployer represents a service to deploy a manifest inside a Kubernetes environment(endpoint)
 	KubernetesDeployer interface {
-		Deploy(userID UserID, endpoint *Endpoint, manifestFiles []string, namespace string) (string, error)
-		Remove(userID UserID, endpoint *Endpoint, manifestFiles []string, namespace string) (string, error)
+		Deploy(ctx context.Context, userID UserID, endpoint *Endpoint, manifestFiles []string, namespace string) (string, error)
+		Remove(ctx context.Context, userID UserID, endpoint *Endpoint, manifestFiles []string, namespace string) (string, error)
 	}
 
 	// KubernetesSnapshotter represents a service used to create Kubernetes environment(endpoint) snapshots
@@ -1851,12 +1879,12 @@ type (
 
 	// Server defines the interface to serve the API
 	Server interface {
-		Start() error
+		Start(ctx context.Context) error
 	}
 
 	// SnapshotService represents a service for managing environment(endpoint) snapshots
 	SnapshotService interface {
-		Start()
+		Start(ctx context.Context)
 		SetSnapshotInterval(snapshotInterval string) error
 		SnapshotEndpoint(endpoint *Endpoint) error
 		FillSnapshotData(endpoint *Endpoint, includeRaw bool) error
@@ -1864,19 +1892,19 @@ type (
 
 	// SwarmStackManager represents a service to manage Swarm stacks
 	SwarmStackManager interface {
-		Login(registries []Registry, endpoint *Endpoint) error
-		Logout(endpoint *Endpoint) error
-		Deploy(stack *Stack, prune bool, pullImage bool, endpoint *Endpoint) error
-		Remove(stack *Stack, endpoint *Endpoint) error
+		Login(ctx context.Context, registries []Registry, endpoint *Endpoint) error
+		Logout(ctx context.Context, endpoint *Endpoint) error
+		Deploy(ctx context.Context, stack *Stack, prune bool, pullImage bool, endpoint *Endpoint) error
+		Remove(ctx context.Context, stack *Stack, endpoint *Endpoint) error
 		NormalizeStackName(name string) string
 	}
 )
 
 const (
 	// APIVersion is the version number of the Portainer API
-	APIVersion = "2.39.0"
+	APIVersion = "2.40.0"
 	// Support annotation for the API version ("STS" for Short-Term Support or "LTS" for Long-Term Support)
-	APIVersionSupport = "LTS"
+	APIVersionSupport = "STS"
 	// Edition is what this edition of Portainer is called
 	Edition = PortainerCE
 	// ComposeSyntaxMaxVersion is a maximum supported version of the docker compose syntax
@@ -2156,9 +2184,11 @@ const (
 
 // StackStatus represents a status for a stack
 const (
-	_ StackStatus = iota
-	StackStatusActive
-	StackStatusInactive
+	_                    StackStatus = iota
+	StackStatusActive                // 1 - deployed and running
+	StackStatusInactive              // 2 - intentionally stopped
+	StackStatusDeploying             // 3 - deployment in progress
+	StackStatusError                 // 4 - deployment failed
 )
 
 const (

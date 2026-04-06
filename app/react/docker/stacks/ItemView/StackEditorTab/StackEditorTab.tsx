@@ -6,7 +6,6 @@ import uuidv4 from 'uuid/v4';
 
 import { Stack, StackType } from '@/react/common/stacks/types';
 import { useDockerComposeSchema } from '@/react/hooks/useDockerComposeSchema/useDockerComposeSchema';
-import { useApiVersion } from '@/react/docker/proxy/queries/useVersion';
 import { useCurrentEnvironment } from '@/react/hooks/useCurrentEnvironment';
 import { confirmStackUpdate } from '@/react/common/stacks/common/confirm-stack-update';
 import { notifyError, notifySuccess } from '@/portainer/services/notifications';
@@ -44,7 +43,6 @@ export function StackEditorTab({
   const mutation = useUpdateStackMutation();
   const envQuery = useCurrentEnvironment();
   const schemaQuery = useDockerComposeSchema();
-  const apiVersion = useApiVersion(envQuery.data?.Id);
   const [webhookId] = useState(() => stack.Webhook || uuidv4());
 
   if (!envQuery.data || !schemaQuery.data) {
@@ -113,7 +111,6 @@ export function StackEditorTab({
         stackType={stack.Type}
         composeSyntaxMaxVersion={composeSyntaxMaxVersion}
         isOrphaned={isOrphaned}
-        apiVersion={apiVersion}
         envType={envType}
         schema={schemaQuery.data}
         versions={versions}

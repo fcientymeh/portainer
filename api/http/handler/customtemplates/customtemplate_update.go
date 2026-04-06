@@ -1,6 +1,7 @@
 package customtemplates
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -48,8 +49,6 @@ type customTemplateUpdatePayload struct {
 	// Password used in basic authentication or token used in token authentication.
 	// Required when RepositoryAuthentication is true and RepositoryGitCredentialID is 0
 	RepositoryPassword string `example:"myGitPassword"`
-	// RepositoryAuthorizationType is the authorization type to use
-	RepositoryAuthorizationType gittypes.GitCredentialAuthType `example:"0"`
 	// GitCredentialID used to identify the bound git credential. Required when RepositoryAuthentication
 	// is true and RepositoryUsername/RepositoryPassword are not provided
 	RepositoryGitCredentialID int `example:"0"`
@@ -205,25 +204,21 @@ func (handler *Handler) customTemplateUpdate(w http.ResponseWriter, r *http.Requ
 
 		repositoryUsername := ""
 		repositoryPassword := ""
-		repositoryAuthType := gittypes.GitCredentialAuthType_Basic
 		if payload.RepositoryAuthentication {
 			repositoryUsername = payload.RepositoryUsername
 			repositoryPassword = payload.RepositoryPassword
-			repositoryAuthType = payload.RepositoryAuthorizationType
 			gitConfig.Authentication = &gittypes.GitAuthentication{
-				Username:          payload.RepositoryUsername,
-				Password:          payload.RepositoryPassword,
-				AuthorizationType: payload.RepositoryAuthorizationType,
+				Username: payload.RepositoryUsername,
+				Password: payload.RepositoryPassword,
 			}
 		}
 
-		cleanBackup, err := git.CloneWithBackup(handler.GitService, handler.FileService, git.CloneOptions{
+		cleanBackup, err := git.CloneWithBackup(context.TODO(), handler.GitService, handler.FileService, git.CloneOptions{
 			ProjectPath:   customTemplate.ProjectPath,
 			URL:           gitConfig.URL,
 			ReferenceName: gitConfig.ReferenceName,
 			Username:      repositoryUsername,
 			Password:      repositoryPassword,
-			AuthType:      repositoryAuthType,
 			TLSSkipVerify: gitConfig.TLSSkipVerify,
 		})
 		if err != nil {
@@ -233,11 +228,11 @@ func (handler *Handler) customTemplateUpdate(w http.ResponseWriter, r *http.Requ
 		defer cleanBackup()
 
 		commitHash, err := handler.GitService.LatestCommitID(
+			context.TODO(),
 			gitConfig.URL,
 			gitConfig.ReferenceName,
 			repositoryUsername,
 			repositoryPassword,
-			repositoryAuthType,
 			gitConfig.TLSSkipVerify,
 		)
 		if err != nil {

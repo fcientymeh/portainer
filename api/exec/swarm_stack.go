@@ -2,6 +2,7 @@ package exec
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"os"
 	"os/exec"
@@ -53,7 +54,7 @@ func NewSwarmStackManager(
 }
 
 // Login executes the docker login command against a list of registries (including DockerHub).
-func (manager *SwarmStackManager) Login(registries []portainer.Registry, endpoint *portainer.Endpoint) error {
+func (manager *SwarmStackManager) Login(ctx context.Context, registries []portainer.Registry, endpoint *portainer.Endpoint) error {
 	command, args, err := manager.prepareDockerCommandAndArgs(manager.binaryPath, manager.configPath, endpoint)
 	if err != nil {
 		return err
@@ -67,7 +68,7 @@ func (manager *SwarmStackManager) Login(registries []portainer.Registry, endpoin
 			}
 
 			registryArgs := append(args, "login", "--username", username, "--password", password, registry.URL)
-			if err := runCommandAndCaptureStdErr(command, registryArgs, nil, ""); err != nil {
+			if err := runCommandAndCaptureStdErr(ctx, command, registryArgs, nil, ""); err != nil {
 				log.Warn().
 					Err(err).
 					Str("RegistryName", registry.Name).
@@ -80,7 +81,7 @@ func (manager *SwarmStackManager) Login(registries []portainer.Registry, endpoin
 }
 
 // Logout executes the docker logout command.
-func (manager *SwarmStackManager) Logout(endpoint *portainer.Endpoint) error {
+func (manager *SwarmStackManager) Logout(ctx context.Context, endpoint *portainer.Endpoint) error {
 	command, args, err := manager.prepareDockerCommandAndArgs(manager.binaryPath, manager.configPath, endpoint)
 	if err != nil {
 		return err
@@ -88,11 +89,11 @@ func (manager *SwarmStackManager) Logout(endpoint *portainer.Endpoint) error {
 
 	args = append(args, "logout")
 
-	return runCommandAndCaptureStdErr(command, args, nil, "")
+	return runCommandAndCaptureStdErr(ctx, command, args, nil, "")
 }
 
 // Deploy executes the docker stack deploy command.
-func (manager *SwarmStackManager) Deploy(stack *portainer.Stack, prune bool, pullImage bool, endpoint *portainer.Endpoint) error {
+func (manager *SwarmStackManager) Deploy(ctx context.Context, stack *portainer.Stack, prune bool, pullImage bool, endpoint *portainer.Endpoint) error {
 	filePaths := stackutils.GetStackFilePaths(stack, true)
 	command, args, err := manager.prepareDockerCommandAndArgs(manager.binaryPath, manager.configPath, endpoint)
 	if err != nil {
@@ -117,11 +118,11 @@ func (manager *SwarmStackManager) Deploy(stack *portainer.Stack, prune bool, pul
 		env = append(env, envvar.Name+"="+envvar.Value)
 	}
 
-	return runCommandAndCaptureStdErr(command, args, env, stack.ProjectPath)
+	return runCommandAndCaptureStdErr(ctx, command, args, env, stack.ProjectPath)
 }
 
 // Remove executes the docker stack rm command.
-func (manager *SwarmStackManager) Remove(stack *portainer.Stack, endpoint *portainer.Endpoint) error {
+func (manager *SwarmStackManager) Remove(ctx context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
 	command, args, err := manager.prepareDockerCommandAndArgs(manager.binaryPath, manager.configPath, endpoint)
 	if err != nil {
 		return err
@@ -129,13 +130,13 @@ func (manager *SwarmStackManager) Remove(stack *portainer.Stack, endpoint *porta
 
 	args = append(args, "stack", "rm", "--detach=false", stack.Name)
 
-	return runCommandAndCaptureStdErr(command, args, nil, "")
+	return runCommandAndCaptureStdErr(ctx, command, args, nil, "")
 }
 
-func runCommandAndCaptureStdErr(command string, args []string, env []string, workingDir string) error {
+func runCommandAndCaptureStdErr(ctx context.Context, command string, args []string, env []string, workingDir string) error {
 	var stderr bytes.Buffer
 
-	cmd := exec.Command(command, args...)
+	cmd := exec.CommandContext(ctx, command, args...)
 	cmd.Stderr = &stderr
 
 	if workingDir != "" {

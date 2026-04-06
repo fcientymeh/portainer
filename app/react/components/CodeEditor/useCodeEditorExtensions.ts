@@ -7,15 +7,22 @@ import {
 import { dockerFile } from '@codemirror/legacy-modes/mode/dockerfile';
 import { shell } from '@codemirror/legacy-modes/mode/shell';
 import { keymap, Extension } from '@uiw/react-codemirror';
+import { highlightSpecialChars, lineNumbers } from '@codemirror/view';
 import type { JSONSchema7 } from 'json-schema';
 import { lintKeymap, lintGutter } from '@codemirror/lint';
 import { defaultKeymap } from '@codemirror/commands';
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
 import { yamlCompletion, yamlSchema } from 'yaml-schema';
 import { compact } from 'lodash';
-import { lineNumbers } from '@codemirror/view';
 
 export type CodeEditorType = 'yaml' | 'shell' | 'dockerfile';
+
+// Extends the default special-char set with invisible Unicode characters that
+// are hard to spot (non-breaking spaces, zero-width joiners, word joiner, etc.)
+export const extendedHighlightSpecialChars = highlightSpecialChars({
+  // eslint-disable-next-line no-misleading-character-class
+  addSpecialChars: /[\u00a0\u200c\u200d\u202f\u2060]/,
+});
 
 // Custom indentation service for YAML
 const yamlIndentExtension = indentService.of((context, pos) => {
@@ -71,15 +78,16 @@ export function useCodeEditorExtensions(
   schema?: JSONSchema7
 ): Extension[] {
   return useMemo(() => {
+    const baseExtensions = [extendedHighlightSpecialChars];
     switch (type) {
       case 'dockerfile':
-        return [dockerFileLanguage];
+        return [...baseExtensions, dockerFileLanguage];
       case 'shell':
-        return [shellLanguage];
+        return [...baseExtensions, shellLanguage];
       case 'yaml':
-        return yamlLanguage(schema);
+        return [...baseExtensions, ...yamlLanguage(schema)];
       default:
-        return [];
+        return baseExtensions;
     }
   }, [type, schema]);
 }

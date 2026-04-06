@@ -1,7 +1,6 @@
 package git
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -21,7 +20,7 @@ func TestService_ClonePublicRepository_Azure(t *testing.T) {
 	ensureIntegrationTest(t)
 
 	pat := getRequiredValue(t, "AZURE_DEVOPS_PAT")
-	service := NewService(context.TODO())
+	service := NewService(t.Context())
 
 	type args struct {
 		repositoryURLFormat string
@@ -60,12 +59,12 @@ func TestService_ClonePublicRepository_Azure(t *testing.T) {
 			dst := t.TempDir()
 			repositoryUrl := fmt.Sprintf(tt.args.repositoryURLFormat, tt.args.password)
 			err := service.CloneRepository(
+				t.Context(),
 				dst,
 				repositoryUrl,
 				tt.args.referenceName,
 				"",
 				"",
-				gittypes.GitCredentialAuthType_Basic,
 				false,
 			)
 			require.NoError(t, err)
@@ -78,17 +77,17 @@ func TestService_ClonePrivateRepository_Azure(t *testing.T) {
 	ensureIntegrationTest(t)
 
 	pat := getRequiredValue(t, "AZURE_DEVOPS_PAT")
-	service := NewService(context.TODO())
+	service := NewService(t.Context())
 
 	dst := t.TempDir()
 
 	err := service.CloneRepository(
+		t.Context(),
 		dst,
 		privateAzureRepoURL,
 		"refs/heads/main",
 		"",
 		pat,
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 	)
 	require.NoError(t, err)
@@ -99,14 +98,14 @@ func TestService_LatestCommitID_Azure(t *testing.T) {
 	ensureIntegrationTest(t)
 
 	pat := getRequiredValue(t, "AZURE_DEVOPS_PAT")
-	service := NewService(context.TODO())
+	service := NewService(t.Context())
 
 	id, err := service.LatestCommitID(
+		t.Context(),
 		privateAzureRepoURL,
 		"refs/heads/main",
 		"",
 		pat,
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 	)
 	require.NoError(t, err)
@@ -118,13 +117,13 @@ func TestService_ListRefs_Azure(t *testing.T) {
 
 	accessToken := getRequiredValue(t, "AZURE_DEVOPS_PAT")
 	username := getRequiredValue(t, "AZURE_DEVOPS_USERNAME")
-	service := NewService(context.TODO())
+	service := NewService(t.Context())
 
 	refs, err := service.ListRefs(
+		t.Context(),
 		privateAzureRepoURL,
 		username,
 		accessToken,
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 		false,
 	)
@@ -137,13 +136,13 @@ func TestService_ListRefs_Azure_Concurrently(t *testing.T) {
 
 	accessToken := getRequiredValue(t, "AZURE_DEVOPS_PAT")
 	username := getRequiredValue(t, "AZURE_DEVOPS_USERNAME")
-	service := newService(context.TODO(), repositoryCacheSize, 200*time.Millisecond)
+	service := newService(t.Context(), repositoryCacheSize, 200*time.Millisecond)
 
 	go func() {
-		_, _ = service.ListRefs(privateAzureRepoURL, username, accessToken, gittypes.GitCredentialAuthType_Basic, false, false)
+		_, _ = service.ListRefs(t.Context(), privateAzureRepoURL, username, accessToken, false, false)
 	}()
 
-	_, err := service.ListRefs(privateAzureRepoURL, username, accessToken, gittypes.GitCredentialAuthType_Basic, false, false)
+	_, err := service.ListRefs(t.Context(), privateAzureRepoURL, username, accessToken, false, false)
 	require.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
@@ -152,33 +151,38 @@ func TestService_ListRefs_Azure_Concurrently(t *testing.T) {
 func TestService_ListFiles_Azure(t *testing.T) {
 	ensureIntegrationTest(t)
 
+	type args struct {
+		repositoryUrl string
+		referenceName string
+		username      string
+		password      string
+		extensions    []string
+	}
+
 	type expectResult struct {
 		shouldFail   bool
 		err          error
 		matchedCount int
 	}
 
-	service := newService(context.TODO(), 0, 0)
+	service := newService(t.Context(), 0, 0)
 	accessToken := getRequiredValue(t, "AZURE_DEVOPS_PAT")
 	username := getRequiredValue(t, "AZURE_DEVOPS_USERNAME")
 
 	tests := []struct {
-		name       string
-		args       fetchOption
-		extensions []string
-		expect     expectResult
+		name   string
+		args   args
+		expect expectResult
 	}{
 		{
 			name: "list tree with real repository and head ref but incorrect credential",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateAzureRepoURL,
-					username:      "test-username",
-					password:      "test-token",
-				},
+			args: args{
+				repositoryUrl: privateAzureRepoURL,
 				referenceName: "refs/heads/main",
+				username:      "test-username",
+				password:      "test-token",
+				extensions:    []string{},
 			},
-			extensions: []string{},
 			expect: expectResult{
 				shouldFail: true,
 				err:        gittypes.ErrAuthenticationFailure,
@@ -186,15 +190,13 @@ func TestService_ListFiles_Azure(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository and head ref but no credential",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateAzureRepoURL,
-					username:      "",
-					password:      "",
-				},
+			args: args{
+				repositoryUrl: privateAzureRepoURL,
 				referenceName: "refs/heads/main",
+				username:      "",
+				password:      "",
+				extensions:    []string{},
 			},
-			extensions: []string{},
 			expect: expectResult{
 				shouldFail: true,
 				err:        gittypes.ErrAuthenticationFailure,
@@ -202,15 +204,13 @@ func TestService_ListFiles_Azure(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository and head ref",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateAzureRepoURL,
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateAzureRepoURL,
 				referenceName: "refs/heads/main",
+				username:      username,
+				password:      accessToken,
+				extensions:    []string{},
 			},
-			extensions: []string{},
 			expect: expectResult{
 				err:          nil,
 				matchedCount: 19,
@@ -218,15 +218,13 @@ func TestService_ListFiles_Azure(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository and head ref and existing file extension",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateAzureRepoURL,
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateAzureRepoURL,
 				referenceName: "refs/heads/main",
+				username:      username,
+				password:      accessToken,
+				extensions:    []string{"yml"},
 			},
-			extensions: []string{"yml"},
 			expect: expectResult{
 				err:          nil,
 				matchedCount: 2,
@@ -234,15 +232,13 @@ func TestService_ListFiles_Azure(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository and head ref and non-existing file extension",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateAzureRepoURL,
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateAzureRepoURL,
 				referenceName: "refs/heads/main",
+				username:      username,
+				password:      accessToken,
+				extensions:    []string{"hcl"},
 			},
-			extensions: []string{"hcl"},
 			expect: expectResult{
 				err:          nil,
 				matchedCount: 2,
@@ -250,30 +246,26 @@ func TestService_ListFiles_Azure(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository but non-existing ref",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateAzureRepoURL,
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateAzureRepoURL,
 				referenceName: "refs/fake/feature",
+				username:      username,
+				password:      accessToken,
+				extensions:    []string{},
 			},
-			extensions: []string{},
 			expect: expectResult{
 				shouldFail: true,
 			},
 		},
 		{
 			name: "list tree with fake repository ",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateAzureRepoURL + "fake",
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateAzureRepoURL + "fake",
 				referenceName: "refs/fake/feature",
+				username:      username,
+				password:      accessToken,
+				extensions:    []string{},
 			},
-			extensions: []string{},
 			expect: expectResult{
 				shouldFail: true,
 				err:        gittypes.ErrIncorrectRepositoryURL,
@@ -284,14 +276,14 @@ func TestService_ListFiles_Azure(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			paths, err := service.ListFiles(
+				t.Context(),
 				tt.args.repositoryUrl,
 				tt.args.referenceName,
 				tt.args.username,
 				tt.args.password,
-				gittypes.GitCredentialAuthType_Basic,
 				false,
 				false,
-				tt.extensions,
+				tt.args.extensions,
 				false,
 			)
 
@@ -315,15 +307,15 @@ func TestService_ListFiles_Azure_Concurrently(t *testing.T) {
 
 	accessToken := getRequiredValue(t, "AZURE_DEVOPS_PAT")
 	username := getRequiredValue(t, "AZURE_DEVOPS_USERNAME")
-	service := newService(context.TODO(), repositoryCacheSize, 200*time.Millisecond)
+	service := newService(t.Context(), repositoryCacheSize, 200*time.Millisecond)
 
 	go func() {
 		_, _ = service.ListFiles(
+			t.Context(),
 			privateAzureRepoURL,
 			"refs/heads/main",
 			username,
 			accessToken,
-			gittypes.GitCredentialAuthType_Basic,
 			false,
 			false,
 			[]string{},
@@ -332,11 +324,11 @@ func TestService_ListFiles_Azure_Concurrently(t *testing.T) {
 	}()
 
 	_, err := service.ListFiles(
+		t.Context(),
 		privateAzureRepoURL,
 		"refs/heads/main",
 		username,
 		accessToken,
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 		false,
 		[]string{},

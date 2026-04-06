@@ -63,6 +63,7 @@ import (
 	"github.com/portainer/portainer/api/internal/upgrade"
 	k8s "github.com/portainer/portainer/api/kubernetes"
 	"github.com/portainer/portainer/api/kubernetes/cli"
+	motdservice "github.com/portainer/portainer/api/motd"
 	"github.com/portainer/portainer/api/pendingactions"
 	"github.com/portainer/portainer/api/platform"
 	"github.com/portainer/portainer/api/scheduler"
@@ -106,7 +107,6 @@ type Server struct {
 	KubernetesDeployer          portainer.KubernetesDeployer
 	HelmPackageManager          libhelmtypes.HelmPackageManager
 	Scheduler                   *scheduler.Scheduler
-	ShutdownCtx                 context.Context
 	ShutdownTrigger             context.CancelFunc
 	StackDeployer               deployments.StackDeployer
 	UpgradeService              upgrade.Service
@@ -118,10 +118,10 @@ type Server struct {
 }
 
 // Start starts the HTTP server
-func (server *Server) Start() error {
+func (server *Server) Start(ctx context.Context) error {
 	kubernetesTokenCacheManager := server.KubernetesTokenCacheManager
 
-	requestBouncer := security.NewRequestBouncer(server.DataStore, server.JWTService, server.APIKeyService)
+	requestBouncer := security.NewRequestBouncer(ctx, server.DataStore, server.JWTService, server.APIKeyService)
 	if !server.CSP {
 		requestBouncer.DisableCSP()
 	}
@@ -140,8 +140,8 @@ func (server *Server) Start() error {
 	authHandler.KubernetesTokenCacheManager = kubernetesTokenCacheManager
 	authHandler.OAuthService = server.OAuthService
 
-	adminMonitor := adminmonitor.New(5*time.Minute, server.DataStore, server.ShutdownCtx)
-	adminMonitor.Start()
+	adminMonitor := adminmonitor.New(5*time.Minute, server.DataStore)
+	adminMonitor.Start(ctx)
 
 	var backupHandler = backup.NewHandler(
 		requestBouncer,
@@ -217,7 +217,10 @@ func (server *Server) Start() error {
 	ldapHandler.FileService = server.FileService
 	ldapHandler.LDAPService = server.LDAPService
 
-	var motdHandler = motd.NewHandler(requestBouncer)
+	motdSvc := motdservice.NewService(portainer.MessageOfTheDayURL)
+	motdSvc.Start(ctx)
+
+	var motdHandler = motd.NewHandler(requestBouncer, motdSvc)
 
 	var registryHandler = registries.NewHandler(requestBouncer)
 	registryHandler.DataStore = server.DataStore
@@ -355,7 +358,7 @@ func (server *Server) Start() error {
 				ErrorLog: errorLogger,
 			}
 
-			go shutdown(server.ShutdownCtx, httpServer)
+			go shutdown(ctx, httpServer)
 
 			err := httpServer.ListenAndServe()
 			if err != nil && err != http.ErrServerClosed {
@@ -377,7 +380,7 @@ func (server *Server) Start() error {
 		return server.SSLService.GetRawCertificate(), nil
 	}
 
-	go shutdown(server.ShutdownCtx, httpsServer)
+	go shutdown(ctx, httpsServer)
 	go snapshot.NewBackgroundSnapshotter(server.DataStore, server.ReverseTunnelService)
 
 	return httpsServer.ListenAndServeTLS("", "")

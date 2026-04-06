@@ -4,4 +4,5 @@ export type ServiceAccount = {
   namespace: string;
   creationDate: string;
   isSystem: boolean;
+  imagePullSecrets?: Array<{ name: string }>;
 };

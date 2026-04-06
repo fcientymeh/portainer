@@ -4,14 +4,16 @@ import { Formik } from 'formik';
 import { vi } from 'vitest';
 import { ComponentProps } from 'react';
 import { JSONSchema7 } from 'json-schema';
+import { http, HttpResponse } from 'msw';
 
 import { StackType } from '@/react/common/stacks/types';
 import { EnvironmentType } from '@/react/portainer/environments/types';
 import { withTestQueryProvider } from '@/react/test-utils/withTestQuery';
 import { withUserProvider } from '@/react/test-utils/withUserProvider';
-import { createMockUsers } from '@/react-tools/test-mocks';
+import { createMockUser, createMockUsers } from '@/react-tools/test-mocks';
 import { Role } from '@/portainer/users/types';
 import { withTestRouter } from '@/react/test-utils/withRouter';
+import { server } from '@/setup-tests/server';
 
 import { usePreventExit } from '@@/WebEditorForm';
 
@@ -38,7 +40,6 @@ vi.mock('@uirouter/react', async (importOriginal: () => Promise<object>) => ({
 const defaultProps = {
   stackType: StackType.DockerCompose,
   composeSyntaxMaxVersion: 3,
-  apiVersion: 1.47,
   envType: EnvironmentType.Docker,
   schema: { type: 'object' } as JSONSchema7,
   isOrphaned: false,
@@ -141,54 +142,79 @@ describe('initial rendering', () => {
 
 describe('conditional rendering - Prune services field', () => {
   it('should show Prune field for DockerSwarm with API >= 1.27', async () => {
-    renderComponent({
-      stackType: StackType.DockerSwarm,
-      apiVersion: 1.27,
-    });
+    renderComponent(
+      {
+        stackType: StackType.DockerSwarm,
+      },
+      {
+        apiVersion: 1.27,
+      }
+    );
 
     await waitFor(() => {
-      expect(screen.getByTestId('stack-prune-switch')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('stack-prune-services-switch')
+      ).toBeInTheDocument();
     });
 
     expect(screen.getByText('Prune services')).toBeVisible();
   });
 
   it('should show Prune field for DockerCompose with API >= 1.27', async () => {
-    renderComponent({
-      stackType: StackType.DockerCompose,
-      apiVersion: 1.47,
-    });
+    renderComponent(
+      {
+        stackType: StackType.DockerCompose,
+      },
+      {
+        apiVersion: 1.27,
+      }
+    );
 
     await waitFor(() => {
-      expect(screen.getByTestId('stack-prune-switch')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('stack-prune-services-switch')
+      ).toBeInTheDocument();
     });
   });
 
   it('should hide Prune field for DockerSwarm with API < 1.27', () => {
-    renderComponent({
-      stackType: StackType.DockerSwarm,
-      apiVersion: 1.26,
-    });
+    renderComponent(
+      {
+        stackType: StackType.DockerSwarm,
+      },
+      {
+        apiVersion: 1.26,
+      }
+    );
 
-    expect(screen.queryByTestId('stack-prune-switch')).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('stack-prune-services-switch')
+    ).not.toBeInTheDocument();
   });
 
   it('should hide Prune field for DockerCompose with API < 1.27', () => {
-    renderComponent({
-      stackType: StackType.DockerCompose,
-      apiVersion: 1.25,
-    });
+    renderComponent(
+      {
+        stackType: StackType.DockerCompose,
+      },
+      {
+        apiVersion: 1.26,
+      }
+    );
 
-    expect(screen.queryByTestId('stack-prune-switch')).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('stack-prune-services-switch')
+    ).not.toBeInTheDocument();
   });
 
   it('should hide Prune field for Kubernetes stack', () => {
     renderComponent({
       stackType: StackType.Kubernetes,
-      apiVersion: 1.47,
     });
 
-    expect(screen.queryByTestId('stack-prune-switch')).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('stack-prune-services-switch')
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -274,17 +300,18 @@ describe('form field updates', () => {
     renderComponent(
       {
         stackType: StackType.DockerSwarm,
-        apiVersion: 1.47,
       },
       { onSubmit }
     );
     const user = userEvent.setup();
 
     await waitFor(() => {
-      expect(screen.getByTestId('stack-prune-switch')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('stack-prune-services-switch')
+      ).toBeInTheDocument();
     });
 
-    const pruneSwitchField = screen.getByTestId('stack-prune-switch');
+    const pruneSwitchField = screen.getByTestId('stack-prune-services-switch');
     await user.click(pruneSwitchField);
 
     const pruneSwitch = pruneSwitchField.querySelector(
@@ -411,12 +438,13 @@ describe('authorization', () => {
     renderComponent(
       {
         stackType: StackType.DockerSwarm,
-        apiVersion: 1.47,
       },
       { user: unauthorizedUser }
     );
 
-    expect(screen.queryByTestId('stack-prune-switch')).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('stack-prune-services-switch')
+    ).not.toBeInTheDocument();
   });
 
   it('should hide FormActions when user lacks PortainerStackUpdate authorization', () => {
@@ -462,44 +490,43 @@ describe('isSaved state', () => {
  */
 function renderComponent(
   props: Partial<ComponentProps<typeof StackEditorTabInner>> = {},
-  options: {
-    onSubmit?: (values: StackEditorFormValues) => void | Promise<void>;
-    initialValues?: StackEditorFormValues;
-    validationErrors?: Partial<Record<keyof StackEditorFormValues, string>>;
-    user?: ReturnType<typeof createMockUsers>[0];
-  } = {}
-) {
-  const {
+  {
+    apiVersion = 1.47,
     onSubmit = vi.fn(),
     initialValues = defaultInitialValues,
     validationErrors = {},
-    user = createMockUsers(1, Role.Admin)[0], // Default admin user
-  } = options;
+    user = createMockUser({ Role: Role.Admin }), // Default admin user
+  }: {
+    apiVersion?: number;
+    onSubmit?: (values: StackEditorFormValues) => void | Promise<void>;
+    initialValues?: StackEditorFormValues;
+    validationErrors?: Partial<Record<keyof StackEditorFormValues, string>>;
+    user?: ReturnType<typeof createMockUser>;
+  } = {}
+) {
+  server.use(
+    http.get('/api/endpoints/:endpointId/docker/version', () =>
+      HttpResponse.json({ ApiVersion: String(apiVersion) })
+    )
+  );
 
   // Create validation function that returns errors
   function validate() {
     return validationErrors;
   }
 
-  const Component = withTestQueryProvider(() => {
-    const WrappedWithUser = withTestRouter(
-      withUserProvider(
-        () => (
-          <Formik
-            initialValues={initialValues}
-            onSubmit={onSubmit}
-            validate={validate}
-            enableReinitialize
-          >
-            <StackEditorTabInner {...defaultProps} {...props} />
-          </Formik>
-        ),
-        user
-      )
-    );
+  const Component = withTestQueryProvider(
+    withTestRouter(withUserProvider(StackEditorTabInner, user))
+  );
 
-    return <WrappedWithUser />;
-  });
-
-  return render(<Component />);
+  return render(
+    <Formik
+      initialValues={initialValues}
+      onSubmit={onSubmit}
+      validate={validate}
+      enableReinitialize
+    >
+      <Component {...defaultProps} {...props} />
+    </Formik>
+  );
 }

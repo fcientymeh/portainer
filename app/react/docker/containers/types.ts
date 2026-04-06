@@ -12,6 +12,8 @@ export enum ContainerStatus {
   Running = 'running',
   Dead = 'dead',
   Exited = 'exited',
+  Restarting = 'restarting',
+  Removing = 'removing',
 }
 
 export type QuickAction = 'attach' | 'exec' | 'inspect' | 'logs' | 'stats';

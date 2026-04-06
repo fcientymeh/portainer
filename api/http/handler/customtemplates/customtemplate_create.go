@@ -1,6 +1,7 @@
 package customtemplates
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"os"
@@ -334,7 +335,7 @@ func (handler *Handler) createCustomTemplateFromGitRepository(r *http.Request) (
 		}
 	}
 
-	commitHash, err := stackutils.DownloadGitRepository(*gitConfig, handler.GitService, getProjectPath)
+	commitHash, err := stackutils.DownloadGitRepository(context.TODO(), *gitConfig, handler.GitService, getProjectPath)
 	if err != nil {
 		return nil, err
 	}

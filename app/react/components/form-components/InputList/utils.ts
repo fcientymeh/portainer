@@ -1,3 +1,5 @@
+import { DefaultType } from './types';
+
 export function arrayMove<T>(array: Array<T>, from: number, to: number) {
   if (!checkValidIndex(array, from) || !checkValidIndex(array, to)) {
     throw new Error('index is out of bounds');
@@ -45,4 +47,8 @@ export function hasKey(
 
 function isObject(value: unknown): value is object {
   return typeof value === 'object' && value !== null;
+}
+
+export function defaultItemBuilder(): DefaultType {
+  return { value: '' };
 }

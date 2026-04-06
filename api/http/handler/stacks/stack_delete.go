@@ -134,7 +134,7 @@ func (handler *Handler) stackDelete(w http.ResponseWriter, r *http.Request) *htt
 		deployments.StopAutoupdate(stack.ID, stack.AutoUpdate.JobID, handler.Scheduler)
 	}
 
-	if err := handler.deleteStack(securityContext.UserID, stack, endpoint); err != nil {
+	if err := handler.deleteStack(context.TODO(), securityContext.UserID, stack, endpoint); err != nil {
 		return httperror.InternalServerError(err.Error(), err)
 	}
 
@@ -195,38 +195,38 @@ func (handler *Handler) deleteExternalStack(r *http.Request, w http.ResponseWrit
 		Type: portainer.DockerSwarmStack,
 	}
 
-	if err := handler.deleteStack(securityContext.UserID, stack, endpoint); err != nil {
+	if err := handler.deleteStack(context.TODO(), securityContext.UserID, stack, endpoint); err != nil {
 		return httperror.InternalServerError("Unable to delete stack", err)
 	}
 
 	return response.Empty(w)
 }
 
-func (handler *Handler) deleteStack(userID portainer.UserID, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
+func (handler *Handler) deleteStack(ctx context.Context, userID portainer.UserID, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
 	if stack.Type == portainer.DockerSwarmStack {
 		stack.Name = handler.SwarmStackManager.NormalizeStackName(stack.Name)
 
 		if stackutils.IsRelativePathStack(stack) {
-			return handler.StackDeployer.UndeployRemoteSwarmStack(stack, endpoint)
+			return handler.StackDeployer.UndeployRemoteSwarmStack(ctx, stack, endpoint)
 		}
 
-		return handler.SwarmStackManager.Remove(stack, endpoint)
+		return handler.SwarmStackManager.Remove(ctx, stack, endpoint)
 	}
 
 	if stack.Type == portainer.DockerComposeStack {
 		stack.Name = handler.ComposeStackManager.NormalizeStackName(stack.Name)
 
 		if stackutils.IsRelativePathStack(stack) {
-			return handler.StackDeployer.UndeployRemoteComposeStack(stack, endpoint)
+			return handler.StackDeployer.UndeployRemoteComposeStack(ctx, stack, endpoint)
 		}
 
-		return handler.ComposeStackManager.Down(context.TODO(), stack, endpoint)
+		return handler.ComposeStackManager.Down(ctx, stack, endpoint)
 	}
 
 	if stack.Type == portainer.KubernetesStack {
 		manifestFiles := stackutils.GetStackFilePaths(stack, true)
 
-		out, err := handler.KubernetesDeployer.Remove(userID, endpoint, manifestFiles, stack.Namespace)
+		out, err := handler.KubernetesDeployer.Remove(ctx, userID, endpoint, manifestFiles, stack.Namespace)
 		if err != nil {
 			for _, manifest := range manifestFiles {
 				if exists, fileExistsErr := filesystem.FileExists(manifest); fileExistsErr != nil || !exists {
@@ -348,7 +348,7 @@ func (handler *Handler) stackDeleteKubernetesByName(w http.ResponseWriter, r *ht
 			deployments.StopAutoupdate(stack.ID, stack.AutoUpdate.JobID, handler.Scheduler)
 		}
 
-		err = handler.deleteStack(securityContext.UserID, &stack, endpoint)
+		err = handler.deleteStack(context.TODO(), securityContext.UserID, &stack, endpoint)
 		if err != nil {
 			log.Err(err).Msgf("Unable to delete Kubernetes stack `%d`", stack.ID)
 			errs = errors.Join(errs, err)

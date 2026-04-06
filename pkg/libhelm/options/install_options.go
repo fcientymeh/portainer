@@ -4,7 +4,6 @@ import (
 	"time"
 
 	portainer "github.com/portainer/portainer/api"
-	gittypes "github.com/portainer/portainer/api/git/types"
 )
 
 type InstallOptions struct {
@@ -30,7 +29,6 @@ type InstallOptions struct {
 	CreateNamespace         bool
 
 	// GitOps related options
-	GitConfig  *gittypes.RepoConfig
 	AutoUpdate *portainer.AutoUpdateSettings
 
 	// StackID is the ID of the Portainer stack associated with this release

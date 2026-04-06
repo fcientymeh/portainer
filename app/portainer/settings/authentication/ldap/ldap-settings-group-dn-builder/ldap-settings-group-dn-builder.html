@@ -27,10 +27,9 @@
 </div>
 
 <ldap-settings-dn-builder
-  ng-model="$ctrl.entries"
-  label="Path to group"
-  suffix="{{ $ctrl.suffix }}"
+  value="$ctrl.entries"
+  label="'Path to group'"
+  suffix="$ctrl.suffix"
   on-change="($ctrl.onEntriesChange)"
-  on-remove-click="($ctrl.removeGroup)"
   limited-feature-id="$ctrl.limitedFeatureId"
 ></ldap-settings-dn-builder>

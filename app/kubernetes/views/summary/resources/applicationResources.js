@@ -1,14 +1,14 @@
 import _ from 'lodash-es';
-import { KubernetesResourceTypes, KubernetesResourceActions } from 'Kubernetes/models/resource-types/models';
-import { KubernetesApplicationFormValues } from 'Kubernetes/models/application/formValues';
-import { KubernetesStatefulSet } from 'Kubernetes/models/stateful-set/models';
-import { KubernetesService, KubernetesServiceTypes } from 'Kubernetes/models/service/models';
-import { KubernetesApplicationDeploymentTypes } from 'Kubernetes/models/application/models/appConstants';
-import { KubernetesHorizontalPodAutoScalerConverter } from 'Kubernetes/horizontal-pod-auto-scaler/converter';
-import KubernetesApplicationConverter from 'Kubernetes/converters/application';
-import KubernetesServiceConverter from 'Kubernetes/converters/service';
-import { KubernetesIngressConverter } from 'Kubernetes/ingress/converter';
-import KubernetesPersistentVolumeClaimConverter from 'Kubernetes/converters/persistentVolumeClaim';
+import { KubernetesResourceTypes, KubernetesResourceActions } from '@/kubernetes/models/resource-types/models';
+import { KubernetesApplicationFormValues } from '@/kubernetes/models/application/formValues';
+import { KubernetesStatefulSet } from '@/kubernetes/models/stateful-set/models';
+import { KubernetesService, KubernetesServiceTypes } from '@/kubernetes/models/service/models';
+import { KubernetesApplicationDeploymentTypes } from '@/kubernetes/models/application/models/appConstants';
+import { KubernetesHorizontalPodAutoScalerConverter } from '@/kubernetes/horizontal-pod-auto-scaler/converter';
+import KubernetesApplicationConverter from '@/kubernetes/converters/application';
+import KubernetesServiceConverter from '@/kubernetes/converters/service';
+import { KubernetesIngressConverter } from '@/kubernetes/ingress/converter';
+import KubernetesPersistentVolumeClaimConverter from '@/kubernetes/converters/persistentVolumeClaim';
 import { generateNewIngressesFromFormPaths } from '@/react/kubernetes/applications/CreateView/application-services/utils';
 
 const { CREATE, UPDATE, DELETE } = KubernetesResourceActions;

@@ -50,12 +50,11 @@ func TestComposeProjectStatus(t *testing.T) {
 	}
 
 	w := NewComposeDeployer()
-	ctx := context.Background()
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			projectName := testCase.TestName
-			err := w.Deploy(ctx, []string{testCase.ComposeFile}, libstack.DeployOptions{
+			err := w.Deploy(t.Context(), []string{testCase.ComposeFile}, libstack.DeployOptions{
 				Options: libstack.Options{
 					ProjectName: projectName,
 				},
@@ -66,7 +65,7 @@ func TestComposeProjectStatus(t *testing.T) {
 
 			time.Sleep(5 * time.Second)
 
-			status, statusMessage, err := waitForStatus(w, ctx, projectName, libstack.StatusRunning)
+			status, statusMessage, err := waitForStatus(w, t.Context(), projectName, libstack.StatusRunning)
 			if err != nil {
 				t.Fatalf("[test: %s] Failed to get compose project status: %v", testCase.TestName, err)
 			}
@@ -79,14 +78,14 @@ func TestComposeProjectStatus(t *testing.T) {
 				t.Fatalf("[test: %s] Expected status message but got empty", testCase.TestName)
 			}
 
-			err = w.Remove(ctx, projectName, nil, libstack.RemoveOptions{})
+			err = w.Remove(t.Context(), projectName, nil, libstack.RemoveOptions{})
 			if err != nil {
 				t.Fatalf("[test: %s] Failed to remove compose project: %v", testCase.TestName, err)
 			}
 
 			time.Sleep(20 * time.Second)
 
-			status, statusMessage, err = waitForStatus(w, ctx, projectName, libstack.StatusRemoved)
+			status, statusMessage, err = waitForStatus(w, t.Context(), projectName, libstack.StatusRemoved)
 			if err != nil {
 				t.Fatalf("[test: %s] Failed to get compose project status: %v", testCase.TestName, err)
 			}

@@ -34,13 +34,7 @@ export const gitFormModule = angular
   )
   .component(
     'gitFormInfoPanel',
-    r2a(InfoPanel, [
-      'additionalFiles',
-      'className',
-      'configFilePath',
-      'type',
-      'url',
-    ])
+    r2a(InfoPanel, ['type', 'currentDeployment', 'nextDeployment'])
   )
   .component(
     'reactGitFormAutoUpdateFieldset',

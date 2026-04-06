@@ -14,9 +14,9 @@ import (
 )
 
 type BaseStackDeployer interface {
-	DeploySwarmStack(stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, pullImage bool) error
-	DeployComposeStack(stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, forcePullImage, forceRecreate bool) error
-	DeployKubernetesStack(stack *portainer.Stack, endpoint *portainer.Endpoint, user *portainer.User) error
+	DeploySwarmStack(ctx context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, pullImage bool) error
+	DeployComposeStack(ctx context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, forcePullImage, forceRecreate bool) error
+	DeployKubernetesStack(ctx context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, user *portainer.User) error
 }
 
 type StackDeployer interface {
@@ -45,23 +45,23 @@ func NewStackDeployer(swarmStackManager portainer.SwarmStackManager, composeStac
 		dataStore:           dataStore,
 	}
 }
-func (d *stackDeployer) DeploySwarmStack(stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, pullImage bool) error {
+func (d *stackDeployer) DeploySwarmStack(ctx context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, pullImage bool) error {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
-	if err := d.swarmStackManager.Login(registries, endpoint); err != nil {
+	if err := d.swarmStackManager.Login(ctx, registries, endpoint); err != nil {
 		log.Warn().Err(err).Msg("unable to login to registries for swarm stack deployment")
 	}
 	defer func() {
-		if err := d.swarmStackManager.Logout(endpoint); err != nil {
+		if err := d.swarmStackManager.Logout(ctx, endpoint); err != nil {
 			log.Warn().Err(err).Msg("unable to logout from registries after swarm stack deployment")
 		}
 	}()
 
-	return d.swarmStackManager.Deploy(stack, prune, pullImage, endpoint)
+	return d.swarmStackManager.Deploy(ctx, stack, prune, pullImage, endpoint)
 }
 
-func (d *stackDeployer) DeployComposeStack(stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, forcePullImage, forceRecreate bool) error {
+func (d *stackDeployer) DeployComposeStack(ctx context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, forcePullImage, forceRecreate bool) error {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
@@ -69,18 +69,19 @@ func (d *stackDeployer) DeployComposeStack(stack *portainer.Stack, endpoint *por
 
 	// --force-recreate doesn't pull updated images
 	if forcePullImage {
-		if err := d.composeStackManager.Pull(context.TODO(), stack, endpoint, options); err != nil {
+		if err := d.composeStackManager.Pull(ctx, stack, endpoint, options); err != nil {
 			return err
 		}
 	}
 
-	return d.composeStackManager.Up(context.TODO(), stack, endpoint, portainer.ComposeUpOptions{
+	return d.composeStackManager.Up(ctx, stack, endpoint, portainer.ComposeUpOptions{
 		ComposeOptions: options,
 		ForceRecreate:  forceRecreate,
+		Prune:          prune,
 	})
 }
 
-func (d *stackDeployer) DeployKubernetesStack(stack *portainer.Stack, endpoint *portainer.Endpoint, user *portainer.User) error {
+func (d *stackDeployer) DeployKubernetesStack(ctx context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, user *portainer.User) error {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
@@ -101,7 +102,7 @@ func (d *stackDeployer) DeployKubernetesStack(stack *portainer.Stack, endpoint *
 		return errors.Wrap(err, "failed to create temp kub deployment files")
 	}
 
-	if err := k8sDeploymentConfig.Deploy(); err != nil {
+	if err := k8sDeploymentConfig.Deploy(ctx); err != nil {
 		return errors.Wrap(err, "failed to deploy kubernetes application")
 	}
 

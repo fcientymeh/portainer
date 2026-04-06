@@ -1,4 +1,4 @@
-import axios, { parseAxiosError } from 'Portainer/services/axios/axios';
+import axios, { parseAxiosError } from '@/react/portainer/services/axios/axios';
 
 export async function getServiceAccounts(environmentId, namespaceId) {
   try {

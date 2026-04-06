@@ -1,6 +1,7 @@
 package deployments
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -65,7 +66,7 @@ func (config *SwarmStackDeploymentConfig) GetUsername() string {
 	return ""
 }
 
-func (config *SwarmStackDeploymentConfig) Deploy() error {
+func (config *SwarmStackDeploymentConfig) Deploy(ctx context.Context) error {
 	if config.FileService == nil || config.StackDeployer == nil {
 		log.Println("[deployment, swarm] file service or stack deployer is not initialised")
 		return errors.New("file service or stack deployer cannot be nil")
@@ -85,10 +86,10 @@ func (config *SwarmStackDeploymentConfig) Deploy() error {
 	}
 
 	if stackutils.IsRelativePathStack(config.stack) {
-		return config.StackDeployer.DeployRemoteSwarmStack(config.stack, config.endpoint, config.registries, config.prune, config.pullImage)
+		return config.StackDeployer.DeployRemoteSwarmStack(ctx, config.stack, config.endpoint, config.registries, config.prune, config.pullImage)
 	}
 
-	return config.StackDeployer.DeploySwarmStack(config.stack, config.endpoint, config.registries, config.prune, config.pullImage)
+	return config.StackDeployer.DeploySwarmStack(ctx, config.stack, config.endpoint, config.registries, config.prune, config.pullImage)
 }
 
 func (config *SwarmStackDeploymentConfig) GetResponse() string {

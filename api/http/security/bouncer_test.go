@@ -48,7 +48,7 @@ func Test_mwAuthenticateFirst(t *testing.T) {
 
 	apiKeyService := apikey.NewAPIKeyService(nil, nil)
 
-	bouncer := NewRequestBouncer(store, jwtService, apiKeyService)
+	bouncer := NewRequestBouncer(t.Context(), store, jwtService, apiKeyService)
 
 	tests := []struct {
 		name                   string
@@ -319,7 +319,7 @@ func Test_apiKeyLookup(t *testing.T) {
 	jwtService, err := jwt.NewService("1h", store)
 	require.NoError(t, err, "Error initiating jwt service")
 	apiKeyService := apikey.NewAPIKeyService(store.APIKeyRepository(), store.User())
-	bouncer := NewRequestBouncer(store, jwtService, apiKeyService)
+	bouncer := NewRequestBouncer(t.Context(), store, jwtService, apiKeyService)
 
 	t.Run("missing x-api-key header fails api-key lookup", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -496,7 +496,7 @@ func TestJWTRevocation(t *testing.T) {
 
 	apiKeyService := apikey.NewAPIKeyService(nil, nil)
 
-	bouncer := NewRequestBouncer(store, jwtService, apiKeyService)
+	bouncer := NewRequestBouncer(t.Context(), store, jwtService, apiKeyService)
 
 	r, err := http.NewRequest(http.MethodGet, "url", nil)
 	require.NoError(t, err)
@@ -539,7 +539,7 @@ func TestJWTRevocation(t *testing.T) {
 }
 
 func TestCSPHeaderDefault(t *testing.T) {
-	b := NewRequestBouncer(nil, nil, nil)
+	b := NewRequestBouncer(t.Context(), nil, nil, nil)
 
 	srv := httptest.NewServer(
 		b.PublicAccess(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})),
@@ -557,7 +557,7 @@ func TestCSPHeaderDefault(t *testing.T) {
 }
 
 func TestCSPHeaderDisabled(t *testing.T) {
-	b := NewRequestBouncer(nil, nil, nil)
+	b := NewRequestBouncer(t.Context(), nil, nil, nil)
 	b.DisableCSP()
 
 	srv := httptest.NewServer(

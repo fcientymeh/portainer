@@ -4,6 +4,7 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/internal/authorization"
+	"github.com/portainer/portainer/api/internal/registryutils"
 	kubecli "github.com/portainer/portainer/api/kubernetes/cli"
 	"github.com/portainer/portainer/api/pendingactions/actions"
 )
@@ -62,9 +63,14 @@ func (h *HandlerDeleteK8sRegistrySecrets) Execute(pa portainer.PendingAction, en
 		return err
 	}
 
+	secretName := registryutils.RegistrySecretName(registryData.RegistryID)
+
 	for _, namespace := range registryData.Namespaces {
-		err = kubeClient.DeleteRegistrySecret(registryData.RegistryID, namespace)
-		if err != nil {
+		if err = kubeClient.RemoveImagePullSecretFromServiceAccount(namespace, "default", secretName); err != nil {
+			return err
+		}
+
+		if err = kubeClient.DeleteRegistrySecret(registryData.RegistryID, namespace); err != nil {
 			return err
 		}
 	}

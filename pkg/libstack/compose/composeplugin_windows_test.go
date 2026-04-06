@@ -1,7 +1,6 @@
 package compose
 
 import (
-	"context"
 	"errors"
 	"os"
 	"testing"
@@ -12,7 +11,6 @@ import (
 )
 
 func Test_createProject_win(t *testing.T) {
-	ctx := context.Background()
 	dir := t.TempDir()
 	projectName := "create-project-test"
 
@@ -95,7 +93,7 @@ func Test_createProject_win(t *testing.T) {
 				}
 			}()
 
-			gotProject, err := createProject(ctx, tc.configFilepaths, tc.options)
+			gotProject, err := createProject(t.Context(), tc.configFilepaths, tc.options)
 			if err != nil {
 				t.Fatalf("Failed to create new project: %v", err)
 			}

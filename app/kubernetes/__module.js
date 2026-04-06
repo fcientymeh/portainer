@@ -1,8 +1,8 @@
 import { EnvironmentStatus } from '@/react/portainer/environments/types';
 
-import { updateAxiosAdapter } from 'Portainer/services/axios/axios';
-import { PortainerEndpointTypes } from 'Portainer/models/endpoint/models';
-import { cache } from 'Portainer/services/axios/axios';
+import { updateAxiosAdapter } from '@/react/portainer/services/axios/axios';
+import { PortainerEndpointTypes } from '@/portainer/models/endpoint/models';
+import { cache } from '@/react/portainer/services/axios/axios';
 import { CACHE_REFRESH_EVENT, CACHE_DURATION } from '../portainer/services/http-request.helper';
 
 import registriesModule from './registries';
@@ -646,6 +646,19 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
       },
     };
 
+    const serviceAccount = {
+      name: 'kubernetes.moreResources.serviceAccounts.serviceAccount',
+      url: '/serviceAccounts/:namespace/:name?tab',
+      views: {
+        'content@': {
+          component: 'serviceAccountView',
+        },
+      },
+      data: {
+        docs: '/user/kubernetes/more-resources/service-accounts',
+      },
+    };
+
     const clusterRoles = {
       name: 'kubernetes.moreResources.clusterRoles',
       url: '/clusterRoles?tab',
@@ -717,6 +730,7 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
     $stateRegistryProvider.register(moreResources);
     $stateRegistryProvider.register(jobs);
     $stateRegistryProvider.register(serviceAccounts);
+    $stateRegistryProvider.register(serviceAccount);
     $stateRegistryProvider.register(clusterRoles);
     $stateRegistryProvider.register(roles);
   },

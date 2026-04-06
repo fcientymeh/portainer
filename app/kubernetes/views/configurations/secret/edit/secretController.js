@@ -1,12 +1,12 @@
 import angular from 'angular';
 import _ from 'lodash-es';
 
-import { KubernetesConfigurationFormValues } from 'Kubernetes/models/configuration/formvalues';
-import { KubernetesConfigurationKinds, KubernetesSecretTypeOptions } from 'Kubernetes/models/configuration/models';
-import KubernetesConfigurationHelper from 'Kubernetes/helpers/configurationHelper';
-import KubernetesConfigurationConverter from 'Kubernetes/converters/configuration';
-import KubernetesEventHelper from 'Kubernetes/helpers/eventHelper';
-import KubernetesNamespaceHelper from 'Kubernetes/helpers/namespaceHelper';
+import { KubernetesConfigurationFormValues } from '@/kubernetes/models/configuration/formvalues';
+import { KubernetesConfigurationKinds, KubernetesSecretTypeOptions } from '@/kubernetes/models/configuration/models';
+import KubernetesConfigurationHelper from '@/kubernetes/helpers/configurationHelper';
+import KubernetesConfigurationConverter from '@/kubernetes/converters/configuration';
+import KubernetesEventHelper from '@/kubernetes/helpers/eventHelper';
+import KubernetesNamespaceHelper from '@/kubernetes/helpers/namespaceHelper';
 
 import { pluralize } from '@/portainer/helpers/strings';
 
@@ -60,8 +60,8 @@ class KubernetesSecretController {
   }
 
   getRegistryId() {
-    const annotation = this.configuration?.Annotations?.find((a) => a.key === 'portainer.io/registry.id');
-    return annotation ? parseInt(annotation.value, 10) || undefined : undefined;
+    const id = this.configuration?.Annotations?.['portainer.io/registry.id'];
+    return id ? parseInt(id, 10) || undefined : undefined;
   }
 
   isSystemConfig() {

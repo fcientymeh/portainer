@@ -1,6 +1,8 @@
 package stackbuilders
 
 import (
+	"context"
+
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/filesystem"
@@ -53,12 +55,12 @@ func (b *ComposeStackFileUploadBuilder) SetUploadedFile(payload *StackPayload) F
 	return b
 }
 
-func (b *ComposeStackFileUploadBuilder) Deploy(payload *StackPayload, endpoint *portainer.Endpoint) FileUploadMethodStackBuildProcess {
+func (b *ComposeStackFileUploadBuilder) Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) FileUploadMethodStackBuildProcess {
 	if b.hasError() {
 		return b
 	}
 
-	composeDeploymentConfig, err := deployments.CreateComposeStackDeploymentConfig(b.SecurityContext, b.stack, endpoint, b.dataStore, b.fileService, b.stackDeployer, false, false)
+	composeDeploymentConfig, err := deployments.CreateComposeStackDeploymentConfig(b.SecurityContext, b.stack, endpoint, b.dataStore, b.fileService, b.stackDeployer, false, false, false)
 	if err != nil {
 		b.err = err
 		return b
@@ -67,5 +69,5 @@ func (b *ComposeStackFileUploadBuilder) Deploy(payload *StackPayload, endpoint *
 	b.deploymentConfiger = composeDeploymentConfig
 	b.stack.CreatedBy = b.deploymentConfiger.GetUsername()
 
-	return b.FileUploadMethodStackBuilder.Deploy(payload, endpoint)
+	return b.FileUploadMethodStackBuilder.Deploy(ctx, payload, endpoint)
 }

@@ -1,7 +1,6 @@
 package exec
 
 import (
-	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -50,9 +49,7 @@ func Test_UpAndDown(t *testing.T) {
 
 	w := NewComposeStackManager(deployer, nil, nil)
 
-	ctx := context.TODO()
-
-	if err := w.Up(ctx, stack, endpoint, portainer.ComposeUpOptions{}); err != nil {
+	if err := w.Up(t.Context(), stack, endpoint, portainer.ComposeUpOptions{}); err != nil {
 		t.Fatalf("Error calling docker-compose up: %s", err)
 	}
 
@@ -60,7 +57,7 @@ func Test_UpAndDown(t *testing.T) {
 		t.Fatal("container should exist")
 	}
 
-	if err := w.Down(ctx, stack, endpoint); err != nil {
+	if err := w.Down(t.Context(), stack, endpoint); err != nil {
 		t.Fatalf("Error calling docker-compose down: %s", err)
 	}
 

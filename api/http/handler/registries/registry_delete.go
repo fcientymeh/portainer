@@ -17,6 +17,30 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// cleanupRegistryFromNamespaces removes the registry imagePullSecret from the
+// default service account and deletes the registry secret in each namespace.
+// It returns the list of namespaces that failed either operation so the caller
+// can schedule a pending action for retry.
+func cleanupRegistryFromNamespaces(cli portainer.KubeClient, registryID portainer.RegistryID, namespaces []string, endpointID portainer.EndpointID) []string {
+	secretName := registryutils.RegistrySecretName(registryID)
+	failed := make([]string, 0)
+
+	for _, ns := range namespaces {
+		if err := cli.RemoveImagePullSecretFromServiceAccount(ns, "default", secretName); err != nil {
+			failed = append(failed, ns)
+			log.Warn().Err(err).Msgf("Unable to remove registry secret from default service account in namespace %q for environment %d. Retrying offline", ns, endpointID)
+			continue
+		}
+
+		if err := cli.DeleteRegistrySecret(registryID, ns); err != nil {
+			failed = append(failed, ns)
+			log.Warn().Err(err).Msgf("Unable to delete registry secret %q from namespace %q for environment %d. Retrying offline", secretName, ns, endpointID)
+		}
+	}
+
+	return failed
+}
+
 // @id RegistryDelete
 // @summary Remove a registry
 // @description Remove a registry
@@ -99,14 +123,7 @@ func (handler *Handler) deleteKubernetesSecrets(tx dataservices.DataStoreTx, reg
 			continue
 		}
 
-		failedNamespaces := make([]string, 0)
-
-		for _, ns := range access.Namespaces {
-			if err := cli.DeleteRegistrySecret(registry.ID, ns); err != nil {
-				failedNamespaces = append(failedNamespaces, ns)
-				log.Warn().Err(err).Msgf("Unable to delete registry secret %q from namespace %q for environment %d. Retrying offline", registryutils.RegistrySecretName(registry.ID), ns, endpointId)
-			}
-		}
+		failedNamespaces := cleanupRegistryFromNamespaces(cli, registry.ID, access.Namespaces, endpointId)
 
 		if len(failedNamespaces) == 0 {
 			continue

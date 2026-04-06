@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/crypto"
@@ -78,41 +79,41 @@ vJUUCFYm8+9p6gTVOcoMit+eGSwa81PCPEs1TnU1PV/PaDFeUhn/mg==
 type noopDeployer struct{}
 
 // without unpacker
-func (s noopDeployer) DeploySwarmStack(stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, pullImage bool) error {
+func (s noopDeployer) DeploySwarmStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, pullImage bool) error {
 	return nil
 }
 
-func (s noopDeployer) DeployComposeStack(stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, forcePullImage, forceRecreate bool) error {
+func (s noopDeployer) DeployComposeStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, forcePullImage, forceRecreate bool) error {
 	return nil
 }
 
-func (s noopDeployer) DeployKubernetesStack(stack *portainer.Stack, endpoint *portainer.Endpoint, user *portainer.User) error {
+func (s noopDeployer) DeployKubernetesStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, user *portainer.User) error {
 	return nil
 }
 
 // with unpacker
-func (s noopDeployer) DeployRemoteComposeStack(stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, forcePullImage, forceRecreate bool) error {
+func (s noopDeployer) DeployRemoteComposeStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, forcePullImage, forceRecreate bool) error {
 	return nil
 }
-func (s noopDeployer) UndeployRemoteComposeStack(stack *portainer.Stack, endpoint *portainer.Endpoint) error {
+func (s noopDeployer) UndeployRemoteComposeStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
 	return nil
 }
-func (s noopDeployer) StartRemoteComposeStack(stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry) error {
+func (s noopDeployer) StartRemoteComposeStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry) error {
 	return nil
 }
-func (s noopDeployer) StopRemoteComposeStack(stack *portainer.Stack, endpoint *portainer.Endpoint) error {
+func (s noopDeployer) StopRemoteComposeStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
 	return nil
 }
-func (s noopDeployer) DeployRemoteSwarmStack(stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, pullImage bool) error {
+func (s noopDeployer) DeployRemoteSwarmStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, pullImage bool) error {
 	return nil
 }
-func (s noopDeployer) UndeployRemoteSwarmStack(stack *portainer.Stack, endpoint *portainer.Endpoint) error {
+func (s noopDeployer) UndeployRemoteSwarmStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
 	return nil
 }
-func (s noopDeployer) StartRemoteSwarmStack(stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry) error {
+func (s noopDeployer) StartRemoteSwarmStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry) error {
 	return nil
 }
-func (s noopDeployer) StopRemoteSwarmStack(stack *portainer.Stack, endpoint *portainer.Endpoint) error {
+func (s noopDeployer) StopRemoteSwarmStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
 	return nil
 }
 
@@ -145,7 +146,10 @@ func agentServer(t *testing.T) string {
 	}()
 
 	t.Cleanup(func() {
-		require.NoError(t, s.Shutdown(context.Background()))
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		require.NoError(t, s.Shutdown(ctx))
 		require.ErrorIs(t, <-errCh, http.ErrServerClosed)
 	})
 
@@ -155,7 +159,7 @@ func agentServer(t *testing.T) string {
 func Test_redeployWhenChanged_FailsWhenCannotFindStack(t *testing.T) {
 	_, store := datastore.MustNewTestStore(t, true, true)
 
-	err := RedeployWhenChanged(1, nil, store, nil)
+	err := RedeployWhenChanged(t.Context(), 1, nil, store, nil)
 	require.Error(t, err)
 	assert.Truef(t, strings.HasPrefix(err.Error(), "failed to get the stack"), "it isn't an error we expected: %v", err.Error())
 }
@@ -170,7 +174,7 @@ func Test_redeployWhenChanged_DoesNothingWhenNotAGitBasedStack(t *testing.T) {
 	err = store.Stack().Create(&portainer.Stack{ID: 1, CreatedBy: "admin"})
 	require.NoError(t, err, "failed to create a test stack")
 
-	err = RedeployWhenChanged(1, nil, store, testhelpers.NewGitService(nil, ""))
+	err = RedeployWhenChanged(t.Context(), 1, nil, store, testhelpers.NewGitService(nil, ""))
 	require.NoError(t, err)
 }
 
@@ -199,7 +203,7 @@ func Test_redeployWhenChanged_DoesNothingWhenNoGitChanges(t *testing.T) {
 		}})
 	require.NoError(t, err, "failed to create a test stack")
 
-	err = RedeployWhenChanged(1, nil, store, testhelpers.NewGitService(nil, "oldHash"))
+	err = RedeployWhenChanged(t.Context(), 1, nil, store, testhelpers.NewGitService(nil, "oldHash"))
 	require.NoError(t, err)
 }
 
@@ -233,7 +237,7 @@ func Test_redeployWhenChanged_FailsWhenCannotClone(t *testing.T) {
 		}})
 	require.NoError(t, err, "failed to create a test stack")
 
-	err = RedeployWhenChanged(1, nil, store, testhelpers.NewGitService(cloneErr, "newHash"))
+	err = RedeployWhenChanged(t.Context(), 1, nil, store, testhelpers.NewGitService(cloneErr, "newHash"))
 	require.Error(t, err)
 	require.ErrorIs(t, err, cloneErr, "should failed to clone but didn't, check test setup")
 }
@@ -270,7 +274,7 @@ func Test_redeployWhenChanged(t *testing.T) {
 		err = store.Stack().Update(stack.ID, &stack)
 		require.NoError(t, err)
 
-		err = RedeployWhenChanged(1, noopDeployer{}, store, testhelpers.NewGitService(nil, "newHash"))
+		err = RedeployWhenChanged(t.Context(), 1, noopDeployer{}, store, testhelpers.NewGitService(nil, "newHash"))
 		require.NoError(t, err)
 	})
 
@@ -279,7 +283,7 @@ func Test_redeployWhenChanged(t *testing.T) {
 		err = store.Stack().Update(stack.ID, &stack)
 		require.NoError(t, err)
 
-		err = RedeployWhenChanged(1, noopDeployer{}, store, testhelpers.NewGitService(nil, "newHash"))
+		err = RedeployWhenChanged(t.Context(), 1, noopDeployer{}, store, testhelpers.NewGitService(nil, "newHash"))
 		require.NoError(t, err)
 	})
 
@@ -288,7 +292,7 @@ func Test_redeployWhenChanged(t *testing.T) {
 		err = store.Stack().Update(stack.ID, &stack)
 		require.NoError(t, err)
 
-		err = RedeployWhenChanged(1, noopDeployer{}, store, testhelpers.NewGitService(nil, "newHash"))
+		err = RedeployWhenChanged(t.Context(), 1, noopDeployer{}, store, testhelpers.NewGitService(nil, "newHash"))
 		require.NoError(t, err)
 	})
 }

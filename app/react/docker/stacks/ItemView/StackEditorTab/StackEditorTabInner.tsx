@@ -7,14 +7,13 @@ import { EnvironmentType } from '@/react/portainer/environments/types';
 import { Authorized, useAuthorizations } from '@/react/hooks/useUser';
 
 import { CodeEditor } from '@@/CodeEditor';
-import { SwitchField } from '@@/form-components/SwitchField';
 import { StackEnvironmentVariablesPanel } from '@@/form-components/EnvironmentVariablesFieldset';
 import { FormActions } from '@@/form-components/FormActions';
-import { FormSection } from '@@/form-components/FormSection';
 import { usePreventExit } from '@@/WebEditorForm';
 import { FormError } from '@@/form-components/FormError';
 
 import { WebhookFieldset } from '../../common/WebhookFieldset';
+import { PruneField } from '../components/PruneField';
 
 import { StackEditorFormValues } from './StackEditorTab.types';
 import { useVersionedStackFile } from './useVersionedStackFile';
@@ -22,7 +21,6 @@ import { useVersionedStackFile } from './useVersionedStackFile';
 interface StackEditorTabInnerProps {
   stackType: StackType | undefined;
   composeSyntaxMaxVersion: number;
-  apiVersion: number;
   envType: EnvironmentType;
   schema: JSONSchema7;
   isOrphaned: boolean;
@@ -36,7 +34,6 @@ interface StackEditorTabInnerProps {
 export function StackEditorTabInner({
   stackType,
   composeSyntaxMaxVersion,
-  apiVersion,
   envType,
   schema,
   isOrphaned,
@@ -143,27 +140,13 @@ export function StackEditorTabInner({
         />
       )}
 
-      {(stackType === StackType.DockerSwarm ||
-        stackType === StackType.DockerCompose) &&
-        apiVersion >= 1.27 && (
-          <Authorized authorizations="PortainerStackUpdate">
-            <FormSection title="Options">
-              <div className="form-group">
-                <div className="col-sm-12">
-                  <SwitchField
-                    name="prune"
-                    checked={values.prune}
-                    onChange={(checked) => setFieldValue('prune', checked)}
-                    tooltip="Prune services that are no longer referenced."
-                    labelClass="col-sm-2"
-                    label="Prune services"
-                    data-cy="stack-prune-switch"
-                  />
-                </div>
-              </div>
-            </FormSection>
-          </Authorized>
-        )}
+      <Authorized authorizations="PortainerStackUpdate">
+        <PruneField
+          stackType={stackType}
+          checked={values.prune}
+          onChange={(checked) => setFieldValue('prune', checked)}
+        />
+      </Authorized>
 
       <Authorized authorizations="PortainerStackUpdate">
         <FormActions

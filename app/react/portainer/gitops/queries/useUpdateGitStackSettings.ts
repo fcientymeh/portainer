@@ -1,11 +1,35 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { GitStackPayload } from '@/react/common/stacks/types';
+import axios, { parseAxiosError } from '@/react/portainer/services/axios/axios';
 import { buildStackUrl } from '@/react/common/stacks/queries/buildUrl';
 import { queryKeys } from '@/react/common/stacks/queries/query-keys';
 
-async function updateGitStackSettings(
+import { EnvVar } from '@@/form-components/EnvironmentVariablesFieldset/types';
+
+import { AutoUpdateResponse } from '../types';
+import { AuthTypeOption } from '../../account/git-credentials/types';
+
+export interface GitStackPayload {
+  env: Array<EnvVar>;
+  prune?: boolean;
+  RepositoryURL?: string;
+  ConfigFilePath?: string;
+  RepositoryReferenceName?: string;
+  RepositoryAuthentication?: boolean;
+  RepositoryGitCredentialID?: number;
+  RepositoryUsername?: string;
+  RepositoryPassword?: string;
+  RepositoryAuthorizationType?: AuthTypeOption;
+  AutoUpdate?: AutoUpdateResponse | null;
+  TLSSkipVerify?: boolean;
+  Registries?: number[];
+  AdditionalFiles?: string[];
+  HelmChartPath?: string;
+  HelmValuesFiles?: string[];
+  Atomic?: boolean;
+}
+
+export async function updateGitStackSettings(
   stackId: number,
   endpointId: number,
   payload: GitStackPayload

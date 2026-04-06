@@ -16,7 +16,9 @@ import (
 	"github.com/portainer/portainer/api/logs"
 	"github.com/rs/zerolog/log"
 
+	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
+	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/pkg/errors"
 	"github.com/segmentio/encoding/json"
 )
@@ -26,7 +28,7 @@ const (
 	visualStudioHostSuffix = ".visualstudio.com"
 )
 
-func isAzureUrl(s string) bool {
+func IsAzureUrl(s string) bool {
 	return strings.Contains(s, azureDevOpsHost) ||
 		strings.Contains(s, visualStudioHostSuffix)
 }
@@ -73,7 +75,11 @@ func newHttpClientForAzure(insecureSkipVerify bool) *http.Client {
 	return httpsCli
 }
 
-func (a *azureClient) download(ctx context.Context, destination string, opt cloneOption) error {
+func (a *azureClient) Download(ctx context.Context, destination string, opt *git.CloneOptions) error {
+	if opt == nil {
+		return errors.New("options cannot be nil")
+	}
+
 	zipFilepath, err := a.downloadZipFromAzureDevOps(ctx, opt)
 	if err != nil {
 		return errors.Wrap(err, "failed to download a zip file from Azure DevOps")
@@ -91,13 +97,13 @@ func (a *azureClient) download(ctx context.Context, destination string, opt clon
 	return nil
 }
 
-func (a *azureClient) downloadZipFromAzureDevOps(ctx context.Context, opt cloneOption) (string, error) {
-	config, err := parseUrl(opt.repositoryUrl)
+func (a *azureClient) downloadZipFromAzureDevOps(ctx context.Context, opt *git.CloneOptions) (string, error) {
+	config, err := parseUrl(opt.URL)
 	if err != nil {
 		return "", errors.WithMessage(err, "failed to parse url")
 	}
 
-	downloadUrl, err := a.buildDownloadUrl(config, opt.referenceName)
+	downloadUrl, err := a.buildDownloadUrl(config, string(opt.ReferenceName))
 	if err != nil {
 		return "", errors.WithMessage(err, "failed to build download url")
 	}
@@ -109,9 +115,18 @@ func (a *azureClient) downloadZipFromAzureDevOps(ctx context.Context, opt cloneO
 
 	defer logs.CloseAndLogErr(zipFile)
 
+	var basicAuth *githttp.BasicAuth
+	if opt.Auth != nil {
+		var ok bool
+		basicAuth, ok = opt.Auth.(*githttp.BasicAuth)
+		if !ok {
+			return "", errors.New("only basic auth is supported for azure")
+		}
+	}
+
 	req, err := http.NewRequestWithContext(ctx, "GET", downloadUrl, nil)
-	if opt.username != "" || opt.password != "" {
-		req.SetBasicAuth(opt.username, opt.password)
+	if basicAuth != nil {
+		req.SetBasicAuth(basicAuth.Username, basicAuth.Password)
 	} else if config.username != "" || config.password != "" {
 		req.SetBasicAuth(config.username, config.password)
 	}
@@ -120,7 +135,7 @@ func (a *azureClient) downloadZipFromAzureDevOps(ctx context.Context, opt cloneO
 		return "", errors.WithMessage(err, "failed to create a new HTTP request")
 	}
 
-	client := newHttpClientForAzure(opt.tlsSkipVerify)
+	client := newHttpClientForAzure(opt.InsecureSkipTLS)
 	defer client.CloseIdleConnections()
 
 	res, err := client.Do(req)
@@ -145,8 +160,12 @@ func (a *azureClient) downloadZipFromAzureDevOps(ctx context.Context, opt cloneO
 	return zipFile.Name(), nil
 }
 
-func (a *azureClient) latestCommitID(ctx context.Context, opt fetchOption) (string, error) {
-	rootItem, err := a.getRootItem(ctx, opt)
+func (a *azureClient) LatestCommitID(ctx context.Context, repositoryUrl, referenceName string, opt *git.ListOptions) (string, error) {
+	if opt == nil {
+		return "", errors.New("options cannot be nil")
+	}
+
+	rootItem, err := a.getRootItem(ctx, repositoryUrl, referenceName, opt)
 	if err != nil {
 		return "", err
 	}
@@ -154,20 +173,29 @@ func (a *azureClient) latestCommitID(ctx context.Context, opt fetchOption) (stri
 	return rootItem.CommitId, nil
 }
 
-func (a *azureClient) getRootItem(ctx context.Context, opt fetchOption) (*azureItem, error) {
-	config, err := parseUrl(opt.repositoryUrl)
+func (a *azureClient) getRootItem(ctx context.Context, repositoryUrl, referenceName string, opt *git.ListOptions) (*azureItem, error) {
+	config, err := parseUrl(repositoryUrl)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to parse url")
 	}
 
-	rootItemUrl, err := a.buildRootItemUrl(config, opt.referenceName)
+	rootItemUrl, err := a.buildRootItemUrl(config, referenceName)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to build azure root item url")
 	}
 
+	var basicAuth *githttp.BasicAuth
+	if opt.Auth != nil {
+		var ok bool
+		basicAuth, ok = opt.Auth.(*githttp.BasicAuth)
+		if !ok {
+			return nil, errors.New("only basic auth is supported for azure")
+		}
+	}
+
 	req, err := http.NewRequestWithContext(ctx, "GET", rootItemUrl, nil)
-	if opt.username != "" || opt.password != "" {
-		req.SetBasicAuth(opt.username, opt.password)
+	if basicAuth != nil {
+		req.SetBasicAuth(basicAuth.Username, basicAuth.Password)
 	} else if config.username != "" || config.password != "" {
 		req.SetBasicAuth(config.username, config.password)
 	}
@@ -176,7 +204,7 @@ func (a *azureClient) getRootItem(ctx context.Context, opt fetchOption) (*azureI
 		return nil, errors.WithMessage(err, "failed to create a new HTTP request")
 	}
 
-	client := newHttpClientForAzure(opt.tlsSkipVerify)
+	client := newHttpClientForAzure(opt.InsecureSkipTLS)
 	defer client.CloseIdleConnections()
 
 	resp, err := client.Do(req)
@@ -239,8 +267,10 @@ func parseSshUrl(rawUrl string) (*azureOptions, error) {
 	}, nil
 }
 
-const expectedAzureDevOpsHttpUrl = "https://Organisation@dev.azure.com/Organisation/Project/_git/Repository"
-const expectedVisualStudioHttpUrl = "https://organisation.visualstudio.com/project/_git/repository"
+const (
+	expectedAzureDevOpsHttpUrl  = "https://Organisation@dev.azure.com/Organisation/Project/_git/Repository"
+	expectedVisualStudioHttpUrl = "https://organisation.visualstudio.com/project/_git/repository"
+)
 
 func parseHttpUrl(rawUrl string) (*azureOptions, error) {
 	u, err := url.Parse(rawUrl)
@@ -283,7 +313,6 @@ func (a *azureClient) buildDownloadUrl(config *azureOptions, referenceName strin
 		url.PathEscape(config.project),
 		url.PathEscape(config.repository))
 	u, err := url.Parse(rawUrl)
-
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to parse download url path %s", rawUrl)
 	}
@@ -310,7 +339,6 @@ func (a *azureClient) buildRootItemUrl(config *azureOptions, referenceName strin
 		url.PathEscape(config.project),
 		url.PathEscape(config.repository))
 	u, err := url.Parse(rawUrl)
-
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to parse root item url path %s", rawUrl)
 	}
@@ -335,7 +363,6 @@ func (a *azureClient) buildRefsUrl(config *azureOptions) (string, error) {
 		url.PathEscape(config.project),
 		url.PathEscape(config.repository))
 	u, err := url.Parse(rawUrl)
-
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to parse list refs url path %s", rawUrl)
 	}
@@ -357,7 +384,6 @@ func (a *azureClient) buildTreeUrl(config *azureOptions, rootObjectHash string) 
 		url.PathEscape(rootObjectHash),
 	)
 	u, err := url.Parse(rawUrl)
-
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to parse list tree url path %s", rawUrl)
 	}
@@ -400,8 +426,12 @@ func getVersionType(name string) string {
 	return "commit"
 }
 
-func (a *azureClient) listRefs(ctx context.Context, opt baseOption) ([]string, error) {
-	config, err := parseUrl(opt.repositoryUrl)
+func (a *azureClient) ListRefs(ctx context.Context, repositoryUrl string, opt *git.ListOptions) ([]string, error) {
+	if opt == nil {
+		return nil, errors.New("options cannot be nil")
+	}
+
+	config, err := parseUrl(repositoryUrl)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to parse url")
 	}
@@ -411,9 +441,18 @@ func (a *azureClient) listRefs(ctx context.Context, opt baseOption) ([]string, e
 		return nil, errors.WithMessage(err, "failed to build list refs url")
 	}
 
+	var basicAuth *githttp.BasicAuth
+	if opt.Auth != nil {
+		var ok bool
+		basicAuth, ok = opt.Auth.(*githttp.BasicAuth)
+		if !ok {
+			return nil, errors.New("only basic auth is supported for azure")
+		}
+	}
+
 	req, err := http.NewRequestWithContext(ctx, "GET", listRefsUrl, nil)
-	if opt.username != "" || opt.password != "" {
-		req.SetBasicAuth(opt.username, opt.password)
+	if basicAuth != nil {
+		req.SetBasicAuth(basicAuth.Username, basicAuth.Password)
 	} else if config.username != "" || config.password != "" {
 		req.SetBasicAuth(config.username, config.password)
 	}
@@ -422,7 +461,7 @@ func (a *azureClient) listRefs(ctx context.Context, opt baseOption) ([]string, e
 		return nil, errors.WithMessage(err, "failed to create a new HTTP request")
 	}
 
-	client := newHttpClientForAzure(opt.tlsSkipVerify)
+	client := newHttpClientForAzure(opt.InsecureSkipTLS)
 	defer client.CloseIdleConnections()
 
 	resp, err := client.Do(req)
@@ -459,13 +498,21 @@ func (a *azureClient) listRefs(ctx context.Context, opt baseOption) ([]string, e
 }
 
 // listFiles list all filenames under the specific repository
-func (a *azureClient) listFiles(ctx context.Context, opt fetchOption) ([]string, error) {
-	rootItem, err := a.getRootItem(ctx, opt)
+func (a *azureClient) ListFiles(ctx context.Context, dirOnly bool, opt *git.CloneOptions) ([]string, error) {
+	if opt == nil {
+		return nil, errors.New("options cannot be nil")
+	}
+
+	listOptions := &git.ListOptions{
+		Auth:            opt.Auth,
+		InsecureSkipTLS: opt.InsecureSkipTLS,
+	}
+	rootItem, err := a.getRootItem(ctx, opt.URL, string(opt.ReferenceName), listOptions)
 	if err != nil {
 		return nil, err
 	}
 
-	config, err := parseUrl(opt.repositoryUrl)
+	config, err := parseUrl(opt.URL)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to parse url")
 	}
@@ -475,9 +522,18 @@ func (a *azureClient) listFiles(ctx context.Context, opt fetchOption) ([]string,
 		return nil, errors.WithMessage(err, "failed to build list tree url")
 	}
 
+	var basicAuth *githttp.BasicAuth
+	if opt.Auth != nil {
+		var ok bool
+		basicAuth, ok = opt.Auth.(*githttp.BasicAuth)
+		if !ok {
+			return nil, errors.New("only basic auth is supported for azure")
+		}
+	}
+
 	req, err := http.NewRequestWithContext(ctx, "GET", listTreeUrl, nil)
-	if opt.username != "" || opt.password != "" {
-		req.SetBasicAuth(opt.username, opt.password)
+	if basicAuth != nil {
+		req.SetBasicAuth(basicAuth.Username, basicAuth.Password)
 	} else if config.username != "" || config.password != "" {
 		req.SetBasicAuth(config.username, config.password)
 	}
@@ -486,7 +542,7 @@ func (a *azureClient) listFiles(ctx context.Context, opt fetchOption) ([]string,
 		return nil, errors.WithMessage(err, "failed to create a new HTTP request")
 	}
 
-	client := newHttpClientForAzure(opt.tlsSkipVerify)
+	client := newHttpClientForAzure(opt.InsecureSkipTLS)
 	defer client.CloseIdleConnections()
 
 	resp, err := client.Do(req)
@@ -518,7 +574,7 @@ func (a *azureClient) listFiles(ctx context.Context, opt fetchOption) ([]string,
 	for _, treeEntry := range tree.TreeEntries {
 		mode, _ := filemode.New(treeEntry.Mode)
 		isDir := filemode.Dir == mode
-		if opt.dirOnly == isDir {
+		if dirOnly == isDir {
 			allPaths = append(allPaths, treeEntry.RelativePath)
 		}
 	}

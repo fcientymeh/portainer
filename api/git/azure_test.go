@@ -7,6 +7,9 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
 	gittypes "github.com/portainer/portainer/api/git/types"
 	"github.com/portainer/portainer/pkg/fips"
 
@@ -234,7 +237,7 @@ func Test_isAzureUrl(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, isAzureUrl(tt.args.s))
+			assert.Equal(t, tt.want, IsAzureUrl(tt.args.s))
 		})
 	}
 }
@@ -243,7 +246,9 @@ func Test_azureDownloader_downloadZipFromAzureDevOps(t *testing.T) {
 	fips.InitFIPS(false)
 
 	type args struct {
-		options baseOption
+		repositoryUrl string
+		username      string
+		password      string
 	}
 	type basicAuth struct {
 		username, password string
@@ -256,9 +261,7 @@ func Test_azureDownloader_downloadZipFromAzureDevOps(t *testing.T) {
 		{
 			name: "username, password embedded",
 			args: args{
-				options: baseOption{
-					repositoryUrl: "https://username:password@dev.azure.com/Organisation/Project/_git/Repository",
-				},
+				repositoryUrl: "https://username:password@dev.azure.com/Organisation/Project/_git/Repository",
 			},
 			want: &basicAuth{
 				username: "username",
@@ -268,11 +271,9 @@ func Test_azureDownloader_downloadZipFromAzureDevOps(t *testing.T) {
 		{
 			name: "username, password embedded, clone options take precedence",
 			args: args{
-				options: baseOption{
-					repositoryUrl: "https://username:password@dev.azure.com/Organisation/Project/_git/Repository",
-					username:      "u",
-					password:      "p",
-				},
+				repositoryUrl: "https://username:password@dev.azure.com/Organisation/Project/_git/Repository",
+				username:      "u",
+				password:      "p",
 			},
 			want: &basicAuth{
 				username: "u",
@@ -282,9 +283,7 @@ func Test_azureDownloader_downloadZipFromAzureDevOps(t *testing.T) {
 		{
 			name: "no credentials",
 			args: args{
-				options: baseOption{
-					repositoryUrl: "https://dev.azure.com/Organisation/Project/_git/Repository",
-				},
+				repositoryUrl: "https://dev.azure.com/Organisation/Project/_git/Repository",
 			},
 		},
 	}
@@ -303,12 +302,16 @@ func Test_azureDownloader_downloadZipFromAzureDevOps(t *testing.T) {
 				baseUrl: server.URL,
 			}
 
-			option := cloneOption{
-				fetchOption: fetchOption{
-					baseOption: tt.args.options,
-				},
+			option := &git.CloneOptions{
+				URL: tt.args.repositoryUrl,
 			}
-			_, err := a.downloadZipFromAzureDevOps(context.Background(), option)
+			if tt.args.username != "" || tt.args.password != "" {
+				option.Auth = &githttp.BasicAuth{
+					Username: tt.args.username,
+					Password: tt.args.password,
+				}
+			}
+			_, err := a.downloadZipFromAzureDevOps(t.Context(), option)
 			require.Error(t, err)
 			assert.Equal(t, tt.want, zipRequestAuth)
 		})
@@ -340,18 +343,21 @@ func Test_azureDownloader_latestCommitID(t *testing.T) {
 
 	a := &azureClient{baseUrl: server.URL}
 
+	type args struct {
+		repositoryUrl string
+		referenceName string
+	}
+
 	tests := []struct {
 		name    string
-		args    fetchOption
+		args    args
 		want    string
 		wantErr bool
 	}{
 		{
 			name: "should be able to parse response",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: "https://dev.azure.com/Organisation/Project/_git/Repository",
-				},
+			args: args{
+				repositoryUrl: "https://dev.azure.com/Organisation/Project/_git/Repository",
 				referenceName: "",
 			},
 			want:    "27104ad7549d9e66685e115a497533f18024be9c",
@@ -361,7 +367,7 @@ func Test_azureDownloader_latestCommitID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			id, err := a.latestCommitID(context.Background(), tt.args)
+			id, err := a.LatestCommitID(t.Context(), tt.args.repositoryUrl, tt.args.referenceName, &git.ListOptions{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("azureDownloader.latestCommitID() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -375,22 +381,23 @@ type testRepoManager struct {
 	called bool
 }
 
-func (t *testRepoManager) download(_ context.Context, _ string, _ cloneOption) error {
+func (t *testRepoManager) Download(_ context.Context, _ string, _ *git.CloneOptions) error {
 	t.called = true
 	return nil
 }
 
-func (t *testRepoManager) latestCommitID(_ context.Context, _ fetchOption) (string, error) {
+func (t *testRepoManager) LatestCommitID(_ context.Context, _, _ string, _ *git.ListOptions) (string, error) {
 	return "", nil
 }
 
-func (t *testRepoManager) listRefs(_ context.Context, _ baseOption) ([]string, error) {
+func (t *testRepoManager) ListRefs(_ context.Context, _ string, _ *git.ListOptions) ([]string, error) {
 	return nil, nil
 }
 
-func (t *testRepoManager) listFiles(_ context.Context, _ fetchOption) ([]string, error) {
+func (t *testRepoManager) ListFiles(_ context.Context, _ bool, _ *git.CloneOptions) ([]string, error) {
 	return nil, nil
 }
+
 func Test_cloneRepository_azure(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -420,15 +427,7 @@ func Test_cloneRepository_azure(t *testing.T) {
 			git := &testRepoManager{}
 
 			s := &Service{azure: azure, git: git}
-			err := s.cloneRepository("", cloneOption{
-				fetchOption: fetchOption{
-					baseOption: baseOption{
-
-						repositoryUrl: tt.url,
-					},
-				},
-				depth: 1,
-			})
+			err := s.CloneRepository(t.Context(), "", tt.url, "", "", "", false)
 			require.NoError(t, err)
 
 			// if azure API is called, git isn't and vice versa
@@ -443,6 +442,12 @@ func Test_listRefs_azure(t *testing.T) {
 
 	client := NewAzureClient()
 
+	type args struct {
+		repositoryUrl string
+		username      string
+		password      string
+	}
+
 	type expectResult struct {
 		err       error
 		refsCount int
@@ -453,12 +458,12 @@ func Test_listRefs_azure(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		args   baseOption
+		args   args
 		expect expectResult
 	}{
 		{
 			name: "list refs of a real repository",
-			args: baseOption{
+			args: args{
 				repositoryUrl: privateAzureRepoURL,
 				username:      username,
 				password:      accessToken,
@@ -470,7 +475,7 @@ func Test_listRefs_azure(t *testing.T) {
 		},
 		{
 			name: "list refs of a real repository with incorrect credential",
-			args: baseOption{
+			args: args{
 				repositoryUrl: privateAzureRepoURL,
 				username:      "test-username",
 				password:      "test-token",
@@ -481,7 +486,7 @@ func Test_listRefs_azure(t *testing.T) {
 		},
 		{
 			name: "list refs of a real repository without providing credential",
-			args: baseOption{
+			args: args{
 				repositoryUrl: privateAzureRepoURL,
 				username:      "",
 				password:      "",
@@ -492,7 +497,7 @@ func Test_listRefs_azure(t *testing.T) {
 		},
 		{
 			name: "list refs of a fake repository",
-			args: baseOption{
+			args: args{
 				repositoryUrl: privateAzureRepoURL + "fake",
 				username:      username,
 				password:      accessToken,
@@ -505,7 +510,14 @@ func Test_listRefs_azure(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			refs, err := client.listRefs(context.TODO(), tt.args)
+			option := &git.ListOptions{}
+			if tt.args.username != "" || tt.args.password != "" {
+				option.Auth = &githttp.BasicAuth{
+					Username: tt.args.username,
+					Password: tt.args.password,
+				}
+			}
+			refs, err := client.ListRefs(t.Context(), tt.args.repositoryUrl, option)
 			if tt.expect.err == nil {
 				require.NoError(t, err)
 				if tt.expect.refsCount > 0 {
@@ -517,13 +529,19 @@ func Test_listRefs_azure(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func Test_listFiles_azure(t *testing.T) {
 	ensureIntegrationTest(t)
 
 	client := NewAzureClient()
+
+	type args struct {
+		repositoryUrl string
+		referenceName string
+		username      string
+		password      string
+	}
 
 	type expectResult struct {
 		shouldFail   bool
@@ -535,18 +553,16 @@ func Test_listFiles_azure(t *testing.T) {
 	username := getRequiredValue(t, "AZURE_DEVOPS_USERNAME")
 	tests := []struct {
 		name   string
-		args   fetchOption
+		args   args
 		expect expectResult
 	}{
 		{
 			name: "list tree with real repository and head ref but incorrect credential",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateAzureRepoURL,
-					username:      "test-username",
-					password:      "test-token",
-				},
+			args: args{
+				repositoryUrl: privateAzureRepoURL,
 				referenceName: "refs/heads/main",
+				username:      "test-username",
+				password:      "test-token",
 			},
 			expect: expectResult{
 				shouldFail: true,
@@ -555,13 +571,11 @@ func Test_listFiles_azure(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository and head ref but no credential",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateAzureRepoURL,
-					username:      "",
-					password:      "",
-				},
+			args: args{
+				repositoryUrl: privateAzureRepoURL,
 				referenceName: "refs/heads/main",
+				username:      "",
+				password:      "",
 			},
 			expect: expectResult{
 				shouldFail: true,
@@ -570,13 +584,11 @@ func Test_listFiles_azure(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository and head ref",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateAzureRepoURL,
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateAzureRepoURL,
 				referenceName: "refs/heads/main",
+				username:      username,
+				password:      accessToken,
 			},
 			expect: expectResult{
 				err:          nil,
@@ -585,13 +597,11 @@ func Test_listFiles_azure(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository but non-existing ref",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateAzureRepoURL,
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateAzureRepoURL,
 				referenceName: "refs/fake/feature",
+				username:      username,
+				password:      accessToken,
 			},
 			expect: expectResult{
 				shouldFail: true,
@@ -599,13 +609,11 @@ func Test_listFiles_azure(t *testing.T) {
 		},
 		{
 			name: "list tree with fake repository ",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateAzureRepoURL + "fake",
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateAzureRepoURL + "fake",
 				referenceName: "refs/fake/feature",
+				username:      username,
+				password:      accessToken,
 			},
 			expect: expectResult{
 				shouldFail: true,
@@ -616,7 +624,17 @@ func Test_listFiles_azure(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths, err := client.listFiles(context.TODO(), tt.args)
+			option := &git.CloneOptions{
+				URL:           tt.args.repositoryUrl,
+				ReferenceName: plumbing.ReferenceName(tt.args.referenceName),
+			}
+			if tt.args.username != "" || tt.args.password != "" {
+				option.Auth = &githttp.BasicAuth{
+					Username: tt.args.username,
+					Password: tt.args.password,
+				}
+			}
+			paths, err := client.ListFiles(t.Context(), false, option)
 			if tt.expect.shouldFail {
 				require.Error(t, err)
 				if tt.expect.err != nil {

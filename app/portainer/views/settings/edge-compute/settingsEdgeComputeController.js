@@ -1,7 +1,7 @@
 import _ from 'lodash-es';
 import angular from 'angular';
 
-import { configureAMT } from 'Portainer/hostmanagement/open-amt/open-amt.service';
+import { configureAMT } from '@/portainer/hostmanagement/open-amt/open-amt.service';
 
 angular.module('portainer.app').controller('SettingsEdgeComputeController', SettingsEdgeComputeController);
 

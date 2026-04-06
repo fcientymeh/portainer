@@ -112,6 +112,13 @@ docs-validate: docs-build ## Validate docs
 	pnpm swagger2openapi --warnOnly dist/docs/swagger.yaml -o dist/docs/openapi.yaml
 	pnpm swagger-cli validate dist/docs/openapi.yaml
 
+.PHONY: docs-serve
+docs-serve: docs-build ## Serve docs locally with Swagger UI on port 8080
+	docker run -p 8080:8080 \
+		-e SWAGGER_JSON=/foo/swagger.yaml \
+		-v $(PWD)/dist/docs:/foo \
+		swaggerapi/swagger-ui
+
 ##@ Helpers
 .PHONY: help
 help:  ## Display this help

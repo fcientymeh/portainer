@@ -1,8 +1,8 @@
 import angular from 'angular';
 import _ from 'lodash-es';
-import PortainerError from 'Portainer/error';
-import KubernetesConfigMapConverter from 'Kubernetes/converters/configMap';
-import { KubernetesCommonParams } from 'Kubernetes/models/common/params';
+import PortainerError from '@/portainer/error';
+import KubernetesConfigMapConverter from '@/kubernetes/converters/configMap';
+import { KubernetesCommonParams } from '@/kubernetes/models/common/params';
 
 class KubernetesConfigMapService {
   /* @ngInject */

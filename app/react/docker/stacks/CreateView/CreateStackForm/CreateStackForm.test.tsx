@@ -14,6 +14,13 @@ vi.mock('@/react/hooks/useEnvironmentId', () => ({
   useEnvironmentId: () => 1,
 }));
 
+vi.mock('@/react/hooks/useDebounce', () => ({
+  useDebounce: (value: unknown, onChange: (value: unknown) => void) => [
+    value,
+    onChange,
+  ],
+}));
+
 vi.mock('@/portainer/services/notifications', () => ({
   notifyError: vi.fn(),
   notifySuccess: vi.fn(),
@@ -31,14 +38,17 @@ function renderComponent({
 }
 
 describe('CreateStackForm', () => {
-  it.skip('should not display any visible error messages on initial load', async () => {
-    renderComponent();
+  it.todo(
+    'should not display any visible error messages on initial load',
+    async () => {
+      renderComponent();
 
-    const errors = await screen.findByRole('alert');
+      const errors = await screen.findByRole('alert');
 
-    // Check that no error messages (role="alert") are visible
-    expect(errors).not.toBeInTheDocument();
-  });
+      // Check that no error messages (role="alert") are visible
+      expect(errors).not.toBeInTheDocument();
+    }
+  );
 
   it('should render with default method (editor)', async () => {
     renderComponent();
@@ -170,61 +180,64 @@ describe('CreateStackForm', () => {
   });
 
   // TODO: update to happydom fixes the issues, but fails other tests
-  it.skip('some issue with file upload prevents this from working: should submit upload form with file', async () => {
-    let requestPayload: FormData | undefined;
-    server.use(
-      http.post('/api/stacks/create/standalone/file', async ({ request }) => {
-        requestPayload = (await request.formData()) as FormData;
-        return HttpResponse.json({
-          Id: 123,
-          Name: 'test-stack',
-          ResourceControl: { Id: 1 },
-        });
-      }),
-      http.put('/api/resource_controls/:id', () =>
-        HttpResponse.json({ success: true })
-      )
-    );
+  it.todo(
+    'some issue with file upload prevents this from working: should submit upload form with file',
+    async () => {
+      let requestPayload: FormData | undefined;
+      server.use(
+        http.post('/api/stacks/create/standalone/file', async ({ request }) => {
+          requestPayload = (await request.formData()) as FormData;
+          return HttpResponse.json({
+            Id: 123,
+            Name: 'test-stack',
+            ResourceControl: { Id: 1 },
+          });
+        }),
+        http.put('/api/resource_controls/:id', () =>
+          HttpResponse.json({ success: true })
+        )
+      );
 
-    const user = userEvent.setup();
-    renderComponent();
+      const user = userEvent.setup();
+      renderComponent();
 
-    await user.click(await screen.findByRole('radio', { name: /upload/i }));
+      await user.click(await screen.findByRole('radio', { name: /upload/i }));
 
-    // Fill in name
-    const nameInput = screen.getByRole('textbox', { name: /name/i });
-    await user.clear(nameInput);
-    await user.type(nameInput, 'test-stack');
+      // Fill in name
+      const nameInput = screen.getByRole('textbox', { name: /name/i });
+      await user.clear(nameInput);
+      await user.type(nameInput, 'test-stack');
 
-    // Upload file
-    const file = new File(
-      ['version: "3"\nservices:\n  web:\n    image: nginx'],
-      'docker-compose.yml',
-      {
-        type: 'application/x-yaml',
-      }
-    );
-    const fileInput = screen.getByTestId('stack-creation-file-upload-input');
-    await user.upload(fileInput, file);
+      // Upload file
+      const file = new File(
+        ['version: "3"\nservices:\n  web:\n    image: nginx'],
+        'docker-compose.yml',
+        {
+          type: 'application/x-yaml',
+        }
+      );
+      const fileInput = screen.getByTestId('stack-creation-file-upload-input');
+      await user.upload(fileInput, file);
 
-    await waitFor(() => {
-      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      });
 
-    const submitButton = screen.getByRole('button', {
-      name: /deploy the stack/i,
-    });
+      const submitButton = screen.getByRole('button', {
+        name: /deploy the stack/i,
+      });
 
-    expect(submitButton).toBeEnabled();
+      expect(submitButton).toBeEnabled();
 
-    await user.click(submitButton);
+      await user.click(submitButton);
 
-    await waitFor(() => {
-      expect(requestPayload).toBeDefined();
-      expect(requestPayload?.get('Name')).toBe('test-stack');
-      expect(requestPayload?.get('file')).toBeInstanceOf(File);
-    });
-  });
+      await waitFor(() => {
+        expect(requestPayload).toBeDefined();
+        expect(requestPayload?.get('Name')).toBe('test-stack');
+        expect(requestPayload?.get('file')).toBeInstanceOf(File);
+      });
+    }
+  );
 
   it('should submit git form successfully', async () => {
     let requestBody: unknown;
@@ -256,23 +269,24 @@ describe('CreateStackForm', () => {
     await user.click(await screen.findByRole('radio', { name: /repository/i }));
 
     // Fill in form
+    // using paste to reduce test validation time and test time
     const nameInput = screen.getByRole('textbox', { name: /name/i });
     await user.clear(nameInput);
-    await user.type(nameInput, 'test-stack');
+    await user.paste('test-stack');
 
     const urlField = await screen.findByRole('textbox', {
       name: /repository url/i,
     });
     await user.clear(urlField);
-    await user.type(urlField, 'https://github.com/test/repo');
+    await user.paste('https://github.com/test/repo');
 
     const refsField = screen.getByLabelText(/reference/i);
     await user.clear(refsField);
-    await user.type(refsField, 'refs/heads/main');
+    await user.paste('refs/heads/main');
 
     const configFileField = screen.getByLabelText(/compose path/i);
     await user.clear(configFileField);
-    await user.type(configFileField, 'docker-compose.yml');
+    await user.paste('docker-compose.yml');
 
     await waitFor(() => {
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();

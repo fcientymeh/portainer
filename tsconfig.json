@@ -27,19 +27,42 @@
     "removeComments": true,
     "resolveJsonModule": true,
     // "sourceMap": true,
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "paths": {
       // paths relative to the baseUrl
-      "@@/*": ["react/components/*"],
-      "@/*": ["./*", "../app/*"],
+      "@@/*": [
+        "react/components/*"
+      ],
+      "@/*": [
+        "./*",
+        "../app/*"
+      ],
       // https://github.com/jsonnext/codemirror-json-schema/issues/107#issuecomment-2144584296
-      "yaml-schema": ["../node_modules/codemirror-json-schema/dist/yaml"],
-      "Docker/*": ["docker/*"],
-      "Kubernetes/*": ["kubernetes/*"],
-      "Portainer/*": ["portainer/*"]
+      "yaml-schema": [
+        "../node_modules/codemirror-json-schema/dist/yaml"
+      ],
     },
-    "types": ["vitest/globals", "@testing-library/jest-dom", "node"]
+    "types": [
+      "vitest/globals",
+      "@testing-library/jest-dom",
+      "node"
+    ]
   },
-  "exclude": ["api", "build", "dist", "distribution", "node_modules", "test", "webpack"],
-  "include": ["app", ".storybook"]
+  "exclude": [
+    "api",
+    "build",
+    "dist",
+    "distribution",
+    "node_modules",
+    "test",
+    "webpack"
+  ],
+  "include": [
+    "app",
+    ".storybook"
+  ]
 }

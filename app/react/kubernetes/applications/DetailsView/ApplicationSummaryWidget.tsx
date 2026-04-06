@@ -177,10 +177,16 @@ export function ApplicationSummaryWidget() {
                       {!applicationIsKind<Pod>('Pod', application) && (
                         <td data-cy="k8sAppDetail-appType">
                           {appKindToDeploymentTypeMap[application.kind]}
-                          <code className="ml-1">
+                          <code
+                            className="ml-1"
+                            data-cy="k8sAppDetail-runningPods"
+                          >
                             {getRunningPods(application)}
                           </code>{' '}
-                          / <code>{getTotalPods(application)}</code>
+                          /{' '}
+                          <code data-cy="k8sAppDetail-totalPods">
+                            {getTotalPods(application)}
+                          </code>
                         </td>
                       )}
                     </tr>

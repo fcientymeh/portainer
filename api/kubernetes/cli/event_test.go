@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -31,7 +30,7 @@ func TestGetEvents(t *testing.T) {
 			Message:        "This event has a very serious warning",
 		}
 
-		_, err := kcl.cli.CoreV1().Events("default").Create(context.TODO(), &event, metav1.CreateOptions{})
+		_, err := kcl.cli.CoreV1().Events("default").Create(t.Context(), &event, metav1.CreateOptions{})
 		require.NoError(t, err, "Failed to create Event")
 
 		events, err := kcl.GetEvents("default", "resourceId")
@@ -60,7 +59,7 @@ func TestGetEvents(t *testing.T) {
 			Message:        "This event has a very serious warning",
 		}
 
-		_, err := kcl.cli.CoreV1().Events("nonAdmin").Create(context.TODO(), &event, metav1.CreateOptions{})
+		_, err := kcl.cli.CoreV1().Events("nonAdmin").Create(t.Context(), &event, metav1.CreateOptions{})
 		require.NoError(t, err, "Failed to create Event")
 
 		events, err := kcl.GetEvents("nonAdmin", "resourceId")
@@ -90,7 +89,7 @@ func TestGetEvents(t *testing.T) {
 			Message:        "This event has a very serious warning",
 		}
 
-		_, err := kcl.cli.CoreV1().Events("admin").Create(context.TODO(), &event, metav1.CreateOptions{})
+		_, err := kcl.cli.CoreV1().Events("admin").Create(t.Context(), &event, metav1.CreateOptions{})
 		require.NoError(t, err, "Failed to create Event")
 
 		events, err := kcl.GetEvents("admin", "resourceId")

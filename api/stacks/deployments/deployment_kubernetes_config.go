@@ -1,6 +1,7 @@
 package deployments
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -36,7 +37,7 @@ func (config *KubernetesStackDeploymentConfig) GetUsername() string {
 	return config.user.Username
 }
 
-func (config *KubernetesStackDeploymentConfig) Deploy() error {
+func (config *KubernetesStackDeploymentConfig) Deploy(ctx context.Context) error {
 	fileNames := stackutils.GetStackFilePaths(config.stack, false)
 
 	manifestFilePaths := make([]string, 0, len(fileNames))
@@ -71,7 +72,7 @@ func (config *KubernetesStackDeploymentConfig) Deploy() error {
 		manifestFilePaths = append(manifestFilePaths, manifestFilePath)
 	}
 
-	output, err := config.kubernetesDeployer.Deploy(config.user.ID, config.endpoint, manifestFilePaths, config.stack.Namespace)
+	output, err := config.kubernetesDeployer.Deploy(ctx, config.user.ID, config.endpoint, manifestFilePaths, config.stack.Namespace)
 	if err != nil {
 		return fmt.Errorf("failed to deploy kubernete stack: %w", err)
 	}

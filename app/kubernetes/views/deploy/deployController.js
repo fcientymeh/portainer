@@ -3,7 +3,7 @@ import _ from 'lodash-es';
 import stripAnsi from 'strip-ansi';
 
 import PortainerError from '@/portainer/error';
-import { KubernetesDeployManifestTypes, KubernetesDeployBuildMethods, KubernetesDeployRequestMethods, RepositoryMechanismTypes } from 'Kubernetes/models/deploy';
+import { KubernetesDeployManifestTypes, KubernetesDeployBuildMethods, KubernetesDeployRequestMethods, RepositoryMechanismTypes } from '@/kubernetes/models/deploy';
 import { isTemplateVariablesEnabled, renderTemplate } from '@/react/portainer/custom-templates/components/utils';
 import { getDeploymentOptions } from '@/react/portainer/environments/environment.service';
 import { parseAutoUpdateResponse, transformAutoUpdateViewModel } from '@/react/portainer/gitops/AutoUpdateFieldset/utils';

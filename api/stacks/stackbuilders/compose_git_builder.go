@@ -1,6 +1,8 @@
 package stackbuilders
 
 import (
+	"context"
+
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/http/security"
@@ -48,17 +50,17 @@ func (b *ComposeStackGitBuilder) SetUniqueInfo(payload *StackPayload) GitMethodS
 	return b
 }
 
-func (b *ComposeStackGitBuilder) SetGitRepository(payload *StackPayload) GitMethodStackBuildProcess {
-	b.GitMethodStackBuilder.SetGitRepository(payload)
+func (b *ComposeStackGitBuilder) SetGitRepository(ctx context.Context, payload *StackPayload) GitMethodStackBuildProcess {
+	b.GitMethodStackBuilder.SetGitRepository(ctx, payload)
 	return b
 }
 
-func (b *ComposeStackGitBuilder) Deploy(payload *StackPayload, endpoint *portainer.Endpoint) GitMethodStackBuildProcess {
+func (b *ComposeStackGitBuilder) Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) GitMethodStackBuildProcess {
 	if b.hasError() {
 		return b
 	}
 
-	composeDeploymentConfig, err := deployments.CreateComposeStackDeploymentConfig(b.SecurityContext, b.stack, endpoint, b.dataStore, b.fileService, b.stackDeployer, false, false)
+	composeDeploymentConfig, err := deployments.CreateComposeStackDeploymentConfig(b.SecurityContext, b.stack, endpoint, b.dataStore, b.fileService, b.stackDeployer, false, false, false)
 	if err != nil {
 		b.err = err
 		return b
@@ -67,7 +69,7 @@ func (b *ComposeStackGitBuilder) Deploy(payload *StackPayload, endpoint *portain
 	b.deploymentConfiger = composeDeploymentConfig
 	b.stack.CreatedBy = b.deploymentConfiger.GetUsername()
 
-	return b.GitMethodStackBuilder.Deploy(payload, endpoint)
+	return b.GitMethodStackBuilder.Deploy(ctx, payload, endpoint)
 }
 
 func (b *ComposeStackGitBuilder) SetAutoUpdate(payload *StackPayload) GitMethodStackBuildProcess {

@@ -74,7 +74,7 @@ func TestAppendChartReferenceAnnotations(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := appendChartReferenceAnnotations(
 				tt.chartPath, tt.repoURL, tt.registryID, tt.stackID,
-				nil, nil, tt.existing,
+				nil, tt.existing,
 			)
 
 			assert.Equal(t, tt.want, result)
@@ -85,18 +85,18 @@ func TestAppendChartReferenceAnnotations(t *testing.T) {
 func TestAppendChartReferenceAnnotations_RepoURLLogic(t *testing.T) {
 	t.Run("repoURL only added when registryID is zero", func(t *testing.T) {
 		// With registry ID - no repoURL
-		result := appendChartReferenceAnnotations("chart", "url", 5, 0, nil, nil, nil)
+		result := appendChartReferenceAnnotations("chart", "url", 5, 0, nil, nil)
 		_, hasRepoURL := result[RepoURLAnnotation]
 		assert.False(t, hasRepoURL)
 
 		// Without registry ID - includes repoURL
-		result = appendChartReferenceAnnotations("chart", "url", 0, 0, nil, nil, nil)
+		result = appendChartReferenceAnnotations("chart", "url", 0, 0, nil, nil)
 		assert.Equal(t, "url", result[RepoURLAnnotation])
 	})
 
 	t.Run("does not mutate existing map", func(t *testing.T) {
 		existing := map[string]string{"key": "value"}
-		appendChartReferenceAnnotations("chart", "", 0, 0, nil, nil, existing)
+		appendChartReferenceAnnotations("chart", "", 0, 0, nil, existing)
 		assert.Equal(t, map[string]string{"key": "value"}, existing)
 	})
 }

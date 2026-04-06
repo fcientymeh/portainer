@@ -1,6 +1,7 @@
 package stackbuilders
 
 import (
+	"context"
 	"time"
 
 	portainer "github.com/portainer/portainer/api"
@@ -12,7 +13,7 @@ type UrlMethodStackBuildProcess interface {
 	// Set unique stack information, e.g. swarm stack has swarmID, kubernetes stack has namespace
 	SetUniqueInfo(payload *StackPayload) UrlMethodStackBuildProcess
 	// Deploy stack based on the configuration
-	Deploy(payload *StackPayload, endpoint *portainer.Endpoint) UrlMethodStackBuildProcess
+	Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) UrlMethodStackBuildProcess
 	// Save the stack information to database
 	SaveStack() (*portainer.Stack, error)
 	// Get reponse from http request. Use if it is needed
@@ -40,20 +41,16 @@ func (b *UrlMethodStackBuilder) SetUniqueInfo(payload *StackPayload) UrlMethodSt
 }
 
 func (b *UrlMethodStackBuilder) SetURL(payload *StackPayload) UrlMethodStackBuildProcess {
-	if b.hasError() {
-		return b
-	}
-
 	return b
 }
 
-func (b *UrlMethodStackBuilder) Deploy(payload *StackPayload, endpoint *portainer.Endpoint) UrlMethodStackBuildProcess {
+func (b *UrlMethodStackBuilder) Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) UrlMethodStackBuildProcess {
 	if b.hasError() {
 		return b
 	}
 
 	// Deploy the stack
-	err := b.deploymentConfiger.Deploy()
+	err := b.deploymentConfiger.Deploy(ctx)
 	if err != nil {
 		b.err = err
 		return b

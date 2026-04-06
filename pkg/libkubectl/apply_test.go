@@ -1,7 +1,6 @@
 package libkubectl
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -34,7 +33,6 @@ data:
 	}
 
 	manifests := []string{manifestFile}
-	ctx := context.Background()
 
 	// Force GC and measure memory before benchmark
 	runtime.GC()
@@ -42,7 +40,7 @@ data:
 	runtime.ReadMemStats(&memBefore)
 
 	for b.Loop() {
-		_, err := client.Apply(ctx, manifests)
+		_, err := client.Apply(b.Context(), manifests)
 		if err != nil {
 			b.Errorf("Failed to apply manifests: %v", err)
 		}
@@ -79,7 +77,7 @@ data:
   key: value`,
 	}
 
-	ctx := context.Background()
+	ctx := b.Context()
 
 	// Force GC and measure memory before benchmark
 	runtime.GC()

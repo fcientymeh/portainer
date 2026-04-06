@@ -41,7 +41,6 @@ angular
     'ngFileUpload',
     'ngMessages',
     'ngResource',
-    'angularUtils.directives.dirPagination',
     'LocalStorageModule',
     'angular-loading-bar',
     'angular-clipboard',
@@ -54,7 +53,6 @@ angular
     'portainer.kubernetes',
     'portainer.edge',
     'rzModule',
-    'moment-picker',
     constantsModule,
   ])
   .run(onStartupAngular)

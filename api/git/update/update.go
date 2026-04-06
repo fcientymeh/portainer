@@ -1,6 +1,7 @@
 package update
 
 import (
+	"context"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -13,7 +14,7 @@ import (
 )
 
 // UpdateGitObject updates a git object based on its config
-func UpdateGitObject(gitService portainer.GitService, objId string, gitConfig *gittypes.RepoConfig, enableVersionFolder bool, projectPath string) (bool, string, error) {
+func UpdateGitObject(ctx context.Context, gitService portainer.GitService, objId string, gitConfig *gittypes.RepoConfig, enableVersionFolder bool, projectPath string) (bool, string, error) {
 	if gitConfig == nil {
 		return false, "", nil
 	}
@@ -30,11 +31,11 @@ func UpdateGitObject(gitService portainer.GitService, objId string, gitConfig *g
 	}
 
 	newHash, err := gitService.LatestCommitID(
+		ctx,
 		gitConfig.URL,
 		gitConfig.ReferenceName,
 		username,
 		password,
-		gittypes.GitCredentialAuthType_Basic,
 		gitConfig.TLSSkipVerify,
 	)
 	if err != nil {
@@ -69,11 +70,10 @@ func UpdateGitObject(gitService portainer.GitService, objId string, gitConfig *g
 		cloneParams.auth = &gitAuth{
 			username: username,
 			password: password,
-			authType: gitConfig.Authentication.AuthorizationType,
 		}
 	}
 
-	if err := cloneGitRepository(gitService, cloneParams); err != nil {
+	if err := cloneGitRepository(ctx, gitService, cloneParams); err != nil {
 		return false, "", errors.WithMessagef(err, "failed to do a fresh clone of %v", objId)
 	}
 
@@ -97,31 +97,24 @@ type cloneRepositoryParameters struct {
 }
 
 type gitAuth struct {
-	authType gittypes.GitCredentialAuthType
 	username string
 	password string
 }
 
-func cloneGitRepository(gitService portainer.GitService, cloneParams *cloneRepositoryParameters) error {
+func cloneGitRepository(ctx context.Context, gitService portainer.GitService, cloneParams *cloneRepositoryParameters) error {
+	username, password := "", ""
 	if cloneParams.auth != nil {
-		return gitService.CloneRepository(
-			cloneParams.toDir,
-			cloneParams.url,
-			cloneParams.ref,
-			cloneParams.auth.username,
-			cloneParams.auth.password,
-			cloneParams.auth.authType,
-			cloneParams.tlsSkipVerify,
-		)
+		username = cloneParams.auth.username
+		password = cloneParams.auth.password
 	}
 
 	return gitService.CloneRepository(
+		ctx,
 		cloneParams.toDir,
 		cloneParams.url,
 		cloneParams.ref,
-		"",
-		"",
-		gittypes.GitCredentialAuthType_Basic,
+		username,
+		password,
 		cloneParams.tlsSkipVerify,
 	)
 }

@@ -70,6 +70,7 @@ func (manager *ComposeStackManager) Up(ctx context.Context, stack *portainer.Sta
 		},
 		ForceRecreate:        options.ForceRecreate,
 		AbortOnContainerExit: options.AbortOnContainerExit,
+		RemoveOrphans:        options.Prune,
 	})
 	return errors.Wrap(err, "failed to deploy a stack")
 }

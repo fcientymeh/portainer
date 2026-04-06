@@ -117,7 +117,7 @@ func (handler *Handler) stackStop(w http.ResponseWriter, r *http.Request) *httpe
 		stack.AutoUpdate.JobID = ""
 	}
 
-	err = handler.stopStack(stack, endpoint)
+	err = handler.stopStack(context.TODO(), stack, endpoint)
 	if err != nil {
 		return httperror.InternalServerError("Unable to stop stack", err)
 	}
@@ -140,24 +140,24 @@ func (handler *Handler) stackStop(w http.ResponseWriter, r *http.Request) *httpe
 	return response.JSON(w, stack)
 }
 
-func (handler *Handler) stopStack(stack *portainer.Stack, endpoint *portainer.Endpoint) error {
+func (handler *Handler) stopStack(ctx context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
 	switch stack.Type {
 	case portainer.DockerComposeStack:
 		stack.Name = handler.ComposeStackManager.NormalizeStackName(stack.Name)
 
 		if stackutils.IsRelativePathStack(stack) {
-			return handler.StackDeployer.StopRemoteComposeStack(stack, endpoint)
+			return handler.StackDeployer.StopRemoteComposeStack(ctx, stack, endpoint)
 		}
 
-		return handler.ComposeStackManager.Down(context.TODO(), stack, endpoint)
+		return handler.ComposeStackManager.Down(ctx, stack, endpoint)
 	case portainer.DockerSwarmStack:
 		stack.Name = handler.SwarmStackManager.NormalizeStackName(stack.Name)
 
 		if stackutils.IsRelativePathStack(stack) {
-			return handler.StackDeployer.StopRemoteSwarmStack(stack, endpoint)
+			return handler.StackDeployer.StopRemoteSwarmStack(ctx, stack, endpoint)
 		}
 
-		return handler.SwarmStackManager.Remove(stack, endpoint)
+		return handler.SwarmStackManager.Remove(ctx, stack, endpoint)
 	}
 
 	return nil

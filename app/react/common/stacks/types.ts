@@ -45,6 +45,9 @@ export interface StackDeploymentInfo {
    * Commit hash of the git repository used for deploying the stack
    */
   ConfigHash?: string;
+  RepositoryURL?: string;
+  ConfigFilePath?: string;
+  AdditionalFiles?: string[];
 }
 
 export interface Stack {
@@ -77,6 +80,7 @@ export interface Stack {
   FilesystemPath: string;
   StackFileVersion: number;
   PreviousDeploymentInfo?: StackDeploymentInfo;
+  CurrentDeploymentInfo?: StackDeploymentInfo;
 }
 
 export type StackFile = {

@@ -15,7 +15,7 @@ export interface Props {
   size?: Size;
   tooltip?: ReactNode;
   setTooltipHtmlMessage?: boolean;
-  children: ReactNode;
+  children?: ReactNode;
   errors?: ReactNode;
   required?: boolean;
   className?: string;

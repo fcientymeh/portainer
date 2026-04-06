@@ -1,4 +1,4 @@
-import { RepositoryMechanismTypes } from 'Kubernetes/models/deploy';
+import { RepositoryMechanismTypes } from '@/kubernetes/models/deploy';
 import { confirm } from '@@/modals/confirm';
 import { buildConfirmButton } from '@@/modals/utils';
 import { ModalType } from '@@/modals';

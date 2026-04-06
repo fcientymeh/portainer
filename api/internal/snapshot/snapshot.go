@@ -24,7 +24,6 @@ type Service struct {
 	snapshotIntervalInSeconds float64
 	dockerSnapshotter         portainer.DockerSnapshotter
 	kubernetesSnapshotter     portainer.KubernetesSnapshotter
-	shutdownCtx               context.Context
 	pendingActionsService     *pendingactions.PendingActionsService
 }
 
@@ -34,7 +33,6 @@ func NewService(
 	dataStore dataservices.DataStore,
 	dockerSnapshotter portainer.DockerSnapshotter,
 	kubernetesSnapshotter portainer.KubernetesSnapshotter,
-	shutdownCtx context.Context,
 	pendingActionsService *pendingactions.PendingActionsService,
 ) (*Service, error) {
 	interval, err := parseSnapshotFrequency(snapshotIntervalFromFlag, dataStore)
@@ -48,7 +46,6 @@ func NewService(
 		snapshotIntervalInSeconds: interval,
 		dockerSnapshotter:         dockerSnapshotter,
 		kubernetesSnapshotter:     kubernetesSnapshotter,
-		shutdownCtx:               shutdownCtx,
 		pendingActionsService:     pendingActionsService,
 	}, nil
 }
@@ -106,8 +103,8 @@ func parseSnapshotFrequency(snapshotInterval string, dataStore dataservices.Data
 }
 
 // Start will start a background routine to execute periodic snapshots of environments(endpoints)
-func (service *Service) Start() {
-	go service.startSnapshotLoop()
+func (service *Service) Start(ctx context.Context) {
+	go service.startSnapshotLoop(ctx)
 }
 
 // SetSnapshotInterval sets the snapshot interval and resets the service
@@ -212,7 +209,7 @@ func validateContainerEngineCompatibility(endpoint *portainer.Endpoint, dockerSn
 	return nil
 }
 
-func (service *Service) startSnapshotLoop() {
+func (service *Service) startSnapshotLoop(ctx context.Context) {
 	ticker := time.NewTicker(time.Duration(service.snapshotIntervalInSeconds) * time.Second)
 
 	err := service.snapshotEndpoints()
@@ -227,7 +224,7 @@ func (service *Service) startSnapshotLoop() {
 			if err != nil {
 				log.Error().Err(err).Msg("background schedule error (environment snapshot)")
 			}
-		case <-service.shutdownCtx.Done():
+		case <-ctx.Done():
 			log.Debug().Msg("shutting down snapshotting")
 			ticker.Stop()
 

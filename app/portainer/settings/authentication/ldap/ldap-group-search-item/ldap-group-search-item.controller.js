@@ -1,7 +1,7 @@
 export default class LdapSettingsAdGroupSearchItemController {
   /* @ngInject */
-  constructor(Notifications) {
-    Object.assign(this, { Notifications });
+  constructor(Notifications, $scope) {
+    Object.assign(this, { Notifications, $scope });
 
     this.groups = [];
 
@@ -9,7 +9,9 @@ export default class LdapSettingsAdGroupSearchItemController {
   }
 
   onChangeBaseDN(baseDN) {
-    this.config.GroupBaseDN = baseDN;
+    return this.$scope.$evalAsync(() => {
+      this.config.GroupBaseDN = baseDN;
+    });
   }
 
   addGroup() {

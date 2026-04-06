@@ -1,10 +1,10 @@
 import angular from 'angular';
 import _ from 'lodash-es';
-import KubernetesConfigurationConverter from 'Kubernetes/converters/configuration';
-import KubernetesConfigMapConverter from 'Kubernetes/converters/configMap';
-import KubernetesSecretConverter from 'Kubernetes/converters/secret';
-import { KubernetesConfigurationKinds } from 'Kubernetes/models/configuration/models';
-import KubernetesCommonHelper from 'Kubernetes/helpers/commonHelper';
+import KubernetesConfigurationConverter from '@/kubernetes/converters/configuration';
+import KubernetesConfigMapConverter from '@/kubernetes/converters/configMap';
+import KubernetesSecretConverter from '@/kubernetes/converters/secret';
+import { KubernetesConfigurationKinds } from '@/kubernetes/models/configuration/models';
+import KubernetesCommonHelper from '@/kubernetes/helpers/commonHelper';
 
 class KubernetesConfigurationService {
   /* @ngInject */

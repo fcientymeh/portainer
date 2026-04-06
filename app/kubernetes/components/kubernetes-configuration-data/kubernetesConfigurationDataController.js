@@ -3,10 +3,10 @@ import angular from 'angular';
 import _ from 'lodash-es';
 import chardet from 'chardet';
 import { Base64 } from 'js-base64';
-import KubernetesFormValidationHelper from 'Kubernetes/helpers/formValidationHelper';
-import KubernetesConfigurationHelper from 'Kubernetes/helpers/configurationHelper';
-import { KubernetesConfigurationFormValuesEntry } from 'Kubernetes/models/configuration/formvalues';
-import { KubernetesConfigurationKinds, KubernetesSecretTypeOptions } from 'Kubernetes/models/configuration/models';
+import KubernetesFormValidationHelper from '@/kubernetes/helpers/formValidationHelper';
+import KubernetesConfigurationHelper from '@/kubernetes/helpers/configurationHelper';
+import { KubernetesConfigurationFormValuesEntry } from '@/kubernetes/models/configuration/formvalues';
+import { KubernetesConfigurationKinds, KubernetesSecretTypeOptions } from '@/kubernetes/models/configuration/models';
 
 class KubernetesConfigurationDataController {
   /* @ngInject */

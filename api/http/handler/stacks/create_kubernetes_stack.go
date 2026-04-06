@@ -1,6 +1,7 @@
 package stacks
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -171,7 +172,7 @@ func (handler *Handler) createKubernetesStackFromFileContent(w http.ResponseWrit
 	}
 
 	stackBuilderDirector := stackbuilders.NewStackBuilderDirector(k8sStackBuilder)
-	if _, err := stackBuilderDirector.Build(&stackPayload, endpoint); err != nil {
+	if _, err := stackBuilderDirector.Build(context.TODO(), &stackPayload, endpoint); err != nil {
 		return err
 	}
 
@@ -244,7 +245,7 @@ func (handler *Handler) createKubernetesStackFromGitRepository(w http.ResponseWr
 		user)
 
 	stackBuilderDirector := stackbuilders.NewStackBuilderDirector(k8sStackBuilder)
-	if _, err := stackBuilderDirector.Build(&stackPayload, endpoint); err != nil {
+	if _, err := stackBuilderDirector.Build(context.TODO(), &stackPayload, endpoint); err != nil {
 		return err
 	}
 
@@ -290,7 +291,7 @@ func (handler *Handler) createKubernetesStackFromManifestURL(w http.ResponseWrit
 		user)
 
 	stackBuilderDirector := stackbuilders.NewStackBuilderDirector(k8sStackBuilder)
-	if _, err := stackBuilderDirector.Build(&stackPayload, endpoint); err != nil {
+	if _, err := stackBuilderDirector.Build(context.TODO(), &stackPayload, endpoint); err != nil {
 		return err
 	}
 
@@ -299,7 +300,7 @@ func (handler *Handler) createKubernetesStackFromManifestURL(w http.ResponseWrit
 	})
 }
 
-func (handler *Handler) deployKubernetesStack(userID portainer.UserID, endpoint *portainer.Endpoint, stack *portainer.Stack, appLabels k.KubeAppLabels) (string, error) {
+func (handler *Handler) deployKubernetesStack(ctx context.Context, userID portainer.UserID, endpoint *portainer.Endpoint, stack *portainer.Stack, appLabels k.KubeAppLabels) (string, error) {
 	handler.stackCreationMutex.Lock()
 	defer handler.stackCreationMutex.Unlock()
 
@@ -311,7 +312,7 @@ func (handler *Handler) deployKubernetesStack(userID portainer.UserID, endpoint 
 		return "", errors.Wrap(err, "failed to create temp kub deployment files")
 	}
 
-	if err := k8sDeploymentConfig.Deploy(); err != nil {
+	if err := k8sDeploymentConfig.Deploy(ctx); err != nil {
 		return "", err
 	}
 

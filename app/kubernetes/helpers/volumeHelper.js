@@ -1,5 +1,5 @@
 import _ from 'lodash-es';
-import { KubernetesApplicationTypes } from 'Kubernetes/models/application/models/appConstants';
+import { KubernetesApplicationTypes } from '@/kubernetes/models/application/models/appConstants';
 
 class KubernetesVolumeHelper {
   // TODO: review

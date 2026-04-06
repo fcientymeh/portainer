@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { FormikErrors } from 'formik';
 import { ReactNode } from 'react';
 
-import { useIsStandAlone } from '@/react/docker/proxy/queries/useInfo';
+import { useIsStandalone } from '@/react/docker/proxy/queries/useInfo';
 import { useEnvironmentId } from '@/react/hooks/useEnvironmentId';
 import { useCurrentEnvironment } from '@/react/hooks/useCurrentEnvironment';
 
@@ -59,7 +59,7 @@ export function ResourcesTab({
 
   const environmentQuery = useCurrentEnvironment();
 
-  const isStandalone = useIsStandAlone(environmentId);
+  const isStandalone = useIsStandalone(environmentId);
 
   if (!environmentQuery.data) {
     return null;

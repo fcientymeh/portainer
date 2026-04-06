@@ -25,7 +25,6 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/docker/client"
-	gittypes "github.com/portainer/portainer/api/git/types"
 	"github.com/portainer/portainer/api/http/proxy/factory/utils"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/authorization"
@@ -470,11 +469,11 @@ func (transport *Transport) updateDefaultGitBranch(request *http.Request) error 
 
 	repositoryURL := remote[:len(remote)-4]
 	latestCommitID, err := transport.gitService.LatestCommitID(
+		request.Context(),
 		repositoryURL,
 		"",
 		"",
 		"",
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 	)
 	if err != nil {
@@ -604,10 +603,7 @@ func (transport *Transport) restrictedResourceOperation(request *http.Request, r
 		return nil, err
 	}
 
-	userTeamIDs := make([]portainer.TeamID, 0)
-	for _, membership := range teamMemberships {
-		userTeamIDs = append(userTeamIDs, membership.TeamID)
-	}
+	userTeamIDs := authorization.TeamIDs(teamMemberships)
 
 	resourceControls, err := transport.dataStore.ResourceControl().ReadAll()
 	if err != nil {
@@ -1090,12 +1086,7 @@ func (transport *Transport) createOperationContext(request *http.Request) (*rest
 		return nil, err
 	}
 
-	userTeamIDs := make([]portainer.TeamID, 0)
-	for _, membership := range teamMemberships {
-		userTeamIDs = append(userTeamIDs, membership.TeamID)
-	}
-
-	operationContext.userTeamIDs = userTeamIDs
+	operationContext.userTeamIDs = authorization.TeamIDs(teamMemberships)
 
 	return operationContext, nil
 }

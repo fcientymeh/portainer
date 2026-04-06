@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"strconv"
 	"testing"
 
@@ -25,7 +24,7 @@ func Test_ToggleSystemState(t *testing.T) {
 		err := kcl.ToggleSystemState(nsName, true)
 		require.NoError(t, err)
 
-		ns, err := kcl.cli.CoreV1().Namespaces().Get(context.Background(), nsName, metav1.GetOptions{})
+		ns, err := kcl.cli.CoreV1().Namespaces().Get(t.Context(), nsName, metav1.GetOptions{})
 		require.NoError(t, err)
 
 		_, exists := ns.Labels[systemNamespaceLabel]
@@ -64,7 +63,7 @@ func Test_ToggleSystemState(t *testing.T) {
 				err := kcl.ToggleSystemState(nsName, test.isSystem)
 				require.NoError(t, err)
 
-				ns, err := kcl.cli.CoreV1().Namespaces().Get(context.Background(), nsName, metav1.GetOptions{})
+				ns, err := kcl.cli.CoreV1().Namespaces().Get(t.Context(), nsName, metav1.GetOptions{})
 				require.NoError(t, err)
 
 				assert.Equal(t, test.isSystem, isSystemNamespace(ns))
@@ -93,7 +92,7 @@ func Test_ToggleSystemState(t *testing.T) {
 		err := kcl.ToggleSystemState(nsName, true)
 		require.NoError(t, err)
 
-		ns, err := kcl.cli.CoreV1().Namespaces().Get(context.Background(), nsName, metav1.GetOptions{})
+		ns, err := kcl.cli.CoreV1().Namespaces().Get(t.Context(), nsName, metav1.GetOptions{})
 		require.NoError(t, err)
 
 		labelValue, exists := ns.Labels[systemNamespaceLabel]
@@ -113,7 +112,7 @@ func Test_ToggleSystemState(t *testing.T) {
 		err := kcl.ToggleSystemState(nsName, false)
 		require.NoError(t, err)
 
-		ns, err := kcl.cli.CoreV1().Namespaces().Get(context.Background(), nsName, metav1.GetOptions{})
+		ns, err := kcl.cli.CoreV1().Namespaces().Get(t.Context(), nsName, metav1.GetOptions{})
 		require.NoError(t, err)
 
 		labelValue, exists := ns.Labels[systemNamespaceLabel]
@@ -135,7 +134,7 @@ func Test_ToggleSystemState(t *testing.T) {
 		err := kcl.ToggleSystemState(nsName, false)
 		require.NoError(t, err)
 
-		ns, err := kcl.cli.CoreV1().Namespaces().Get(context.Background(), nsName, metav1.GetOptions{})
+		ns, err := kcl.cli.CoreV1().Namespaces().Get(t.Context(), nsName, metav1.GetOptions{})
 		require.NoError(t, err)
 
 		labelValue, exists := ns.Labels[systemNamespaceLabel]
@@ -168,7 +167,7 @@ func Test_ToggleSystemState(t *testing.T) {
 		err := kcl.ToggleSystemState(nsName, true)
 		require.NoError(t, err)
 
-		ns, err := kcl.cli.CoreV1().Namespaces().Get(context.Background(), nsName, metav1.GetOptions{})
+		ns, err := kcl.cli.CoreV1().Namespaces().Get(t.Context(), nsName, metav1.GetOptions{})
 		require.NoError(t, err)
 
 		labelValue, exists := ns.Labels[systemNamespaceLabel]

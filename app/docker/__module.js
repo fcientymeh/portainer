@@ -1,6 +1,6 @@
 import angular from 'angular';
 
-import { PortainerEndpointTypes } from 'Portainer/models/endpoint/models';
+import { PortainerEndpointTypes } from '@/portainer/models/endpoint/models';
 
 import { EnvironmentStatus } from '@/react/portainer/environments/types';
 
@@ -407,7 +407,7 @@ angular.module('portainer.docker', ['portainer.app', reactModule]).config([
       url: '/stacks',
       views: {
         'content@': {
-          templateUrl: '~Portainer/views/stacks/stacks.html',
+          templateUrl: '~@/portainer/views/stacks/stacks.html',
           controller: 'StacksController',
         },
       },

@@ -1,6 +1,7 @@
 package customtemplates
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"sync"
@@ -67,7 +68,7 @@ func (handler *Handler) customTemplateGitFetch(w http.ResponseWriter, r *http.Re
 		}
 	}()
 
-	commitHash, err := stackutils.DownloadGitRepository(*customTemplate.GitConfig, handler.GitService, func() string {
+	commitHash, err := stackutils.DownloadGitRepository(context.TODO(), *customTemplate.GitConfig, handler.GitService, func() string {
 		return customTemplate.ProjectPath
 	})
 	if err != nil {

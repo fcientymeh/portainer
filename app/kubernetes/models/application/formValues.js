@@ -1,5 +1,5 @@
 import { PorImageRegistryModel } from '@/docker/models/porImageRegistry';
-import { KubernetesApplicationTypes, KubernetesApplicationDeploymentTypes, KubernetesApplicationDataAccessPolicies } from 'Kubernetes/models/application/models/appConstants';
+import { KubernetesApplicationTypes, KubernetesApplicationDeploymentTypes, KubernetesApplicationDataAccessPolicies } from '@/kubernetes/models/application/models/appConstants';
 
 /**
  * KubernetesApplicationFormValues Model

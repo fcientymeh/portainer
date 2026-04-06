@@ -1,6 +1,7 @@
 export default class LdapUserSearchItemController {
   /* @ngInject */
-  constructor() {
+  constructor($scope) {
+    this.$scope = $scope;
     this.groups = [];
 
     this.onBaseDNChange = this.onBaseDNChange.bind(this);
@@ -10,7 +11,9 @@ export default class LdapUserSearchItemController {
   }
 
   onBaseDNChange(baseDN) {
-    this.config.BaseDN = baseDN;
+    this.$scope.$evalAsync(() => {
+      this.config.BaseDN = baseDN;
+    });
   }
 
   onGroupChange(index, group) {

@@ -1,7 +1,6 @@
 package git
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -23,18 +22,18 @@ func TestService_ClonePrivateRepository_GitHub(t *testing.T) {
 
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
 	username := getRequiredValue(t, "GITHUB_USERNAME")
-	service := newService(context.TODO(), 0, 0)
+	service := newService(t.Context(), 0, 0)
 
 	dst := t.TempDir()
 
 	repositoryUrl := privateGitRepoURL
 	err := service.CloneRepository(
+		t.Context(),
 		dst,
 		repositoryUrl,
 		"refs/heads/main",
 		username,
 		accessToken,
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 	)
 	require.NoError(t, err)
@@ -46,15 +45,15 @@ func TestService_LatestCommitID_GitHub(t *testing.T) {
 
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
 	username := getRequiredValue(t, "GITHUB_USERNAME")
-	service := newService(context.TODO(), 0, 0)
+	service := newService(t.Context(), 0, 0)
 
 	repositoryUrl := privateGitRepoURL
 	id, err := service.LatestCommitID(
+		t.Context(),
 		repositoryUrl,
 		"refs/heads/main",
 		username,
 		accessToken,
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 	)
 	require.NoError(t, err)
@@ -66,10 +65,10 @@ func TestService_ListRefs_GitHub(t *testing.T) {
 
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
 	username := getRequiredValue(t, "GITHUB_USERNAME")
-	service := newService(context.TODO(), 0, 0)
+	service := newService(t.Context(), 0, 0)
 
 	repositoryUrl := privateGitRepoURL
-	refs, err := service.ListRefs(repositoryUrl, username, accessToken, gittypes.GitCredentialAuthType_Basic, false, false)
+	refs, err := service.ListRefs(t.Context(), repositoryUrl, username, accessToken, false, false)
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, len(refs), 1)
 }
@@ -79,14 +78,14 @@ func TestService_ListRefs_Github_Concurrently(t *testing.T) {
 
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
 	username := getRequiredValue(t, "GITHUB_USERNAME")
-	service := newService(context.TODO(), repositoryCacheSize, 200*time.Millisecond)
+	service := newService(t.Context(), repositoryCacheSize, 200*time.Millisecond)
 
 	repositoryUrl := privateGitRepoURL
 	go func() {
-		_, _ = service.ListRefs(repositoryUrl, username, accessToken, gittypes.GitCredentialAuthType_Basic, false, false)
+		_, _ = service.ListRefs(t.Context(), repositoryUrl, username, accessToken, false, false)
 	}()
 
-	_, err := service.ListRefs(repositoryUrl, username, accessToken, gittypes.GitCredentialAuthType_Basic, false, false)
+	_, err := service.ListRefs(t.Context(), repositoryUrl, username, accessToken, false, false)
 	require.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
@@ -95,32 +94,37 @@ func TestService_ListRefs_Github_Concurrently(t *testing.T) {
 func TestService_ListFiles_GitHub(t *testing.T) {
 	ensureIntegrationTest(t)
 
+	type args struct {
+		repositoryUrl string
+		referenceName string
+		username      string
+		password      string
+		extensions    []string
+	}
+
 	type expectResult struct {
 		shouldFail   bool
 		err          error
 		matchedCount int
 	}
-	service := newService(context.TODO(), 0, 0)
+	service := newService(t.Context(), 0, 0)
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
 	username := getRequiredValue(t, "GITHUB_USERNAME")
 
 	tests := []struct {
-		name       string
-		args       fetchOption
-		extensions []string
-		expect     expectResult
+		name   string
+		args   args
+		expect expectResult
 	}{
 		{
 			name: "list tree with real repository and head ref but incorrect credential",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateGitRepoURL,
-					username:      "test-username",
-					password:      "test-token",
-				},
+			args: args{
+				repositoryUrl: privateGitRepoURL,
 				referenceName: "refs/heads/main",
+				username:      "test-username",
+				password:      "test-token",
+				extensions:    []string{},
 			},
-			extensions: []string{},
 			expect: expectResult{
 				shouldFail: true,
 				err:        gittypes.ErrAuthenticationFailure,
@@ -128,15 +132,13 @@ func TestService_ListFiles_GitHub(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository and head ref but no credential",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateGitRepoURL + "fake",
-					username:      "",
-					password:      "",
-				},
+			args: args{
+				repositoryUrl: privateGitRepoURL + "fake",
 				referenceName: "refs/heads/main",
+				username:      "",
+				password:      "",
+				extensions:    []string{},
 			},
-			extensions: []string{},
 			expect: expectResult{
 				shouldFail: true,
 				err:        gittypes.ErrAuthenticationFailure,
@@ -144,15 +146,13 @@ func TestService_ListFiles_GitHub(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository and head ref",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateGitRepoURL,
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateGitRepoURL,
 				referenceName: "refs/heads/main",
+				username:      username,
+				password:      accessToken,
+				extensions:    []string{},
 			},
-			extensions: []string{},
 			expect: expectResult{
 				err:          nil,
 				matchedCount: 15,
@@ -160,15 +160,13 @@ func TestService_ListFiles_GitHub(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository and head ref and existing file extension",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateGitRepoURL,
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateGitRepoURL,
 				referenceName: "refs/heads/main",
+				username:      username,
+				password:      accessToken,
+				extensions:    []string{"yml"},
 			},
-			extensions: []string{"yml"},
 			expect: expectResult{
 				err:          nil,
 				matchedCount: 2,
@@ -176,15 +174,13 @@ func TestService_ListFiles_GitHub(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository and head ref and non-existing file extension",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateGitRepoURL,
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateGitRepoURL,
 				referenceName: "refs/heads/main",
+				username:      username,
+				password:      accessToken,
+				extensions:    []string{"hcl"},
 			},
-			extensions: []string{"hcl"},
 			expect: expectResult{
 				err:          nil,
 				matchedCount: 2,
@@ -192,30 +188,26 @@ func TestService_ListFiles_GitHub(t *testing.T) {
 		},
 		{
 			name: "list tree with real repository but non-existing ref",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateGitRepoURL,
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateGitRepoURL,
 				referenceName: "refs/fake/feature",
+				username:      username,
+				password:      accessToken,
+				extensions:    []string{},
 			},
-			extensions: []string{},
 			expect: expectResult{
 				shouldFail: true,
 			},
 		},
 		{
 			name: "list tree with fake repository ",
-			args: fetchOption{
-				baseOption: baseOption{
-					repositoryUrl: privateGitRepoURL + "fake",
-					username:      username,
-					password:      accessToken,
-				},
+			args: args{
+				repositoryUrl: privateGitRepoURL + "fake",
 				referenceName: "refs/fake/feature",
+				username:      username,
+				password:      accessToken,
+				extensions:    []string{},
 			},
-			extensions: []string{},
 			expect: expectResult{
 				shouldFail: true,
 				err:        gittypes.ErrIncorrectRepositoryURL,
@@ -226,14 +218,14 @@ func TestService_ListFiles_GitHub(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			paths, err := service.ListFiles(
+				t.Context(),
 				tt.args.repositoryUrl,
 				tt.args.referenceName,
 				tt.args.username,
 				tt.args.password,
-				gittypes.GitCredentialAuthType_Basic,
 				false,
 				false,
-				tt.extensions,
+				tt.args.extensions,
 				false,
 			)
 			if tt.expect.shouldFail {
@@ -257,15 +249,15 @@ func TestService_ListFiles_Github_Concurrently(t *testing.T) {
 	repositoryUrl := privateGitRepoURL
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
 	username := getRequiredValue(t, "GITHUB_USERNAME")
-	service := newService(context.TODO(), repositoryCacheSize, 200*time.Millisecond)
+	service := newService(t.Context(), repositoryCacheSize, 200*time.Millisecond)
 
 	go func() {
 		_, _ = service.ListFiles(
+			t.Context(),
 			repositoryUrl,
 			"refs/heads/main",
 			username,
 			accessToken,
-			gittypes.GitCredentialAuthType_Basic,
 			false,
 			false,
 			[]string{},
@@ -274,11 +266,11 @@ func TestService_ListFiles_Github_Concurrently(t *testing.T) {
 	}()
 
 	_, err := service.ListFiles(
+		t.Context(),
 		repositoryUrl,
 		"refs/heads/main",
 		username,
 		accessToken,
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 		false,
 		[]string{},
@@ -295,17 +287,17 @@ func TestService_purgeCache_Github(t *testing.T) {
 	repositoryUrl := privateGitRepoURL
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
 	username := getRequiredValue(t, "GITHUB_USERNAME")
-	service := NewService(context.TODO())
+	service := NewService(t.Context())
 
-	_, err := service.ListRefs(repositoryUrl, username, accessToken, gittypes.GitCredentialAuthType_Basic, false, false)
+	_, err := service.ListRefs(t.Context(), repositoryUrl, username, accessToken, false, false)
 	require.NoError(t, err)
 
 	_, err = service.ListFiles(
+		t.Context(),
 		repositoryUrl,
 		"refs/heads/main",
 		username,
 		accessToken,
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 		false,
 		[]string{},
@@ -329,16 +321,16 @@ func TestService_purgeCacheByTTL_Github(t *testing.T) {
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
 	username := getRequiredValue(t, "GITHUB_USERNAME")
 	// 40*timeout is designed for giving enough time for ListRefs and ListFiles to cache the result
-	service := newService(context.TODO(), 2, 40*timeout)
+	service := newService(t.Context(), 2, 40*timeout)
 
-	_, err := service.ListRefs(repositoryUrl, username, accessToken, gittypes.GitCredentialAuthType_Basic, false, false)
+	_, err := service.ListRefs(t.Context(), repositoryUrl, username, accessToken, false, false)
 	require.NoError(t, err)
 	_, err = service.ListFiles(
+		t.Context(),
 		repositoryUrl,
 		"refs/heads/main",
 		username,
 		accessToken,
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 		false,
 		[]string{},
@@ -354,33 +346,20 @@ func TestService_purgeCacheByTTL_Github(t *testing.T) {
 	assert.Equal(t, 0, service.repoFileCache.Len())
 }
 
-func TestService_canStopCacheCleanTimer_whenContextDone(t *testing.T) {
-	timeout := 10 * time.Millisecond
-	deadlineCtx, cancel := context.WithDeadline(context.TODO(), time.Now().Add(10*timeout))
-	defer cancel()
-
-	service := NewService(deadlineCtx)
-	assert.False(t, service.timerHasStopped(), "timer should not be stopped")
-
-	<-time.After(20 * timeout)
-
-	assert.True(t, service.timerHasStopped(), "timer should be stopped")
-}
-
 func TestService_HardRefresh_ListRefs_GitHub(t *testing.T) {
 	ensureIntegrationTest(t)
 
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
 	username := getRequiredValue(t, "GITHUB_USERNAME")
-	service := newService(context.TODO(), 2, 0)
+	service := newService(t.Context(), 2, 0)
 
 	repositoryUrl := privateGitRepoURL
-	refs, err := service.ListRefs(repositoryUrl, username, accessToken, gittypes.GitCredentialAuthType_Basic, false, false)
+	refs, err := service.ListRefs(t.Context(), repositoryUrl, username, accessToken, false, false)
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, len(refs), 1)
 	assert.Equal(t, 1, service.repoRefCache.Len())
 
-	_, err = service.ListRefs(repositoryUrl, username, "fake-token", gittypes.GitCredentialAuthType_Basic, false, false)
+	_, err = service.ListRefs(t.Context(), repositoryUrl, username, "fake-token", false, false)
 	require.Error(t, err)
 	assert.Equal(t, 1, service.repoRefCache.Len())
 }
@@ -390,20 +369,20 @@ func TestService_HardRefresh_ListRefs_And_RemoveAllCaches_GitHub(t *testing.T) {
 
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
 	username := getRequiredValue(t, "GITHUB_USERNAME")
-	service := newService(context.TODO(), 2, 0)
+	service := newService(t.Context(), 2, 0)
 
 	repositoryUrl := privateGitRepoURL
-	refs, err := service.ListRefs(repositoryUrl, username, accessToken, gittypes.GitCredentialAuthType_Basic, false, false)
+	refs, err := service.ListRefs(t.Context(), repositoryUrl, username, accessToken, false, false)
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, len(refs), 1)
 	assert.Equal(t, 1, service.repoRefCache.Len())
 
 	files, err := service.ListFiles(
+		t.Context(),
 		repositoryUrl,
 		"refs/heads/main",
 		username,
 		accessToken,
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 		false,
 		[]string{},
@@ -414,11 +393,11 @@ func TestService_HardRefresh_ListRefs_And_RemoveAllCaches_GitHub(t *testing.T) {
 	assert.Equal(t, 1, service.repoFileCache.Len())
 
 	files, err = service.ListFiles(
+		t.Context(),
 		repositoryUrl,
 		"refs/heads/test",
 		username,
 		accessToken,
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 		false,
 		[]string{},
@@ -428,11 +407,11 @@ func TestService_HardRefresh_ListRefs_And_RemoveAllCaches_GitHub(t *testing.T) {
 	assert.GreaterOrEqual(t, len(files), 1)
 	assert.Equal(t, 2, service.repoFileCache.Len())
 
-	_, err = service.ListRefs(repositoryUrl, username, "fake-token", gittypes.GitCredentialAuthType_Basic, false, false)
+	_, err = service.ListRefs(t.Context(), repositoryUrl, username, "fake-token", false, false)
 	require.Error(t, err)
 	assert.Equal(t, 1, service.repoRefCache.Len())
 
-	_, err = service.ListRefs(repositoryUrl, username, "fake-token", gittypes.GitCredentialAuthType_Basic, true, false)
+	_, err = service.ListRefs(t.Context(), repositoryUrl, username, "fake-token", true, false)
 	require.Error(t, err)
 	assert.Equal(t, 1, service.repoRefCache.Len())
 	// The relevant file caches should be removed too
@@ -442,16 +421,16 @@ func TestService_HardRefresh_ListRefs_And_RemoveAllCaches_GitHub(t *testing.T) {
 func TestService_HardRefresh_ListFiles_GitHub(t *testing.T) {
 	ensureIntegrationTest(t)
 
-	service := newService(context.TODO(), 2, 0)
+	service := newService(t.Context(), 2, 0)
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
 	username := getRequiredValue(t, "GITHUB_USERNAME")
 	repositoryUrl := privateGitRepoURL
 	files, err := service.ListFiles(
+		t.Context(),
 		repositoryUrl,
 		"refs/heads/main",
 		username,
 		accessToken,
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 		false,
 		[]string{},
@@ -462,11 +441,11 @@ func TestService_HardRefresh_ListFiles_GitHub(t *testing.T) {
 	assert.Equal(t, 1, service.repoFileCache.Len())
 
 	_, err = service.ListFiles(
+		t.Context(),
 		repositoryUrl,
 		"refs/heads/main",
 		username,
 		"fake-token",
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 		true,
 		[]string{},
@@ -479,7 +458,7 @@ func TestService_HardRefresh_ListFiles_GitHub(t *testing.T) {
 func TestService_CloneRepository_TokenAuth(t *testing.T) {
 	ensureIntegrationTest(t)
 
-	service := newService(context.TODO(), 2, 0)
+	service := newService(t.Context(), 2, 0)
 	var requests []*http.Request
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requests = append(requests, r)
@@ -490,12 +469,12 @@ func TestService_CloneRepository_TokenAuth(t *testing.T) {
 
 	// Since we aren't hitting a real git server we ignore the error
 	_ = service.CloneRepository(
+		t.Context(),
 		"test_dir",
 		repositoryUrl,
 		"refs/heads/main",
 		username,
 		accessToken,
-		gittypes.GitCredentialAuthType_Token,
 		false,
 	)
 

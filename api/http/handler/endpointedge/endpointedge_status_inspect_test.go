@@ -1,7 +1,6 @@
 package endpointedge
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -85,10 +84,6 @@ func mustSetupHandler(t *testing.T) *Handler {
 
 	_, store := datastore.MustNewTestStore(t, true, true)
 
-	ctx := context.Background()
-	shutdownCtx, cancelFn := context.WithCancel(ctx)
-	t.Cleanup(cancelFn)
-
 	jwtService, err := jwt.NewService("1h", store)
 	if err != nil {
 		t.Fatalf("could not start a new JWT service: %s", err)
@@ -107,13 +102,13 @@ func mustSetupHandler(t *testing.T) *Handler {
 	}
 
 	handler := NewHandler(
-		security.NewRequestBouncer(store, jwtService, apiKeyService),
+		security.NewRequestBouncer(t.Context(), store, jwtService, apiKeyService),
 		store,
 		fs,
-		chisel.NewService(store, shutdownCtx, nil),
+		chisel.NewService(store, t.Context(), nil),
 	)
 
-	handler.ReverseTunnelService = chisel.NewService(store, shutdownCtx, nil)
+	handler.ReverseTunnelService = chisel.NewService(store, t.Context(), nil)
 
 	return handler
 }

@@ -1,6 +1,7 @@
 package stackbuilders
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"sync"
@@ -82,7 +83,7 @@ func (b *KubernetesStackUrlBuilder) SetURL(payload *StackPayload) UrlMethodStack
 	return b
 }
 
-func (b *KubernetesStackUrlBuilder) Deploy(payload *StackPayload, endpoint *portainer.Endpoint) UrlMethodStackBuildProcess {
+func (b *KubernetesStackUrlBuilder) Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) UrlMethodStackBuildProcess {
 	if b.hasError() {
 		return b
 	}
@@ -106,7 +107,7 @@ func (b *KubernetesStackUrlBuilder) Deploy(payload *StackPayload, endpoint *port
 
 	b.deploymentConfiger = k8sDeploymentConfig
 
-	return b.UrlMethodStackBuilder.Deploy(payload, endpoint)
+	return b.UrlMethodStackBuilder.Deploy(ctx, payload, endpoint)
 }
 
 func (b *KubernetesStackUrlBuilder) GetResponse() string {

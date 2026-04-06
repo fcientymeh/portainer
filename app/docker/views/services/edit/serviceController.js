@@ -19,7 +19,7 @@ require('./includes/updateconfig.html');
 import _ from 'lodash-es';
 
 import * as envVarsUtils from '@/react/components/form-components/EnvironmentVariablesFieldset/utils';
-import { PorImageRegistryModel } from 'Docker/models/porImageRegistry';
+import { PorImageRegistryModel } from '@/docker/models/porImageRegistry';
 import { ResourceControlType } from '@/react/portainer/access-control/types';
 import { confirmServiceForceUpdate } from '@/react/docker/services/common/update-service-modal';
 import { confirm, confirmDelete } from '@@/modals/confirm';

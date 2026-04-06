@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -49,7 +48,7 @@ func (kcl *KubeClient) TestFetchJobs(t *testing.T) {
 		kcl.cli = kfake.NewSimpleClientset()
 		kcl.instanceID = "test"
 
-		_, err := kcl.cli.BatchV1().Jobs("default").Create(context.Background(), &batchv1.Job{
+		_, err := kcl.cli.BatchV1().Jobs("default").Create(t.Context(), &batchv1.Job{
 			ObjectMeta: metav1.ObjectMeta{Name: "test-job"},
 		}, metav1.CreateOptions{})
 		if err != nil {

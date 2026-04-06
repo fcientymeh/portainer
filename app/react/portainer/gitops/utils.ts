@@ -25,6 +25,14 @@ export function getAuthentication(
   };
 }
 
+/** Returns a copy of the object without `password` to keep it out of query keys and devtools. */
+export function omitPassword<T extends { password?: unknown }>(
+  obj: T
+): Omit<T, 'password'> {
+  const { password, ...rest } = obj;
+  return rest;
+}
+
 export function confirmEnableTLSVerify() {
   return confirm({
     title: 'Enable TLS Verification?',

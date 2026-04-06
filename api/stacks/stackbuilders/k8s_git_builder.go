@@ -1,6 +1,7 @@
 package stackbuilders
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -60,13 +61,13 @@ func (b *KubernetesStackGitBuilder) SetUniqueInfo(payload *StackPayload) GitMeth
 	return b
 }
 
-func (b *KubernetesStackGitBuilder) SetGitRepository(payload *StackPayload) GitMethodStackBuildProcess {
-	b.GitMethodStackBuilder.SetGitRepository(payload)
+func (b *KubernetesStackGitBuilder) SetGitRepository(ctx context.Context, payload *StackPayload) GitMethodStackBuildProcess {
+	b.GitMethodStackBuilder.SetGitRepository(ctx, payload)
 
 	return b
 }
 
-func (b *KubernetesStackGitBuilder) Deploy(payload *StackPayload, endpoint *portainer.Endpoint) GitMethodStackBuildProcess {
+func (b *KubernetesStackGitBuilder) Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) GitMethodStackBuildProcess {
 	if b.hasError() {
 		return b
 	}
@@ -89,7 +90,7 @@ func (b *KubernetesStackGitBuilder) Deploy(payload *StackPayload, endpoint *port
 
 	b.deploymentConfiger = k8sDeploymentConfig
 
-	return b.GitMethodStackBuilder.Deploy(payload, endpoint)
+	return b.GitMethodStackBuilder.Deploy(ctx, payload, endpoint)
 }
 
 func (b *KubernetesStackGitBuilder) SetAutoUpdate(payload *StackPayload) GitMethodStackBuildProcess {

@@ -60,10 +60,7 @@ func (handler *Handler) customTemplateList(w http.ResponseWriter, r *http.Reques
 			return httperror.InternalServerError("Unable to retrieve user information from the database", err)
 		}
 
-		userTeamIDs := make([]portainer.TeamID, 0)
-		for _, membership := range securityContext.UserMemberships {
-			userTeamIDs = append(userTeamIDs, membership.TeamID)
-		}
+		userTeamIDs := authorization.TeamIDs(securityContext.UserMemberships)
 
 		customTemplates = authorization.FilterAuthorizedCustomTemplates(customTemplates, user, userTeamIDs)
 	}

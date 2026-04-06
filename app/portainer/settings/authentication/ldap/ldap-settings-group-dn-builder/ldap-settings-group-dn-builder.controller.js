@@ -1,17 +1,19 @@
 export default class LdapSettingsGroupDnBuilderController {
   /* @ngInject */
-  constructor() {
+  constructor($scope) {
+    this.$scope = $scope;
     this.groupName = '';
     this.entries = '';
 
     this.onEntriesChange = this.onEntriesChange.bind(this);
     this.onGroupNameChange = this.onGroupNameChange.bind(this);
     this.onGroupChange = this.onGroupChange.bind(this);
-    this.removeGroup = this.removeGroup.bind(this);
   }
 
   onEntriesChange(entries) {
-    this.onGroupChange(this.groupName, entries);
+    this.$scope.$evalAsync(() => {
+      this.onGroupChange(this.groupName, entries);
+    });
   }
 
   onGroupNameChange() {
@@ -24,10 +26,6 @@ export default class LdapSettingsGroupDnBuilderController {
     }
     const groupNameEntry = `cn=${groupName}`;
     this.onChange(this.index, entries || this.suffix ? `${groupNameEntry},${entries || this.suffix}` : groupNameEntry);
-  }
-
-  removeGroup() {
-    this.onRemoveClick(this.index);
   }
 
   parseEntries(value, suffix) {

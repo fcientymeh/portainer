@@ -48,7 +48,7 @@ func setupHandler(t *testing.T) (*Handler, string) {
 	}
 
 	handler := NewHandler(
-		security.NewRequestBouncer(store, jwtService, apiKeyService),
+		security.NewRequestBouncer(t.Context(), store, jwtService, apiKeyService),
 		store,
 		edgestacks.NewService(store),
 	)

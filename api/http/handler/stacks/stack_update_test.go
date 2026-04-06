@@ -16,7 +16,6 @@ import (
 	"github.com/portainer/portainer/api/datastore"
 	"github.com/portainer/portainer/api/filesystem"
 	"github.com/portainer/portainer/api/internal/testhelpers"
-	"github.com/portainer/portainer/api/stacks/deployments"
 	"github.com/portainer/portainer/api/stacks/stackutils"
 	"github.com/portainer/portainer/pkg/fips"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
@@ -248,7 +247,7 @@ func TestStackUpdate(t *testing.T) {
 	handler := NewHandler(testhelpers.NewTestRequestBouncer())
 	handler.DataStore = store
 	handler.FileService = fileService
-	handler.StackDeployer = testStackDeployer{}
+	handler.StackDeployer = testhelpers.NewTestStackDeployer()
 	handler.ComposeStackManager = testhelpers.NewComposeStackManager()
 	handler.SwarmStackManager = swarmStackManager{}
 
@@ -318,7 +317,11 @@ type updateStackInTxTestSetup struct {
 	req             *http.Request
 }
 
-func setupUpdateStackInTxTest(t *testing.T, stack *portainer.Stack, payload *updateComposeStackPayload) *updateStackInTxTestSetup {
+type testUpdateStackPayload interface {
+	*updateComposeStackPayload | *updateSwarmStackPayload
+}
+
+func setupUpdateStackInTxTest[T testUpdateStackPayload](t *testing.T, stack *portainer.Stack, payload T) *updateStackInTxTestSetup {
 	t.Helper()
 
 	_, store := datastore.MustNewTestStore(t, true, true)
@@ -364,7 +367,7 @@ func setupUpdateStackInTxTest(t *testing.T, stack *portainer.Stack, payload *upd
 	handler := NewHandler(testhelpers.NewTestRequestBouncer())
 	handler.DataStore = store
 	handler.FileService = fileService
-	handler.StackDeployer = testStackDeployer{}
+	handler.StackDeployer = testhelpers.NewTestStackDeployer()
 	handler.ComposeStackManager = testhelpers.NewComposeStackManager()
 
 	// Create mock request with security context
@@ -398,22 +401,73 @@ func (manager swarmStackManager) NormalizeStackName(name string) string {
 	return name
 }
 
-type testStackDeployer struct {
-	deployments.StackDeployer
+func Test_updateSwarmStack_Prune(t *testing.T) {
+	fips.InitFIPS(false)
+
+	payload := &updateSwarmStackPayload{
+		StackFileContent: "version: '3'\nservices:\n  web:\n    image: nginx:latest",
+		Prune:            true,
+	}
+	stack := &portainer.Stack{
+		ID:         1,
+		Name:       "test-stack-prune",
+		EntryPoint: "docker-compose.yml",
+		Type:       portainer.DockerSwarmStack,
+	}
+	setup := setupUpdateStackInTxTest(t, stack, payload)
+	setup.handler.SwarmStackManager = swarmStackManager{}
+	deployer := testhelpers.NewTestStackDeployer()
+	setup.handler.StackDeployer = deployer
+
+	err := setup.store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		_, handlerErr := setup.handler.updateStackInTx(tx, setup.req, setup.stack.ID, setup.endpoint.ID)
+		if handlerErr != nil {
+			return handlerErr
+		}
+		return nil
+	})
+	require.NoError(t, err, "handler should accept Prune=true and succeed")
+
+	stored, err := setup.store.Stack().Read(setup.stack.ID)
+	require.NoError(t, err)
+	require.NotNil(t, stored.Option, "stack.Option should not be nil")
+	assert.True(t, stored.Option.Prune, "stack.Option.Prune should be persisted as true")
+
+	assert.Equal(t, 1, deployer.DeploySwarmCallCount, "DeploySwarmStack should be called exactly once")
+	assert.True(t, deployer.LastPrune, "deployer should be invoked with prune=true")
 }
 
-func (testStackDeployer) DeployComposeStack(stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, forcePullImage, forceRecreate bool) error {
-	return nil
-}
+func Test_updateComposeStack_Prune(t *testing.T) {
+	fips.InitFIPS(false)
 
-func (testStackDeployer) DeploySwarmStack(stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, pullImage bool) error {
-	return nil
-}
+	payload := &updateComposeStackPayload{
+		StackFileContent: "version: '3'\nservices:\n  web:\n    image: nginx:latest",
+		Prune:            true,
+	}
+	stack := &portainer.Stack{
+		ID:         1,
+		Name:       "test-stack-prune",
+		EntryPoint: "docker-compose.yml",
+		Type:       portainer.DockerComposeStack,
+	}
+	setup := setupUpdateStackInTxTest(t, stack, payload)
+	deployer := testhelpers.NewTestStackDeployer()
+	setup.handler.StackDeployer = deployer
 
-func (testStackDeployer) DeployRemoteComposeStack(stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, forcePullImage, forceRecreate bool) error {
-	return nil
-}
+	err := setup.store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		_, handlerErr := setup.handler.updateStackInTx(tx, setup.req, setup.stack.ID, setup.endpoint.ID)
+		if handlerErr != nil {
+			return handlerErr
+		}
+		return nil
+	})
+	require.NoError(t, err, "handler should accept Prune=true and succeed")
 
-func (testStackDeployer) DeployRemoteSwarmStack(stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, pullImage bool) error {
-	return nil
+	stored, err := setup.store.Stack().Read(setup.stack.ID)
+	require.NoError(t, err)
+	require.NotNil(t, stored.Option, "stack.Option should not be nil")
+	assert.True(t, stored.Option.Prune, "stack.Option.Prune should be persisted as true")
+
+	assert.Equal(t, 1, deployer.DeployComposeCallCount, "DeployComposeStack should be called exactly once")
+	assert.True(t, deployer.LastPrune, "deployer should be invoked with prune=true")
 }

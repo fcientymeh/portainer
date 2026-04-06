@@ -42,9 +42,13 @@ export function useIsWindows(environmentId: EnvironmentId) {
   return !!query.data;
 }
 
-export function useIsStandAlone(environmentId: EnvironmentId | undefined) {
+export function useIsStandalone(
+  environmentId: EnvironmentId | undefined,
+  { enabled }: { enabled?: boolean } = {}
+) {
   const query = useInfo(environmentId, {
     select: (info) => !info.Swarm?.NodeID,
+    enabled,
   });
 
   return !!query.data;

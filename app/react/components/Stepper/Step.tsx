@@ -5,6 +5,8 @@ import { Icon } from '@@/Icon';
 
 export interface StepData {
   label: string;
+  /** Allow this step to be clicked even when it hasn't been reached yet */
+  enabled?: boolean;
 }
 
 interface Props {
@@ -32,7 +34,7 @@ export function Step({
 }: Props) {
   const isActive = index === currentStepIndex;
   const isCompleted = index < currentStepIndex;
-  const isClickable = !!onStepClick && isCompleted;
+  const isClickable = !!onStepClick && (isCompleted || !!step.enabled);
   const displayNumber = index + 1;
   const stepState = getStepState({ isActive, isCompleted });
 

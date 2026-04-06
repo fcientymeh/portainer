@@ -2,6 +2,7 @@ package deployments
 
 import (
 	"cmp"
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -33,7 +34,7 @@ var singleflightGroup = &singleflight.Group{}
 
 // RedeployWhenChanged pull and redeploy the stack when git repo changed
 // Stack will always be redeployed if force deployment is set to true
-func RedeployWhenChanged(stackID portainer.StackID, deployer StackDeployer, datastore dataservices.DataStore, gitService portainer.GitService) error {
+func RedeployWhenChanged(ctx context.Context, stackID portainer.StackID, deployer StackDeployer, datastore dataservices.DataStore, gitService portainer.GitService) error {
 	stack, err := datastore.Stack().Read(stackID)
 	if dataservices.IsErrObjectNotFound(err) {
 		return scheduler.NewPermanentError(errors.WithMessagef(err, "failed to get the stack %v", stackID))
@@ -43,18 +44,18 @@ func RedeployWhenChanged(stackID portainer.StackID, deployer StackDeployer, data
 
 	// Webhook
 	if stack.AutoUpdate != nil && stack.AutoUpdate.Webhook != "" {
-		return redeployWhenChanged(stack, deployer, datastore, gitService, true)
+		return redeployWhenChanged(ctx, stack, deployer, datastore, gitService, true)
 	}
 
 	// Polling
 	_, err, _ = singleflightGroup.Do(strconv.Itoa(int(stackID)), func() (any, error) {
-		return nil, redeployWhenChanged(stack, deployer, datastore, gitService, false)
+		return nil, redeployWhenChanged(ctx, stack, deployer, datastore, gitService, false)
 	})
 
 	return err
 }
 
-func redeployWhenChanged(stack *portainer.Stack, deployer StackDeployer, datastore dataservices.DataStore, gitService portainer.GitService, webhook bool) error {
+func redeployWhenChanged(ctx context.Context, stack *portainer.Stack, deployer StackDeployer, datastore dataservices.DataStore, gitService portainer.GitService, webhook bool) error {
 	log.Debug().Int("stack_id", int(stack.ID)).Msg("redeploying stack")
 
 	if stack.GitConfig == nil {
@@ -94,7 +95,7 @@ func redeployWhenChanged(stack *portainer.Stack, deployer StackDeployer, datasto
 
 	if webhook {
 		go func() {
-			if err := redeployWhenChangedSecondStage(stack, deployer, datastore, gitService, user, endpoint); err != nil {
+			if err := redeployWhenChangedSecondStage(ctx, stack, deployer, datastore, gitService, user, endpoint); err != nil {
 				log.Error().Err(err).
 					Int("stack_id", int(stack.ID)).
 					Str("stack", stack.Name).
@@ -107,10 +108,11 @@ func redeployWhenChanged(stack *portainer.Stack, deployer StackDeployer, datasto
 		return nil
 	}
 
-	return redeployWhenChangedSecondStage(stack, deployer, datastore, gitService, user, endpoint)
+	return redeployWhenChangedSecondStage(ctx, stack, deployer, datastore, gitService, user, endpoint)
 }
 
 func redeployWhenChangedSecondStage(
+	ctx context.Context,
 	stack *portainer.Stack,
 	deployer StackDeployer,
 	datastore dataservices.DataStore,
@@ -121,13 +123,14 @@ func redeployWhenChangedSecondStage(
 	var gitCommitChangedOrForceUpdate bool
 
 	if !stack.FromAppTemplate {
-		updated, newHash, err := update.UpdateGitObject(gitService, fmt.Sprintf("stack:%d", stack.ID), stack.GitConfig, false, stack.ProjectPath)
+		updated, newHash, err := update.UpdateGitObject(ctx, gitService, fmt.Sprintf("stack:%d", stack.ID), stack.GitConfig, false, stack.ProjectPath)
 		if err != nil {
 			return err
 		}
 
 		if updated {
 			stack.GitConfig.ConfigHash = newHash
+
 			stack.UpdateDate = time.Now().Unix()
 			gitCommitChangedOrForceUpdate = updated
 		}
@@ -141,6 +144,13 @@ func redeployWhenChangedSecondStage(
 		return nil
 	}
 
+	stack.CurrentDeploymentInfo = &portainer.StackDeploymentInfo{
+		RepositoryURL:   stack.GitConfig.URL,
+		ConfigFilePath:  stack.GitConfig.ConfigFilePath,
+		AdditionalFiles: stack.AdditionalFiles,
+		ConfigHash:      stack.GitConfig.ConfigHash,
+	}
+
 	registries, err := getUserRegistries(datastore, user, endpoint.ID)
 	if dataservices.IsErrObjectNotFound(err) {
 		return scheduler.NewPermanentError(err)
@@ -151,9 +161,9 @@ func redeployWhenChangedSecondStage(
 	switch stack.Type {
 	case portainer.DockerComposeStack:
 		if stackutils.IsRelativePathStack(stack) {
-			err = deployer.DeployRemoteComposeStack(stack, endpoint, registries, true, false)
+			err = deployer.DeployRemoteComposeStack(ctx, stack, endpoint, registries, true, true, false)
 		} else {
-			err = deployer.DeployComposeStack(stack, endpoint, registries, true, false)
+			err = deployer.DeployComposeStack(ctx, stack, endpoint, registries, true, true, false)
 		}
 
 		if err != nil {
@@ -161,9 +171,9 @@ func redeployWhenChangedSecondStage(
 		}
 	case portainer.DockerSwarmStack:
 		if stackutils.IsRelativePathStack(stack) {
-			err = deployer.DeployRemoteSwarmStack(stack, endpoint, registries, true, true)
+			err = deployer.DeployRemoteSwarmStack(ctx, stack, endpoint, registries, true, true)
 		} else {
-			err = deployer.DeploySwarmStack(stack, endpoint, registries, true, true)
+			err = deployer.DeploySwarmStack(ctx, stack, endpoint, registries, true, true)
 		}
 		if err != nil {
 			return errors.WithMessagef(err, "failed to deploy a docker compose stack %v", stack.ID)
@@ -171,7 +181,7 @@ func redeployWhenChangedSecondStage(
 	case portainer.KubernetesStack:
 		log.Debug().Int("stack_id", int(stack.ID)).Msg("deploying a kube app")
 
-		if err := deployer.DeployKubernetesStack(stack, endpoint, user); err != nil {
+		if err := deployer.DeployKubernetesStack(ctx, stack, endpoint, user); err != nil {
 			return errors.WithMessagef(err, "failed to deploy a kubernetes app stack %v", stack.ID)
 		}
 	default:

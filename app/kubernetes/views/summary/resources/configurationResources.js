@@ -1,5 +1,5 @@
-import { KubernetesResourceTypes, KubernetesResourceActions } from 'Kubernetes/models/resource-types/models';
-import { KubernetesConfigurationKinds } from 'Kubernetes/models/configuration/models';
+import { KubernetesResourceTypes, KubernetesResourceActions } from '@/kubernetes/models/resource-types/models';
+import { KubernetesConfigurationKinds } from '@/kubernetes/models/configuration/models';
 
 const { CREATE, UPDATE } = KubernetesResourceActions;
 

@@ -4,7 +4,7 @@ import filesizeParser from 'filesize-parser';
 import * as JsonPatch from 'fast-json-patch';
 import { RegistryTypes } from '@/portainer/models/registryTypes';
 import { getServices } from '@/react/kubernetes/services/useNamespaceServices';
-import { KubernetesConfigurationKinds } from 'Kubernetes/models/configuration/models';
+import { KubernetesConfigurationKinds } from '@/kubernetes/models/configuration/models';
 import { getGlobalDeploymentOptions } from '@/react/portainer/settings/settings.service';
 
 import {
@@ -12,17 +12,17 @@ import {
   KubernetesApplicationDeploymentTypes,
   KubernetesApplicationServiceTypes,
   KubernetesApplicationTypes,
-} from 'Kubernetes/models/application/models/appConstants';
-import { KubernetesApplicationQuotaDefaults, KubernetesDeploymentTypes } from 'Kubernetes/models/application/models';
-import { KubernetesApplicationEnvironmentVariableFormValue, KubernetesApplicationFormValues, KubernetesFormValidationReferences } from 'Kubernetes/models/application/formValues';
-import KubernetesFormValidationHelper from 'Kubernetes/helpers/formValidationHelper';
-import KubernetesApplicationConverter from 'Kubernetes/converters/application';
-import KubernetesResourceReservationHelper from 'Kubernetes/helpers/resourceReservationHelper';
-import { KubernetesServiceTypes } from 'Kubernetes/models/service/models';
-import KubernetesApplicationHelper from 'Kubernetes/helpers/application/index';
-import KubernetesVolumeHelper from 'Kubernetes/helpers/volumeHelper';
-import KubernetesNamespaceHelper from 'Kubernetes/helpers/namespaceHelper';
-import { KubernetesNodeHelper } from 'Kubernetes/node/helper';
+} from '@/kubernetes/models/application/models/appConstants';
+import { KubernetesApplicationQuotaDefaults, KubernetesDeploymentTypes } from '@/kubernetes/models/application/models';
+import { KubernetesApplicationEnvironmentVariableFormValue, KubernetesApplicationFormValues, KubernetesFormValidationReferences } from '@/kubernetes/models/application/formValues';
+import KubernetesFormValidationHelper from '@/kubernetes/helpers/formValidationHelper';
+import KubernetesApplicationConverter from '@/kubernetes/converters/application';
+import KubernetesResourceReservationHelper from '@/kubernetes/helpers/resourceReservationHelper';
+import { KubernetesServiceTypes } from '@/kubernetes/models/service/models';
+import KubernetesApplicationHelper from '@/kubernetes/helpers/application/index';
+import KubernetesVolumeHelper from '@/kubernetes/helpers/volumeHelper';
+import KubernetesNamespaceHelper from '@/kubernetes/helpers/namespaceHelper';
+import { KubernetesNodeHelper } from '@/kubernetes/node/helper';
 import { updateIngress, getIngresses } from '@/react/kubernetes/ingresses/service';
 import { confirmUpdateAppIngress } from '@/react/kubernetes/applications/CreateView/UpdateIngressPrompt';
 import { KUBE_STACK_NAME_VALIDATION_REGEX } from '@/react/kubernetes/DeployView/StackName/constants';

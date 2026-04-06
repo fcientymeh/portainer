@@ -2,8 +2,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'toastr/build/toastr.css';
 import 'angularjs-slider/dist/rzslider.css';
 import 'angular-loading-bar/build/loading-bar.css';
-import 'angular-moment-picker/dist/angular-moment-picker.min.css';
-import 'spinkit/spinkit.min.css';
+import 'spinkit/spinkit.min.css'; // ViewLoading, index.html, internal-auth. auth,
 import '@reach/menu-button/styles.css';
 
 import './colors';

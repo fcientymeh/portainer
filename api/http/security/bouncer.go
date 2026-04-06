@@ -1,6 +1,7 @@
 package security
 
 import (
+	"context"
 	"net/http"
 	"slices"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/pkg/featureflags"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
+	"github.com/portainer/portainer/pkg/schedule"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -68,7 +70,7 @@ var (
 )
 
 // NewRequestBouncer initializes a new RequestBouncer
-func NewRequestBouncer(dataStore dataservices.DataStore, jwtService portainer.JWTService, apiKeyService apikey.APIKeyService) *RequestBouncer {
+func NewRequestBouncer(ctx context.Context, dataStore dataservices.DataStore, jwtService portainer.JWTService, apiKeyService apikey.APIKeyService) *RequestBouncer {
 	b := &RequestBouncer{
 		dataStore:     dataStore,
 		jwtService:    jwtService,
@@ -77,7 +79,7 @@ func NewRequestBouncer(dataStore dataservices.DataStore, jwtService portainer.JW
 		csp:           true,
 	}
 
-	go b.cleanUpExpiredJWT()
+	go schedule.RunOnInterval(ctx, time.Hour, b.cleanUpExpiredJWTPass, nil)
 
 	return b
 }
@@ -398,14 +400,6 @@ func (bouncer *RequestBouncer) cleanUpExpiredJWTPass() {
 
 		return true
 	})
-}
-
-func (bouncer *RequestBouncer) cleanUpExpiredJWT() {
-	ticker := time.NewTicker(time.Hour)
-
-	for range ticker.C {
-		bouncer.cleanUpExpiredJWTPass()
-	}
 }
 
 // apiKeyLookup looks up an verifies an api-key by:

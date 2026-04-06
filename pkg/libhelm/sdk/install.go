@@ -100,7 +100,7 @@ func (hspm *HelmSDKPackageManager) install(installOpts options.InstallOptions) (
 	if installOpts.Registry != nil {
 		registryID = int(installOpts.Registry.ID)
 	}
-	chart.Metadata.Annotations = appendChartReferenceAnnotations(installOpts.Chart, installOpts.Repo, registryID, installOpts.StackID, installOpts.GitConfig, installOpts.AutoUpdate, chart.Metadata.Annotations)
+	chart.Metadata.Annotations = appendChartReferenceAnnotations(installOpts.Chart, installOpts.Repo, registryID, installOpts.StackID, installOpts.AutoUpdate, chart.Metadata.Annotations)
 
 	// Run the installation
 	log.Info().

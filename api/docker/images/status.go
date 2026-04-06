@@ -89,11 +89,11 @@ func FigureOut(statuses []Status) Status {
 		return Preparing
 	}
 
-	if contains(statuses, Outdated) {
+	if slices.Contains(statuses, Outdated) {
 		return Outdated
-	} else if contains(statuses, Processing) {
+	} else if slices.Contains(statuses, Processing) {
 		return Processing
-	} else if contains(statuses, Error) {
+	} else if slices.Contains(statuses, Error) {
 		return Error
 	}
 
@@ -273,14 +273,6 @@ func CachedImageDigest(resourceID string) (Status, error) {
 
 func EvictImageStatus(resourceID string) {
 	statusCache.Delete(resourceID)
-}
-
-func contains(statuses []Status, status Status) bool {
-	if len(statuses) == 0 {
-		return false
-	}
-
-	return slices.Contains(statuses, status)
 }
 
 func allMatch(statuses []Status, status Status) bool {

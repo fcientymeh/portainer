@@ -1,7 +1,6 @@
 package compose_test
 
 import (
-	"context"
 	"log"
 	"os"
 	"os/exec"
@@ -53,10 +52,9 @@ func Test_UpAndDown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx := context.Background()
 	projectName := "binarytest"
 
-	err = deployer.Deploy(ctx, []string{filePathOriginal, filePathOverride}, libstack.DeployOptions{
+	err = deployer.Deploy(t.Context(), []string{filePathOriginal, filePathOverride}, libstack.DeployOptions{
 		Options: libstack.Options{
 			ProjectName: projectName,
 		},
@@ -69,7 +67,7 @@ func Test_UpAndDown(t *testing.T) {
 		t.Fatal("container should exist")
 	}
 
-	err = deployer.Remove(ctx, projectName, []string{filePathOriginal, filePathOverride}, libstack.RemoveOptions{})
+	err = deployer.Remove(t.Context(), projectName, []string{filePathOriginal, filePathOverride}, libstack.RemoveOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}

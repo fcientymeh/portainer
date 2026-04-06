@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/slicesx"
 	"github.com/portainer/portainer/api/stacks/stackutils"
 )
 
@@ -201,4 +202,11 @@ func GetResourceControlByResourceIDAndType(resourceID string, resourceType porta
 	}
 
 	return nil
+}
+
+// TeamIDs extracts the TeamID from each membership.
+func TeamIDs(memberships []portainer.TeamMembership) []portainer.TeamID {
+	return slicesx.Map(memberships, func(m portainer.TeamMembership) portainer.TeamID {
+		return m.TeamID
+	})
 }

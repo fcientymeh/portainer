@@ -1,17 +1,17 @@
 import _ from 'lodash-es';
 import angular from 'angular';
-import PortainerError from 'Portainer/error';
+import PortainerError from '@/portainer/error';
 
-import { KubernetesApplicationDeploymentTypes, KubernetesApplicationTypes } from 'Kubernetes/models/application/models/appConstants';
-import KubernetesApplicationHelper from 'Kubernetes/helpers/application';
-import KubernetesApplicationConverter from 'Kubernetes/converters/application';
-import { KubernetesStatefulSet } from 'Kubernetes/models/stateful-set/models';
-import KubernetesServiceHelper from 'Kubernetes/helpers/serviceHelper';
-import { KubernetesHorizontalPodAutoScalerHelper } from 'Kubernetes/horizontal-pod-auto-scaler/helper';
-import { KubernetesHorizontalPodAutoScalerConverter } from 'Kubernetes/horizontal-pod-auto-scaler/converter';
-import KubernetesPodConverter from 'Kubernetes/pod/converter';
+import { KubernetesApplicationDeploymentTypes, KubernetesApplicationTypes } from '@/kubernetes/models/application/models/appConstants';
+import KubernetesApplicationHelper from '@/kubernetes/helpers/application';
+import KubernetesApplicationConverter from '@/kubernetes/converters/application';
+import { KubernetesStatefulSet } from '@/kubernetes/models/stateful-set/models';
+import KubernetesServiceHelper from '@/kubernetes/helpers/serviceHelper';
+import { KubernetesHorizontalPodAutoScalerHelper } from '@/kubernetes/horizontal-pod-auto-scaler/helper';
+import { KubernetesHorizontalPodAutoScalerConverter } from '@/kubernetes/horizontal-pod-auto-scaler/converter';
+import KubernetesPodConverter from '@/kubernetes/pod/converter';
 import { notifyError } from '@/portainer/services/notifications';
-import { KubernetesIngressConverter } from 'Kubernetes/ingress/converter';
+import { KubernetesIngressConverter } from '@/kubernetes/ingress/converter';
 import { generateNewIngressesFromFormPaths } from '@/react/kubernetes/applications/CreateView/application-services/utils';
 import { KubernetesPod } from '../pod/models';
 

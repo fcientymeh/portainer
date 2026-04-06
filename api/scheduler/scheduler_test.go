@@ -151,7 +151,7 @@ func Test_CanTerminateAllJobs_ByCancellingParentContext(t *testing.T) {
 
 func Test_StartJobEvery_Concurrently(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.Background(), 2*jobInterval)
+		ctx, cancel := context.WithTimeout(t.Context(), 2*jobInterval)
 		s := NewScheduler(ctx)
 
 		f := func() error {

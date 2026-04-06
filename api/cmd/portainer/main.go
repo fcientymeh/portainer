@@ -226,13 +226,12 @@ func initSnapshotService(
 	dataStore dataservices.DataStore,
 	dockerClientFactory *dockerclient.ClientFactory,
 	kubernetesClientFactory *kubecli.ClientFactory,
-	shutdownCtx context.Context,
 	pendingActionsService *pendingactions.PendingActionsService,
 ) (portainer.SnapshotService, error) {
 	dockerSnapshotter := docker.NewSnapshotter(dockerClientFactory)
 	kubernetesSnapshotter := kubernetes.NewSnapshotter(kubernetesClientFactory)
 
-	snapshotService, err := snapshot.NewService(snapshotIntervalFromFlag, dataStore, dockerSnapshotter, kubernetesSnapshotter, shutdownCtx, pendingActionsService)
+	snapshotService, err := snapshot.NewService(snapshotIntervalFromFlag, dataStore, dockerSnapshotter, kubernetesSnapshotter, pendingActionsService)
 	if err != nil {
 		return nil, err
 	}
@@ -348,8 +347,7 @@ func loadEncryptionSecretKey(keyfilename string) []byte {
 	return hash[:]
 }
 
-func buildServer(flags *portainer.CLIFlags) portainer.Server {
-	shutdownCtx, shutdownTrigger := context.WithCancel(context.Background())
+func buildServer(flags *portainer.CLIFlags, shutdownCtx context.Context, shutdownTrigger context.CancelFunc) portainer.Server {
 
 	if flags.FeatureFlags != nil {
 		featureflags.Parse(*flags.FeatureFlags, portainer.SupportedFeatureFlags)
@@ -471,12 +469,12 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 	pendingActionsService.RegisterHandler(actions.DeletePortainerK8sRegistrySecrets, handlers.NewHandlerDeleteRegistrySecrets(authorizationService, dataStore, kubernetesClientFactory))
 	pendingActionsService.RegisterHandler(actions.PostInitMigrateEnvironment, handlers.NewHandlerPostInitMigrateEnvironment(authorizationService, dataStore, kubernetesClientFactory, dockerClientFactory, *flags.Assets, kubernetesDeployer))
 
-	snapshotService, err := initSnapshotService(*flags.SnapshotInterval, dataStore, dockerClientFactory, kubernetesClientFactory, shutdownCtx, pendingActionsService)
+	snapshotService, err := initSnapshotService(*flags.SnapshotInterval, dataStore, dockerClientFactory, kubernetesClientFactory, pendingActionsService)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed initializing snapshot service")
 	}
 
-	snapshotService.Start()
+	snapshotService.Start(shutdownCtx)
 
 	proxyManager.NewProxyFactory(dataStore, signatureService, reverseTunnelService, dockerClientFactory, kubernetesClientFactory, kubernetesTokenCacheManager, gitService, snapshotService, jwtService)
 
@@ -614,7 +612,6 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 		DockerClientFactory:         dockerClientFactory,
 		KubernetesClientFactory:     kubernetesClientFactory,
 		Scheduler:                   scheduler,
-		ShutdownCtx:                 shutdownCtx,
 		ShutdownTrigger:             shutdownTrigger,
 		StackDeployer:               stackDeployer,
 		UpgradeService:              upgradeService,
@@ -636,12 +633,9 @@ func main() {
 	logs.SetLoggingMode(*flags.LogMode)
 
 	for {
-
 		var graylogAddr string
 		var graylogProto string
 
-		//os.Setenv("LOGGING_SERVER_ADDRESS", "172.31.0.11:12202")
-		//os.Setenv("LOGGING_SERVER_PROTO", "TCP")
 		graylogAddr = os.Getenv("LOGGING_SERVER_ADDRESS")
 		graylogProto = os.Getenv("LOGGING_SERVER_PROTO")
 		log.Info().Msg("AIP Portainer Logger initialization")
@@ -734,7 +728,8 @@ func main() {
 			stdlog.SetOutput(log.Logger)
 		}
 
-		server := buildServer(flags)
+		shutdownCtx, shutdownTrigger := context.WithCancel(context.Background())
+		server := buildServer(flags, shutdownCtx, shutdownTrigger)
 
 		log.Info().
 			Str("version", portainer.APIVersion).
@@ -745,8 +740,8 @@ func main() {
 			Str("webpack_version", build.WebpackVersion).
 			Str("go_version", build.GoVersion).
 			Msg("starting Portainer")
-		err := server.Start()
 
+		err := server.Start(shutdownCtx)
 		log.Info().Err(err).Msg("HTTP server exited")
 	}
 }

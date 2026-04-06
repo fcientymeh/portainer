@@ -1,4 +1,5 @@
 import { SystemBadge } from '@@/Badge/SystemBadge';
+import { Link } from '@@/Link';
 
 import { columnHelper } from './helper';
 
@@ -15,7 +16,16 @@ export const name = columnHelper.accessor(
     id: 'name',
     cell: ({ row }) => (
       <div className="flex gap-2">
-        <div>{row.original.name}</div>
+        <Link
+          to="kubernetes.moreResources.serviceAccounts.serviceAccount"
+          params={{
+            namespace: row.original.namespace,
+            name: row.original.name,
+          }}
+          data-cy={`sa-name-link-${row.original.name}`}
+        >
+          {row.original.name}
+        </Link>
         {row.original.isSystem && <SystemBadge className="ml-auto" />}
       </div>
     ),

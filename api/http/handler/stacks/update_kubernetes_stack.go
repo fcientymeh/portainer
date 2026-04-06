@@ -1,6 +1,7 @@
 package stacks
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"strconv"
@@ -27,13 +28,12 @@ type kubernetesFileStackUpdatePayload struct {
 }
 
 type kubernetesGitStackUpdatePayload struct {
-	RepositoryReferenceName     string
-	RepositoryAuthentication    bool
-	RepositoryUsername          string
-	RepositoryPassword          string
-	RepositoryAuthorizationType gittypes.GitCredentialAuthType
-	AutoUpdate                  *portainer.AutoUpdateSettings
-	TLSSkipVerify               bool
+	RepositoryReferenceName  string
+	RepositoryAuthentication bool
+	RepositoryUsername       string
+	RepositoryPassword       string
+	AutoUpdate               *portainer.AutoUpdateSettings
+	TLSSkipVerify            bool
 }
 
 func (payload *kubernetesFileStackUpdatePayload) Validate(r *http.Request) error {
@@ -77,17 +77,16 @@ func (handler *Handler) updateKubernetesStack(r *http.Request, stack *portainer.
 			}
 
 			stack.GitConfig.Authentication = &gittypes.GitAuthentication{
-				Username:          payload.RepositoryUsername,
-				Password:          password,
-				AuthorizationType: payload.RepositoryAuthorizationType,
+				Username: payload.RepositoryUsername,
+				Password: password,
 			}
 
 			if _, err := handler.GitService.LatestCommitID(
+				context.TODO(),
 				stack.GitConfig.URL,
 				stack.GitConfig.ReferenceName,
 				stack.GitConfig.Authentication.Username,
 				stack.GitConfig.Authentication.Password,
-				stack.GitConfig.Authentication.AuthorizationType,
 				stack.GitConfig.TLSSkipVerify,
 			); err != nil {
 				return httperror.InternalServerError("Unable to fetch git repository", err)
@@ -95,7 +94,7 @@ func (handler *Handler) updateKubernetesStack(r *http.Request, stack *portainer.
 		}
 
 		if payload.AutoUpdate != nil && payload.AutoUpdate.Interval != "" {
-			jobID, e := deployments.StartAutoupdate(stack.ID, stack.AutoUpdate.Interval, handler.Scheduler, handler.StackDeployer, handler.DataStore, handler.GitService)
+			jobID, e := deployments.StartAutoupdate(context.TODO(), stack.ID, stack.AutoUpdate.Interval, handler.Scheduler, handler.StackDeployer, handler.DataStore, handler.GitService)
 			if e != nil {
 				return e
 			}
@@ -148,7 +147,7 @@ func (handler *Handler) updateKubernetesStack(r *http.Request, stack *portainer.
 	// so if the deployment failed, the original file won't be over-written
 	stack.ProjectPath = tempFileDir
 
-	if _, err := handler.deployKubernetesStack(tokenData.ID, endpoint, stack, k.KubeAppLabels{
+	if _, err := handler.deployKubernetesStack(context.TODO(), tokenData.ID, endpoint, stack, k.KubeAppLabels{
 		StackID:   int(stack.ID),
 		StackName: stack.Name,
 		Owner:     stack.CreatedBy,

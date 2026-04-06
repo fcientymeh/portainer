@@ -1,7 +1,6 @@
 package libkubectl
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -141,12 +140,12 @@ data:
 
 			if shouldCreate {
 				// Create the resources first
-				_, err := client.ApplyDynamic(context.Background(), tt.manifests)
+				_, err := client.ApplyDynamic(t.Context(), tt.manifests)
 				require.NoError(t, err, "Failed to create resources for deletion test")
 			}
 
 			// Test DeleteDynamic
-			output, err := client.DeleteDynamic(context.Background(), tt.manifests)
+			output, err := client.DeleteDynamic(t.Context(), tt.manifests)
 
 			if tt.wantErr {
 				require.Error(t, err, "DeleteDynamic() expected error but got none")
@@ -177,15 +176,15 @@ data:
 	require.NoError(t, err, "Failed to create client")
 
 	// Create the resource
-	_, err = client.ApplyDynamic(context.Background(), manifest)
+	_, err = client.ApplyDynamic(t.Context(), manifest)
 	require.NoError(t, err, "Failed to create resource")
 
 	// Delete it once
-	_, err = client.DeleteDynamic(context.Background(), manifest)
+	_, err = client.DeleteDynamic(t.Context(), manifest)
 	require.NoError(t, err, "First DeleteDynamic() failed")
 
 	// Delete it again (should succeed since DeleteDynamic ignores not found errors)
-	_, err = client.DeleteDynamic(context.Background(), manifest)
+	_, err = client.DeleteDynamic(t.Context(), manifest)
 	require.NoError(t, err, "Second DeleteDynamic() should not return error for already deleted resource")
 }
 
@@ -207,11 +206,11 @@ data:
   key: value`,
 	}
 
-	_, err = client.ApplyDynamic(context.Background(), validManifest)
+	_, err = client.ApplyDynamic(t.Context(), validManifest)
 	require.NoError(t, err, "Failed to create resource")
 
 	t.Cleanup(func() {
-		_, err = client.DeleteDynamic(context.Background(), validManifest)
+		_, err = client.DeleteDynamic(t.Context(), validManifest)
 		require.NoError(t, err, "Cleanup DeleteDynamic() failed")
 	})
 
@@ -230,6 +229,6 @@ metadata:
   namespace: default`,
 	}
 
-	_, err = client.DeleteDynamic(context.Background(), mixedManifests)
+	_, err = client.DeleteDynamic(t.Context(), mixedManifests)
 	require.NoError(t, err, "DeleteDynamic() should handle non-existent resources gracefully")
 }

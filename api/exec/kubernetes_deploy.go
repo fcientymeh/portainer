@@ -76,16 +76,16 @@ func (deployer *KubernetesDeployer) getToken(userID portainer.UserID, endpoint *
 }
 
 // Deploy upserts Kubernetes resources defined in manifest(s)
-func (deployer *KubernetesDeployer) Deploy(userID portainer.UserID, endpoint *portainer.Endpoint, resources []string, namespace string) (string, error) {
-	return deployer.command("apply", userID, endpoint, resources, namespace)
+func (deployer *KubernetesDeployer) Deploy(ctx context.Context, userID portainer.UserID, endpoint *portainer.Endpoint, resources []string, namespace string) (string, error) {
+	return deployer.command(ctx, "apply", userID, endpoint, resources, namespace)
 }
 
 // Remove deletes Kubernetes resources defined in manifest(s)
-func (deployer *KubernetesDeployer) Remove(userID portainer.UserID, endpoint *portainer.Endpoint, resources []string, namespace string) (string, error) {
-	return deployer.command("delete", userID, endpoint, resources, namespace)
+func (deployer *KubernetesDeployer) Remove(ctx context.Context, userID portainer.UserID, endpoint *portainer.Endpoint, resources []string, namespace string) (string, error) {
+	return deployer.command(ctx, "delete", userID, endpoint, resources, namespace)
 }
 
-func (deployer *KubernetesDeployer) command(operation string, userID portainer.UserID, endpoint *portainer.Endpoint, resources []string, namespace string) (string, error) {
+func (deployer *KubernetesDeployer) command(ctx context.Context, operation string, userID portainer.UserID, endpoint *portainer.Endpoint, resources []string, namespace string) (string, error) {
 	token, err := deployer.getToken(userID, endpoint, endpoint.Type == portainer.KubernetesLocalEnvironment)
 	if err != nil {
 		return "", errors.Wrap(err, "failed generating a user token")
@@ -120,7 +120,7 @@ func (deployer *KubernetesDeployer) command(operation string, userID portainer.U
 		return "", errors.Errorf("unsupported operation: %s", operation)
 	}
 
-	output, err := operationFunc(context.Background(), resources)
+	output, err := operationFunc(ctx, resources)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to execute kubectl %s command", operation)
 	}

@@ -1,7 +1,6 @@
 package libkubectl
 
 import (
-	"context"
 	"os"
 	"strings"
 	"testing"
@@ -546,14 +545,14 @@ data:
 			// This runs even if the test fails, ensuring cluster stays clean
 			if !tt.wantErr && len(tt.manifests) > 0 {
 				t.Cleanup(func() {
-					_, err := client.DeleteDynamic(context.Background(), tt.manifests)
+					_, err := client.DeleteDynamic(t.Context(), tt.manifests)
 					if err != nil {
 						t.Logf("Warning: failed to cleanup resources: %v", err)
 					}
 				})
 			}
 
-			output, err := client.ApplyDynamic(context.Background(), tt.manifests)
+			output, err := client.ApplyDynamic(t.Context(), tt.manifests)
 
 			if tt.wantErr {
 				if err == nil {
@@ -683,7 +682,7 @@ metadata:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := client.applyResource(context.Background(), dynamicClient, mapper, []byte(tt.yaml), tt.configuredNS)
+			result, err := client.applyResource(t.Context(), dynamicClient, mapper, []byte(tt.yaml), tt.configuredNS)
 
 			if tt.wantErr {
 				if err == nil {

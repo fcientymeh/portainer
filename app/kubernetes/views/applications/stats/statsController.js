@@ -2,7 +2,7 @@ import angular from 'angular';
 import moment from 'moment';
 import _ from 'lodash-es';
 import filesizeParser from 'filesize-parser';
-import KubernetesPodConverter from 'Kubernetes/pod/converter';
+import KubernetesPodConverter from '@/kubernetes/pod/converter';
 import { getMetricsForPod } from '@/react/kubernetes/metrics/metrics.ts';
 import { parseCPU } from '@/react/kubernetes/utils';
 

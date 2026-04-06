@@ -1,5 +1,5 @@
 import _ from 'lodash-es';
-import { PorImageRegistryModel } from 'Docker/models/porImageRegistry';
+import { PorImageRegistryModel } from '@/docker/models/porImageRegistry';
 import { confirmImageExport } from '@/react/docker/images/common/ConfirmExportModal';
 import { confirmDelete } from '@@/modals/confirm';
 

@@ -98,10 +98,7 @@ func (handler *Handler) userCanAccessStack(securityContext *security.RestrictedR
 		return false, err
 	}
 
-	userTeamIDs := make([]portainer.TeamID, 0)
-	for _, membership := range securityContext.UserMemberships {
-		userTeamIDs = append(userTeamIDs, membership.TeamID)
-	}
+	userTeamIDs := authorization.TeamIDs(securityContext.UserMemberships)
 
 	if resourceControl != nil && authorization.UserCanAccessResource(securityContext.UserID, userTeamIDs, resourceControl) {
 		return true, nil

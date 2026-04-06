@@ -41,6 +41,47 @@ func (handler *Handler) getAllKubernetesServiceAccounts(w http.ResponseWriter, r
 	return response.JSON(w, serviceAccounts)
 }
 
+// @id GetKubernetesServiceAccount
+// @summary Get a kubernetes service account
+// @description Get a kubernetes service account in the given namespace.
+// @description **Access policy**: Authenticated user.
+// @tags kubernetes
+// @security ApiKeyAuth || jwt
+// @produce json
+// @param id path int true "Environment identifier"
+// @param namespace path string true "Namespace"
+// @param name path string true "Service account name"
+// @success 200 {object} models.K8sServiceAccount "Success"
+// @failure 400 "Invalid request"
+// @failure 401 "Unauthorized"
+// @failure 403 "Permission denied"
+// @failure 404 "Service account not found"
+// @failure 500 "Server error"
+// @router /kubernetes/{id}/namespaces/{namespace}/service_accounts/{name} [get]
+func (handler *Handler) getKubernetesServiceAccount(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
+	namespace, err := request.RetrieveRouteVariableValue(r, "namespace")
+	if err != nil {
+		return httperror.BadRequest("Invalid namespace", err)
+	}
+
+	name, err := request.RetrieveRouteVariableValue(r, "name")
+	if err != nil {
+		return httperror.BadRequest("Invalid name", err)
+	}
+
+	cli, httpErr := handler.prepareKubeClient(r)
+	if httpErr != nil {
+		return httperror.InternalServerError("Unable to prepare kube client", httpErr)
+	}
+
+	sa, err := cli.GetServiceAccount(namespace, name)
+	if err != nil {
+		return httperror.InternalServerError("Unable to retrieve service account", err)
+	}
+
+	return response.JSON(w, sa)
+}
+
 // @id DeleteServiceAccounts
 // @summary Delete service accounts
 // @description Delete the provided list of service accounts.

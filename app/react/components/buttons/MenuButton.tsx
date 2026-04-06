@@ -89,7 +89,7 @@ export function MenuButtonLink({
       href={anchorProps.href}
       onClick={anchorProps.onClick}
       className={clsx(
-        'rounded-md px-5 py-1 text-sm leading-5 whitespace-nowrap text-[var(--text-dropdown-menu-color)] decoration-none hover:decoration-none hover:bg-[var(--bg-dropdown-hover)] hover:text-[var(--text-dropdown-menu-color)] focus:bg-[var(--bg-dropdown-hover)] focus:text-[var(--text-dropdown-menu-color)] focus-visible:outline-none focus-visible:ring-0 hover:no-underline'
+        'rounded-md px-5 py-1 text-sm leading-5 whitespace-nowrap text-[var(--text-dropdown-menu-color)] th-dark:text-[var(--text-dropdown-menu-color)] th-highcontrast:text-[var(--text-dropdown-menu-color)] decoration-none hover:decoration-none hover:bg-[var(--bg-dropdown-hover)] hover:text-[var(--text-dropdown-menu-color)] th-dark:hover:text-[var(--text-dropdown-menu-color)] th-highcontrast:hover:text-[var(--text-dropdown-menu-color)] focus:bg-[var(--bg-dropdown-hover)] focus:text-[var(--text-dropdown-menu-color)] th-dark:focus:text-[var(--text-dropdown-menu-color)] th-highcontrast:focus:text-[var(--text-dropdown-menu-color)] focus-visible:outline-none focus-visible:ring-0 hover:no-underline'
       )}
       aria-label={label}
       data-cy={dataCy}

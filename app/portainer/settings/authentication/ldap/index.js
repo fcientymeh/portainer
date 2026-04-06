@@ -10,7 +10,6 @@ import { ldapGroupSearch } from './ldap-group-search';
 import { ldapGroupSearchItem } from './ldap-group-search-item';
 import { ldapUserSearch } from './ldap-user-search';
 import { ldapUserSearchItem } from './ldap-user-search-item';
-import { ldapSettingsDnBuilder } from './ldap-settings-dn-builder';
 import { ldapSettingsGroupDnBuilder } from './ldap-settings-group-dn-builder';
 import { ldapCustomAdminGroup } from './ldap-custom-admin-group';
 import { ldapCustomGroupSearch } from './ldap-custom-group-search';
@@ -31,7 +30,6 @@ export default angular
   .component('ldapUserSearch', ldapUserSearch)
   .component('ldapUserSearchItem', ldapUserSearchItem)
   .component('ldapSettingsCustom', ldapSettingsCustom)
-  .component('ldapSettingsDnBuilder', ldapSettingsDnBuilder)
   .component('ldapSettingsGroupDnBuilder', ldapSettingsGroupDnBuilder)
   .component('ldapCustomGroupSearch', ldapCustomGroupSearch)
   .component('ldapSettingsOpenLdap', ldapSettingsOpenLdap)

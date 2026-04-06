@@ -40,7 +40,6 @@ interface TableSettings
 
 interface CronJobsExecutionsProps {
   item: Job[];
-  tableState: TableSettings;
 }
 
 export function CronJobsDatatable() {
@@ -102,17 +101,17 @@ export function CronJobsDatatable() {
       )}
       getRowCanExpand={(row) => (row.original.Jobs ?? []).length > 0}
       renderSubRow={(row) => (
-        <SubRow item={row.original.Jobs ?? []} tableState={tableState} />
+        <SubRow item={row.original.Jobs ?? []} />
       )}
     />
   );
 }
 
-function SubRow({ item, tableState }: CronJobsExecutionsProps) {
+function SubRow({ item }: CronJobsExecutionsProps) {
   return (
     <tr>
       <td colSpan={8}>
-        <CronJobsExecutionsInnerDatatable item={item} tableState={tableState} />
+        <CronJobsExecutionsInnerDatatable item={item} />
       </td>
     </tr>
   );

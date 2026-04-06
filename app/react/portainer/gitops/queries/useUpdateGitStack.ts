@@ -1,14 +1,32 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { GitStackPayload } from '@/react/common/stacks/types';
 import { buildStackUrl } from '@/react/common/stacks/queries/buildUrl';
 import { queryKeys } from '@/react/common/stacks/queries/query-keys';
+import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 
-async function updateGitStack(
+import { EnvVarValues } from '@@/form-components/EnvironmentVariablesFieldset';
+
+import { AuthTypeOption } from '../../account/git-credentials/types';
+
+interface DeployGitPayload {
+  RepositoryReferenceName?: string;
+  RepositoryAuthentication?: boolean;
+  RepositoryUsername?: string;
+  RepositoryPassword?: string;
+  RepositoryAuthorizationType?: AuthTypeOption;
+  Env?: EnvVarValues;
+  Prune?: boolean;
+  // RepullImageAndRedeploy indicates whether to force repulling images and redeploying the stack
+  RepullImageAndRedeploy?: boolean;
+  RepositoryGitCredentialID?: number;
+
+  StackName?: string;
+}
+
+export async function updateGitStack(
   stackId: number,
   endpointId: number,
-  payload: GitStackPayload
+  payload: DeployGitPayload
 ) {
   try {
     const { data } = await axios.put(
@@ -27,7 +45,7 @@ export function useUpdateGitStack(stackId: number, endpointId: number) {
 
   return useMutation({
     mutationKey: ['git-stack', 'redeploy', endpointId, stackId],
-    mutationFn: (payload: GitStackPayload) =>
+    mutationFn: (payload: DeployGitPayload) =>
       updateGitStack(stackId, endpointId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({

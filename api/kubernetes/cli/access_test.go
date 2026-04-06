@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
@@ -52,10 +51,10 @@ func Test_NamespaceAccessPoliciesDeleteNamespace_updatesPortainerConfig_whenConf
 				},
 			}
 
-			_, err := k.cli.CoreV1().ConfigMaps(portainerNamespace).Create(context.Background(), config, metav1.CreateOptions{})
+			_, err := k.cli.CoreV1().ConfigMaps(portainerNamespace).Create(t.Context(), config, metav1.CreateOptions{})
 			require.NoError(t, err, "failed to create a portainer config")
 			defer func() {
-				err := k.cli.CoreV1().ConfigMaps(portainerNamespace).Delete(context.Background(), portainerConfigMapName, metav1.DeleteOptions{})
+				err := k.cli.CoreV1().ConfigMaps(portainerNamespace).Delete(t.Context(), portainerConfigMapName, metav1.DeleteOptions{})
 				require.NoError(t, err)
 			}()
 

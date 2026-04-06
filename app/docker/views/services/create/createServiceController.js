@@ -1,7 +1,7 @@
 import _ from 'lodash-es';
 
 import * as envVarsUtils from '@/react/components/form-components/EnvironmentVariablesFieldset/utils';
-import { PorImageRegistryModel } from 'Docker/models/porImageRegistry';
+import { PorImageRegistryModel } from '@/docker/models/porImageRegistry';
 import { AccessControlFormData } from '../../../../portainer/components/accessControlForm/porAccessControlFormModel';
 
 require('./includes/update-restart.html');

@@ -2,7 +2,6 @@ package backup
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -54,7 +53,7 @@ func Test_restoreArchive_usingCombinationOfPasswords(t *testing.T) {
 				testhelpers.WithUsers([]portainer.User{}),
 				testhelpers.WithEdgeJobs([]portainer.EdgeJob{}),
 			)
-			adminMonitor := adminmonitor.New(time.Hour, datastore, context.Background())
+			adminMonitor := adminmonitor.New(time.Hour, datastore)
 
 			h := NewHandler(
 				testhelpers.NewTestRequestBouncer(),
@@ -86,7 +85,7 @@ func Test_restoreArchive_shouldFailIfSystemWasAlreadyInitialized(t *testing.T) {
 		testhelpers.WithUsers([]portainer.User{admin}),
 		testhelpers.WithEdgeJobs([]portainer.EdgeJob{}),
 	)
-	adminMonitor := adminmonitor.New(time.Hour, datastore, context.Background())
+	adminMonitor := adminmonitor.New(time.Hour, datastore)
 
 	h := NewHandler(testhelpers.NewTestRequestBouncer(),
 		datastore,

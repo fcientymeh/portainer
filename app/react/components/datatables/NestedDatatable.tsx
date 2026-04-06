@@ -12,6 +12,8 @@ import {
 
 import { AutomationTestingProps } from '@/types';
 
+import { IconProps } from '@@/Icon';
+
 import { defaultGetRowId } from './defaultGetRowId';
 import { Table } from './Table';
 import { NestedTable } from './NestedTable';
@@ -29,6 +31,8 @@ interface Props<D extends DefaultType> extends AutomationTestingProps {
   isLoading?: boolean;
   initialSortBy?: BasicTableSettings['sortBy'];
   enablePagination?: boolean;
+  title?: React.ReactNode;
+  titleIcon?: IconProps['icon'];
   /**
    * keyword to filter by
    */
@@ -46,6 +50,8 @@ export function NestedDatatable<D extends DefaultType>({
   isLoading,
   initialSortBy,
   enablePagination = true,
+  title,
+  titleIcon,
   search,
   'data-cy': dataCy,
   'aria-label': ariaLabel,
@@ -87,6 +93,7 @@ export function NestedDatatable<D extends DefaultType>({
   return (
     <NestedTable>
       <Table.Container noWidget>
+        {title && <Table.Title label={title} icon={titleIcon} />}
         <DatatableContent<D>
           tableInstance={tableInstance}
           isLoading={isLoading}

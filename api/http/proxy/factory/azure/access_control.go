@@ -37,11 +37,7 @@ func (transport *Transport) createAzureRequestContext(request *http.Request) (*a
 			return nil, err
 		}
 
-		userTeamIDs := make([]portainer.TeamID, 0)
-		for _, membership := range teamMemberships {
-			userTeamIDs = append(userTeamIDs, membership.TeamID)
-		}
-		context.userTeamIDs = userTeamIDs
+		context.userTeamIDs = authorization.TeamIDs(teamMemberships)
 	}
 
 	return context, nil

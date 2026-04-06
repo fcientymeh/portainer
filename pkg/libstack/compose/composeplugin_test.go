@@ -53,17 +53,15 @@ services:
 
 	filePaths := []string{filePathOriginal, filePathOverride}
 
-	ctx := context.Background()
-
-	err := w.Validate(ctx, filePaths, libstack.Options{ProjectName: projectName})
+	err := w.Validate(t.Context(), filePaths, libstack.Options{ProjectName: projectName})
 	require.NoError(t, err)
 
-	err = w.Pull(ctx, filePaths, libstack.Options{ProjectName: projectName})
+	err = w.Pull(t.Context(), filePaths, libstack.Options{ProjectName: projectName})
 	require.NoError(t, err)
 
 	require.False(t, containerExists(composeContainerName))
 
-	err = w.Deploy(ctx, filePaths, libstack.DeployOptions{
+	err = w.Deploy(t.Context(), filePaths, libstack.DeployOptions{
 		Options: libstack.Options{
 			ProjectName: projectName,
 		},
@@ -72,12 +70,12 @@ services:
 
 	require.True(t, containerExists(composeContainerName))
 
-	waitResult := w.WaitForStatus(ctx, projectName, libstack.StatusCompleted)
+	waitResult := w.WaitForStatus(t.Context(), projectName, libstack.StatusCompleted)
 
 	require.Empty(t, waitResult.ErrorMsg)
 	require.Equal(t, libstack.StatusCompleted, waitResult.Status)
 
-	err = w.Remove(ctx, projectName, filePaths, libstack.RemoveOptions{})
+	err = w.Remove(t.Context(), projectName, filePaths, libstack.RemoveOptions{})
 	require.NoError(t, err)
 
 	require.False(t, containerExists(composeContainerName))
@@ -108,20 +106,19 @@ configs:
 	w := NewComposeDeployer()
 
 	dir := t.TempDir()
-	ctx := context.Background()
 
 	filePath := createFile(t, dir, "docker-compose.yml", content)
 	filePaths := []string{filePath}
 
-	err := w.Validate(ctx, filePaths, libstack.Options{ProjectName: projectName})
+	err := w.Validate(t.Context(), filePaths, libstack.Options{ProjectName: projectName})
 	require.NoError(t, err)
 
-	err = w.Pull(ctx, filePaths, libstack.Options{ProjectName: projectName})
+	err = w.Pull(t.Context(), filePaths, libstack.Options{ProjectName: projectName})
 	require.NoError(t, err)
 
 	require.False(t, containerExists(containerName))
 
-	err = w.Deploy(ctx, filePaths, libstack.DeployOptions{
+	err = w.Deploy(t.Context(), filePaths, libstack.DeployOptions{
 		Options: libstack.Options{
 			ProjectName: projectName,
 		},
@@ -130,12 +127,12 @@ configs:
 
 	require.True(t, containerExists(containerName))
 
-	waitResult := w.WaitForStatus(ctx, projectName, libstack.StatusCompleted)
+	waitResult := w.WaitForStatus(t.Context(), projectName, libstack.StatusCompleted)
 
 	require.Empty(t, waitResult.ErrorMsg)
 	require.Equal(t, libstack.StatusCompleted, waitResult.Status)
 
-	err = w.Remove(ctx, projectName, filePaths, libstack.RemoveOptions{})
+	err = w.Remove(t.Context(), projectName, filePaths, libstack.RemoveOptions{})
 	require.NoError(t, err)
 
 	require.False(t, containerExists(containerName))
@@ -154,7 +151,7 @@ services:
 	filePaths := []string{filePath}
 	serviceName := "updater"
 
-	err := w.Run(context.Background(), filePaths, serviceName, libstack.RunOptions{
+	err := w.Run(t.Context(), filePaths, serviceName, libstack.RunOptions{
 		Remove: true,
 		Options: libstack.Options{
 			ProjectName: "project_name",
@@ -196,14 +193,11 @@ func Test_Validate(t *testing.T) {
 
 	projectName := "plugintest"
 
-	ctx := context.Background()
-
-	err := w.Validate(ctx, filePaths, libstack.Options{ProjectName: projectName})
+	err := w.Validate(t.Context(), filePaths, libstack.Options{ProjectName: projectName})
 	require.Error(t, err)
 }
 
 func Test_Config(t *testing.T) {
-	ctx := context.Background()
 	dir := t.TempDir()
 	projectName := "configtest"
 
@@ -411,7 +405,7 @@ networks:
 			}
 
 			w := NewComposeDeployer()
-			actual, err := w.Config(ctx, []string{composeFilePath}, libstack.Options{
+			actual, err := w.Config(t.Context(), []string{composeFilePath}, libstack.Options{
 				WorkingDir:    dir,
 				ProjectName:   projectName,
 				EnvFilePath:   envFilePath,
@@ -451,8 +445,6 @@ func Test_DeployWithRemoveOrphans(t *testing.T) {
 	filepaths := []string{composeFilepath}
 	modifiedFilepaths := []string{modifiedComposeFilepath}
 
-	ctx := context.Background()
-
 	testCases := []struct {
 		name    string
 		options libstack.DeployOptions
@@ -491,20 +483,20 @@ func Test_DeployWithRemoveOrphans(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			options := tc.options.Options
 
-			err := w.Validate(ctx, filepaths, options)
+			err := w.Validate(t.Context(), filepaths, options)
 			require.NoError(t, err)
 
-			err = w.Pull(ctx, filepaths, options)
+			err = w.Pull(t.Context(), filepaths, options)
 			require.NoError(t, err)
 
 			require.False(t, containerExists(service1ContainerName))
 			require.False(t, containerExists(service2ContainerName))
 
-			err = w.Deploy(ctx, filepaths, tc.options)
+			err = w.Deploy(t.Context(), filepaths, tc.options)
 			require.NoError(t, err)
 
 			defer func() {
-				err = w.Remove(ctx, projectName, filepaths, libstack.RemoveOptions{})
+				err = w.Remove(t.Context(), projectName, filepaths, libstack.RemoveOptions{})
 				require.NoError(t, err)
 
 				require.False(t, containerExists(service1ContainerName))
@@ -514,27 +506,27 @@ func Test_DeployWithRemoveOrphans(t *testing.T) {
 			require.True(t, containerExists(service1ContainerName))
 			require.True(t, containerExists(service2ContainerName))
 
-			waitResult := w.WaitForStatus(ctx, projectName, libstack.StatusCompleted)
+			waitResult := w.WaitForStatus(t.Context(), projectName, libstack.StatusCompleted)
 
 			require.Empty(t, waitResult.ErrorMsg)
 			require.Equal(t, libstack.StatusCompleted, waitResult.Status)
 
-			err = w.Validate(ctx, modifiedFilepaths, options)
+			err = w.Validate(t.Context(), modifiedFilepaths, options)
 			require.NoError(t, err)
 
-			err = w.Pull(ctx, modifiedFilepaths, options)
+			err = w.Pull(t.Context(), modifiedFilepaths, options)
 			require.NoError(t, err)
 
 			require.True(t, containerExists(service1ContainerName))
 			require.True(t, containerExists(service2ContainerName))
 
-			err = w.Deploy(ctx, modifiedFilepaths, tc.options)
+			err = w.Deploy(t.Context(), modifiedFilepaths, tc.options)
 			require.NoError(t, err)
 
 			require.False(t, containerExists(service1ContainerName))
 			require.True(t, containerExists(service2ContainerName))
 
-			waitResult = w.WaitForStatus(ctx, projectName, libstack.StatusCompleted)
+			waitResult = w.WaitForStatus(t.Context(), projectName, libstack.StatusCompleted)
 
 			require.Empty(t, waitResult.ErrorMsg)
 			require.Equal(t, libstack.StatusCompleted, waitResult.Status)
@@ -591,22 +583,20 @@ func Test_DeployWithIgnoreOrphans(t *testing.T) {
 		Env:         []string{cmdcompose.ComposeIgnoreOrphans + "=true"},
 	}
 
-	ctx := context.Background()
-
-	err := w.Validate(ctx, filepaths, options)
+	err := w.Validate(t.Context(), filepaths, options)
 	require.NoError(t, err)
 
-	err = w.Pull(ctx, filepaths, options)
+	err = w.Pull(t.Context(), filepaths, options)
 	require.NoError(t, err)
 
 	require.False(t, containerExists(service1ContainerName))
 	require.False(t, containerExists(service2ContainerName))
 
-	err = w.Deploy(ctx, filepaths, libstack.DeployOptions{Options: options})
+	err = w.Deploy(t.Context(), filepaths, libstack.DeployOptions{Options: options})
 	require.NoError(t, err)
 
 	defer func() {
-		err = w.Remove(ctx, projectName, filepaths, libstack.RemoveOptions{})
+		err = w.Remove(t.Context(), projectName, filepaths, libstack.RemoveOptions{})
 		require.NoError(t, err)
 
 		require.False(t, containerExists(service1ContainerName))
@@ -616,27 +606,27 @@ func Test_DeployWithIgnoreOrphans(t *testing.T) {
 	require.True(t, containerExists(service1ContainerName))
 	require.True(t, containerExists(service2ContainerName))
 
-	waitResult := w.WaitForStatus(ctx, projectName, libstack.StatusCompleted)
+	waitResult := w.WaitForStatus(t.Context(), projectName, libstack.StatusCompleted)
 
 	require.Empty(t, waitResult.ErrorMsg)
 	require.Equal(t, libstack.StatusCompleted, waitResult.Status)
 
-	err = w.Validate(ctx, modifiedFilepaths, options)
+	err = w.Validate(t.Context(), modifiedFilepaths, options)
 	require.NoError(t, err)
 
-	err = w.Pull(ctx, modifiedFilepaths, options)
-	require.NoError(t, err)
-
-	require.True(t, containerExists(service1ContainerName))
-	require.True(t, containerExists(service2ContainerName))
-
-	err = w.Deploy(ctx, modifiedFilepaths, libstack.DeployOptions{Options: options})
+	err = w.Pull(t.Context(), modifiedFilepaths, options)
 	require.NoError(t, err)
 
 	require.True(t, containerExists(service1ContainerName))
 	require.True(t, containerExists(service2ContainerName))
 
-	waitResult = w.WaitForStatus(ctx, projectName, libstack.StatusCompleted)
+	err = w.Deploy(t.Context(), modifiedFilepaths, libstack.DeployOptions{Options: options})
+	require.NoError(t, err)
+
+	require.True(t, containerExists(service1ContainerName))
+	require.True(t, containerExists(service2ContainerName))
+
+	waitResult = w.WaitForStatus(t.Context(), projectName, libstack.StatusCompleted)
 
 	require.Empty(t, waitResult.ErrorMsg)
 	require.Equal(t, libstack.StatusCompleted, waitResult.Status)
@@ -668,12 +658,10 @@ func Test_MaxConcurrency(t *testing.T) {
 		Env:         []string{cmdcompose.ComposeParallelLimit + "=" + strconv.Itoa(expectedMaxConcurrency)},
 	}
 
-	ctx := context.Background()
-
-	err := w.Validate(ctx, filepaths, options)
+	err := w.Validate(t.Context(), filepaths, options)
 	require.NoError(t, err)
 
-	err = w.withComposeService(ctx, filepaths, options, func(service api.Compose, _ *types.Project) error {
+	err = w.withComposeService(t.Context(), filepaths, options, func(service api.Compose, _ *types.Project) error {
 		if mockS, ok := service.(*mockComposeService); ok {
 			require.Equal(t, expectedMaxConcurrency, mockS.maxConcurrency)
 		} else {
@@ -685,7 +673,6 @@ func Test_MaxConcurrency(t *testing.T) {
 }
 
 func Test_createProject(t *testing.T) {
-	ctx := context.Background()
 	dir := t.TempDir()
 	projectName := "create-project-test"
 
@@ -1364,7 +1351,7 @@ func Test_createProject(t *testing.T) {
 				t.Setenv(k, v)
 			}
 
-			gotProject, err := createProject(ctx, tc.configFilepaths, tc.options)
+			gotProject, err := createProject(t.Context(), tc.configFilepaths, tc.options)
 			if err != nil {
 				t.Fatalf("Failed to create new project: %v", err)
 			}
@@ -1377,7 +1364,6 @@ func Test_createProject(t *testing.T) {
 }
 
 func Test_CredentialsStore_Behavior(t *testing.T) {
-	ctx := context.Background()
 	// Create a temporary Docker config with a credsStore set (simulating Docker Desktop)
 	tmpDir := t.TempDir()
 
@@ -1397,7 +1383,7 @@ func Test_CredentialsStore_Behavior(t *testing.T) {
 		var capturedCredsStore string
 		var capturedAuthConfigs map[string]configtypes.AuthConfig
 
-		err = withCli(ctx, libstack.Options{}, func(ctx context.Context, cli *command.DockerCli) error {
+		err = withCli(t.Context(), libstack.Options{}, func(ctx context.Context, cli *command.DockerCli) error {
 			// Capture the state after withCli sets up credentials
 			capturedCredsStore = cli.ConfigFile().CredentialsStore
 			capturedAuthConfigs = cli.ConfigFile().AuthConfigs
@@ -1429,7 +1415,7 @@ func Test_CredentialsStore_Behavior(t *testing.T) {
 		var capturedCredsStore string
 		var capturedAuthConfigs map[string]configtypes.AuthConfig
 
-		err = withCli(ctx, libstack.Options{Registries: registries}, func(ctx context.Context, cli *command.DockerCli) error {
+		err = withCli(t.Context(), libstack.Options{Registries: registries}, func(ctx context.Context, cli *command.DockerCli) error {
 			// Capture the state after withCli sets up credentials
 			capturedCredsStore = cli.ConfigFile().CredentialsStore
 			capturedAuthConfigs = cli.ConfigFile().AuthConfigs

@@ -61,12 +61,33 @@ func (kcl *KubeClient) fetchServiceAccounts(namespace string) ([]models.K8sServi
 // parseServiceAccount converts a corev1.ServiceAccount object to a models.K8sServiceAccount object.
 func (kcl *KubeClient) parseServiceAccount(serviceAccount corev1.ServiceAccount) models.K8sServiceAccount {
 	return models.K8sServiceAccount{
-		Name:         serviceAccount.Name,
-		UID:          serviceAccount.UID,
-		Namespace:    serviceAccount.Namespace,
-		CreationDate: serviceAccount.CreationTimestamp.Time,
-		IsSystem:     kcl.isSystemServiceAccount(serviceAccount.Namespace),
+		Name:             serviceAccount.Name,
+		UID:              serviceAccount.UID,
+		Namespace:        serviceAccount.Namespace,
+		CreationDate:     serviceAccount.CreationTimestamp.Time,
+		IsSystem:         kcl.isSystemServiceAccount(serviceAccount.Namespace),
+		ImagePullSecrets: serviceAccount.ImagePullSecrets,
 	}
+}
+
+// GetServiceAccount returns the details of a single service account in the given namespace.
+func (kcl *KubeClient) GetServiceAccount(namespace, name string) (models.K8sServiceAccount, error) {
+	sa, err := kcl.cli.CoreV1().ServiceAccounts(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		return models.K8sServiceAccount{}, err
+	}
+
+	return models.K8sServiceAccount{
+		Name:                         sa.Name,
+		UID:                          sa.UID,
+		Namespace:                    sa.Namespace,
+		CreationDate:                 sa.CreationTimestamp.Time,
+		IsSystem:                     kcl.isSystemServiceAccount(sa.Namespace),
+		AutomountServiceAccountToken: sa.AutomountServiceAccountToken,
+		ImagePullSecrets:             sa.ImagePullSecrets,
+		Labels:                       sa.Labels,
+		Annotations:                  sa.Annotations,
+	}, nil
 }
 
 // GetPortainerUserServiceAccount returns the portainer ServiceAccountName associated to the specified user.
@@ -237,6 +258,53 @@ func (kcl *KubeClient) removeNamespaceAccessForServiceAccount(serviceAccountName
 	roleBinding.Subjects = updatedSubjects
 
 	_, err = kcl.cli.RbacV1().RoleBindings(namespace).Update(context.TODO(), roleBinding, metav1.UpdateOptions{})
+	return err
+}
+
+func (kcl *KubeClient) AddImagePullSecretToServiceAccount(namespace, serviceAccountName, secretName string) error {
+	sa, err := kcl.cli.CoreV1().ServiceAccounts(namespace).Get(context.TODO(), serviceAccountName, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	for _, ref := range sa.ImagePullSecrets {
+		if ref.Name == secretName {
+			return nil
+		}
+	}
+
+	sa.ImagePullSecrets = append(sa.ImagePullSecrets, corev1.LocalObjectReference{Name: secretName})
+
+	_, err = kcl.cli.CoreV1().ServiceAccounts(namespace).Update(context.TODO(), sa, metav1.UpdateOptions{})
+	return err
+}
+
+func (kcl *KubeClient) RemoveImagePullSecretFromServiceAccount(namespace, serviceAccountName, secretName string) error {
+	sa, err := kcl.cli.CoreV1().ServiceAccounts(namespace).Get(context.TODO(), serviceAccountName, metav1.GetOptions{})
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+
+	updated := sa.ImagePullSecrets[:0]
+	changed := false
+	for _, ref := range sa.ImagePullSecrets {
+		if ref.Name == secretName {
+			changed = true
+			continue
+		}
+		updated = append(updated, ref)
+	}
+
+	if !changed {
+		return nil
+	}
+
+	sa.ImagePullSecrets = updated
+
+	_, err = kcl.cli.CoreV1().ServiceAccounts(namespace).Update(context.TODO(), sa, metav1.UpdateOptions{})
 	return err
 }
 

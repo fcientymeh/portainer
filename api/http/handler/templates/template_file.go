@@ -1,11 +1,11 @@
 package templates
 
 import (
+	"context"
 	"net/http"
 	"slices"
 
 	portainer "github.com/portainer/portainer/api"
-	gittypes "github.com/portainer/portainer/api/git/types"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
@@ -73,12 +73,12 @@ func (handler *Handler) templateFile(w http.ResponseWriter, r *http.Request) *ht
 	defer handler.cleanUp(projectPath)
 
 	if err := handler.GitService.CloneRepository(
+		context.TODO(),
 		projectPath,
 		template.Repository.URL,
 		"",
 		"",
 		"",
-		gittypes.GitCredentialAuthType_Basic,
 		false,
 	); err != nil {
 		return httperror.InternalServerError("Unable to clone git repository", err)

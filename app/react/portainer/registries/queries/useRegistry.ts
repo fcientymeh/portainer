@@ -16,6 +16,7 @@ export function useRegistry(registryId?: Registry['Id']) {
     () => (registryId ? getRegistry(registryId, environmentId) : undefined),
     {
       enabled: !!registryId,
+      retry: 1,
     }
   );
 }

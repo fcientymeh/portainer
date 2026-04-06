@@ -1,7 +1,7 @@
 import _ from 'lodash-es';
 import filesizeParser from 'filesize-parser';
 
-import { KubernetesApplicationDataAccessPolicies, KubernetesApplicationDeploymentTypes, KubernetesApplicationTypes } from 'Kubernetes/models/application/models/appConstants';
+import { KubernetesApplicationDataAccessPolicies, KubernetesApplicationDeploymentTypes, KubernetesApplicationTypes } from '@/kubernetes/models/application/models/appConstants';
 import {
   KubernetesApplication,
   KubernetesApplicationConfigurationVolume,
@@ -13,22 +13,21 @@ import {
   KubernetesPortainerApplicationStackNameLabel,
   KubernetesPortainerApplicationStackIdLabel,
   KubernetesPortainerApplicationKindLabel,
-} from 'Kubernetes/models/application/models';
-import { KubernetesServiceTypes } from 'Kubernetes/models/service/models';
-import KubernetesResourceReservationHelper from 'Kubernetes/helpers/resourceReservationHelper';
-import { KubernetesApplicationFormValues } from 'Kubernetes/models/application/formValues';
-import KubernetesApplicationHelper from 'Kubernetes/helpers/application';
-
-import KubernetesDeploymentConverter from 'Kubernetes/converters/deployment';
-import KubernetesDaemonSetConverter from 'Kubernetes/converters/daemonSet';
-import KubernetesStatefulSetConverter from 'Kubernetes/converters/statefulSet';
-import KubernetesPodConverter from 'Kubernetes/pod/converter';
-import KubernetesServiceConverter from 'Kubernetes/converters/service';
-import KubernetesPersistentVolumeClaimConverter from 'Kubernetes/converters/persistentVolumeClaim';
-import PortainerError from 'Portainer/error';
-import { KubernetesIngressHelper } from 'Kubernetes/ingress/helper';
-import KubernetesCommonHelper from 'Kubernetes/helpers/commonHelper';
-import { KubernetesConfigurationKinds } from 'Kubernetes/models/configuration/models';
+} from '@/kubernetes/models/application/models';
+import { KubernetesServiceTypes } from '@/kubernetes/models/service/models';
+import KubernetesResourceReservationHelper from '@/kubernetes/helpers/resourceReservationHelper';
+import { KubernetesApplicationFormValues } from '@/kubernetes/models/application/formValues';
+import KubernetesApplicationHelper from '@/kubernetes/helpers/application';
+import KubernetesDeploymentConverter from '@/kubernetes/converters/deployment';
+import KubernetesDaemonSetConverter from '@/kubernetes/converters/daemonSet';
+import KubernetesStatefulSetConverter from '@/kubernetes/converters/statefulSet';
+import KubernetesPodConverter from '@/kubernetes/pod/converter';
+import KubernetesServiceConverter from '@/kubernetes/converters/service';
+import KubernetesPersistentVolumeClaimConverter from '@/kubernetes/converters/persistentVolumeClaim';
+import PortainerError from '@/portainer/error';
+import { KubernetesIngressHelper } from '@/kubernetes/ingress/helper';
+import KubernetesCommonHelper from '@/kubernetes/helpers/commonHelper';
+import { KubernetesConfigurationKinds } from '@/kubernetes/models/configuration/models';
 import { parseCPU } from '@/react/kubernetes/utils';
 
 function _apiPortsToPublishedPorts(pList, pRefs) {

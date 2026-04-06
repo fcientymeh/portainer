@@ -62,12 +62,17 @@ func (d *stackDeployer) buildUnpackerCmdForStack(stack *portainer.Stack, operati
 	return fn(stack, opts, registriesStrings, envStrings), nil
 }
 
-// deploy [-u username -p password] [--skip-tls-verify] [--force-recreate] [-k] [--env KEY1=VALUE1 --env KEY2=VALUE2] <git-repo-url> <ref> <project-name> <destination> <compose-file-path> [<more-file-paths>...]
+// deploy [-u username -p password] [--skip-tls-verify] [--force-recreate] [-r] [-k] [--env KEY1=VALUE1 --env KEY2=VALUE2] <git-repo-url> <ref> <project-name> <destination> <compose-file-path> [<more-file-paths>...]
 func buildDeployCmd(stack *portainer.Stack, opts unpackerCmdBuilderOptions, registries []string, env []string) []string {
 	cmd := []string{UnpackerCmdDeploy}
 	cmd = appendGitAuthIfNeeded(cmd, stack)
 	cmd = appendSkipTLSVerifyIfNeeded(cmd, stack)
 	cmd = appendForceRecreateIfNeeded(cmd, opts.forceRecreate)
+
+	if opts.prune {
+		cmd = append(cmd, "-r")
+	}
+
 	cmd = append(cmd, env...)
 	cmd = append(cmd, registries...)
 	cmd = append(cmd,

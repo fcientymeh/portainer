@@ -21,14 +21,12 @@ import (
 type ContainerService struct {
 	factory   *dockerclient.ClientFactory
 	dataStore dataservices.DataStore
-	sr        *serviceRestore
 }
 
 func NewContainerService(factory *dockerclient.ClientFactory, dataStore dataservices.DataStore) *ContainerService {
 	return &ContainerService{
 		factory:   factory,
 		dataStore: dataStore,
-		sr:        &serviceRestore{},
 	}
 }
 
@@ -141,11 +139,14 @@ func (c *ContainerService) Recreate(ctx context.Context, endpoint *portainer.End
 			initialNetwork.EndpointsConfig[name] = network
 		}
 	}
-	c.sr.enable()
-	defer c.sr.close()
-	defer c.sr.restore()
 
-	c.sr.push(func() {
+	restore := true
+
+	defer func() {
+		if !restore {
+			return
+		}
+
 		log.Debug().Str("container_id", containerId).Str("container", container.Name).Msg("restoring the container")
 		if err := cli.ContainerRename(ctx, containerId, container.Name); err != nil {
 			log.Warn().Err(err).Msg("failure to rename container")
@@ -160,7 +161,7 @@ func (c *ContainerService) Recreate(ctx context.Context, endpoint *portainer.End
 		if err := cli.ContainerStart(ctx, containerId, dockercontainer.StartOptions{}); err != nil {
 			log.Warn().Err(err).Msg("failure to start container")
 		}
-	})
+	}()
 
 	log.Debug().Str("container", strings.Split(container.Name, "/")[1]).Msg("starting to create a new container")
 
@@ -179,8 +180,15 @@ func (c *ContainerService) Recreate(ctx context.Context, endpoint *portainer.End
 	}
 
 	create, err := cli.ContainerCreate(ctx, container.Config, container.HostConfig, &initialNetwork, nil, container.Name)
+	if err != nil {
+		return nil, errors.Wrap(err, "create container error")
+	}
 
-	c.sr.push(func() {
+	defer func() {
+		if !restore {
+			return
+		}
+
 		log.Debug().Str("container_id", create.ID).Msg("removing the new container")
 
 		if err := cli.ContainerStop(ctx, create.ID, dockercontainer.StopOptions{}); err != nil {
@@ -190,11 +198,7 @@ func (c *ContainerService) Recreate(ctx context.Context, endpoint *portainer.End
 		if err := cli.ContainerRemove(ctx, create.ID, dockercontainer.RemoveOptions{}); err != nil {
 			log.Warn().Err(err).Msg("failure to remove container")
 		}
-	})
-
-	if err != nil {
-		return nil, errors.Wrap(err, "create container error")
-	}
+	}()
 
 	newContainerId := create.ID
 
@@ -224,7 +228,7 @@ func (c *ContainerService) Recreate(ctx context.Context, endpoint *portainer.End
 	log.Debug().Str("container_id", containerId).Msg("starting to remove the old container")
 	_ = cli.ContainerRemove(ctx, containerId, dockercontainer.RemoveOptions{})
 
-	c.sr.disable()
+	restore = false
 
 	newContainer, _, err := cli.ContainerInspectWithRaw(ctx, newContainerId, true)
 	if err != nil {
@@ -232,52 +236,4 @@ func (c *ContainerService) Recreate(ctx context.Context, endpoint *portainer.End
 	}
 
 	return &newContainer, nil
-}
-
-type serviceRestore struct {
-	restoreC chan struct{}
-	fs       []func()
-}
-
-func (sr *serviceRestore) enable() {
-	sr.restoreC = make(chan struct{}, 1)
-	sr.fs = make([]func(), 0)
-	sr.restoreC <- struct{}{}
-}
-
-func (sr *serviceRestore) disable() {
-	select {
-	case <-sr.restoreC:
-	default:
-	}
-}
-
-func (sr *serviceRestore) push(f func()) {
-	sr.fs = append(sr.fs, f)
-}
-
-func (sr *serviceRestore) restore() {
-	select {
-	case <-sr.restoreC:
-		l := len(sr.fs)
-		if l > 0 {
-			for i := l - 1; i >= 0; i-- {
-				sr.fs[i]()
-			}
-		}
-	default:
-	}
-}
-
-func (sr *serviceRestore) close() {
-	if sr == nil || sr.restoreC == nil {
-		return
-	}
-
-	select {
-	case <-sr.restoreC:
-	default:
-	}
-
-	close(sr.restoreC)
 }

@@ -11,7 +11,6 @@ import (
 
 	"github.com/pkg/errors"
 	portainer "github.com/portainer/portainer/api"
-	gittypes "github.com/portainer/portainer/api/git/types"
 	"github.com/portainer/portainer/pkg/libhelm/options"
 	"github.com/portainer/portainer/pkg/libhelm/release"
 	"github.com/rs/zerolog/log"
@@ -195,7 +194,7 @@ func ensureHelmDirectoriesExist(settings *cli.EnvSettings) error {
 		}
 
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			if err := os.MkdirAll(dir, 0700); err != nil {
+			if err := os.MkdirAll(dir, 0o700); err != nil {
 				log.Error().
 					Str("context", "helm_sdk_dirs").
 					Str("directory", dir).
@@ -211,7 +210,7 @@ func ensureHelmDirectoriesExist(settings *cli.EnvSettings) error {
 		if _, err := os.Stat(settings.RegistryConfig); os.IsNotExist(err) {
 			// Create the directory if it doesn't exist
 			dir := filepath.Dir(settings.RegistryConfig)
-			if err := os.MkdirAll(dir, 0700); err != nil {
+			if err := os.MkdirAll(dir, 0o700); err != nil {
 				log.Error().
 					Str("context", "helm_sdk_dirs").
 					Str("directory", dir).
@@ -237,7 +236,7 @@ func ensureHelmDirectoriesExist(settings *cli.EnvSettings) error {
 		if _, err := os.Stat(settings.RepositoryConfig); os.IsNotExist(err) {
 			// Create an empty repository config file with default yaml structure
 			f := repo.NewFile()
-			if err := f.WriteFile(settings.RepositoryConfig, 0644); err != nil {
+			if err := f.WriteFile(settings.RepositoryConfig, 0o644); err != nil {
 				log.Error().
 					Str("context", "helm_sdk_dirs").
 					Str("file", settings.RepositoryConfig).
@@ -258,7 +257,7 @@ func ensureHelmDirectoriesExist(settings *cli.EnvSettings) error {
 // appendChartReferenceAnnotations encodes chart reference values for safe storage in Helm labels.
 // It creates a new map with encoded values for specific chart reference labels.
 // Preserves existing labels and handles edge cases gracefully.
-func appendChartReferenceAnnotations(chartPath, repoURL string, registryID int, stackID int, gitConfig *gittypes.RepoConfig, autoUpdateSettings *portainer.AutoUpdateSettings, existingAnnotations map[string]string) map[string]string {
+func appendChartReferenceAnnotations(chartPath, repoURL string, registryID int, stackID int, autoUpdateSettings *portainer.AutoUpdateSettings, existingAnnotations map[string]string) map[string]string {
 	// Copy existing annotations
 	annotations := make(map[string]string)
 	maps.Copy(annotations, existingAnnotations)

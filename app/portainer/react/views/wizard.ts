@@ -66,7 +66,7 @@ function config($stateRegistryProvider: StateRegistry) {
 
   $stateRegistryProvider.register({
     name: 'portainer.wizard.endpoints.create',
-    url: '/create?envType',
+    url: '/create?envType&step',
     views: {
       'content@': {
         component: 'wizardEnvironmentCreationView',
@@ -74,6 +74,7 @@ function config($stateRegistryProvider: StateRegistry) {
     },
     params: {
       envType: '',
+      step: { value: null, squash: true },
     },
   });
 }

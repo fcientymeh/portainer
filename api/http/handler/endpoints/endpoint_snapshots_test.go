@@ -1,6 +1,7 @@
 package endpoints
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -87,7 +88,7 @@ type mockSnapshotService struct {
 	snapshotEndpointShouldSucceed atomic.Bool
 }
 
-func (s *mockSnapshotService) Start() {
+func (s *mockSnapshotService) Start(_ context.Context) {
 }
 
 func (s *mockSnapshotService) SetSnapshotInterval(snapshotInterval string) error {

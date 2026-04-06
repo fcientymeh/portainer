@@ -1,6 +1,8 @@
 package git
 
 import (
+	"context"
+
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/filesystem"
 	gittypes "github.com/portainer/portainer/api/git/types"
@@ -19,12 +21,11 @@ type CloneOptions struct {
 	ReferenceName string
 	Username      string
 	Password      string
-	AuthType      gittypes.GitCredentialAuthType
 	// TLSSkipVerify skips SSL verification when cloning the Git repository
 	TLSSkipVerify bool `example:"false"`
 }
 
-func CloneWithBackup(gitService portainer.GitService, fileService portainer.FileService, options CloneOptions) (clean func(), err error) {
+func CloneWithBackup(ctx context.Context, gitService portainer.GitService, fileService portainer.FileService, options CloneOptions) (clean func(), err error) {
 	backupProjectPath := options.ProjectPath + "-old"
 	cleanUp := false
 	cleanFn := func() {
@@ -44,12 +45,12 @@ func CloneWithBackup(gitService portainer.GitService, fileService portainer.File
 	cleanUp = true
 
 	if err := gitService.CloneRepository(
+		ctx,
 		options.ProjectPath,
 		options.URL,
 		options.ReferenceName,
 		options.Username,
 		options.Password,
-		options.AuthType,
 		options.TLSSkipVerify,
 	); err != nil {
 		cleanUp = false

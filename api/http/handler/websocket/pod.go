@@ -137,7 +137,7 @@ func (handler *Handler) hijackPodExecStartOperation(
 	defer logs.CloseAndLogErr(stdoutWriter)
 
 	// errorChan is used to propagate errors from the go routines to the caller.
-	errorChan := make(chan error, 1)
+	errorChan := make(chan error, 3)
 	go ws.StreamFromWebsocketToWriter(websocketConn, stdinWriter, errorChan)
 	go ws.StreamFromReaderToWebsocket(websocketConn, stdoutReader, errorChan)
 

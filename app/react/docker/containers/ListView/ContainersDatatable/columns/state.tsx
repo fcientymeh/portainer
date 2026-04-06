@@ -59,6 +59,8 @@ function StatusCell({
       case ContainerStatus.Paused:
       case ContainerStatus.Starting:
       case ContainerStatus.Unhealthy:
+      case ContainerStatus.Restarting:
+      case ContainerStatus.Removing:
         return 'warning';
       case ContainerStatus.Created:
         return 'info';

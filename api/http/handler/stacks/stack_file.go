@@ -32,6 +32,7 @@ type stackFileResponse struct {
 // @failure 400 "Invalid request"
 // @failure 403 "Permission denied"
 // @failure 404 "Stack not found"
+// @failure 409 "Git settings changed, redeploy required"
 // @failure 500 "Server error"
 // @router /stacks/{id}/file [get]
 func (handler *Handler) stackFile(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
@@ -92,10 +93,25 @@ func (handler *Handler) stackFile(w http.ResponseWriter, r *http.Request) *httpe
 		}
 	}
 
+	if gitStackPendingRedeploy(stack) {
+		return httperror.Conflict("Stack git settings have changed. Redeploy the stack to apply the new configuration.", errors.New("git settings updated without redeploy"))
+	}
+
 	stackFileContent, err := handler.FileService.GetFileContent(stack.ProjectPath, stack.EntryPoint)
 	if err != nil {
 		return httperror.InternalServerError("Unable to retrieve Compose file from disk", err)
 	}
 
 	return response.JSON(w, &stackFileResponse{StackFileContent: string(stackFileContent)})
+}
+
+// gitStackPendingRedeploy returns true when the stack's git settings (URL or config file path)
+// have been updated via "save settings" but the stack has not yet been redeployed to apply them.
+// In that state the local clone is stale and the stack file cannot be read from disk.
+func gitStackPendingRedeploy(stack *portainer.Stack) bool {
+	if stack.GitConfig == nil || stack.CurrentDeploymentInfo == nil {
+		return false
+	}
+	return stack.GitConfig.URL != stack.CurrentDeploymentInfo.RepositoryURL ||
+		stack.GitConfig.ConfigFilePath != stack.CurrentDeploymentInfo.ConfigFilePath
 }

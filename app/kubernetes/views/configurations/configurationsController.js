@@ -1,6 +1,6 @@
 import angular from 'angular';
 import { confirmDelete } from '@@/modals/confirm';
-import KubernetesConfigurationHelper from 'Kubernetes/helpers/configurationHelper';
+import KubernetesConfigurationHelper from '@/kubernetes/helpers/configurationHelper';
 
 class KubernetesConfigurationsController {
   /* @ngInject */

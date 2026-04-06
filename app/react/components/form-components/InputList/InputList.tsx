@@ -1,6 +1,6 @@
 import { ComponentType, useRef } from 'react';
 import { FormikErrors } from 'formik';
-import { ArrowDown, ArrowUp, Plus, RotateCw, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import clsx from 'clsx';
 
 import { AutomationTestingProps } from '@/types';
@@ -12,7 +12,12 @@ import { TextTip } from '@@/Tip/TextTip';
 import { Input } from '../Input';
 import { FormError } from '../FormError';
 
-import { arrayMove, hasKey } from './utils';
+import { defaultItemBuilder } from './utils';
+import { InputListActionButtons } from './ActionButtons';
+import { DefaultType, Key, OnChangeEvent } from './types';
+import { useInputList } from './useInputList';
+
+export { useInputList } from './useInputList';
 
 type ArrElement<ArrType> = ArrType extends readonly (infer ElementType)[]
   ? ElementType
@@ -35,21 +40,6 @@ export interface ItemProps<T> {
   index: number;
   needsDeletion?: boolean;
 }
-type Key = string | number;
-type ChangeType = 'delete' | 'create' | 'update';
-export type DefaultType = { value: string; needsDeletion?: boolean };
-type CanUndoDeleteItem<T> = T & { needsDeletion: boolean };
-
-type OnChangeEvent<T> =
-  | {
-      item: T;
-      type: ChangeType;
-    }
-  | {
-      type: 'move';
-      fromIndex: number;
-      to: number;
-    };
 
 type RenderItemFunction<T> = (
   item: T,
@@ -125,7 +115,7 @@ export function InputList<T = DefaultType>({
     <div className="form-group" aria-label={ariaLabel || label}>
       {label && (
         <div className="col-sm-12">
-          <span className="control-label space-right pt-2 text-left !font-bold">
+          <span className="control-label space-right pt-2 text-left">
             {label}
             {tooltip && <Tooltip message={tooltip} />}
           </span>
@@ -165,51 +155,23 @@ export function InputList<T = DefaultType>({
                     error
                   )
                 )}
-                <div className="items-start">
-                  {!readOnly && movable && (
-                    <>
-                      <Button
-                        size="medium"
-                        disabled={disabled || index === 0}
-                        onClick={() => handleMoveUp(index)}
-                        className="vertical-center btn-only-icon"
-                        icon={ArrowUp}
-                        data-cy={`${dataCy}-move-up_${index}`}
-                      />
-                      <Button
-                        size="medium"
-                        type="button"
-                        disabled={disabled || index === value.length - 1}
-                        onClick={() => handleMoveDown(index)}
-                        className="vertical-center btn-only-icon"
-                        icon={ArrowDown}
-                        data-cy={`${dataCy}-move-down_${index}`}
-                      />
-                    </>
-                  )}
-                  {isDeleteButtonVisible && !canUndoDelete && (
-                    <Button
-                      color="dangerlight"
-                      size="medium"
-                      onClick={() => handleRemoveItem(key, item)}
-                      className="vertical-center btn-only-icon"
-                      data-cy={`${dataCy}RemoveButton_${index}`}
-                      icon={Trash2}
-                    />
-                  )}
-                  {isDeleteButtonVisible &&
-                    canUndoDelete &&
-                    hasKey(item, 'needsDeletion') && (
-                      <CanUndoDeleteButton
-                        item={{ ...item, needsDeletion: !!item.needsDeletion }}
-                        itemIndex={index}
-                        initialItemsCount={initialItemsCount.current}
-                        handleRemoveItem={handleRemoveItem}
-                        handleToggleNeedsDeletion={toggleNeedsDeletion}
-                        dataCy={`${dataCy}RemoveButton_${index}`}
-                      />
-                    )}
-                </div>
+                <InputListActionButtons
+                  index={index}
+                  count={value.length}
+                  movable={movable && !readOnly}
+                  disabled={disabled}
+                  showDelete={isDeleteButtonVisible}
+                  canUndoDelete={canUndoDelete}
+                  item={item}
+                  initialItemsCount={initialItemsCount.current}
+                  onMoveUp={() => handleMoveUp(index)}
+                  onMoveDown={() => handleMoveDown(index)}
+                  onDelete={() => handleRemoveItem(key, item)}
+                  onToggleNeedsDeletion={(idx, itm) =>
+                    toggleNeedsDeletion(key, itm)
+                  }
+                  data-cy={dataCy}
+                />
               </div>
             );
           })}
@@ -218,7 +180,7 @@ export function InputList<T = DefaultType>({
 
       {isAddButtonVisible && (
         <>
-          <div className="col-sm-12 mt-7">
+          <div className="col-sm-12 mt-5">
             <Button
               onClick={handleAdd}
               disabled={disabled}
@@ -241,92 +203,6 @@ export function InputList<T = DefaultType>({
       )}
     </div>
   );
-}
-
-export function useInputList<T = DefaultType>({
-  value,
-  onChange,
-  itemBuilder = defaultItemBuilder as unknown as () => T,
-  itemKeyGetter = (item: T, index: number) => index,
-  movable = false,
-}: {
-  value: T[];
-  onChange(value: T[], e: OnChangeEvent<T>): void;
-  itemBuilder?(): T;
-  itemKeyGetter?(item: T, index: number): Key;
-  movable?: boolean;
-}) {
-  function handleMoveUp(index: number) {
-    if (index <= 0) {
-      return;
-    }
-    handleMove(index, index - 1);
-  }
-
-  function handleMoveDown(index: number) {
-    if (index >= value.length - 1) {
-      return;
-    }
-    handleMove(index, index + 1);
-  }
-
-  function handleMove(from: number, to: number) {
-    if (!movable) {
-      return;
-    }
-
-    onChange(arrayMove(value, from, to), {
-      type: 'move',
-      fromIndex: from,
-      to,
-    });
-  }
-
-  function handleRemoveItem(key: Key, item: T) {
-    onChange(
-      value.filter((item, index) => {
-        const itemKey = itemKeyGetter(item, index);
-        return itemKey !== key;
-      }),
-      { type: 'delete', item }
-    );
-  }
-
-  function toggleNeedsDeletion(key: Key, item: CanUndoDeleteItem<T>) {
-    handleChangeItem(key, { ...item, needsDeletion: !item.needsDeletion });
-  }
-
-  function handleAdd() {
-    const newItem = itemBuilder();
-    onChange([...value, newItem], { type: 'create', item: newItem });
-  }
-
-  function handleChangeItem(key: Key, newItemValue: T) {
-    const newItems = value.map((item, index) => {
-      const itemKey = itemKeyGetter(item, index);
-      if (itemKey !== key) {
-        return item;
-      }
-      return newItemValue;
-    });
-    onChange(newItems, {
-      type: 'update',
-      item: newItemValue,
-    });
-  }
-
-  return {
-    handleMoveUp,
-    handleMoveDown,
-    handleRemoveItem,
-    handleAdd,
-    handleChangeItem,
-    toggleNeedsDeletion,
-  };
-}
-
-function defaultItemBuilder(): DefaultType {
-  return { value: '' };
 }
 
 function DefaultItem({
@@ -369,56 +245,4 @@ function renderDefaultItem(
       data-cy={dataCy}
     />
   );
-}
-
-type CanUndoDeleteButtonProps<T> = {
-  item: CanUndoDeleteItem<T>;
-  itemIndex: number;
-  initialItemsCount: number;
-  handleRemoveItem(key: Key, item: T): void;
-  handleToggleNeedsDeletion(key: Key, item: T): void;
-  dataCy: string;
-};
-
-function CanUndoDeleteButton<T>({
-  item,
-  itemIndex,
-  initialItemsCount,
-  handleRemoveItem,
-  handleToggleNeedsDeletion,
-  dataCy,
-}: CanUndoDeleteButtonProps<T>) {
-  return (
-    <div className="items-start">
-      {!item.needsDeletion && (
-        <Button
-          color="dangerlight"
-          size="medium"
-          onClick={handleDeleteClick}
-          className="vertical-center btn-only-icon"
-          icon={Trash2}
-          data-cy={`${dataCy}_delete`}
-        />
-      )}
-      {item.needsDeletion && (
-        <Button
-          color="default"
-          size="medium"
-          onClick={handleDeleteClick}
-          className="vertical-center btn-only-icon"
-          icon={RotateCw}
-          data-cy={`${dataCy}_undo_delete`}
-        />
-      )}
-    </div>
-  );
-
-  // if the item is new, we can just remove it, otherwise we need to toggle the needsDeletion flag
-  function handleDeleteClick() {
-    if (itemIndex < initialItemsCount) {
-      handleToggleNeedsDeletion(itemIndex, item);
-    } else {
-      handleRemoveItem(itemIndex, item);
-    }
-  }
 }
