@@ -34,7 +34,7 @@ export function ApplicationSummarySection({
       <TextTip color="blue">
         Portainer will execute the following Kubernetes actions.
       </TextTip>
-      <ul className="w-full small text-muted ml-5">
+      <ul className="small text-muted ml-5 w-full">
         {appResourceSummaries.map((summary) => (
           <SummaryItem key={JSON.stringify(summary)} summary={summary} />
         ))}

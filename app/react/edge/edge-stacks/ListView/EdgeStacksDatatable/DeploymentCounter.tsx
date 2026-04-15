@@ -45,7 +45,7 @@ export function DeploymentCounter({
       <div className="h-2 w-full overflow-hidden rounded-lg">
         <progress
           aria-label={`${getLabel(type)}`}
-          className={clsx('bg-gray-4 w-full', {
+          className={clsx('w-full bg-gray-4', {
             'progress-filled:bg-success-7': type === StatusType.Running,
             'progress-filled:bg-error-7': type === StatusType.Error,
             'progress-filled:bg-blue-9': type === StatusType.Acknowledged,

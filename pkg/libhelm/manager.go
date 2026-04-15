@@ -6,6 +6,6 @@ import (
 )
 
 // NewHelmPackageManager returns a new instance of HelmPackageManager based on HelmConfig
-func NewHelmPackageManager() (types.HelmPackageManager, error) {
-	return sdk.NewHelmSDKPackageManager(), nil
+func NewHelmPackageManager() types.HelmPackageManager {
+	return sdk.NewHelmSDKPackageManager()
 }

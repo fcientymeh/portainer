@@ -58,6 +58,7 @@ import { AppDeploymentTypeFormSection } from '@/react/kubernetes/applications/co
 import { EnvironmentVariablesFormSection } from '@/react/kubernetes/applications/components/EnvironmentVariablesFormSection/EnvironmentVariablesFormSection';
 import { kubeEnvVarValidationSchema } from '@/react/kubernetes/applications/components/EnvironmentVariablesFormSection/kubeEnvVarValidationSchema';
 import { IntegratedAppsDatatable } from '@/react/kubernetes/components/IntegratedAppsDatatable/IntegratedAppsDatatable';
+import { K8sRegistryAccessNotice } from '@/react/kubernetes/components/K8sRegistryAccessNotice';
 import { HelmTemplates } from '@/react/kubernetes/helm/HelmTemplates/HelmTemplates';
 import { SecretDetailsTable } from '@/react/kubernetes/configs/secrets/ItemView/SecretDetailsTable';
 import { KubernetesSummaryView } from '@/react/kubernetes/summary/KubernetesSummaryView';
@@ -245,6 +246,13 @@ export const ngModule = angular
   .component(
     'kubernetesSummaryViewReact',
     r2a(KubernetesSummaryView, ['actions', 'cpuLimit', 'memoryLimit'])
+  )
+  .component(
+    'k8sRegistryAccessNotice',
+    r2a(
+      withUIRouter(withReactQuery(withCurrentUser(K8sRegistryAccessNotice))),
+      ['namespace', 'manifestContent', 'environmentId']
+    )
   );
 
 export const componentsModule = ngModule.name;

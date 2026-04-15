@@ -13,6 +13,7 @@ import (
 )
 
 func Test_ConvertToReleaseElements(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	// Create mock releases

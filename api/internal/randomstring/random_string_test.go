@@ -12,6 +12,7 @@ func init() {
 }
 
 func TestRandomString(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name     string
 		length   int
@@ -48,6 +49,7 @@ func TestRandomString(t *testing.T) {
 }
 
 func TestRandomStringUniqueness(t *testing.T) {
+	t.Parallel()
 	// Generate multiple random strings and verify they are different
 	const numStrings = 100
 	const stringLength = 10

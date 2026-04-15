@@ -8,38 +8,21 @@ import (
 	"github.com/gorilla/mux"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/datastore"
-	"github.com/portainer/portainer/api/filesystem"
 	"github.com/portainer/portainer/api/http/security"
-	"github.com/portainer/portainer/api/internal/testhelpers"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/segmentio/encoding/json"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCustomTemplateFile(t *testing.T) {
-	_, ds := datastore.MustNewTestStore(t, true, false)
-	require.NotNil(t, ds)
+	t.Parallel()
 
-	fs, err := filesystem.NewService(t.TempDir(), t.TempDir())
-	require.NoError(t, err)
+	handler, ds, fs := newTestHandler(t)
 
 	templateContent := "some template content"
 	templateEntrypoint := "entrypoint"
 
 	require.NoError(t, ds.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		require.NoError(t, tx.User().Create(&portainer.User{ID: 1, Username: "admin", Role: portainer.AdministratorRole}))
-		require.NoError(t, tx.User().Create(&portainer.User{ID: 2, Username: "std2", Role: portainer.StandardUserRole}))
-		require.NoError(t, tx.User().Create(&portainer.User{ID: 3, Username: "std3", Role: portainer.StandardUserRole}))
-		require.NoError(t, tx.User().Create(&portainer.User{ID: 4, Username: "std4", Role: portainer.StandardUserRole}))
-		require.NoError(t, tx.Endpoint().Create(&portainer.Endpoint{ID: 1,
-			UserAccessPolicies: portainer.UserAccessPolicies{
-				2: portainer.AccessPolicy{RoleID: 0},
-				3: portainer.AccessPolicy{RoleID: 0},
-			}}))
-		require.NoError(t, tx.Team().Create(&portainer.Team{ID: 1}))
-		require.NoError(t, tx.TeamMembership().Create(&portainer.TeamMembership{ID: 1, UserID: 3, TeamID: 1, Role: portainer.TeamMember}))
-
 		// template 1
 		path, err := fs.StoreCustomTemplateFileFromBytes("1", templateEntrypoint, []byte(templateContent))
 		require.NoError(t, err)
@@ -56,8 +39,6 @@ func TestCustomTemplateFile(t *testing.T) {
 		}))
 		return nil
 	}))
-
-	handler := NewHandler(testhelpers.NewTestRequestBouncer(), ds, fs, nil)
 
 	test := func(templateID string, restrictedContext *security.RestrictedRequestContext) (*httptest.ResponseRecorder, *httperror.HandlerError) {
 		r := httptest.NewRequest(http.MethodGet, "/custom_templates/"+templateID+"/file", nil)

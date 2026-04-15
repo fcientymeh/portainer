@@ -13,6 +13,7 @@ import (
 )
 
 func Test_waitForPodStatus(t *testing.T) {
+	t.Parallel()
 
 	t.Run("successfully errors on cancelled context", func(t *testing.T) {
 		k := &KubeClient{

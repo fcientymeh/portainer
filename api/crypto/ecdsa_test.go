@@ -7,6 +7,7 @@ import (
 )
 
 func TestCreateSignature(t *testing.T) {
+	t.Parallel()
 	var s = NewECDSAService("secret")
 
 	privKey, pubKey, err := s.GenerateKeyPair()

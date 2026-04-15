@@ -151,7 +151,7 @@ export function WithConnectButton() {
         >
           {state === 'connected' ? 'Disconnect' : 'Connect'}
         </Button>
-        <span className="text-sm text-gray-500">state: {state}</span>
+        <span className="text-gray-500 text-sm">state: {state}</span>
       </div>
       <div className="h-[400px]">
         <Terminal

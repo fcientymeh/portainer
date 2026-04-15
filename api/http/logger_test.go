@@ -10,6 +10,7 @@ import (
 )
 
 func TestLogger(t *testing.T) {
+	t.Parallel()
 	msg := "Testing HTTP logger"
 	buf := &bytes.Buffer{}
 

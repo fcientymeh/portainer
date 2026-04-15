@@ -48,14 +48,14 @@ export const AsDiv: Story = {
 export const WithCustomContent: Story = {
   args: {
     children: (
-      <div className="flex flex-col gap-2 w-full">
-        <div className="flex flex-wrap gap-1 justify-between">
+      <div className="flex w-full flex-col gap-2">
+        <div className="flex flex-wrap justify-between gap-1">
           <Badge type="success">Deployed</Badge>
-          <span className="text-xs text-muted">Revision #4</span>
+          <span className="text-muted text-xs">Revision #4</span>
         </div>
-        <div className="flex flex-wrap gap-1 justify-between">
-          <span className="text-xs text-muted">my-app-1.0.0</span>
-          <span className="text-xs text-muted">
+        <div className="flex flex-wrap justify-between gap-1">
+          <span className="text-muted text-xs">my-app-1.0.0</span>
+          <span className="text-muted text-xs">
             {localizeDate(new Date('2000-01-01'))}
           </span>
         </div>

@@ -13,6 +13,7 @@ import (
 )
 
 func TestCanBypassUAC(t *testing.T) {
+	t.Parallel()
 	is := require.New(t)
 
 	admin := &portainer.User{Role: portainer.AdministratorRole}
@@ -24,6 +25,7 @@ func TestCanBypassUAC(t *testing.T) {
 }
 
 func TestFilterByResourceControl(t *testing.T) {
+	t.Parallel()
 	is := require.New(t)
 
 	ok, store := datastore.MustNewTestStore(t, true, false)

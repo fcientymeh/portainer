@@ -8,6 +8,7 @@ import (
 )
 
 func TestWriteAccessDeniedResponse(t *testing.T) {
+	t.Parallel()
 	r, err := WriteAccessDeniedResponse()
 	require.NoError(t, err)
 	defer func() {

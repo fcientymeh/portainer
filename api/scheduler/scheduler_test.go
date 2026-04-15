@@ -19,6 +19,7 @@ func requireNoShutdownErr(t *testing.T, fn func() error) {
 }
 
 func Test_ScheduledJobRuns(t *testing.T) {
+	t.Parallel()
 	synctest.Test(t, func(t *testing.T) {
 		s := NewScheduler(t.Context())
 		defer requireNoShutdownErr(t, s.Shutdown)
@@ -40,6 +41,7 @@ func Test_ScheduledJobRuns(t *testing.T) {
 }
 
 func Test_JobCanBeStopped(t *testing.T) {
+	t.Parallel()
 	synctest.Test(t, func(t *testing.T) {
 		s := NewScheduler(t.Context())
 		defer requireNoShutdownErr(t, s.Shutdown)
@@ -64,6 +66,7 @@ func Test_JobCanBeStopped(t *testing.T) {
 }
 
 func Test_JobShouldStop_UponPermError(t *testing.T) {
+	t.Parallel()
 	synctest.Test(t, func(t *testing.T) {
 		s := NewScheduler(t.Context())
 		defer requireNoShutdownErr(t, s.Shutdown)
@@ -85,6 +88,7 @@ func Test_JobShouldStop_UponPermError(t *testing.T) {
 }
 
 func Test_JobShouldNotStop_UponError(t *testing.T) {
+	t.Parallel()
 	synctest.Test(t, func(t *testing.T) {
 		s := NewScheduler(t.Context())
 		defer requireNoShutdownErr(t, s.Shutdown)
@@ -109,6 +113,7 @@ func Test_JobShouldNotStop_UponError(t *testing.T) {
 }
 
 func Test_CanTerminateAllJobs_ByShuttingDownScheduler(t *testing.T) {
+	t.Parallel()
 	synctest.Test(t, func(t *testing.T) {
 		s := NewScheduler(t.Context())
 
@@ -130,6 +135,7 @@ func Test_CanTerminateAllJobs_ByShuttingDownScheduler(t *testing.T) {
 }
 
 func Test_CanTerminateAllJobs_ByCancellingParentContext(t *testing.T) {
+	t.Parallel()
 	synctest.Test(t, func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(t.Context(), 2*jobInterval)
 		s := NewScheduler(ctx)
@@ -150,6 +156,7 @@ func Test_CanTerminateAllJobs_ByCancellingParentContext(t *testing.T) {
 }
 
 func Test_StartJobEvery_Concurrently(t *testing.T) {
+	t.Parallel()
 	synctest.Test(t, func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(t.Context(), 2*jobInterval)
 		s := NewScheduler(ctx)

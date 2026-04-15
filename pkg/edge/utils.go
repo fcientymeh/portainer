@@ -40,6 +40,10 @@ func GetEndpointIDFromEdgeKey(edgeKey string) (int, error) {
 
 	keyInfo := strings.Split(string(decodedKey), "|")
 
+	if len(keyInfo) != 4 {
+		return 0, errors.New("invalid key format")
+	}
+
 	return strconv.Atoi(keyInfo[3])
 }
 

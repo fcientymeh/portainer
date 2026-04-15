@@ -25,7 +25,7 @@ export function ResourceUsageItem({
       className={isLoading ? 'mb-1.5' : ''}
       dataCy={dataCy}
     >
-      <div className="flex items-center gap-2 mt-1">
+      <div className="mt-1 flex items-center gap-2">
         <ProgressBar
           steps={[
             {
@@ -35,7 +35,7 @@ export function ResourceUsageItem({
           ]}
           total={total}
         />
-        <div className="text-xs flex shrink-0">{annotation}</div>
+        <div className="flex shrink-0 text-xs">{annotation}</div>
       </div>
     </FormControl>
   );

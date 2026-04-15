@@ -77,9 +77,9 @@
         <rd-widget>
           <rd-widget-body>
             <ldap-settings-group-dn-builder
-              ng-model="group"
+              value="group"
               index="$index"
-              suffix="{{ $ctrl.domainSuffix }}"
+              suffix="$ctrl.domainSuffix"
               on-change="($ctrl.onGroupChange)"
               on-remove-click="($ctrl.removeGroup)"
               limited-feature-id="$ctrl.limitedFeatureId"

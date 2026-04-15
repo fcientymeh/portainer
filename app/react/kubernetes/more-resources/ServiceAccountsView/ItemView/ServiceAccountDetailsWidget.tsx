@@ -259,7 +259,7 @@ function ImagePullSecretBadge({
   return (
     <Badge
       type={secret ? 'info' : 'warn'}
-      className="inline-flex items-center min-w-max"
+      className="inline-flex min-w-max items-center"
     >
       {renderSecretName()}
       {registryTooltip}

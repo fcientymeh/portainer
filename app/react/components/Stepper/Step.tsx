@@ -85,7 +85,7 @@ function getStepState({
 
 function getButtonClasses({ isActive, isCompleted, isClickable }: StepState) {
   return clsx(
-    'flex items-center gap-2 rounded-lg border border-solid px-3 py-2 transition-all text-inherit font-medium',
+    'flex items-center gap-2 rounded-lg border border-solid px-3 py-2 font-medium text-inherit transition-all',
     getButtonStateClasses({ isActive, isCompleted }),
     isClickable
       ? clsx(

@@ -28,6 +28,7 @@ func (s *testStore) Settings() dataservices.SettingsService {
 }
 
 func TestGetUnusedPort(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name            string
 		existingTunnels map[portainer.EndpointID]*portainer.TunnelDetails

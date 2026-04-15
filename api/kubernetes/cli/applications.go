@@ -430,6 +430,13 @@ func (kcl *KubeClient) GetApplicationFromServiceSelector(pods []corev1.Pod, serv
 				updateOwnerReferenceToDeployment(&pod, replicaSets)
 			}
 
+			if len(pod.OwnerReferences) == 0 {
+				return &models.K8sApplication{
+					Name: pod.Name,
+					Kind: "Pod",
+				}, nil
+			}
+
 			return &models.K8sApplication{
 				Name: pod.OwnerReferences[0].Name,
 				Kind: pod.OwnerReferences[0].Kind,

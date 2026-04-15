@@ -294,7 +294,9 @@ func getGroupsByUser(userDN string, conn *ldap.Conn, settings []portainer.LDAPGr
 
 		for _, entry := range sr.Entries {
 			for _, attr := range entry.Attributes {
-				groups = append(groups, attr.Values[0])
+				if len(attr.Values) > 0 {
+					groups = append(groups, attr.Values[0])
+				}
 			}
 		}
 	}

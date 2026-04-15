@@ -1,4 +1,5 @@
 import { SystemBadge } from '@@/Badge/SystemBadge';
+import { Link } from '@@/Link';
 
 import { columnHelper } from './helper';
 
@@ -14,7 +15,16 @@ export const name = columnHelper.accessor(
     id: 'name',
     cell: ({ row }) => (
       <div className="flex gap-2">
-        {row.original.name}
+        <Link
+          to="kubernetes.moreResources.roleBinding"
+          params={{
+            namespace: row.original.namespace,
+            name: row.original.name,
+          }}
+          data-cy={`rolebinding-name-link-${row.original.namespace}-${row.original.name}`}
+        >
+          {row.original.name}
+        </Link>
         {row.original.isSystem && <SystemBadge className="ml-auto" />}
       </div>
     ),

@@ -17,11 +17,13 @@ import (
 )
 
 func Test_SatisfiesAPIKeyServiceInterface(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 	is.Implements((*APIKeyService)(nil), NewAPIKeyService(nil, nil))
 }
 
 func Test_GenerateApiKey(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	_, store := datastore.MustNewTestStore(t, true, true)
@@ -75,6 +77,7 @@ func Test_GenerateApiKey(t *testing.T) {
 }
 
 func Test_GetAPIKey(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	_, store := datastore.MustNewTestStore(t, true, true)
@@ -94,6 +97,7 @@ func Test_GetAPIKey(t *testing.T) {
 }
 
 func Test_GetAPIKeys(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	_, store := datastore.MustNewTestStore(t, true, true)
@@ -114,6 +118,7 @@ func Test_GetAPIKeys(t *testing.T) {
 }
 
 func Test_GetDigestUserAndKey(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	_, store := datastore.MustNewTestStore(t, true, true)
@@ -149,6 +154,7 @@ func Test_GetDigestUserAndKey(t *testing.T) {
 }
 
 func Test_UpdateAPIKey(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	_, store := datastore.MustNewTestStore(t, true, true)
@@ -197,6 +203,7 @@ func Test_UpdateAPIKey(t *testing.T) {
 }
 
 func Test_DeleteAPIKey(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	_, store := datastore.MustNewTestStore(t, true, true)
@@ -237,6 +244,7 @@ func Test_DeleteAPIKey(t *testing.T) {
 }
 
 func Test_InvalidateUserKeyCache(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	_, store := datastore.MustNewTestStore(t, true, true)

@@ -14,6 +14,7 @@ import (
 )
 
 func TestVolumeResourceControlGetter(t *testing.T) {
+	t.Parallel()
 	is := require.New(t)
 
 	ok, store := datastore.MustNewTestStore(t, true, false)

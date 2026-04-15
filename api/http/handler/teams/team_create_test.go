@@ -14,6 +14,7 @@ import (
 )
 
 func TestConcurrentTeamCreation(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, true, false)
 
 	h := &Handler{

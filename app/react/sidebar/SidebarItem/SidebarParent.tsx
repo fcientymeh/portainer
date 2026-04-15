@@ -50,7 +50,7 @@ export function SidebarParent({
     <Wrapper className="flex flex-col">
       <div
         className={clsx(
-          'w-full h-8 items-center ease-in-out transition-colors flex duration-200 hover:bg-graphite-500 rounded-md',
+          'flex h-8 w-full items-center rounded-md transition-colors duration-200 ease-in-out hover:bg-graphite-500',
           isSidebarOpen && 'pl-3',
           // only highlight the parent when the sidebar is closed/contracted and a child item is selected
           (!isSidebarOpen || !isExpanded) && anchorProps.className
@@ -59,14 +59,14 @@ export function SidebarParent({
       >
         <button
           type="button"
-          className="flex-1 h-full cursor-pointer flex items-center border-none bg-transparent"
+          className="flex h-full flex-1 cursor-pointer items-center border-none bg-transparent"
           onClick={() => setIsExpanded(true)}
         >
           <Link
             to={to}
             params={params}
             className={clsx(
-              'w-full h-full items-center flex list-none border-none !text-inherit hover:!text-inherit hover:no-underline focus:!text-inherit focus:!no-underline',
+              'flex h-full w-full list-none items-center border-none !text-inherit hover:!text-inherit hover:no-underline focus:!text-inherit focus:!no-underline',
               {
                 'justify-start': isSidebarOpen,
                 'justify-center': !isSidebarOpen,
@@ -93,7 +93,7 @@ export function SidebarParent({
     <ul
       id={listId}
       // pl-11 must be important because it needs to avoid the padding from '.root ul' in sidebar.module.css
-      className={clsx('text-white !pl-11', {
+      className={clsx('!pl-11 text-white', {
         hidden: !isExpanded,
         block: isExpanded,
       })}
@@ -114,10 +114,10 @@ export function SidebarParent({
     <SidebarTooltip
       content={
         <ul>
-          <li className="flex items-center space-x-2 text-sm mb-1">
+          <li className="mb-1 flex items-center space-x-2 text-sm">
             <span>{title}</span>
           </li>
-          <div className="th-highcontrast:bg-black th-highcontrast:border th-highcontrast:border-solid th-highcontrast:border-white rounded">
+          <div className="rounded th-highcontrast:border th-highcontrast:border-solid th-highcontrast:border-white th-highcontrast:bg-black">
             {children}
           </div>
         </ul>
@@ -143,7 +143,7 @@ function SidebarExpandButton({
       onClick={onClick}
       aria-controls={listId}
       data-cy="expand-button"
-      className="flex-none border-none bg-transparent flex items-center group p-0 px-3 h-8"
+      className="group flex h-8 flex-none items-center border-none bg-transparent p-0 px-3"
     />
   );
 }

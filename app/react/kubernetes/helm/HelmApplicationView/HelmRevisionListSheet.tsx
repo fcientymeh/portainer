@@ -26,7 +26,7 @@ export function HelmRevisionListSheet({
         <Icon icon={Eye} />
         View revisions
       </SheetTrigger>
-      <SheetContent className="!w-80 !p-0 !pt-1 overflow-auto">
+      <SheetContent className="!w-80 overflow-auto !p-0 !pt-1">
         <div className="sr-only">
           <SheetHeader title="Revisions" />
           <SheetDescription>

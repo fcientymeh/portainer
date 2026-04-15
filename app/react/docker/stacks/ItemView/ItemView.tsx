@@ -5,11 +5,12 @@ import { useEffect } from 'react';
 import { StackContainersDatatable } from '@/react/docker/stacks/ItemView/StackContainersDatatable';
 import { AccessControlPanel } from '@/react/portainer/access-control';
 import { useStack } from '@/react/common/stacks/queries/useStack';
-import { Stack, StackType } from '@/react/common/stacks/types';
+import { Stack, StackStatus, StackType } from '@/react/common/stacks/types';
 import { ResourceControlViewModel } from '@/react/portainer/access-control/models/ResourceControlViewModel';
 import { ResourceControlType } from '@/react/portainer/access-control/types';
 import { queryKeys } from '@/react/common/stacks/queries/query-keys';
 import { notifyError } from '@/portainer/services/notifications';
+import { useUpdateStackResourcesOnDeployment } from '@/react/docker/stacks/ItemView/useUpdateStackResourcesOnDeployment';
 
 import { PageHeader } from '@@/PageHeader';
 
@@ -28,9 +29,15 @@ export function ItemView() {
   } = useParams();
 
   const queryClient = useQueryClient();
-  const stackQuery = useStack(stackId, { enabled: isRegular || isOrphaned });
+  const stackQuery = useStack(stackId, {
+    enabled: isRegular || isOrphaned,
+    refetchInterval: (data) =>
+      data?.Status === StackStatus.Deploying ? 3000 : false,
+  });
 
   const stack = stackQuery.data;
+
+  useUpdateStackResourcesOnDeployment(stack);
 
   const resourceControl = stack?.ResourceControl
     ? new ResourceControlViewModel(stack.ResourceControl)

@@ -45,6 +45,7 @@ export function KubectlShellView() {
         connect
         onStateChange={onStateChange}
         initialCommands={LINUX_SHELL_INIT_COMMANDS}
+        onResize="socket"
       />
     </div>
   );

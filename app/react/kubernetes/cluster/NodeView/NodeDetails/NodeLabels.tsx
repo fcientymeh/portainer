@@ -52,7 +52,7 @@ function NodeLabelItem({
 }: ItemProps<NodeLabel>) {
   const formikError = isErrorType(error) ? error : undefined;
   return (
-    <div className="flex items-start gap-2 flex-wrap">
+    <div className="flex flex-wrap items-start gap-2">
       <div className="w-64 flex-none">
         <InputGroup
           size="small"
@@ -90,7 +90,7 @@ function NodeLabelItem({
         {!!formikError?.value && <FormError>{formikError.value}</FormError>}
       </div>
       {item.isSystem && (
-        <div className="flex-none flex items-center">
+        <div className="flex flex-none items-center">
           <Badge type="info" className="my-auto">
             System
           </Badge>

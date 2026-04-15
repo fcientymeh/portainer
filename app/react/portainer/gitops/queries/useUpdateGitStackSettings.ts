@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios, { parseAxiosError } from '@/react/portainer/services/axios/axios';
 import { buildStackUrl } from '@/react/common/stacks/queries/buildUrl';
 import { queryKeys } from '@/react/common/stacks/queries/query-keys';
+import { withGlobalError } from '@/react-tools/react-query';
 
 import { EnvVar } from '@@/form-components/EnvironmentVariablesFieldset/types';
 
@@ -63,5 +64,6 @@ export function useUpdateGitStackSettings() {
         exact: true,
       });
     },
+    ...withGlobalError('Unable to save stack settings'),
   });
 }

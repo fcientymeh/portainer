@@ -15,6 +15,7 @@ import (
 )
 
 func TestEndpointDeleteEdgeGroupsConcurrently(t *testing.T) {
+	t.Parallel()
 	const endpointsCount = 100
 
 	_, store := datastore.MustNewTestStore(t, true, false)

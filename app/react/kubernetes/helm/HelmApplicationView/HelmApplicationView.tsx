@@ -57,10 +57,10 @@ export function HelmApplicationView() {
         <div className="col-sm-12">
           <Widget className="overflow-hidden">
             <div className="flex">
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 {name && (
                   <WidgetTitle icon={helm} title={name}>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex flex-wrap gap-2">
                       <div className="2xl:hidden">
                         <HelmRevisionListSheet
                           currentRevision={helmReleaseQuery.data?.version}
@@ -105,7 +105,7 @@ export function HelmApplicationView() {
                   />
                 </WidgetBody>
               </div>
-              <div className="w-80 hidden 2xl:!block">
+              <div className="hidden w-80 2xl:!block">
                 <HelmRevisionList
                   currentRevision={helmReleaseQuery.data?.version}
                   history={helmHistoryQuery.data}
@@ -149,7 +149,7 @@ function HelmDetails({
   return (
     <>
       <HelmSummary release={release} />
-      <div className="my-6 h-[1px] w-full bg-gray-5 th-dark:bg-gray-7 th-highcontrast:bg-white" />
+      <div className="my-6 h-[1px] w-full bg-gray-5 th-highcontrast:bg-white th-dark:bg-gray-7" />
       <Card className="bg-inherit">
         <ReleaseTabs release={release} selectedRevision={selectedRevision} />
       </Card>

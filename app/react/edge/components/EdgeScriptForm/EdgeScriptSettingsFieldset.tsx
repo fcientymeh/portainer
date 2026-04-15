@@ -87,7 +87,7 @@ export function EdgeScriptSettingsFieldset({
         />
       </FormControl>
 
-      <TextTip color="orange" className="mb-2 icon-orange">
+      <TextTip color="orange" className="icon-orange mb-2">
         For security purposes, only environment variables prefixed with
         &apos;PORTAINER_&apos; will be accessible.
       </TextTip>

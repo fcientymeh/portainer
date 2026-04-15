@@ -16,6 +16,7 @@ func init() {
 }
 
 func TestCreateClient(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name                 string
 		registry             *portainer.Registry
@@ -109,6 +110,7 @@ func TestCreateClient(t *testing.T) {
 }
 
 func TestCreateClient_CloudRegistries(t *testing.T) {
+	t.Parallel()
 	cloudRegistryTypes := []struct {
 		name         string
 		registryType portainer.RegistryType
@@ -137,6 +139,7 @@ func TestCreateClient_CloudRegistries(t *testing.T) {
 }
 
 func TestCreateClient_CustomTLSConfiguration(t *testing.T) {
+	t.Parallel()
 	t.Run("TLS enabled with skip verify", func(t *testing.T) {
 		registry := &portainer.Registry{
 			Type: portainer.CustomRegistry,
@@ -192,6 +195,7 @@ func TestCreateClient_CustomTLSConfiguration(t *testing.T) {
 }
 
 func TestCreateClient_TLSWithTrustedCerts_UsesDefaultClientHTTPS(t *testing.T) {
+	t.Parallel()
 	registry := &portainer.Registry{
 		Type: portainer.CustomRegistry,
 		URL:  "my-registry.local",
@@ -213,6 +217,7 @@ func TestCreateClient_TLSWithTrustedCerts_UsesDefaultClientHTTPS(t *testing.T) {
 }
 
 func TestCreateClient_CustomTLS_WithCertPathsMissing_ReturnsError(t *testing.T) {
+	t.Parallel()
 	registry := &portainer.Registry{
 		Type: portainer.CustomRegistry,
 		URL:  "my-registry.local",

@@ -117,7 +117,7 @@ function Item({
     <>
       <tr>
         <td>
-          <div className="flex gap-2 items-center">
+          <div className="flex items-center gap-2">
             <RangeOrNumberField
               value={item.hostPort}
               onChange={(value) => handleChange('hostPort', value)}

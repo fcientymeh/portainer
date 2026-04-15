@@ -47,11 +47,11 @@
 
 .root :global(.cm-editor .cm-gutters) {
   border-right: 0px;
-  @apply bg-gray-2 th-dark:bg-gray-10 th-highcontrast:bg-black;
+  @apply bg-gray-2 th-highcontrast:bg-black th-dark:bg-gray-10;
 }
 
 .root :global(.cm-merge-b) {
-  @apply border-0 border-l border-solid border-l-gray-5 th-dark:border-l-gray-7 th-highcontrast:border-l-gray-2;
+  @apply border-0 border-l border-solid border-l-gray-5 th-highcontrast:border-l-gray-2 th-dark:border-l-gray-7;
 }
 
 .root :global(.cm-editor .cm-gutters .cm-lineNumbers .cm-gutterElement) {
@@ -166,9 +166,9 @@
 
 /* Tooltip styles for all themes */
 .root :global(.cm-tooltip) {
-  @apply bg-white border border-solid border-gray-5 shadow-md text-xs rounded h-min;
-  @apply th-dark:bg-gray-9 th-dark:border-gray-7 th-dark:text-white;
-  @apply th-highcontrast:bg-black th-highcontrast:border-gray-7 th-highcontrast:text-white;
+  @apply h-min rounded border border-solid border-gray-5 bg-white text-xs shadow-md;
+  @apply th-dark:border-gray-7 th-dark:bg-gray-9 th-dark:text-white;
+  @apply th-highcontrast:border-gray-7 th-highcontrast:bg-black th-highcontrast:text-white;
 }
 
 /* Hide the completionInfo tooltip when it's empty */
@@ -186,10 +186,10 @@
 .root :global(.cm-editor .cm-collapsedLines) {
   /* inherit bg, instead of using styles from library */
   background: inherit;
-  @apply bg-blue-2 th-dark:bg-blue-10 th-highcontrast:bg-white th-dark:text-white th-highcontrast:text-black;
+  @apply bg-blue-2 th-highcontrast:bg-white th-highcontrast:text-black th-dark:bg-blue-10 th-dark:text-white;
 }
 .root :global(.cm-editor .cm-collapsedLines):hover {
-  @apply bg-blue-3 th-dark:bg-blue-9 th-highcontrast:bg-white th-dark:text-white th-highcontrast:text-black;
+  @apply bg-blue-3 th-highcontrast:bg-white th-highcontrast:text-black th-dark:bg-blue-9 th-dark:text-white;
 }
 
 .root :global(.cm-editor .cm-collapsedLines:before) {

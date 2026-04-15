@@ -15,6 +15,7 @@ import (
 )
 
 func TestMigrateRegistryAccessSASecrets_2_40_0(t *testing.T) {
+	t.Parallel()
 	var conn portainer.Connection = &boltdb.DbConnection{Path: t.TempDir()}
 	err := conn.Open()
 	require.NoError(t, err)

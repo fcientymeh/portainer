@@ -35,7 +35,7 @@ function SheetHeader({
 }: PropsWithChildren<SheetTitleProps>) {
   return (
     <div className="row">
-      <div className="col-sm-12 pt-3 flex gap-2 justify-between">
+      <div className="col-sm-12 flex justify-between gap-2 pt-3">
         <div className="flex items-center gap-2">
           <SheetPrimitive.DialogTitle className="m-0 text-2xl font-medium text-gray-11 th-highcontrast:text-white th-dark:text-white">
             {title}
@@ -128,7 +128,7 @@ const SheetContent = forwardRef<
         {showCloseButton && (
           <SheetPrimitive.Close
             asChild
-            className="absolute close-button right-9 top-8 disabled:pointer-events-none"
+            className="close-button absolute right-9 top-8 disabled:pointer-events-none"
           >
             <Button
               icon={X}

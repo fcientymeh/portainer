@@ -39,7 +39,7 @@ export function KubernetesSummaryView({
       <TextTip color="blue">
         Portainer will execute the following Kubernetes actions.
       </TextTip>
-      <ul className="w-full small text-muted ml-5">
+      <ul className="small text-muted ml-5 w-full">
         {actions.map((action, idx) => {
           if (!action.action || !action.kind || !action.name) {
             return null;

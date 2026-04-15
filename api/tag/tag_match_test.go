@@ -7,6 +7,7 @@ import (
 )
 
 func TestFullMatch(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name           string
 		edgeGroupTags  []portainer.TagID
@@ -68,6 +69,7 @@ func TestFullMatch(t *testing.T) {
 }
 
 func TestPartialMatch(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name           string
 		edgeGroupTags  []portainer.TagID

@@ -7,6 +7,7 @@ import (
 )
 
 func TestGetIngresses(t *testing.T) {
+	t.Parallel()
 	kcl := &KubeClient{}
 
 	ingresses, err := kcl.GetIngresses("default")

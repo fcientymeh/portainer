@@ -26,6 +26,7 @@ func setup(store *Store) error {
 }
 
 func TestMigrateSettings(t *testing.T) {
+	t.Parallel()
 	_, store := MustNewTestStore(t, false, true)
 
 	err := setup(store)

@@ -11,6 +11,7 @@ import (
 	models "github.com/portainer/portainer/api/http/models/kubernetes"
 	"github.com/rs/zerolog/log"
 	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -84,15 +85,32 @@ func (kcl *KubeClient) parseJob(job batchv1.Job) models.K8sJob {
 	status, failedReason := determineJobStatus(job)
 	podName := getJobPodName(kcl, job)
 
+	var command string
+	var container corev1.Container
+	if len(job.Spec.Template.Spec.Containers) > 0 {
+		command = strings.Join(job.Spec.Template.Spec.Containers[0].Command, " ")
+		container = job.Spec.Template.Spec.Containers[0]
+	}
+
+	var backoffLimit int32
+	if job.Spec.BackoffLimit != nil {
+		backoffLimit = *job.Spec.BackoffLimit
+	}
+
+	var completions int32
+	if job.Spec.Completions != nil {
+		completions = *job.Spec.Completions
+	}
+
 	return models.K8sJob{
 		ID:           string(job.UID),
 		Namespace:    job.Namespace,
 		Name:         job.Name,
 		PodName:      podName,
-		Command:      strings.Join(job.Spec.Template.Spec.Containers[0].Command, " "),
-		Container:    job.Spec.Template.Spec.Containers[0],
-		BackoffLimit: *job.Spec.BackoffLimit,
-		Completions:  *job.Spec.Completions,
+		Command:      command,
+		Container:    container,
+		BackoffLimit: backoffLimit,
+		Completions:  completions,
 		StartTime:    times.start,
 		FinishTime:   times.finish,
 		Duration:     times.duration,

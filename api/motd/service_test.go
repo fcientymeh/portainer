@@ -9,11 +9,13 @@ import (
 )
 
 func TestGetCached_InitiallyEmpty(t *testing.T) {
+	t.Parallel()
 	svc := NewService("http://unused")
 	assert.Equal(t, Motd{}, svc.GetCached())
 }
 
 func TestRefresh_Success_PopulatesCache(t *testing.T) {
+	t.Parallel()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"title":"Test title","message":["Hello","world"]}`))
@@ -30,6 +32,7 @@ func TestRefresh_Success_PopulatesCache(t *testing.T) {
 }
 
 func TestRefresh_FetchError_KeepsPreviousCache(t *testing.T) {
+	t.Parallel()
 	// First populate cache with good data
 	good := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -50,6 +53,7 @@ func TestRefresh_FetchError_KeepsPreviousCache(t *testing.T) {
 }
 
 func TestRefresh_InvalidJSON_KeepsPreviousCache(t *testing.T) {
+	t.Parallel()
 	good := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"title":"Cached","message":["Cached message"]}`))
@@ -73,6 +77,7 @@ func TestRefresh_InvalidJSON_KeepsPreviousCache(t *testing.T) {
 }
 
 func TestRefresh_FetchError_CacheRemainsEmpty(t *testing.T) {
+	t.Parallel()
 	svc := NewService("http://127.0.0.1:0") // unreachable
 	svc.refresh()
 	assert.Equal(t, Motd{}, svc.GetCached())

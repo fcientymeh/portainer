@@ -83,7 +83,7 @@ func (handler *Handler) stackFile(w http.ResponseWriter, r *http.Request) *httpe
 				return httperror.InternalServerError("Unable to retrieve a resource control associated to the stack", err)
 			}
 
-			access, err := handler.userCanAccessStack(securityContext, endpoint.ID, resourceControl)
+			access, err := handler.userCanAccessStack(securityContext, resourceControl)
 			if err != nil {
 				return httperror.InternalServerError("Unable to verify user authorizations to validate stack access", err)
 			}

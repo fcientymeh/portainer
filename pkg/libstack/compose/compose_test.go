@@ -18,6 +18,7 @@ func checkPrerequisites(t *testing.T) {
 }
 
 func Test_UpAndDown(t *testing.T) {
+	t.Parallel()
 	checkPrerequisites(t)
 
 	deployer := compose.NewComposeDeployer()

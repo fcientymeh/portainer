@@ -31,6 +31,7 @@ func (*mockBouncer) CookieAuthLookup(r *http.Request) (*portainer.TokenData, err
 }
 
 func TestLogout(t *testing.T) {
+	t.Parallel()
 	h := NewHandler(NewMockBouncer(), nil, nil, nil)
 	h.KubernetesTokenCacheManager = kubernetes.NewTokenCacheManager()
 	k, err := cli.NewClientFactory(nil, nil, nil, "", "", "")
@@ -45,6 +46,7 @@ func TestLogout(t *testing.T) {
 }
 
 func TestLogoutNoPanic(t *testing.T) {
+	t.Parallel()
 	h := NewHandler(testhelpers.NewTestRequestBouncer(), nil, nil, nil)
 
 	rr := httptest.NewRecorder()

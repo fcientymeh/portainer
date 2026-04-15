@@ -118,7 +118,7 @@ export function WizardKubernetes({ onCreate }: Props) {
         defaultFolded={false}
         className="[&>label]:mb-5"
       >
-        <p className="text-xs text-muted mb-2">
+        <p className="text-muted mb-2 text-xs">
           These are legacy options that don&apos;t support edge features or
           policy management. For most use cases,{' '}
           <ExternalLink

@@ -3,7 +3,6 @@ package edgegroups
 import (
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -17,34 +16,10 @@ import (
 )
 
 func TestEdgeGroupUpdateHandler(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, true, true)
+	t.Parallel()
+	handler, store := newHandlerWithEdgeEndpoints(t)
 
-	handler := NewHandler(testhelpers.NewTestRequestBouncer())
-	handler.DataStore = store
-
-	err := store.EndpointGroup().Create(&portainer.EndpointGroup{
-		ID:   1,
-		Name: "Test Group",
-	})
-	require.NoError(t, err)
-
-	for i := range 3 {
-		err = store.Endpoint().Create(&portainer.Endpoint{
-			ID:      portainer.EndpointID(i + 1),
-			Name:    "Test Endpoint " + strconv.Itoa(i+1),
-			Type:    portainer.EdgeAgentOnDockerEnvironment,
-			GroupID: 1,
-		})
-		require.NoError(t, err)
-
-		err = store.EndpointRelation().Create(&portainer.EndpointRelation{
-			EndpointID: portainer.EndpointID(i + 1),
-			EdgeStacks: map[portainer.EdgeStackID]bool{},
-		})
-		require.NoError(t, err)
-	}
-
-	err = store.EdgeGroup().Create(&portainer.EdgeGroup{
+	err := store.EdgeGroup().Create(&portainer.EdgeGroup{
 		ID:          1,
 		Name:        "Test Edge Group",
 		EndpointIDs: roar.FromSlice([]portainer.EndpointID{1}),
@@ -70,7 +45,8 @@ func TestEdgeGroupUpdateHandler(t *testing.T) {
 }
 
 func TestEdgeGroupUpdatePanic(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, true, true)
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
 
 	handler := NewHandler(testhelpers.NewTestRequestBouncer())
 	handler.DataStore = store

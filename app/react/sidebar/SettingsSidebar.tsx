@@ -187,7 +187,7 @@ export function SettingsSidebar({
               }
               target="_blank"
               rel="noreferrer"
-              className="!text-inherit hover:!underline focus:no-underline text-sm flex h-8 w-full items-center rounded px-3 transition-colors duration-200 hover:bg-blue-5/20 be:hover:bg-gray-5/20 th-dark:hover:bg-gray-true-5/20"
+              className="flex h-8 w-full items-center rounded px-3 text-sm !text-inherit transition-colors duration-200 hover:bg-blue-5/20 hover:!underline focus:no-underline be:hover:bg-gray-5/20 th-dark:hover:bg-gray-true-5/20"
             >
               Get Help
             </a>

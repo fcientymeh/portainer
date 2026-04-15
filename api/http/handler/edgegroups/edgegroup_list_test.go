@@ -3,11 +3,9 @@ package edgegroups
 import (
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/datastore"
 	"github.com/portainer/portainer/api/internal/testhelpers"
 	"github.com/portainer/portainer/api/roar"
 
@@ -17,6 +15,7 @@ import (
 )
 
 func Test_getEndpointTypes(t *testing.T) {
+	t.Parallel()
 	endpoints := []portainer.Endpoint{
 		{ID: 1, Type: portainer.DockerEnvironment},
 		{ID: 2, Type: portainer.AgentOnDockerEnvironment},
@@ -54,6 +53,7 @@ func Test_getEndpointTypes(t *testing.T) {
 }
 
 func Test_getEndpointTypes_failWhenEndpointDontExist(t *testing.T) {
+	t.Parallel()
 	datastore := testhelpers.NewDatastore(testhelpers.WithEndpoints([]portainer.Endpoint{}))
 
 	_, err := getEndpointTypes(datastore, roar.FromSlice([]portainer.EndpointID{1}))
@@ -61,34 +61,10 @@ func Test_getEndpointTypes_failWhenEndpointDontExist(t *testing.T) {
 }
 
 func TestEdgeGroupListHandler(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, true, true)
+	t.Parallel()
+	handler, store := newHandlerWithEdgeEndpoints(t)
 
-	handler := NewHandler(testhelpers.NewTestRequestBouncer())
-	handler.DataStore = store
-
-	err := store.EndpointGroup().Create(&portainer.EndpointGroup{
-		ID:   1,
-		Name: "Test Group",
-	})
-	require.NoError(t, err)
-
-	for i := range 3 {
-		err = store.Endpoint().Create(&portainer.Endpoint{
-			ID:      portainer.EndpointID(i + 1),
-			Name:    "Test Endpoint " + strconv.Itoa(i+1),
-			Type:    portainer.EdgeAgentOnDockerEnvironment,
-			GroupID: 1,
-		})
-		require.NoError(t, err)
-
-		err = store.EndpointRelation().Create(&portainer.EndpointRelation{
-			EndpointID: portainer.EndpointID(i + 1),
-			EdgeStacks: map[portainer.EdgeStackID]bool{},
-		})
-		require.NoError(t, err)
-	}
-
-	err = store.EdgeGroup().Create(&portainer.EdgeGroup{
+	err := store.EdgeGroup().Create(&portainer.EdgeGroup{
 		ID:          1,
 		Name:        "Test Edge Group",
 		EndpointIDs: roar.FromSlice([]portainer.EndpointID{1, 2, 3}),

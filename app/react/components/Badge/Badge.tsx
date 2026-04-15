@@ -17,50 +17,50 @@ export type BadgeType =
 // the classes are typed in full because tailwind doesn't render the interpolated classes
 const typeClasses: Record<BadgeType, string> = {
   success: clsx(
-    'text-success-9 bg-success-2',
-    'th-dark:text-success-3 th-dark:bg-success-10',
-    'th-highcontrast:text-success-3 th-highcontrast:bg-success-10'
+    'bg-success-2 text-success-9',
+    'th-dark:bg-success-10 th-dark:text-success-3',
+    'th-highcontrast:bg-success-10 th-highcontrast:text-success-3'
   ),
   warn: clsx(
-    'text-warning-9 bg-warning-2',
-    'th-dark:text-warning-3 th-dark:bg-warning-10',
-    'th-highcontrast:text-warning-3 th-highcontrast:bg-warning-10'
+    'bg-warning-2 text-warning-9',
+    'th-dark:bg-warning-10 th-dark:text-warning-3',
+    'th-highcontrast:bg-warning-10 th-highcontrast:text-warning-3'
   ),
   danger: clsx(
-    'text-error-9 bg-error-2',
-    'th-dark:text-error-3 th-dark:bg-error-10',
-    'th-highcontrast:text-error-3 th-highcontrast:bg-error-10'
+    'bg-error-2 text-error-9',
+    'th-dark:bg-error-10 th-dark:text-error-3',
+    'th-highcontrast:bg-error-10 th-highcontrast:text-error-3'
   ),
   info: clsx(
-    'text-blue-9 bg-blue-2',
-    'th-dark:text-blue-3 th-dark:bg-blue-10',
-    'th-highcontrast:text-blue-3 th-highcontrast:bg-blue-10'
+    'bg-blue-2 text-blue-9',
+    'th-dark:bg-blue-10 th-dark:text-blue-3',
+    'th-highcontrast:bg-blue-10 th-highcontrast:text-blue-3'
   ),
   // the secondary classes are a bit darker in light mode and a bit lighter in dark mode
   successSecondary: clsx(
-    'text-success-9 bg-success-3',
-    'th-dark:text-success-3 th-dark:bg-success-9',
-    'th-highcontrast:text-success-3 th-highcontrast:bg-success-9'
+    'bg-success-3 text-success-9',
+    'th-dark:bg-success-9 th-dark:text-success-3',
+    'th-highcontrast:bg-success-9 th-highcontrast:text-success-3'
   ),
   warnSecondary: clsx(
-    'text-warning-9 bg-warning-3',
-    'th-dark:text-warning-3 th-dark:bg-warning-9',
-    'th-highcontrast:text-warning-3 th-highcontrast:bg-warning-9'
+    'bg-warning-3 text-warning-9',
+    'th-dark:bg-warning-9 th-dark:text-warning-3',
+    'th-highcontrast:bg-warning-9 th-highcontrast:text-warning-3'
   ),
   dangerSecondary: clsx(
-    'text-error-9 bg-error-3',
-    'th-dark:text-error-3 th-dark:bg-error-9',
-    'th-highcontrast:text-error-3 th-highcontrast:bg-error-9'
+    'bg-error-3 text-error-9',
+    'th-dark:bg-error-9 th-dark:text-error-3',
+    'th-highcontrast:bg-error-9 th-highcontrast:text-error-3'
   ),
   infoSecondary: clsx(
-    'text-blue-9 bg-blue-3',
-    'th-dark:text-blue-3 th-dark:bg-blue-9',
-    'th-highcontrast:text-blue-3 th-highcontrast:bg-blue-9'
+    'bg-blue-3 text-blue-9',
+    'th-dark:bg-blue-9 th-dark:text-blue-3',
+    'th-highcontrast:bg-blue-9 th-highcontrast:text-blue-3'
   ),
   muted: clsx(
-    'text-gray-9 bg-gray-3',
-    'th-dark:text-gray-3 th-dark:bg-gray-9',
-    'th-highcontrast:text-gray-3 th-highcontrast:bg-gray-9'
+    'bg-gray-3 text-gray-9',
+    'th-dark:bg-gray-9 th-dark:text-gray-3',
+    'th-highcontrast:bg-gray-9 th-highcontrast:text-gray-3'
   ),
 };
 

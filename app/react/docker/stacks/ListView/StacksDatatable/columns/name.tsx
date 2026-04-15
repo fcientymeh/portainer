@@ -16,7 +16,12 @@ import { DecoratedStack } from '../types';
 
 import { columnHelper } from './helper';
 
-const filterOptions = ['Active Stacks', 'Inactive Stacks'] as const;
+const filterOptions = [
+  'Active Stacks',
+  'Inactive Stacks',
+  'Deploying Stacks',
+  'Error Stacks',
+] as const;
 
 type FilterOption = (typeof filterOptions)[number];
 
@@ -43,7 +48,11 @@ export const name = columnHelper.accessor('Name', {
       (stack.Status === StackStatus.Active &&
         filterValue.includes('Active Stacks')) ||
       (stack.Status === StackStatus.Inactive &&
-        filterValue.includes('Inactive Stacks'))
+        filterValue.includes('Inactive Stacks')) ||
+      (stack.Status === StackStatus.Deploying &&
+        filterValue.includes('Deploying Stacks')) ||
+      (stack.Status === StackStatus.Error &&
+        filterValue.includes('Error Stacks'))
     );
   },
   meta: {
@@ -57,9 +66,19 @@ function NameCell({
   return (
     <>
       <NameLink item={item} />
-      {isRegularStack(item) && item.Status === 2 && (
+      {isRegularStack(item) && item.Status === StackStatus.Inactive && (
         <span className="label label-warning image-tag space-left ml-2">
           Inactive
+        </span>
+      )}
+      {isRegularStack(item) && item.Status === StackStatus.Deploying && (
+        <span className="label label-info image-tag space-left ml-2">
+          Deploying...
+        </span>
+      )}
+      {isRegularStack(item) && item.Status === StackStatus.Error && (
+        <span className="label label-danger image-tag space-left ml-2">
+          Error
         </span>
       )}
     </>

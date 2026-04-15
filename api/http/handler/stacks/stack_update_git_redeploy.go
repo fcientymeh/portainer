@@ -22,7 +22,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type stackGitRedployPayload struct {
+type stackGitRedeployPayload struct {
 	RepositoryReferenceName  string
 	RepositoryAuthentication bool
 	RepositoryUsername       string
@@ -38,7 +38,7 @@ type stackGitRedployPayload struct {
 	PullImage bool `example:"false"`
 }
 
-func (payload *stackGitRedployPayload) Validate(r *http.Request) error {
+func (payload *stackGitRedeployPayload) Validate(r *http.Request) error {
 	return nil
 }
 
@@ -53,7 +53,7 @@ func (payload *stackGitRedployPayload) Validate(r *http.Request) error {
 // @produce json
 // @param id path int true "Stack identifier"
 // @param endpointId query int false "Stacks created before version 1.18.0 might not have an associated environment(endpoint) identifier. Use this optional parameter to set the environment(endpoint) identifier used by the stack."
-// @param body body stackGitRedployPayload true "Git configs for pull and redeploy of a stack. **StackName** may only be populated for Kuberenetes stacks, and if specified with a blank string, it will be set to blank"
+// @param body body stackGitRedeployPayload true "Git configs for pull and redeploy of a stack. **StackName** may only be populated for Kuberenetes stacks, and if specified with a blank string, it will be set to blank"
 // @success 200 {object} portainer.Stack "Success"
 // @failure 400 "Invalid request"
 // @failure 403 "Permission denied"
@@ -125,7 +125,7 @@ func (handler *Handler) stackGitRedeploy(w http.ResponseWriter, r *http.Request)
 			return httperror.InternalServerError("Unable to retrieve a resource control associated to the stack", err)
 		}
 
-		if access, err := handler.userCanAccessStack(securityContext, endpoint.ID, resourceControl); err != nil {
+		if access, err := handler.userCanAccessStack(securityContext, resourceControl); err != nil {
 			return httperror.InternalServerError("Unable to verify user authorizations to validate stack access", err)
 		} else if !access {
 			return httperror.Forbidden("Access denied to resource", httperrors.ErrResourceAccessDenied)
@@ -139,7 +139,7 @@ func (handler *Handler) stackGitRedeploy(w http.ResponseWriter, r *http.Request)
 		return httperror.Forbidden(errMsg, errors.New(errMsg))
 	}
 
-	var payload stackGitRedployPayload
+	var payload stackGitRedeployPayload
 	if err := request.DecodeAndValidateJSONPayload(r, &payload); err != nil {
 		return httperror.BadRequest("Invalid request payload", err)
 	}
@@ -210,6 +210,10 @@ func (handler *Handler) stackGitRedeploy(w http.ResponseWriter, r *http.Request)
 	stack.UpdatedBy = user.Username
 	stack.UpdateDate = time.Now().Unix()
 	stack.Status = portainer.StackStatusActive
+	// TODO: move to async job when stack update becomes async
+	stack.DeploymentStatus = []portainer.StackDeploymentStatus{
+		{Status: portainer.StackStatusActive, Time: time.Now().Unix()},
+	}
 
 	if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		return tx.Stack().Update(stack.ID, stack)
@@ -249,7 +253,7 @@ func (handler *Handler) deployStack(r *http.Request, stack *portainer.Stack, pul
 
 		prune := stack.Option != nil && stack.Option.Prune
 
-		deploymentConfiger, err = deployments.CreateSwarmStackDeploymentConfig(securityContext, stack, endpoint, handler.DataStore, handler.FileService, handler.StackDeployer, prune, pullImage)
+		deploymentConfiger, err = deployments.CreateSwarmStackDeploymentConfigTx(handler.DataStore, securityContext, stack, endpoint, handler.FileService, handler.StackDeployer, prune, pullImage)
 		if err != nil {
 			return httperror.InternalServerError(err.Error(), err)
 		}
@@ -263,7 +267,7 @@ func (handler *Handler) deployStack(r *http.Request, stack *portainer.Stack, pul
 
 		prune := stack.Option != nil && stack.Option.Prune
 
-		deploymentConfiger, err = deployments.CreateComposeStackDeploymentConfig(securityContext, stack, endpoint, handler.DataStore, handler.FileService, handler.StackDeployer, prune, pullImage, true)
+		deploymentConfiger, err = deployments.CreateComposeStackDeploymentConfigTx(handler.DataStore, securityContext, stack, endpoint, handler.FileService, handler.StackDeployer, prune, pullImage, true)
 		if err != nil {
 			return httperror.InternalServerError(err.Error(), err)
 		}
@@ -289,10 +293,7 @@ func (handler *Handler) deployStack(r *http.Request, stack *portainer.Stack, pul
 			Kind:      "git",
 		}
 
-		deploymentConfiger, err = deployments.CreateKubernetesStackDeploymentConfig(stack, handler.KubernetesDeployer, appLabel, user, endpoint)
-		if err != nil {
-			return httperror.InternalServerError(err.Error(), err)
-		}
+		deploymentConfiger = deployments.CreateKubernetesStackDeploymentConfig(stack, handler.KubernetesDeployer, appLabel, user, endpoint)
 
 	default:
 		return httperror.InternalServerError("Unsupported stack", errors.Errorf("unsupported stack type: %v", stack.Type))

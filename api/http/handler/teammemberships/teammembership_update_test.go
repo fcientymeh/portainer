@@ -16,6 +16,7 @@ import (
 )
 
 func TestUpdate(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, false, false)
 
 	err := store.TeamMembershipService.Create(&portainer.TeamMembership{

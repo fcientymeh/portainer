@@ -48,6 +48,7 @@ func (m *MockJWTService) SetUserSessionDuration(userSessionDuration time.Duratio
 }
 
 func TestBaseTransport_AddTokenForExec(t *testing.T) {
+	t.Parallel()
 	// Setup test store and JWT service
 	_, store := datastore.MustNewTestStore(t, true, false)
 
@@ -274,6 +275,7 @@ func TestBaseTransport_AddTokenForExec(t *testing.T) {
 }
 
 func TestBaseTransport_AddTokenForExec_Integration(t *testing.T) {
+	t.Parallel()
 	// Create a test HTTP server to capture requests
 	var capturedRequest *http.Request
 	var capturedHeaders http.Header

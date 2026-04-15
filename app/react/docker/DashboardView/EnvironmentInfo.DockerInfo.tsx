@@ -23,7 +23,7 @@ export function DockerInfo({ isAgent }: { isAgent: boolean }) {
   const type = getDockerEnvironmentType(isSwarm, isPodman);
 
   return (
-    <span className="inline-flex gap-x-2 small text-muted">
+    <span className="small text-muted inline-flex gap-x-2">
       <span>
         {type} {info.ServerVersion}
       </span>

@@ -54,7 +54,7 @@ export function ExpandableMessageByLines({
     <div className="flex flex-col items-start">
       <div
         ref={contentRef}
-        className={`whitespace-pre-wrap break-words overflow-hidden ${
+        className={`overflow-hidden whitespace-pre-wrap break-words ${
           isExpanded ? '' : lineClampClasses[maxLines]
         }`}
       >
@@ -65,7 +65,7 @@ export function ExpandableMessageByLines({
           color="link"
           size="xsmall"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="!ml-0 !p-0 mt-1"
+          className="!ml-0 mt-1 !p-0"
           data-cy="expandable-message-lines-button"
         >
           {isExpanded ? 'Show less' : 'Show more'}

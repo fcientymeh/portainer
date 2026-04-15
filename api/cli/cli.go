@@ -152,11 +152,11 @@ func (Service) ParseFlags(version string) (*portainer.CLIFlags, error) {
 func (Service) ValidateFlags(flags *portainer.CLIFlags) error {
 	displayDeprecationWarnings(flags)
 
-	if err := validateEndpointURL(*flags.EndpointURL); err != nil {
+	if err := ValidateEndpointURL(*flags.EndpointURL); err != nil {
 		return err
 	}
 
-	if err := validateSnapshotInterval(*flags.SnapshotInterval); err != nil {
+	if err := ValidateSnapshotInterval(*flags.SnapshotInterval); err != nil {
 		return err
 	}
 
@@ -173,7 +173,7 @@ func displayDeprecationWarnings(flags *portainer.CLIFlags) {
 	}
 }
 
-func validateEndpointURL(endpointURL string) error {
+func ValidateEndpointURL(endpointURL string) error {
 	if endpointURL == "" {
 		return nil
 	}
@@ -198,7 +198,7 @@ func validateEndpointURL(endpointURL string) error {
 	return nil
 }
 
-func validateSnapshotInterval(snapshotInterval string) error {
+func ValidateSnapshotInterval(snapshotInterval string) error {
 	if snapshotInterval == "" {
 		return nil
 	}

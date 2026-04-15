@@ -230,6 +230,7 @@ func createTestService(name, namespace string, selector map[string]string) *core
 }
 
 func TestGetApplications(t *testing.T) {
+	t.Parallel()
 	t.Run("Admin user - Mix of deployments, statefulsets and daemonsets with and without pods", func(t *testing.T) {
 		// Create a fake K8s client
 		fakeClient := fake.NewSimpleClientset()

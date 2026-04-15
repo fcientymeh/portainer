@@ -43,7 +43,7 @@ export function ProgressBar({ steps, total, className }: Props) {
   return (
     <div
       className={clsx(
-        'progress shadow-none h-2.5 rounded-full',
+        'progress h-2.5 rounded-full shadow-none',
         sum > 100 ? 'text-blue-8' : 'text-error-7',
         className
       )}

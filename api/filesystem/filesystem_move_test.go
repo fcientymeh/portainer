@@ -12,6 +12,7 @@ import (
 var content = []byte("content")
 
 func Test_movePath_shouldFailIfSourceDirDoesNotExist(t *testing.T) {
+	t.Parallel()
 	sourceDir := "missing"
 	destinationDir := t.TempDir()
 	file1 := addFile(t, destinationDir, "dir", "file")
@@ -24,6 +25,7 @@ func Test_movePath_shouldFailIfSourceDirDoesNotExist(t *testing.T) {
 }
 
 func Test_movePath_shouldFailIfDestinationDirExists(t *testing.T) {
+	t.Parallel()
 	sourceDir := t.TempDir()
 	file1 := addFile(t, sourceDir, "dir", "file")
 	file2 := addFile(t, sourceDir, "file")
@@ -40,6 +42,7 @@ func Test_movePath_shouldFailIfDestinationDirExists(t *testing.T) {
 }
 
 func Test_movePath_succesIfOverwriteSetWhenDestinationDirExists(t *testing.T) {
+	t.Parallel()
 	sourceDir := t.TempDir()
 	file1 := addFile(t, sourceDir, "dir", "file")
 	file2 := addFile(t, sourceDir, "file")
@@ -56,6 +59,7 @@ func Test_movePath_succesIfOverwriteSetWhenDestinationDirExists(t *testing.T) {
 }
 
 func Test_movePath_successWhenSourceExistsAndDestinationIsMissing(t *testing.T) {
+	t.Parallel()
 	tmp := t.TempDir()
 	sourceDir := path.Join(tmp, "source")
 	err := os.Mkdir(sourceDir, 0766)

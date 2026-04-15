@@ -13,6 +13,7 @@ import (
 )
 
 func Test_InitActionConfig(t *testing.T) {
+	t.Parallel()
 	hspm := NewHelmSDKPackageManager()
 
 	t.Run("with nil k8sAccess should use default kubeconfig", func(t *testing.T) {
@@ -50,6 +51,7 @@ func Test_InitActionConfig(t *testing.T) {
 }
 
 func Test_ClientConfigGetter(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	// Create a mock client config
@@ -105,6 +107,7 @@ func Test_ClientConfigGetter(t *testing.T) {
 }
 
 func Test_ParseValues(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	t.Run("should parse valid YAML values", func(t *testing.T) {

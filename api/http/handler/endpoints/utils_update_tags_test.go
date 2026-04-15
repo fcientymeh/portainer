@@ -12,6 +12,7 @@ import (
 )
 
 func Test_updateTags(t *testing.T) {
+	t.Parallel()
 	createTags := func(store *datastore.Store, tagNames []string) ([]portainer.Tag, error) {
 		tags := make([]portainer.Tag, len(tagNames))
 		for index, tagName := range tagNames {
@@ -76,7 +77,7 @@ func Test_updateTags(t *testing.T) {
 
 	testFn := func(t *testing.T, testCase testCase) {
 		is := assert.New(t)
-		_, store := datastore.MustNewTestStore(t, true, true)
+		_, store := datastore.MustNewTestStore(t, false, true)
 
 		err := store.Endpoint().Create(testCase.endpoint)
 		require.NoError(t, err)

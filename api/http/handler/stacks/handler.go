@@ -92,7 +92,7 @@ func NewHandler(bouncer security.BouncerService) *Handler {
 	return h
 }
 
-func (handler *Handler) userCanAccessStack(securityContext *security.RestrictedRequestContext, endpointID portainer.EndpointID, resourceControl *portainer.ResourceControl) (bool, error) {
+func (handler *Handler) userCanAccessStack(securityContext *security.RestrictedRequestContext, resourceControl *portainer.ResourceControl) (bool, error) {
 	user, err := handler.DataStore.User().Read(securityContext.UserID)
 	if err != nil {
 		return false, err
@@ -104,7 +104,7 @@ func (handler *Handler) userCanAccessStack(securityContext *security.RestrictedR
 		return true, nil
 	}
 
-	return stackutils.UserIsAdminOrEndpointAdmin(user, endpointID)
+	return stackutils.UserIsAdminOrEndpointAdmin(user), nil
 }
 
 func (handler *Handler) userIsAdmin(userID portainer.UserID) (bool, error) {
@@ -118,13 +118,13 @@ func (handler *Handler) userIsAdmin(userID portainer.UserID) (bool, error) {
 	return isAdmin, nil
 }
 
-func (handler *Handler) userCanCreateStack(securityContext *security.RestrictedRequestContext, endpointID portainer.EndpointID) (bool, error) {
+func (handler *Handler) userCanCreateStack(securityContext *security.RestrictedRequestContext) (bool, error) {
 	user, err := handler.DataStore.User().Read(securityContext.UserID)
 	if err != nil {
 		return false, err
 	}
 
-	return stackutils.UserIsAdminOrEndpointAdmin(user, endpointID)
+	return stackutils.UserIsAdminOrEndpointAdmin(user), nil
 }
 
 // if stack management is disabled for non admins and the user isn't an admin, then return false. Otherwise return true
@@ -136,7 +136,7 @@ func (handler *Handler) userCanManageStacks(securityContext *security.Restricted
 	}
 
 	if endpointutils.IsDockerEndpoint(endpoint) && !endpoint.SecuritySettings.AllowStackManagementForRegularUsers {
-		canCreate, err := handler.userCanCreateStack(securityContext, endpoint.ID)
+		canCreate, err := handler.userCanCreateStack(securityContext)
 
 		if err != nil {
 			return false, fmt.Errorf("failed to get user from the database: %w", err)
@@ -166,6 +166,10 @@ func (handler *Handler) checkUniqueStackNameInDocker(endpoint *portainer.Endpoin
 	isUniqueStackName, err := handler.checkUniqueStackName(endpoint, name, stackID)
 	if err != nil {
 		return false, err
+	}
+
+	if handler.DockerClientFactory == nil {
+		return isUniqueStackName, nil
 	}
 
 	dockerClient, err := handler.DockerClientFactory.CreateClient(endpoint, "", nil)

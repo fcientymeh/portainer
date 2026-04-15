@@ -44,8 +44,8 @@ export function BoxSelector<T extends Value>({
 }: Props<T>) {
   const rootClassName = clsx(
     useGridLayout
-      ? 'grid gap-2.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-      : 'w-full flex flex-wrap gap-2.5 overflow-hidden mb-1 mt-1',
+      ? 'grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+      : 'mb-1 mt-1 flex w-full flex-wrap gap-2.5 overflow-hidden',
     className
   );
 

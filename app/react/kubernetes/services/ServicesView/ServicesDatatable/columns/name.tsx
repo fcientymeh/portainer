@@ -2,6 +2,7 @@ import { Authorized } from '@/react/hooks/useUser';
 
 import { SystemBadge } from '@@/Badge/SystemBadge';
 import { ExternalBadge } from '@@/Badge/ExternalBadge';
+import { Link } from '@@/Link';
 
 import { columnHelper } from './helper';
 
@@ -34,7 +35,13 @@ export const name = columnHelper.accessor(
       return (
         <div className="flex gap-2">
           <Authorized authorizations="K8sServiceW" childrenUnauthorized={name}>
-            {name}
+            <Link
+              to="kubernetes.services.service"
+              params={{ namespace: row.original.Namespace, name }}
+              data-cy={`service-name-link-${row.original.Namespace}-${name}`}
+            >
+              {name}
+            </Link>
 
             <div className="ml-auto flex gap-2">
               {row.original.IsSystem && <SystemBadge />}

@@ -157,7 +157,8 @@ func agentServer(t *testing.T) string {
 }
 
 func Test_redeployWhenChanged_FailsWhenCannotFindStack(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, true, true)
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
 
 	err := RedeployWhenChanged(t.Context(), 1, nil, store, nil)
 	require.Error(t, err)
@@ -165,7 +166,8 @@ func Test_redeployWhenChanged_FailsWhenCannotFindStack(t *testing.T) {
 }
 
 func Test_redeployWhenChanged_DoesNothingWhenNotAGitBasedStack(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, true, true)
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
 
 	admin := &portainer.User{ID: 1, Username: "admin"}
 	err := store.User().Create(admin)
@@ -179,7 +181,8 @@ func Test_redeployWhenChanged_DoesNothingWhenNotAGitBasedStack(t *testing.T) {
 }
 
 func Test_redeployWhenChanged_DoesNothingWhenNoGitChanges(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, true, true)
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
 
 	tmpDir := t.TempDir()
 
@@ -211,7 +214,7 @@ func Test_redeployWhenChanged_FailsWhenCannotClone(t *testing.T) {
 	fips.InitFIPS(false)
 
 	cloneErr := errors.New("failed to clone")
-	_, store := datastore.MustNewTestStore(t, true, true)
+	_, store := datastore.MustNewTestStore(t, false, true)
 
 	admin := &portainer.User{ID: 1, Username: "admin"}
 	err := store.User().Create(admin)
@@ -243,7 +246,8 @@ func Test_redeployWhenChanged_FailsWhenCannotClone(t *testing.T) {
 }
 
 func Test_redeployWhenChanged(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, true, true)
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
 
 	tmpDir := t.TempDir()
 
@@ -298,7 +302,8 @@ func Test_redeployWhenChanged(t *testing.T) {
 }
 
 func Test_getUserRegistries(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, true, true)
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
 
 	endpointID := 123
 

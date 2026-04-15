@@ -5,6 +5,7 @@ import (
 )
 
 func TestConstructChartReference(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		registryURL string
@@ -61,6 +62,7 @@ func TestConstructChartReference(t *testing.T) {
 }
 
 func TestConstructOCIRegistryReference(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		registryURL string

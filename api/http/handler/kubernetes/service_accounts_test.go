@@ -85,6 +85,7 @@ func newServiceAccountRequest(t *testing.T, method, path string, body []byte, u 
 }
 
 func TestDeleteKubernetesServiceAccounts_ValidPayload(t *testing.T) {
+	t.Parallel()
 	handler, u, tk := newServiceAccountTestHandler(t)
 
 	payload := models.K8sServiceAccountDeleteRequests{
@@ -102,6 +103,7 @@ func TestDeleteKubernetesServiceAccounts_ValidPayload(t *testing.T) {
 }
 
 func TestDeleteKubernetesServiceAccounts_InvalidPayload(t *testing.T) {
+	t.Parallel()
 	handler, u, tk := newServiceAccountTestHandler(t)
 
 	payload := models.K8sServiceAccountDeleteRequests{}
@@ -120,6 +122,7 @@ func TestDeleteKubernetesServiceAccounts_InvalidPayload(t *testing.T) {
 }
 
 func TestDeleteKubernetesServiceAccounts_EmptyNamespace(t *testing.T) {
+	t.Parallel()
 	handler, u, tk := newServiceAccountTestHandler(t)
 
 	payload := models.K8sServiceAccountDeleteRequests{

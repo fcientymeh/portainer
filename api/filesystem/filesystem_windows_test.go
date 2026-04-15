@@ -3,6 +3,7 @@ package filesystem
 import "testing"
 
 func TestJoinPaths(t *testing.T) {
+	t.Parallel()
 	var ts = []struct {
 		trusted   string
 		untrusted string

@@ -128,11 +128,16 @@ func (kcl *KubeClient) CreateUserShellPod(ctx context.Context, serviceAccountNam
 		return nil, errors.Wrap(err, "aborting pod creation; error waiting for shell pod ready status")
 	}
 
+	var containerName string
+	if len(shellPod.Spec.Containers) > 0 {
+		containerName = shellPod.Spec.Containers[0].Name
+	}
+
 	podData := &portainer.KubernetesShellPod{
 		Namespace:        shellPod.Namespace,
 		PodName:          shellPod.Name,
-		ContainerName:    shellPod.Spec.Containers[0].Name,
-		ShellExecCommand: "env COLUMNS=200 /bin/bash", // env COLUMNS dictates minimum width of the shell
+		ContainerName:    containerName,
+		ShellExecCommand: "env TERM=xterm-256color /bin/bash",
 	}
 
 	// Handle pod lifecycle/cleanup - terminate pod after maxPodKeepAlive or upon request (long-lived) cancellation

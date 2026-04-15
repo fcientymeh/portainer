@@ -96,7 +96,7 @@ export function AlertContainer({
   return (
     <div
       className={clsx(
-        'border rounded-xl border-solid [&_ul]:ps-8',
+        'rounded-xl border border-solid [&_ul]:ps-8',
         'p-3',
         className
       )}

@@ -10,6 +10,7 @@ import (
 )
 
 func TestDeleteByEndpoint(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, false, false)
 
 	// Create Endpoint 1

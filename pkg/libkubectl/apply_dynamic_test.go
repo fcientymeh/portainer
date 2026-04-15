@@ -47,6 +47,7 @@ func skipIfNoKubeconfig(tb testing.TB) string {
 }
 
 func TestApplyDynamic(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		manifests []string
@@ -604,6 +605,7 @@ func newTestMapper() meta.RESTMapper {
 
 // TestApplyResource unit tests for applyResource using fake client (no cluster needed)
 func TestApplyResource(t *testing.T) {
+	t.Parallel()
 	client := &Client{} // applyResource doesn't use Client fields directly
 	dynamicClient := newFakeDynamicClient()
 	mapper := newTestMapper()
@@ -704,6 +706,7 @@ metadata:
 }
 
 func TestIsManifestFile(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		resource string

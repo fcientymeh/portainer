@@ -13,6 +13,7 @@ import (
 )
 
 func TestUpdateRelation(t *testing.T) {
+	t.Parallel()
 	const endpointID = 1
 	const edgeStackID1 = 1
 	const edgeStackID2 = 2
@@ -106,6 +107,7 @@ func TestUpdateRelation(t *testing.T) {
 }
 
 func TestAddEndpointRelationsForEdgeStack(t *testing.T) {
+	t.Parallel()
 	var conn portainer.Connection = &boltdb.DbConnection{Path: t.TempDir()}
 	err := conn.Open()
 	require.NoError(t, err)
@@ -125,6 +127,7 @@ func TestAddEndpointRelationsForEdgeStack(t *testing.T) {
 }
 
 func TestEndpointRelations(t *testing.T) {
+	t.Parallel()
 	var conn portainer.Connection = &boltdb.DbConnection{Path: t.TempDir()}
 	err := conn.Open()
 	require.NoError(t, err)

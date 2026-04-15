@@ -54,7 +54,7 @@ export function TemplateItem({
             className="blocklist-item-logo"
           />
         </div>
-        <div className="col-sm-12 flex justify-between flex-wrap">
+        <div className="col-sm-12 flex flex-wrap justify-between">
           <div className="blocklist-item-line gap-2">
             <span className="blocklist-item-title">{template.Title}</span>
             <div className="space-left blocklist-item-subtitle inline-flex items-center">

@@ -30,6 +30,7 @@ func buildPendingAction(endpointID portainer.EndpointID, registryID portainer.Re
 }
 
 func TestHandlerDeleteK8sRegistrySecrets_Execute(t *testing.T) {
+	t.Parallel()
 	const endpointID portainer.EndpointID = 1
 	const registryID portainer.RegistryID = 3
 

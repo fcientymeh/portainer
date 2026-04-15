@@ -75,7 +75,12 @@ func (handler *Handler) endpointForceUpdateService(w http.ResponseWriter, r *htt
 	if err != nil {
 		return httperror.InternalServerError("Error creating docker client", err)
 	}
-	defer logs.CloseAndLogErr(dockerClient)
+	closeClient := true
+	defer func() {
+		if closeClient {
+			logs.CloseAndLogErr(dockerClient)
+		}
+	}()
 
 	service, _, err := dockerClient.ServiceInspectWithRaw(context.Background(), payload.ServiceID, dockertypes.ServiceInspectOptions{InsertDefaults: true})
 	if err != nil {
@@ -93,9 +98,15 @@ func (handler *Handler) endpointForceUpdateService(w http.ResponseWriter, r *htt
 		return httperror.InternalServerError("Error force update service", err)
 	}
 
+	// The goroutine will close the client
+	closeClient = false
+
 	go func() {
+		defer logs.CloseAndLogErr(dockerClient)
+
 		images.EvictImageStatus(payload.ServiceID)
 		images.EvictImageStatus(service.Spec.Labels[consts.SwarmStackNameLabel])
+
 		// ignore errors from this cleanup function, log them instead
 		containers, err := dockerClient.ContainerList(context.TODO(), container.ListOptions{
 			All:     true,

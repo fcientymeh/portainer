@@ -10,10 +10,8 @@ type StackPayload struct {
 	Name string `example:"myStack" validate:"required"`
 	// Swarm cluster identifier
 	SwarmID string `example:"jpofkc0i9uo9wtx1zesuk649w" validate:"required"`
-	// Stack file data in byte format. Used by file upload method
-	StackFileContentBytes []byte
-	// Stack file data in string format. Used by file content method
-	StackFileContent string
+	// Stack file data
+	StackFileContent []byte
 	Webhook          string
 	// A list of environment(endpoint) variables used during stack deployment
 	Env []portainer.Pair

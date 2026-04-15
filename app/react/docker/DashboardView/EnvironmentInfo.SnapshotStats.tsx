@@ -18,10 +18,10 @@ export function SnapshotStats({
 
   return (
     <span className="small text-muted flex gap-2">
-      <span className="flex gap-1 items-center">
+      <span className="flex items-center gap-1">
         <Icon icon={CpuIcon} /> {snapshot.TotalCPU}
       </span>
-      <span className="flex gap-1 items-center">
+      <span className="flex items-center gap-1">
         <Icon icon={memoryIcon} />
         {humanize(snapshot.TotalMemory)}
       </span>

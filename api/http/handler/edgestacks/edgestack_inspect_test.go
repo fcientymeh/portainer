@@ -8,6 +8,7 @@ import (
 
 // Inspect
 func TestInspectInvalidEdgeID(t *testing.T) {
+	t.Parallel()
 	handler, rawAPIKey := setupHandler(t)
 
 	cases := []struct {

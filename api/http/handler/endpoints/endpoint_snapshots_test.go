@@ -18,7 +18,8 @@ import (
 )
 
 func Test_endpointSnapshots(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, true, true)
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
 
 	endpointID := portainer.EndpointID(123)
 	endpoint := &portainer.Endpoint{

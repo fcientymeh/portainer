@@ -9,6 +9,7 @@ import (
 )
 
 func TestConfigFilePaths(t *testing.T) {
+	t.Parallel()
 	args := []string{"stack", "deploy", "--with-registry-auth"}
 	filePaths := []string{"dir/file", "dir/file-two", "dir/file-three"}
 	expected := []string{"stack", "deploy", "--with-registry-auth", "--compose-file", "dir/file", "--compose-file", "dir/file-two", "--compose-file", "dir/file-three"}
@@ -17,6 +18,7 @@ func TestConfigFilePaths(t *testing.T) {
 }
 
 func TestPrepareDockerCommandAndArgs(t *testing.T) {
+	t.Parallel()
 	binaryPath := "/test/dist"
 	configPath := "/test/config"
 	manager := &SwarmStackManager{

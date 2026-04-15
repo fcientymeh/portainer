@@ -83,7 +83,7 @@ export function NamespaceInnerForm({
         errors={errors.name}
       >
         {isEdit ? (
-          <div className="flex gap-2 mt-2">
+          <div className="mt-2 flex gap-2">
             {values.name}
             {isSystemNamespace && <SystemBadge />}
           </div>

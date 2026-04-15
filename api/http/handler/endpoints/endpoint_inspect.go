@@ -4,10 +4,12 @@ import (
 	"net/http"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/internal/endpointutils"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
+	"github.com/rs/zerolog/log"
 )
 
 // @id EndpointInspect
@@ -61,21 +63,21 @@ func (handler *Handler) endpointInspect(w http.ResponseWriter, r *http.Request) 
 
 	if endpointutils.IsKubernetesEndpoint(endpoint) {
 		isServerMetricsDetected := endpoint.Kubernetes.Flags.IsServerMetricsDetected
-		if !isServerMetricsDetected && handler.K8sClientFactory != nil {
-			endpointutils.InitialMetricsDetection(
-				endpoint,
-				handler.DataStore.Endpoint(),
-				handler.K8sClientFactory,
-			)
-		}
-
 		isServerStorageDetected := endpoint.Kubernetes.Flags.IsServerStorageDetected
-		if !isServerStorageDetected && handler.K8sClientFactory != nil {
-			endpointutils.InitialStorageDetection(
-				endpoint,
-				handler.DataStore.Endpoint(),
-				handler.K8sClientFactory,
-			)
+		if (!isServerMetricsDetected || !isServerStorageDetected) && handler.K8sClientFactory != nil {
+			if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+				if !isServerMetricsDetected {
+					endpointutils.InitialMetricsDetection(tx, endpoint, handler.K8sClientFactory)
+				}
+
+				if !isServerStorageDetected {
+					endpointutils.InitialStorageDetection(tx, handler.DataStore, endpoint, handler.K8sClientFactory)
+				}
+
+				return nil
+			}); err != nil {
+				log.Err(err).Msg("failed to persist initial kube detection")
+			}
 		}
 	}
 

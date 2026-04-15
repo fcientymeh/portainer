@@ -21,7 +21,7 @@ export function HelmValuesInput({
         label="User-defined values"
         inputId="user-values-editor"
         size="vertical"
-        className="[&>label]:!mb-1 !mx-0"
+        className="!mx-0 [&>label]:!mb-1"
         tooltip={
           <>
             User-defined values will override the default chart values.
@@ -53,7 +53,7 @@ export function HelmValuesInput({
       </FormControl>
       <FormControl
         label={
-          <div className="flex justify-between w-full">
+          <div className="flex w-full justify-between">
             Values reference (read-only)
             <ShortcutsTooltip />
           </div>
@@ -62,7 +62,7 @@ export function HelmValuesInput({
         size="vertical"
         isLoading={isValuesRefLoading}
         loadingText="Loading values..."
-        className="[&>label]:w-full [&>label]:!mb-1 !mx-0"
+        className="!mx-0 [&>label]:!mb-1 [&>label]:w-full"
       >
         <CodeEditor
           id="values-reference"

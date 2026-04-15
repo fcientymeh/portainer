@@ -141,6 +141,7 @@ func Test_encryptAndDecrypt_withTheSamePassword(t *testing.T) {
 }
 
 func Test_encryptAndDecrypt_withStrongPassphrase(t *testing.T) {
+	t.Parallel()
 	const passphrase = "A strong passphrase with special characters: !@#$%^&*()_+"
 
 	testFunc := func(t *testing.T, encrypt encryptFunc, decrypt decryptFunc) {
@@ -200,6 +201,7 @@ func Test_encryptAndDecrypt_withStrongPassphrase(t *testing.T) {
 }
 
 func Test_encryptAndDecrypt_withTheSamePasswordSmallFile(t *testing.T) {
+	t.Parallel()
 	testFunc := func(t *testing.T, encrypt encryptFunc, decrypt decryptFunc) {
 		tmpdir := t.TempDir()
 
@@ -257,6 +259,7 @@ func Test_encryptAndDecrypt_withTheSamePasswordSmallFile(t *testing.T) {
 }
 
 func Test_encryptAndDecrypt_withEmptyPassword(t *testing.T) {
+	t.Parallel()
 	testFunc := func(t *testing.T, encrypt encryptFunc, decrypt decryptFunc) {
 		tmpdir := t.TempDir()
 
@@ -314,6 +317,7 @@ func Test_encryptAndDecrypt_withEmptyPassword(t *testing.T) {
 }
 
 func Test_decryptWithDifferentPassphrase_shouldProduceWrongResult(t *testing.T) {
+	t.Parallel()
 	testFunc := func(t *testing.T, encrypt encryptFunc, decrypt decryptFunc) {
 		tmpdir := t.TempDir()
 
@@ -385,6 +389,7 @@ func legacyAesEncrypt(input io.Reader, output io.Writer, passphrase []byte) erro
 }
 
 func Test_hasEncryptedHeader(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		data     []byte

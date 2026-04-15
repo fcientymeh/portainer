@@ -17,6 +17,7 @@ import (
 // EE-only kubeconfig validation tests removed for CE
 
 func TestSaveEndpointAndUpdateAuthorizations(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, true, false)
 
 	endpointGroup := &portainer.EndpointGroup{
@@ -93,6 +94,7 @@ func TestSaveEndpointAndUpdateAuthorizations(t *testing.T) {
 }
 
 func TestCreateEndpointFailure(t *testing.T) {
+	t.Parallel()
 	fips.InitFIPS(false)
 
 	_, store := datastore.MustNewTestStore(t, true, false)
@@ -115,6 +117,7 @@ func TestCreateEndpointFailure(t *testing.T) {
 }
 
 func TestCreateEdgeAgentEndpoint_ContainerEngineMapping(t *testing.T) {
+	t.Parallel()
 	fips.InitFIPS(false)
 
 	_, store := datastore.MustNewTestStore(t, true, false)

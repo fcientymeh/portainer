@@ -58,6 +58,7 @@ func (s *spyKubeClient) RemoveImagePullSecretFromServiceAccount(namespace, _, _ 
 var testRegistry = &portainer.Registry{ID: 3, URL: "registry.example.com"}
 
 func TestApplyKubeRegistryAccess_Grant(t *testing.T) {
+	t.Parallel()
 	t.Run("single namespace granted creates secret then patches SA", func(t *testing.T) {
 		spy := newSpyKubeClient()
 		err := applyKubeRegistryAccess(spy, testRegistry, nil, []string{"ns-a"})
@@ -96,6 +97,7 @@ func TestApplyKubeRegistryAccess_Grant(t *testing.T) {
 }
 
 func TestApplyKubeRegistryAccess_Revoke(t *testing.T) {
+	t.Parallel()
 	t.Run("single namespace revoked removes from SA then deletes secret", func(t *testing.T) {
 		spy := newSpyKubeClient()
 		err := applyKubeRegistryAccess(spy, testRegistry, []string{"ns-a"}, nil)
@@ -134,6 +136,7 @@ func TestApplyKubeRegistryAccess_Revoke(t *testing.T) {
 }
 
 func TestApplyKubeRegistryAccess_Mixed(t *testing.T) {
+	t.Parallel()
 	t.Run("one namespace added and one removed in same call", func(t *testing.T) {
 		spy := newSpyKubeClient()
 		err := applyKubeRegistryAccess(spy, testRegistry, []string{"ns-old"}, []string{"ns-new"})

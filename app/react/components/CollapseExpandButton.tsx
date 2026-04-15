@@ -22,11 +22,11 @@ export function CollapseExpandButton({
       aria-label={isExpanded ? 'Collapse' : 'Expand'}
       aria-expanded={isExpanded}
       type="button"
-      className="flex-none border-none bg-transparent flex items-center p-0 !ml-0 group"
+      className="group !ml-0 flex flex-none items-center border-none bg-transparent p-0"
       // eslint-disable-next-line react/jsx-props-no-spreading
       {...props}
     >
-      <div className="flex items-center group-hover:bg-blue-5 be:group-hover:bg-gray-5 group-hover:th-dark:bg-gray-true-7 group-hover:bg-opacity-10 be:group-hover:bg-opacity-10 rounded-full p-[3px] transition ease-in-out">
+      <div className="flex items-center rounded-full p-[3px] transition ease-in-out group-hover:bg-blue-5 group-hover:bg-opacity-10 be:group-hover:bg-gray-5 be:group-hover:bg-opacity-10 group-hover:th-dark:bg-gray-true-7">
         <Icon
           icon={ChevronDown}
           size="md"

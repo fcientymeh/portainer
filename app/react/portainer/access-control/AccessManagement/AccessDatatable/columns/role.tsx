@@ -71,7 +71,7 @@ function RollEdit({
   }
 
   return (
-    <div className="flex items-center gap-3 max-w-xs">
+    <div className="flex max-w-xs items-center gap-3">
       <Select
         aria-label="Role"
         data-cy="role-select"

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/datastore"
 	"github.com/portainer/portainer/api/internal/testhelpers"
 	kubecli "github.com/portainer/portainer/api/kubernetes/cli"
@@ -45,9 +46,22 @@ func (s *deleteSpyKubeClient) RemoveImagePullSecretFromServiceAccount(namespace,
 	return s.removePullSecretErrors[namespace]
 }
 
+func newTestHandler(t *testing.T) (*Handler, dataservices.DataStore) {
+	t.Helper()
+
+	_, store := datastore.MustNewTestStore(t, false, false)
+	require.NotNil(t, store)
+
+	handler := NewHandler(testhelpers.NewTestRequestBouncer())
+	handler.DataStore = store
+
+	return handler, store
+}
+
 // --- cleanupRegistryFromNamespaces unit tests ---
 
 func TestCleanupRegistryFromNamespaces(t *testing.T) {
+	t.Parallel()
 	const registryID portainer.RegistryID = 3
 	const endpointID portainer.EndpointID = 1
 
@@ -98,6 +112,7 @@ func TestCleanupRegistryFromNamespaces(t *testing.T) {
 // --- deleteKubernetesSecrets integration tests ---
 
 func TestDeleteKubernetesSecrets(t *testing.T) {
+	t.Parallel()
 	const registryID portainer.RegistryID = 3
 	const endpointID portainer.EndpointID = 1
 

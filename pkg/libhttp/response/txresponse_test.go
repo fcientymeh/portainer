@@ -12,6 +12,7 @@ import (
 )
 
 func TestTxResponse(t *testing.T) {
+	t.Parallel()
 	type sample struct {
 		Name string `json:"name"`
 	}
@@ -35,6 +36,7 @@ func TestTxResponse(t *testing.T) {
 }
 
 func TestTxEmptyResponse(t *testing.T) {
+	t.Parallel()
 	w := httptest.NewRecorder()
 	got := TxEmptyResponse(w, nil)
 	require.Nil(t, got)
@@ -54,6 +56,7 @@ func TestTxEmptyResponse(t *testing.T) {
 }
 
 func TestTxFuncResponse(t *testing.T) {
+	t.Parallel()
 	got := TxFuncResponse(nil, func() *httperror.HandlerError { return nil })
 	require.Nil(t, got)
 
@@ -69,6 +72,7 @@ func TestTxFuncResponse(t *testing.T) {
 }
 
 func TestTxErrorResponse(t *testing.T) {
+	t.Parallel()
 	got := TxErrorResponse(nil)
 	require.NotNil(t, got)
 	require.Equal(t, http.StatusInternalServerError, got.StatusCode)

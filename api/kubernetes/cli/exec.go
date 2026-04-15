@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 
+	portainer "github.com/portainer/portainer/api"
 	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -24,33 +24,30 @@ var (
 	}
 )
 
-// StartExecProcess will start an exec process inside a container located inside a pod inside a specific namespace
-// using the specified command. The stdin parameter will be bound to the stdin process and the stdout process will write
-// to the stdout parameter.
-// This function only works against a local environment(endpoint) using an in-cluster config with the user's SA token.
+// StartExecProcess starts an exec process inside a container using an in-cluster config.
 // This is a blocking operation.
-func (kcl *KubeClient) StartExecProcess(token string, useAdminToken bool, namespace, podName, containerName string, command []string, stdin io.Reader, stdout io.Writer, errChan chan error) {
+func (kcl *KubeClient) StartExecProcess(params portainer.KubeExecParams) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		errChan <- err
+		params.ErrChan <- err
 		return
 	}
 
-	if !useAdminToken {
-		config.BearerToken = token
+	if !params.UseAdminToken {
+		config.BearerToken = params.Token
 		config.BearerTokenFile = ""
 	}
 
 	req := kcl.cli.CoreV1().RESTClient().
 		Post().
 		Resource("pods").
-		Name(podName).
-		Namespace(namespace).
+		Name(params.PodName).
+		Namespace(params.Namespace).
 		SubResource("exec")
 
 	req.VersionedParams(&v1.PodExecOptions{
-		Container: containerName,
-		Command:   command,
+		Container: params.ContainerName,
+		Command:   params.Command,
 		Stdin:     true,
 		Stdout:    true,
 		Stderr:    true,
@@ -58,9 +55,10 @@ func (kcl *KubeClient) StartExecProcess(token string, useAdminToken bool, namesp
 	}, scheme.ParameterCodec)
 
 	streamOpts := remotecommand.StreamOptions{
-		Stdin:  stdin,
-		Stdout: stdout,
-		Tty:    true,
+		Stdin:             params.Stdin,
+		Stdout:            params.Stdout,
+		Tty:               true,
+		TerminalSizeQueue: params.ResizeQueue,
 	}
 
 	// Try WebSocket executor first, fall back to SPDY if it fails
@@ -73,6 +71,7 @@ func (kcl *KubeClient) StartExecProcess(token string, useAdminToken bool, namesp
 	if err == nil {
 		err = exec.StreamWithContext(context.TODO(), streamOpts)
 		if err == nil {
+			params.ErrChan <- nil
 			return
 		}
 
@@ -85,7 +84,7 @@ func (kcl *KubeClient) StartExecProcess(token string, useAdminToken bool, namesp
 	// Fall back to SPDY executor
 	exec, err = remotecommand.NewSPDYExecutor(config, "POST", req.URL())
 	if err != nil {
-		errChan <- fmt.Errorf("unable to create SPDY executor: %w", err)
+		params.ErrChan <- fmt.Errorf("unable to create SPDY executor: %w", err)
 		return
 	}
 
@@ -93,7 +92,10 @@ func (kcl *KubeClient) StartExecProcess(token string, useAdminToken bool, namesp
 	if err != nil {
 		var exitError utilexec.ExitError
 		if !errors.As(err, &exitError) {
-			errChan <- fmt.Errorf("unable to start exec process: %w", err)
+			params.ErrChan <- fmt.Errorf("unable to start exec process: %w", err)
+			return
 		}
 	}
+
+	params.ErrChan <- nil
 }

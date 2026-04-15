@@ -9,6 +9,7 @@ import (
 )
 
 func TestUnzipFile(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	/*
 		Archive structure.

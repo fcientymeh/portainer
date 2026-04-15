@@ -10,6 +10,7 @@ import (
 )
 
 func TestMergeValues(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		base     map[string]any
@@ -185,6 +186,7 @@ func TestMergeValues(t *testing.T) {
 }
 
 func TestGetHelmValuesFromFile(t *testing.T) {
+	t.Parallel()
 	// Create a temporary directory for test files
 	tempDir := t.TempDir()
 

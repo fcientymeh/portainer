@@ -34,6 +34,7 @@ func setup(t *testing.T) string {
 }
 
 func Test_checkGitError(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		err      error
@@ -70,6 +71,7 @@ func Test_checkGitError(t *testing.T) {
 }
 
 func Test_ClonePublicRepository_Shallow(t *testing.T) {
+	t.Parallel()
 	service := Service{git: NewGitClient(true)} // no need for http client since the test access the repo via file system.
 	repositoryURL := setup(t)
 	referenceName := "refs/heads/main"
@@ -82,6 +84,7 @@ func Test_ClonePublicRepository_Shallow(t *testing.T) {
 }
 
 func Test_ClonePublicRepository_NoGitDirectory(t *testing.T) {
+	t.Parallel()
 	service := Service{git: NewGitClient(false)} // no need for http client since the test access the repo via file system.
 	repositoryURL := setup(t)
 	referenceName := "refs/heads/main"
@@ -94,6 +97,7 @@ func Test_ClonePublicRepository_NoGitDirectory(t *testing.T) {
 }
 
 func Test_latestCommitID(t *testing.T) {
+	t.Parallel()
 	service := Service{git: NewGitClient(true)} // no need for http client since the test access the repo via file system.
 
 	repositoryURL := setup(t)
@@ -106,6 +110,7 @@ func Test_latestCommitID(t *testing.T) {
 }
 
 func Test_ListRefs(t *testing.T) {
+	t.Parallel()
 	service := Service{git: NewGitClient(true)}
 
 	repositoryURL := setup(t)
@@ -117,6 +122,7 @@ func Test_ListRefs(t *testing.T) {
 }
 
 func Test_ListFiles(t *testing.T) {
+	t.Parallel()
 	service := Service{git: NewGitClient(true)}
 
 	repositoryURL := setup(t)
@@ -161,6 +167,7 @@ func getCommitHistoryLength(t *testing.T, dir string) int {
 }
 
 func Test_listRefsPrivateRepository(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
@@ -255,6 +262,7 @@ func Test_listRefsPrivateRepository(t *testing.T) {
 }
 
 func Test_listFilesPrivateRepository(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	client := NewGitClient(false)

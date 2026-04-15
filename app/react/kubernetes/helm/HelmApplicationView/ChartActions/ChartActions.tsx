@@ -31,7 +31,7 @@ export function ChartActions({
     latestRevision && earlistRevision && latestRevision > earlistRevision;
 
   return (
-    <div className="inline-flex gap-2 flex-wrap">
+    <div className="inline-flex flex-wrap gap-2">
       <UpgradeButton
         environmentId={environmentId}
         releaseName={releaseName}

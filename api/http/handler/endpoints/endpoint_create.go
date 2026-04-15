@@ -22,6 +22,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 type endpointCreatePayload struct {
@@ -277,21 +278,14 @@ func (handler *Handler) endpointCreate(w http.ResponseWriter, r *http.Request) *
 			relationObject.EdgeStacks[stackID] = true
 		}
 	} else if endpointutils.IsKubernetesEndpoint(endpoint) {
-		endpointutils.InitialIngressClassDetection(
-			endpoint,
-			handler.DataStore.Endpoint(),
-			handler.K8sClientFactory,
-		)
-		endpointutils.InitialMetricsDetection(
-			endpoint,
-			handler.DataStore.Endpoint(),
-			handler.K8sClientFactory,
-		)
-		endpointutils.InitialStorageDetection(
-			endpoint,
-			handler.DataStore.Endpoint(),
-			handler.K8sClientFactory,
-		)
+		if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+			endpointutils.InitialIngressClassDetection(tx, endpoint, handler.K8sClientFactory)
+			endpointutils.InitialMetricsDetection(tx, endpoint, handler.K8sClientFactory)
+			endpointutils.InitialStorageDetection(tx, handler.DataStore, endpoint, handler.K8sClientFactory)
+			return nil
+		}); err != nil {
+			log.Err(err).Msg("failed to persist initial kube detection")
+		}
 	}
 
 	if err := handler.DataStore.EndpointRelation().Create(relationObject); err != nil {

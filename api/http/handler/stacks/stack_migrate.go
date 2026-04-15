@@ -120,7 +120,7 @@ func (handler *Handler) stackMigrate(w http.ResponseWriter, r *http.Request) *ht
 		return httperror.InternalServerError("Unable to retrieve a resource control associated to the stack", err)
 	}
 
-	access, err := handler.userCanAccessStack(securityContext, endpoint.ID, resourceControl)
+	access, err := handler.userCanAccessStack(securityContext, resourceControl)
 	if err != nil {
 		return httperror.InternalServerError("Unable to verify user authorizations to validate stack access", err)
 	}
@@ -216,10 +216,10 @@ func (handler *Handler) migrateComposeStack(r *http.Request, stack *portainer.St
 		return httperror.InternalServerError("Unable to retrieve info from request context", err)
 	}
 
-	composeDeploymentConfig, err := deployments.CreateComposeStackDeploymentConfig(securityContext,
+	composeDeploymentConfig, err := deployments.CreateComposeStackDeploymentConfigTx(handler.DataStore,
+		securityContext,
 		stack,
 		next,
-		handler.DataStore,
 		handler.FileService,
 		handler.StackDeployer,
 		true,
@@ -244,10 +244,10 @@ func (handler *Handler) migrateSwarmStack(r *http.Request, stack *portainer.Stac
 		return httperror.InternalServerError("Unable to retrieve info from request context", err)
 	}
 
-	swarmDeploymentConfig, err := deployments.CreateSwarmStackDeploymentConfig(securityContext,
+	swarmDeploymentConfig, err := deployments.CreateSwarmStackDeploymentConfigTx(handler.DataStore,
+		securityContext,
 		stack,
 		next,
-		handler.DataStore,
 		handler.FileService,
 		handler.StackDeployer,
 		true,

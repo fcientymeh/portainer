@@ -7,6 +7,7 @@ import (
 )
 
 func TestAppendChartReferenceAnnotations(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name       string
 		chartPath  string
@@ -83,6 +84,7 @@ func TestAppendChartReferenceAnnotations(t *testing.T) {
 }
 
 func TestAppendChartReferenceAnnotations_RepoURLLogic(t *testing.T) {
+	t.Parallel()
 	t.Run("repoURL only added when registryID is zero", func(t *testing.T) {
 		// With registry ID - no repoURL
 		result := appendChartReferenceAnnotations("chart", "url", 5, 0, nil, nil)

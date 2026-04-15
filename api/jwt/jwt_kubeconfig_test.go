@@ -13,6 +13,7 @@ import (
 )
 
 func TestService_GenerateTokenForKubeconfig(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, true, false)
 
 	err := store.User().Create(&portainer.User{ID: 1})

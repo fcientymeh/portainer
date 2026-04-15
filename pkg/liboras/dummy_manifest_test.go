@@ -15,6 +15,7 @@ import (
 )
 
 func TestGenerateMinimalManifest(t *testing.T) {
+	t.Parallel()
 	t.Run("creates consistent manifest", func(t *testing.T) {
 		manifest1, bytes1, err1 := generateMinimalManifest()
 		require.NoError(t, err1)
@@ -41,6 +42,7 @@ func TestGenerateMinimalManifest(t *testing.T) {
 }
 
 func TestSafeDeleteTags(t *testing.T) {
+	t.Parallel()
 	t.Run("handles empty tag list", func(t *testing.T) {
 		// Test the early return path - this should not call any registry operations
 		err := SafeDeleteTags(nil, "test-repo", []string{})

@@ -6,6 +6,7 @@ import (
 )
 
 func TestRetrieveQueryParameter(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		url      string
@@ -57,6 +58,7 @@ func TestRetrieveQueryParameter(t *testing.T) {
 }
 
 func TestRetrieveNumericQueryParameter(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		url      string
@@ -108,6 +110,7 @@ func TestRetrieveNumericQueryParameter(t *testing.T) {
 }
 
 func TestRetrieveBooleanQueryParameter(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		url      string
@@ -159,6 +162,7 @@ func TestRetrieveBooleanQueryParameter(t *testing.T) {
 }
 
 func TestRetrieveArrayQueryParameter(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		url   string
@@ -218,6 +222,7 @@ func TestRetrieveArrayQueryParameter(t *testing.T) {
 }
 
 func TestRetrieveNumberArrayQueryParameter(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		url     string

@@ -12,6 +12,7 @@ import (
 )
 
 func TestMigrateEdgeGroupEndpointsToRoars_2_33_0Idempotency(t *testing.T) {
+	t.Parallel()
 	var conn portainer.Connection = &boltdb.DbConnection{Path: t.TempDir()}
 	err := conn.Open()
 	require.NoError(t, err)

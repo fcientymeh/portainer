@@ -41,7 +41,7 @@ export function RegistryTestConnection({
   const pingMutation = useCheckRegistryConnectionMutation();
 
   return (
-    <div className="flex flex-row gap-3 items-center">
+    <div className="flex flex-row items-center gap-3">
       <LoadingButton
         size="small"
         color="default"

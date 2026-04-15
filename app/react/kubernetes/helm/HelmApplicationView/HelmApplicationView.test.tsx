@@ -11,6 +11,12 @@ import { mockLocalizeDate } from '@/setup-tests/mock-localizeDate';
 
 import { HelmApplicationView } from './HelmApplicationView';
 
+// Prevent importing @uirouter/react-hybrid (via withUIRouter), which replaces
+// UIView with AngularUIView and breaks the pure-React test router.
+vi.mock('./ChartActions/UpgradeHelmModal', () => ({
+  openUpgradeHelmModal: vi.fn(() => Promise.resolve(undefined)),
+}));
+
 // Mock the necessary hooks and dependencies
 const mockUseCurrentStateAndParams = vi.fn();
 const mockUseEnvironmentId = vi.fn();

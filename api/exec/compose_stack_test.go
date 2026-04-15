@@ -14,6 +14,7 @@ import (
 )
 
 func Test_createEnvFile(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 
 	tests := []struct {
@@ -70,6 +71,7 @@ func Test_createEnvFile(t *testing.T) {
 }
 
 func Test_createEnvFile_mergesDefultAndInplaceEnvVars(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	err := os.WriteFile(path.Join(dir, ".env"), []byte("VAR1=VAL1\nVAR2=VAL2\n"), 0600)
 	require.NoError(t, err)

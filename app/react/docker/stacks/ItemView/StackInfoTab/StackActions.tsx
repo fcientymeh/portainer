@@ -50,13 +50,15 @@ export function StackActions({
     deleteStackMutation.isLoading ||
     detachFromGitMutation.isLoading;
 
+  const isDeploying = status === StackStatus.Deploying;
+
   const stackId = stack.Id;
 
   return (
     <div className="flex items-center gap-2">
       {isRegular && (
         <Authorized authorizations="PortainerStackUpdate">
-          {status === StackStatus.Active ? (
+          {(status === StackStatus.Active || status === StackStatus.Error) && (
             <Button
               icon={StopCircleIcon}
               color="dangerlight"
@@ -67,34 +69,15 @@ export function StackActions({
             >
               Stop this stack
             </Button>
-          ) : (
+          )}
+          {status === StackStatus.Inactive && (
             <Button
               icon={PlayIcon}
               color="success"
               data-cy="stack-start-btn"
               size="xsmall"
               disabled={isMutating}
-              onClick={() =>
-                startStackMutation.mutate(
-                  { id: stackId, environmentId },
-                  {
-                    onError(err) {
-                      notifyError(
-                        'Failure',
-                        err as Error,
-                        'Unable to start stack'
-                      );
-                    },
-                    onSuccess() {
-                      notifySuccess(
-                        'Success',
-                        `Stack ${stack.Name} started successfully`
-                      );
-                      router.stateService.reload();
-                    },
-                  }
-                )
-              }
+              onClick={() => handleStart()}
             >
               Start this stack
             </Button>
@@ -108,7 +91,7 @@ export function StackActions({
           color="dangerlight"
           size="xsmall"
           onClick={() => handleDelete()}
-          disabled={isMutating}
+          disabled={isMutating || isDeploying}
           data-cy="stack-delete-btn"
         >
           Delete this stack
@@ -157,6 +140,22 @@ export function StackActions({
       )}
     </div>
   );
+
+  function handleStart() {
+    startStackMutation.mutate(
+      { id: stackId, environmentId },
+      {
+        onError(err) {
+          notifyError('Failure', err as Error, 'Unable to start stack');
+          router.stateService.reload();
+        },
+        onSuccess() {
+          notifySuccess('Success', `Stack ${stack.Name} started successfully`);
+          router.stateService.reload();
+        },
+      }
+    );
+  }
 
   async function handleStop() {
     const confirmed = await confirm({

@@ -8,6 +8,7 @@ import (
 )
 
 func TestImageParser(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	// portainer/portainer-ee
@@ -62,6 +63,7 @@ func TestImageParser(t *testing.T) {
 }
 
 func TestUpdateParsedImage(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	// gcr.io/k8s-minikube/kicbase:v0.0.30@sha256:02c921df998f95e849058af14de7045efc3954d90320967418a0d1f182bbc0b2

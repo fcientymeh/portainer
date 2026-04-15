@@ -13,6 +13,7 @@ import (
 )
 
 func TestCreateConnectionForURL(t *testing.T) {
+	t.Parallel()
 	fips.InitFIPS(false)
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
@@ -71,6 +72,7 @@ func TestCreateConnectionForURL(t *testing.T) {
 }
 
 func TestFailures(t *testing.T) {
+	t.Parallel()
 	s := Service{}
 
 	err := s.AuthenticateUser("username", "password", &portainer.LDAPSettings{})

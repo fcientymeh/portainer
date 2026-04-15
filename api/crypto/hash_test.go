@@ -7,6 +7,7 @@ import (
 )
 
 func TestService_Hash(t *testing.T) {
+	t.Parallel()
 	var s = Service{}
 
 	type args struct {
@@ -55,6 +56,7 @@ func TestService_Hash(t *testing.T) {
 }
 
 func TestHash(t *testing.T) {
+	t.Parallel()
 	s := Service{}
 
 	hash, err := s.Hash("Passw0rd!")

@@ -8,6 +8,7 @@ import (
 )
 
 func TestIsRegularAgentEndpoint(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		endpoint *portainer.Endpoint
@@ -52,6 +53,7 @@ func TestIsRegularAgentEndpoint(t *testing.T) {
 }
 
 func TestIsEdgeEndpoint(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		endpoint *portainer.Endpoint
@@ -89,6 +91,7 @@ func TestIsEdgeEndpoint(t *testing.T) {
 }
 
 func TestIsAssociatedEdgeEndpoint(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		endpoint *portainer.Endpoint
@@ -141,6 +144,7 @@ func TestIsAssociatedEdgeEndpoint(t *testing.T) {
 }
 
 func TestHasDirectConnectivity(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		endpoint *portainer.Endpoint
@@ -204,6 +208,7 @@ func TestHasDirectConnectivity(t *testing.T) {
 }
 
 func TestIsStandardEdgeEndpoint(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		endpoint *portainer.Endpoint
@@ -236,6 +241,7 @@ func TestIsStandardEdgeEndpoint(t *testing.T) {
 }
 
 func TestIsNewerThan225(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		version  string

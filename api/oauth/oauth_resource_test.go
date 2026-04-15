@@ -7,6 +7,7 @@ import (
 )
 
 func Test_getUsername(t *testing.T) {
+	t.Parallel()
 	t.Run("fails for non-matching user identifier", func(t *testing.T) {
 		oauthSettings := &portainer.OAuthSettings{UserIdentifier: "username"}
 		datamap := map[string]any{"name": "john"}

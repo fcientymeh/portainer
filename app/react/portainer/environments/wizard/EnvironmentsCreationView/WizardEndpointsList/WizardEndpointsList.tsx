@@ -53,7 +53,7 @@ export function WizardEndpointsList({ environmentIds }: Props) {
             <div
               className={clsx(
                 styles.wizardListImage,
-                'text-blue-8 th-dark:text-blue-7 th-highcontrast:text-white text-5xl'
+                'text-5xl text-blue-8 th-highcontrast:text-white th-dark:text-blue-7'
               )}
             >
               <Icon

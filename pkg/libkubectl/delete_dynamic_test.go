@@ -16,6 +16,7 @@ import (
 // Resource type coverage is handled by ApplyDynamic tests.
 
 func TestDeleteDynamic(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		manifests []string
@@ -160,6 +161,7 @@ data:
 
 // TestDeleteDynamicAlreadyDeleted tests the behavior when deleting resources that were already deleted
 func TestDeleteDynamicAlreadyDeleted(t *testing.T) {
+	t.Parallel()
 	kubeconfig := skipIfNoKubeconfig(t)
 
 	manifest := []string{
@@ -190,6 +192,7 @@ data:
 
 // TestDeleteDynamicPartialFailure tests deletion when some resources fail
 func TestDeleteDynamicPartialFailure(t *testing.T) {
+	t.Parallel()
 	kubeconfig := skipIfNoKubeconfig(t)
 
 	client, err := NewClient(&ClientAccess{}, "", kubeconfig, false)

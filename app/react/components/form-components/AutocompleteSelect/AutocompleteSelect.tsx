@@ -49,7 +49,7 @@ export function AutocompleteSelect({
     >
       <ComboboxInput
         value={searchTerm}
-        className="w-full bg-transparent border-none outline-none"
+        className="w-full border-none bg-transparent outline-none"
         onChange={handleChange}
         placeholder={placeholder}
         readOnly={readOnly}
@@ -67,7 +67,7 @@ export function AutocompleteSelect({
                 className={clsx(
                   `[&[aria-selected="true"]]:th-highcontrast:!bg-black [&[aria-selected="true"]]:th-dark:!bg-black`,
                   `hover:th-highcontrast:!bg-black hover:th-dark:!bg-black`,
-                  'th-highcontrast:bg-gray-10 th-dark:bg-gray-10 '
+                  'th-highcontrast:bg-gray-10 th-dark:bg-gray-10'
                 )}
               />
             ))}

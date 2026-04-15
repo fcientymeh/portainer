@@ -26,7 +26,7 @@ export function EnvironmentVariablesPanel({
       title="Environment variables"
       isFoldable={isFoldable}
       defaultFolded={isFoldable}
-      className="flex flex-col w-full"
+      className="flex w-full flex-col"
     >
       <div className="form-group">
         {!!explanation && (

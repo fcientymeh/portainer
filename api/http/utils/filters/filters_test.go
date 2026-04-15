@@ -54,6 +54,7 @@ func productNameSort(a, b Product) int {
 }
 
 func TestSearchOrderAndPaginate(t *testing.T) {
+	t.Parallel()
 	users := createUsers()
 	products := createProducts()
 
@@ -334,6 +335,7 @@ func TestSearchOrderAndPaginate(t *testing.T) {
 }
 
 func TestSearchOrderAndPaginateWithErrors(t *testing.T) {
+	t.Parallel()
 	users := createUsers()
 
 	// Config with error-prone accessor
@@ -360,6 +362,7 @@ func TestSearchOrderAndPaginateWithErrors(t *testing.T) {
 }
 
 func TestApplyFilterResultsHeaders(t *testing.T) {
+	t.Parallel()
 	t.Run("sets headers correctly", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		var responseWriter http.ResponseWriter = w

@@ -22,6 +22,7 @@ import (
 )
 
 func TestTransport_updateDefaultGitBranch(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		gitService portainer.GitService
 	}
@@ -109,6 +110,7 @@ func mockDockerAPIServer(t *testing.T, routes RoutesDefinition) (*httptest.Serve
 }
 
 func TestTransport_getRealResourceID(t *testing.T) {
+	t.Parallel()
 	srv, _ := mockDockerAPIServer(t, RoutesDefinition{
 		{http.MethodGet, "/networks"}:           []network.Summary{{ID: "16e37c629e88694663791dc738fd37affb908d7b85ce00a20680675d10554fd4", Name: "mynetwork"}},
 		{http.MethodGet, "/networks/mynetwork"}: network.Inspect{ID: "16e37c629e88694663791dc738fd37affb908d7b85ce00a20680675d10554fd4", Name: "mynetwork"},
@@ -165,6 +167,7 @@ func TestTransport_getRealResourceID(t *testing.T) {
 }
 
 func TestTransport_proxyNetworkRequest(t *testing.T) {
+	t.Parallel()
 	admin := portainer.User{ID: 1, Username: "admin", Role: portainer.AdministratorRole}
 	std1 := portainer.User{ID: 2, Username: "std1", Role: portainer.StandardUserRole}
 	std2 := portainer.User{ID: 3, Username: "std2", Role: portainer.StandardUserRole}

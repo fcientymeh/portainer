@@ -18,6 +18,7 @@ import (
 )
 
 func Test_buildDownloadUrl(t *testing.T) {
+	t.Parallel()
 	a := NewAzureClient()
 	u, err := a.buildDownloadUrl(&azureOptions{
 		organisation: "organisation",
@@ -39,6 +40,7 @@ func Test_buildDownloadUrl(t *testing.T) {
 }
 
 func Test_buildRootItemUrl(t *testing.T) {
+	t.Parallel()
 	a := NewAzureClient()
 	u, err := a.buildRootItemUrl(&azureOptions{
 		organisation: "organisation",
@@ -56,6 +58,7 @@ func Test_buildRootItemUrl(t *testing.T) {
 }
 
 func Test_buildRefsUrl(t *testing.T) {
+	t.Parallel()
 	a := NewAzureClient()
 	u, err := a.buildRefsUrl(&azureOptions{
 		organisation: "organisation",
@@ -73,6 +76,7 @@ func Test_buildRefsUrl(t *testing.T) {
 }
 
 func Test_buildTreeUrl(t *testing.T) {
+	t.Parallel()
 	a := NewAzureClient()
 	u, err := a.buildTreeUrl(&azureOptions{
 		organisation: "organisation",
@@ -90,6 +94,7 @@ func Test_buildTreeUrl(t *testing.T) {
 }
 
 func Test_parseAzureUrl(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		url string
 	}
@@ -205,6 +210,7 @@ func Test_parseAzureUrl(t *testing.T) {
 }
 
 func Test_isAzureUrl(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		s string
 	}
@@ -243,6 +249,7 @@ func Test_isAzureUrl(t *testing.T) {
 }
 
 func Test_azureDownloader_downloadZipFromAzureDevOps(t *testing.T) {
+	t.Parallel()
 	fips.InitFIPS(false)
 
 	type args struct {
@@ -319,6 +326,7 @@ func Test_azureDownloader_downloadZipFromAzureDevOps(t *testing.T) {
 }
 
 func Test_azureDownloader_latestCommitID(t *testing.T) {
+	t.Parallel()
 	fips.InitFIPS(false)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -399,6 +407,7 @@ func (t *testRepoManager) ListFiles(_ context.Context, _ bool, _ *git.CloneOptio
 }
 
 func Test_cloneRepository_azure(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		url    string
@@ -438,6 +447,7 @@ func Test_cloneRepository_azure(t *testing.T) {
 }
 
 func Test_listRefs_azure(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	client := NewAzureClient()
@@ -532,6 +542,7 @@ func Test_listRefs_azure(t *testing.T) {
 }
 
 func Test_listFiles_azure(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	client := NewAzureClient()

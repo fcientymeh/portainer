@@ -9,6 +9,7 @@ import (
 )
 
 func TestRoar(t *testing.T) {
+	t.Parallel()
 	r := Roar[int]{}
 	require.Equal(t, 0, r.Len())
 
@@ -62,6 +63,7 @@ func TestRoar(t *testing.T) {
 }
 
 func TestNilSafety(t *testing.T) {
+	t.Parallel()
 	var r, s, u Roar[int]
 
 	r.Iterate(func(id int) bool {
@@ -104,6 +106,7 @@ func TestNilSafety(t *testing.T) {
 }
 
 func TestJSON(t *testing.T) {
+	t.Parallel()
 	var r, u Roar[int]
 
 	r.Add(1)

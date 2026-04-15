@@ -29,6 +29,7 @@ import (
 // @failure 400 "Invalid request"
 // @failure 403 "Permission denied"
 // @failure 404 "Not found"
+// @failure 409 "Conflict"
 // @failure 500 "Server error"
 // @router /stacks/{id}/stop [post]
 func (handler *Handler) stackStop(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
@@ -90,7 +91,7 @@ func (handler *Handler) stackStop(w http.ResponseWriter, r *http.Request) *httpe
 		return httperror.InternalServerError("Unable to retrieve a resource control associated to the stack", err)
 	}
 
-	access, err := handler.userCanAccessStack(securityContext, endpoint.ID, resourceControl)
+	access, err := handler.userCanAccessStack(securityContext, resourceControl)
 	if err != nil {
 		return httperror.InternalServerError("Unable to verify user authorizations to validate stack access", err)
 	}
@@ -109,6 +110,10 @@ func (handler *Handler) stackStop(w http.ResponseWriter, r *http.Request) *httpe
 
 	if stack.Status == portainer.StackStatusInactive {
 		return httperror.BadRequest("Stack is already inactive", errors.New("Stack is already inactive"))
+	}
+
+	if stack.Status == portainer.StackStatusDeploying {
+		return httperror.Conflict("Stack deployment is in progress", errors.New("stack deployment is in progress"))
 	}
 
 	// stop scheduler updates of the stack before stopping

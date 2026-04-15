@@ -51,6 +51,7 @@ func (m mockConnection) ConvertToKey(v int) []byte {
 	return []byte(strconv.Itoa(v))
 }
 func TestReadAll(t *testing.T) {
+	t.Parallel()
 	service := BaseDataService[testObject, int]{
 		Bucket:     "testBucket",
 		Connection: mockConnection{store: make(map[int]testObject)},

@@ -27,6 +27,7 @@ func secretToEncryptionKey(passphrase string) []byte {
 }
 
 func Test_MarshalObjectUnencrypted(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	uuid := uuid.New()
@@ -101,6 +102,7 @@ func Test_MarshalObjectUnencrypted(t *testing.T) {
 }
 
 func Test_UnMarshalObjectUnencrypted(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	// Based on actual data entering and what we expect out of the function
@@ -142,6 +144,7 @@ func Test_UnMarshalObjectUnencrypted(t *testing.T) {
 }
 
 func Test_ObjectMarshallingEncrypted(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	// Based on actual data entering and what we expect out of the function
@@ -184,6 +187,7 @@ func Test_ObjectMarshallingEncrypted(t *testing.T) {
 }
 
 func Test_NonceSources(t *testing.T) {
+	t.Parallel()
 	// ensure that the new go 1.24 NewGCMWithRandomNonce works correctly with
 	// the old way of creating and including the nonce
 

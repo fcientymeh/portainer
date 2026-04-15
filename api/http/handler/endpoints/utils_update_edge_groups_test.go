@@ -12,6 +12,7 @@ import (
 )
 
 func Test_updateEdgeGroups(t *testing.T) {
+	t.Parallel()
 	createGroups := func(store *datastore.Store, names []string) ([]portainer.EdgeGroup, error) {
 		groups := make([]portainer.EdgeGroup, len(names))
 		for index, name := range names {
@@ -67,7 +68,7 @@ func Test_updateEdgeGroups(t *testing.T) {
 
 	testFn := func(t *testing.T, testCase testCase) {
 		is := assert.New(t)
-		_, store := datastore.MustNewTestStore(t, true, true)
+		_, store := datastore.MustNewTestStore(t, false, true)
 
 		err := store.Endpoint().Create(testCase.endpoint)
 		require.NoError(t, err)

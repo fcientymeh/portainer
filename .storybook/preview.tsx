@@ -35,6 +35,11 @@ const preview: Preview = {
   ),
   loaders: [mswLoader],
   parameters: {
+    options: {
+      storySort: {
+        order: ['Design System', 'Components', '*'],
+      },
+    },
     controls: {
       matchers: {
         color: /(background|color)$/i,

@@ -10,6 +10,7 @@ import { Breadcrumbs } from './Breadcrumbs';
 import { Crumb } from './Breadcrumbs/Breadcrumbs';
 import { HeaderContainer } from './HeaderContainer';
 import { HeaderTitle } from './HeaderTitle';
+import { PageTitle } from './PageTitle';
 
 interface Props {
   id?: string;
@@ -32,10 +33,13 @@ export function PageHeader({
   const router = useRouter();
 
   return (
-    <HeaderContainer id={id}>
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
+    <>
+      <HeaderContainer id={id}>
+        <Breadcrumbs breadcrumbs={breadcrumbs} />
+        <HeaderTitle />
+      </HeaderContainer>
 
-      <HeaderTitle title={title}>
+      <PageTitle title={title}>
         {reload && (
           <Button
             color="none"
@@ -50,8 +54,8 @@ export function PageHeader({
           </Button>
         )}
         {children}
-      </HeaderTitle>
-    </HeaderContainer>
+      </PageTitle>
+    </>
   );
 
   function onClickedRefresh() {

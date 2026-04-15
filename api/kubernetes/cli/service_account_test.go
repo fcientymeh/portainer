@@ -12,6 +12,7 @@ import (
 )
 
 func Test_GetServiceAccount(t *testing.T) {
+	t.Parallel()
 
 	t.Run("returns error if non-existent", func(t *testing.T) {
 		k := &KubeClient{
@@ -100,6 +101,7 @@ func Test_GetServiceAccount(t *testing.T) {
 }
 
 func TestGetServiceAccountDetails(t *testing.T) {
+	t.Parallel()
 	t.Run("returns service account details", func(t *testing.T) {
 		automount := false
 		sa := &v1.ServiceAccount{
@@ -172,6 +174,7 @@ func TestGetServiceAccountDetails(t *testing.T) {
 }
 
 func TestAddImagePullSecretToServiceAccount(t *testing.T) {
+	t.Parallel()
 	newKCL := func(sa *v1.ServiceAccount) *KubeClient {
 		return &KubeClient{cli: kfake.NewSimpleClientset(sa), instanceID: "test"}
 	}
@@ -239,6 +242,7 @@ func TestAddImagePullSecretToServiceAccount(t *testing.T) {
 }
 
 func TestRemoveImagePullSecretFromServiceAccount(t *testing.T) {
+	t.Parallel()
 	newKCL := func(sa *v1.ServiceAccount) *KubeClient {
 		return &KubeClient{cli: kfake.NewSimpleClientset(sa), instanceID: "test"}
 	}
@@ -307,6 +311,7 @@ func TestRemoveImagePullSecretFromServiceAccount(t *testing.T) {
 }
 
 func TestGetServiceAccount_CreatesAndFetches(t *testing.T) {
+	t.Parallel()
 	t.Run("returns annotations when set", func(t *testing.T) {
 		sa := &v1.ServiceAccount{
 			ObjectMeta: metav1.ObjectMeta{

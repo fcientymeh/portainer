@@ -155,6 +155,7 @@ func singleAPIRequest(h *Handler, jwt string, expect string) error {
 }
 
 func Test_customTemplateGitFetch(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	_, store := datastore.MustNewTestStore(t, true, true)

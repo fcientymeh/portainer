@@ -114,6 +114,7 @@ export function ConsoleView() {
                 url={buildUrl()}
                 connect={connect}
                 onStateChange={handleStateChange}
+                onResize="socket"
                 initialCommands={
                   isLinuxTerminalCommand(command)
                     ? LINUX_SHELL_INIT_COMMANDS

@@ -8,6 +8,7 @@ import (
 )
 
 func TestGetPortainerURLFromEdgeKey(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		edgeKey  string
@@ -30,6 +31,7 @@ func TestGetPortainerURLFromEdgeKey(t *testing.T) {
 }
 
 func TestIsValidEdgeStackName(t *testing.T) {
+	t.Parallel()
 	f := func(name string, expected bool) {
 		if IsValidEdgeStackName(name) != expected {
 			t.Fatalf("expected %v, found %v", expected, IsValidEdgeStackName(name))

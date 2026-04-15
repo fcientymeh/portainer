@@ -43,7 +43,7 @@ export function FileUploadField({
   const fileRef = createRef<HTMLInputElement>();
 
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex items-center gap-2">
       <input
         id={inputId}
         ref={fileRef}

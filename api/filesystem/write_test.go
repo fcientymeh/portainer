@@ -10,6 +10,7 @@ import (
 )
 
 func Test_WriteFile_CanStoreContentInANewFile(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	tmpFilePath := path.Join(tmpDir, "dummy")
 
@@ -22,6 +23,7 @@ func Test_WriteFile_CanStoreContentInANewFile(t *testing.T) {
 }
 
 func Test_WriteFile_CanOverwriteExistingFile(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	tmpFilePath := path.Join(tmpDir, "dummy")
 
@@ -37,6 +39,7 @@ func Test_WriteFile_CanOverwriteExistingFile(t *testing.T) {
 }
 
 func Test_WriteFile_CanWriteANestedPath(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	tmpFilePath := path.Join(tmpDir, "dir", "sub-dir", "dummy")
 

@@ -26,19 +26,19 @@ export function HelmRevisionItem({
       to="kubernetes.helm"
       params={{ namespace, name, revision: item.version }}
     >
-      <div className="flex flex-col gap-2 w-full">
-        <div className="flex flex-wrap gap-1 justify-between">
+      <div className="flex w-full flex-col gap-2">
+        <div className="flex flex-wrap justify-between gap-1">
           <Badge type={getStatusColor(item.info?.status)}>
             {getStatusText(item.info?.status)}
           </Badge>
-          <span className="text-xs text-muted">Revision #{item.version}</span>
+          <span className="text-muted text-xs">Revision #{item.version}</span>
         </div>
-        <div className="flex flex-wrap gap-1 justify-between">
-          <span className="text-xs text-muted">
+        <div className="flex flex-wrap justify-between gap-1">
+          <span className="text-muted text-xs">
             {item.chart.metadata?.name}-{item.chart.metadata?.version}
           </span>
           {item.info?.last_deployed && (
-            <span className="text-xs text-muted">
+            <span className="text-muted text-xs">
               {localizeDate(new Date(item.info.last_deployed))}
             </span>
           )}

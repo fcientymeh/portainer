@@ -22,7 +22,7 @@ export function EditButtons({ environment }: { environment: Environment }) {
   const configRoute = getConfigRoute(environment);
 
   const buttonsClasses = clsx(
-    'w-full h-full !ml-0 !rounded-none',
+    '!ml-0 h-full w-full !rounded-none',
     'hover:bg-gray-3',
     'th-dark:hover:bg-gray-9',
     'th-highcontrast:hover:bg-white th-highcontrast:hover:text-black'

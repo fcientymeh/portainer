@@ -47,7 +47,7 @@ export function NameCell({
         item.Name
       )}
       {item.Authentication && (
-        <span className="ml-2 label label-info image-tag">
+        <span className="label label-info image-tag ml-2">
           authentication-enabled
         </span>
       )}

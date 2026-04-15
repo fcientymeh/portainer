@@ -14,12 +14,7 @@ export function BadgeIcon({ icon, size = '3xl', iconClass }: Props) {
     <div
       className={clsx(
         sizeClasses,
-        `badge-icon
-      inline-flex items-center
-      justify-center rounded-full
-      bg-blue-3
-      text-blue-8 th-dark:bg-gray-9 th-dark:text-blue-3
-   `
+        `badge-icon inline-flex items-center justify-center rounded-full bg-blue-3 text-blue-8 th-dark:bg-gray-9 th-dark:text-blue-3`
       )}
     >
       <Icon icon={icon} className={clsx('!flex', iconClass)} />

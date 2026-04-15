@@ -4,10 +4,10 @@ import (
 	gittypes "github.com/portainer/portainer/api/git/types"
 )
 
-func GetCredentials(auth *gittypes.GitAuthentication) (string, string, error) {
+func GetCredentials(auth *gittypes.GitAuthentication) (string, string) {
 	if auth == nil {
-		return "", "", nil
+		return "", ""
 	}
 
-	return auth.Username, auth.Password, nil
+	return auth.Username, auth.Password
 }

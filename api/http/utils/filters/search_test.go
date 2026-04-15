@@ -7,6 +7,7 @@ import (
 )
 
 func TestSearchFn_BasicSearch(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{ID: 1, Name: "Alice Smith", Email: "alice@example.com", Age: 25},
 		{ID: 2, Name: "Bob Johnson", Email: "bob@company.com", Age: 30},
@@ -23,6 +24,7 @@ func TestSearchFn_BasicSearch(t *testing.T) {
 }
 
 func TestSearchFn_EmptySearch(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{ID: 1, Name: "Alice Smith", Email: "alice@example.com", Age: 25},
 		{ID: 2, Name: "Bob Johnson", Email: "bob@company.com", Age: 30},
@@ -38,6 +40,7 @@ func TestSearchFn_EmptySearch(t *testing.T) {
 }
 
 func TestSearchFn_NoMatches(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{ID: 1, Name: "Alice Smith", Email: "alice@example.com", Age: 25},
 		{ID: 2, Name: "Bob Johnson", Email: "bob@company.com", Age: 30},
@@ -52,6 +55,7 @@ func TestSearchFn_NoMatches(t *testing.T) {
 }
 
 func TestSearchFn_MultipleMatches(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{ID: 1, Name: "Alice Smith", Email: "alice@example.com", Age: 25},
 		{ID: 2, Name: "Bob Smith", Email: "bob@company.com", Age: 30},
@@ -70,6 +74,7 @@ func TestSearchFn_MultipleMatches(t *testing.T) {
 }
 
 func TestSearchFn_MultipleAccessors(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{ID: 1, Name: "Alice Smith", Email: "alice@example.com", Age: 25},
 		{ID: 2, Name: "Bob Johnson", Email: "bob@company.com", Age: 30},
@@ -93,6 +98,7 @@ func TestSearchFn_MultipleAccessors(t *testing.T) {
 }
 
 func TestSearchFn_CaseSensitive(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{ID: 1, Name: "Alice Smith", Email: "alice@example.com", Age: 25},
 		{ID: 2, Name: "Bob Johnson", Email: "bob@company.com", Age: 30},
@@ -113,6 +119,7 @@ func TestSearchFn_CaseSensitive(t *testing.T) {
 }
 
 func TestSearchFn_PartialMatches(t *testing.T) {
+	t.Parallel()
 	products := []Product{
 		{ID: 1, Name: "Wireless Mouse", Description: "Ergonomic wireless mouse", Price: 25, Category: "Electronics"},
 		{ID: 2, Name: "Mechanical Keyboard", Description: "RGB gaming keyboard", Price: 150, Category: "Electronics"},
@@ -135,6 +142,7 @@ func TestSearchFn_PartialMatches(t *testing.T) {
 }
 
 func TestSearchFn_EmptySlice(t *testing.T) {
+	t.Parallel()
 	users := []User{}
 	accessors := []SearchAccessor[User]{userNameAccessor, userEmailAccessor}
 	params := SearchQueryParams{search: "anything"}
@@ -145,6 +153,7 @@ func TestSearchFn_EmptySlice(t *testing.T) {
 }
 
 func TestSearchFn_EmptyAccessors(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{ID: 1, Name: "Alice Smith", Email: "alice@example.com", Age: 25},
 	}
@@ -159,6 +168,7 @@ func TestSearchFn_EmptyAccessors(t *testing.T) {
 }
 
 func TestSearchFn_SingleAccessor(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{ID: 1, Name: "Alice Smith", Email: "alice@example.com", Age: 25},
 		{ID: 2, Name: "Bob Johnson", Email: "bob@company.com", Age: 30},
@@ -175,6 +185,7 @@ func TestSearchFn_SingleAccessor(t *testing.T) {
 }
 
 func TestSearchFn_NumericSearch(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{ID: 1, Name: "Alice Smith", Email: "alice@example.com", Age: 25},
 		{ID: 2, Name: "Bob Johnson", Email: "bob@company.com", Age: 30},
@@ -192,6 +203,7 @@ func TestSearchFn_NumericSearch(t *testing.T) {
 }
 
 func TestSearchFn_FormattedAccessor(t *testing.T) {
+	t.Parallel()
 	products := []Product{
 		{ID: 1, Name: "Mouse", Description: "Wireless mouse", Price: 25, Category: "Electronics"},
 		{ID: 2, Name: "Keyboard", Description: "Gaming keyboard", Price: 150, Category: "Electronics"},
@@ -208,6 +220,7 @@ func TestSearchFn_FormattedAccessor(t *testing.T) {
 }
 
 func TestSearchFn_FirstMatchOnly(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{ID: 1, Name: "test user", Email: "test@example.com", Age: 25},
 	}
@@ -224,6 +237,7 @@ func TestSearchFn_FirstMatchOnly(t *testing.T) {
 }
 
 func TestSearchFn_PreservesOrder(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{ID: 1, Name: "Alice Test", Email: "alice@example.com", Age: 25},
 		{ID: 2, Name: "Bob Johnson", Email: "bob@test.com", Age: 30},
@@ -243,6 +257,7 @@ func TestSearchFn_PreservesOrder(t *testing.T) {
 }
 
 func TestSearchFn_ComplexSearch(t *testing.T) {
+	t.Parallel()
 	products := []Product{
 		{ID: 1, Name: "Gaming Mouse", Description: "High-DPI gaming mouse", Price: 75, Category: "Gaming"},
 		{ID: 2, Name: "Office Mouse", Description: "Ergonomic office mouse", Price: 25, Category: "Office"},
@@ -268,6 +283,7 @@ func TestSearchFn_ComplexSearch(t *testing.T) {
 }
 
 func TestSearchFn_WhitespaceSearch(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{ID: 1, Name: "Alice Smith", Email: "alice@example.com", Age: 25},
 		{ID: 2, Name: "Bob Johnson", Email: "bob@company.com", Age: 30},

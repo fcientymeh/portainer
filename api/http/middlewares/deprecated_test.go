@@ -12,6 +12,7 @@ import (
 )
 
 func TestDeprecated(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name               string
 		urlBuilder         func(w http.ResponseWriter, r *http.Request) (string, *httperror.HandlerError)
@@ -116,6 +117,7 @@ func TestDeprecated(t *testing.T) {
 }
 
 func TestDeprecatedSimple(t *testing.T) {
+	t.Parallel()
 	// Create a test handler
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -142,6 +144,7 @@ func TestDeprecatedSimple(t *testing.T) {
 }
 
 func TestDeprecated_PreservesRequestContext(t *testing.T) {
+	t.Parallel()
 	// Test that the middleware preserves request context when redirecting
 	urlBuilder := func(w http.ResponseWriter, r *http.Request) (string, *httperror.HandlerError) {
 		return "/new-path", nil
@@ -165,6 +168,7 @@ func TestDeprecated_PreservesRequestContext(t *testing.T) {
 }
 
 func TestDeprecated_PreservesRequestMethod(t *testing.T) {
+	t.Parallel()
 	methods := []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodPatch}
 
 	urlBuilder := func(w http.ResponseWriter, r *http.Request) (string, *httperror.HandlerError) {
@@ -192,6 +196,7 @@ func TestDeprecated_PreservesRequestMethod(t *testing.T) {
 }
 
 func TestDeprecated_PreservesRequestHeaders(t *testing.T) {
+	t.Parallel()
 	urlBuilder := func(w http.ResponseWriter, r *http.Request) (string, *httperror.HandlerError) {
 		return "/new-path", nil
 	}
@@ -216,6 +221,7 @@ func TestDeprecated_PreservesRequestHeaders(t *testing.T) {
 }
 
 func TestDeprecated_PreservesRequestBody(t *testing.T) {
+	t.Parallel()
 	urlBuilder := func(w http.ResponseWriter, r *http.Request) (string, *httperror.HandlerError) {
 		return "/new-path", nil
 	}
@@ -239,6 +245,7 @@ func TestDeprecated_PreservesRequestBody(t *testing.T) {
 }
 
 func TestDeprecated_ErrorResponseFormat(t *testing.T) {
+	t.Parallel()
 	urlBuilder := func(w http.ResponseWriter, r *http.Request) (string, *httperror.HandlerError) {
 		return "", httperror.BadRequest("test error message", nil)
 	}
@@ -266,6 +273,7 @@ func TestDeprecated_ErrorResponseFormat(t *testing.T) {
 }
 
 func TestDeprecated_WithQueryParameters(t *testing.T) {
+	t.Parallel()
 	urlBuilder := func(w http.ResponseWriter, r *http.Request) (string, *httperror.HandlerError) {
 		return "/api/v2/resource", nil
 	}
@@ -287,6 +295,7 @@ func TestDeprecated_WithQueryParameters(t *testing.T) {
 }
 
 func TestDeprecated_WithMultipleRedirects(t *testing.T) {
+	t.Parallel()
 	// Test that multiple deprecated middleware can be chained
 	urlBuilder1 := func(w http.ResponseWriter, r *http.Request) (string, *httperror.HandlerError) {
 		return "/v2" + r.URL.Path, nil

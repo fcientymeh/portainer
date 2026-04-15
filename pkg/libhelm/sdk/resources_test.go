@@ -11,6 +11,7 @@ import (
 )
 
 func TestParseResources(t *testing.T) {
+	t.Parallel()
 	t.Run("successfully parse single resource", func(t *testing.T) {
 		resourceTypesLists := map[string][]runtime.Object{
 			"v1/Pod(related)": {
@@ -108,6 +109,7 @@ func TestParseResources(t *testing.T) {
 }
 
 func TestEnhanceStatus(t *testing.T) {
+	t.Parallel()
 	t.Run("healthy running pod", func(t *testing.T) {
 		// Create a ResourceStatus object
 		status := &ResourceStatus{

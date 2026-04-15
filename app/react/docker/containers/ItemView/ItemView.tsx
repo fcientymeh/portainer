@@ -62,7 +62,7 @@ export function ItemView() {
         ]}
       />
 
-      <div className="mx-4 space-y-4 [&>*]:block mb-4">
+      <div className="mx-4 mb-4 space-y-4 [&>*]:block">
         <ContainerActionsSection
           environmentId={environmentId}
           nodeName={nodeName}
@@ -89,7 +89,7 @@ export function ItemView() {
         <HealthStatus health={container.State.Health} />
       )}
 
-      <div className="mx-4 space-y-4 [&>*]:block mb-4">
+      <div className="mx-4 mb-4 space-y-4 [&>*]:block">
         <CreateImageSection
           environmentId={environmentId}
           containerId={container.Id || ''}

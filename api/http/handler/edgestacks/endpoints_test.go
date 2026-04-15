@@ -11,6 +11,7 @@ import (
 )
 
 func Test_hasKubeEndpoint(t *testing.T) {
+	t.Parallel()
 	endpoints := []portainer.Endpoint{
 		{ID: 1, Type: portainer.DockerEnvironment},
 		{ID: 2, Type: portainer.AgentOnDockerEnvironment},
@@ -49,6 +50,7 @@ func Test_hasKubeEndpoint(t *testing.T) {
 }
 
 func Test_hasKubeEndpoint_failWhenEndpointDontExist(t *testing.T) {
+	t.Parallel()
 	datastore := testhelpers.NewDatastore(testhelpers.WithEndpoints([]portainer.Endpoint{}))
 
 	_, err := hasKubeEndpoint(datastore.Endpoint(), []portainer.EndpointID{1})
@@ -56,6 +58,7 @@ func Test_hasKubeEndpoint_failWhenEndpointDontExist(t *testing.T) {
 }
 
 func Test_hasDockerEndpoint(t *testing.T) {
+	t.Parallel()
 	endpoints := []portainer.Endpoint{
 		{ID: 1, Type: portainer.DockerEnvironment},
 		{ID: 2, Type: portainer.AgentOnDockerEnvironment},
@@ -94,6 +97,7 @@ func Test_hasDockerEndpoint(t *testing.T) {
 }
 
 func Test_hasDockerEndpoint_failWhenEndpointDontExist(t *testing.T) {
+	t.Parallel()
 	datastore := testhelpers.NewDatastore(testhelpers.WithEndpoints([]portainer.Endpoint{}))
 
 	_, err := hasDockerEndpoint(datastore.Endpoint(), []portainer.EndpointID{1})

@@ -8,6 +8,7 @@ import (
 )
 
 func TestIntersectionCount(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name     string
 		setA     tagSet
@@ -57,6 +58,7 @@ func TestIntersectionCount(t *testing.T) {
 }
 
 func TestUnion(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name     string
 		setA     tagSet
@@ -106,6 +108,7 @@ func TestUnion(t *testing.T) {
 }
 
 func TestContains(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name     string
 		setA     tagSet
@@ -167,6 +170,7 @@ func TestContains(t *testing.T) {
 }
 
 func TestDifference(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name     string
 		setA     tagSet

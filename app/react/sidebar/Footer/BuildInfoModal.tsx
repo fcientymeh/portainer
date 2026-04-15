@@ -78,13 +78,13 @@ function BuildInfoModal({ closeModal }: { closeModal: () => void }) {
             <tbody>
               <tr>
                 <td>
-                  <span className="inline-flex items-center flex-wrap">
+                  <span className="inline-flex flex-wrap items-center">
                     <Server size="13" className="space-right" />
                     Server Version: {ServerVersion} {VersionSupport}
                   </span>
                 </td>
                 <td>
-                  <span className="inline-flex items-center flex-wrap">
+                  <span className="inline-flex flex-wrap items-center">
                     <Database size="13" className="space-right" />
                     Database Version: {DatabaseVersion}
                   </span>
@@ -92,13 +92,13 @@ function BuildInfoModal({ closeModal }: { closeModal: () => void }) {
               </tr>
               <tr>
                 <td>
-                  <span className="inline-flex items-center flex-wrap">
+                  <span className="inline-flex flex-wrap items-center">
                     <Hash size="13" className="space-right" />
                     CI Build Number: {Build.BuildNumber}
                   </span>
                 </td>
                 <td>
-                  <span className="inline-flex items-center flex-wrap">
+                  <span className="inline-flex flex-wrap items-center">
                     <Tag size="13" className="space-right" />
                     Image Tag: {Build.ImageTag}
                   </span>
@@ -106,7 +106,7 @@ function BuildInfoModal({ closeModal }: { closeModal: () => void }) {
               </tr>
               <tr>
                 <td>
-                  <span className="inline-flex items-center flex-wrap">
+                  <span className="inline-flex flex-wrap items-center">
                     <GitCommit size="13" className="space-right" />
                     Git Commit: {Build.GitCommit}
                   </span>
@@ -162,7 +162,7 @@ function BuildInfoModal({ closeModal }: { closeModal: () => void }) {
 
         {isAdmin && Runtime.Env && (
           <div className={clsx(styles.toolsList, 'mt-3')}>
-            <span className="inline-flex items-center ">
+            <span className="inline-flex items-center">
               <Variable size="13" className="space-right" />
               Environment Variables
             </span>

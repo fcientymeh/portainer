@@ -25,6 +25,7 @@ func failFunc(t *testing.T) func() (string, error) {
 }
 
 func TestTokenCacheDataRace(t *testing.T) {
+	t.Parallel()
 	ch := make(chan struct{})
 
 	for range 1000 {
@@ -52,6 +53,7 @@ func TestTokenCacheDataRace(t *testing.T) {
 }
 
 func TestTokenCache(t *testing.T) {
+	t.Parallel()
 	mgr := NewTokenCacheManager()
 	tc1 := mgr.GetOrCreateTokenCache(1)
 	tc2 := mgr.GetOrCreateTokenCache(2)

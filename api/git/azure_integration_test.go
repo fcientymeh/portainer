@@ -17,6 +17,7 @@ import (
 const privateAzureRepoURL = "https://portainer.visualstudio.com/gitops-test/_git/gitops-test"
 
 func TestService_ClonePublicRepository_Azure(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	pat := getRequiredValue(t, "AZURE_DEVOPS_PAT")
@@ -74,6 +75,7 @@ func TestService_ClonePublicRepository_Azure(t *testing.T) {
 }
 
 func TestService_ClonePrivateRepository_Azure(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	pat := getRequiredValue(t, "AZURE_DEVOPS_PAT")
@@ -95,6 +97,7 @@ func TestService_ClonePrivateRepository_Azure(t *testing.T) {
 }
 
 func TestService_LatestCommitID_Azure(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	pat := getRequiredValue(t, "AZURE_DEVOPS_PAT")
@@ -113,6 +116,7 @@ func TestService_LatestCommitID_Azure(t *testing.T) {
 }
 
 func TestService_ListRefs_Azure(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	accessToken := getRequiredValue(t, "AZURE_DEVOPS_PAT")
@@ -132,6 +136,7 @@ func TestService_ListRefs_Azure(t *testing.T) {
 }
 
 func TestService_ListRefs_Azure_Concurrently(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	accessToken := getRequiredValue(t, "AZURE_DEVOPS_PAT")
@@ -149,6 +154,7 @@ func TestService_ListRefs_Azure_Concurrently(t *testing.T) {
 }
 
 func TestService_ListFiles_Azure(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	type args struct {
@@ -303,6 +309,7 @@ func TestService_ListFiles_Azure(t *testing.T) {
 }
 
 func TestService_ListFiles_Azure_Concurrently(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	accessToken := getRequiredValue(t, "AZURE_DEVOPS_PAT")

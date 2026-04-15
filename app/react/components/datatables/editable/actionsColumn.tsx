@@ -82,7 +82,7 @@ function ActionsCell<T>({
   rowIndex: number;
 }) {
   return (
-    <div className="flex gap-x-2 justify-center">
+    <div className="flex justify-center gap-x-2">
       <Button
         color="light"
         size="small"
@@ -115,7 +115,7 @@ function EditActionsCell({
   revertRow: () => void;
 }) {
   return (
-    <div className="flex gap-x-2 justify-center">
+    <div className="flex justify-center gap-x-2">
       <Button
         color="light"
         size="small"

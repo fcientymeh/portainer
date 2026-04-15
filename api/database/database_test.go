@@ -10,6 +10,7 @@ import (
 )
 
 func TestNewDatabase(t *testing.T) {
+	t.Parallel()
 	dbPath := filesystem.JoinPaths(t.TempDir(), "test.db")
 	connection, err := NewDatabase("boltdb", dbPath, nil, false)
 	require.NoError(t, err)

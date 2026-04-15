@@ -9,6 +9,7 @@ import (
 )
 
 func TestFilterStacks(t *testing.T) {
+	t.Parallel()
 	t.Run("filter stacks against particular endpoint and all orphaned stacks", func(t *testing.T) {
 		stacks := []portainer.Stack{
 			{ID: 1, EndpointID: 3, Name: "normal_stack", Type: portainer.DockerComposeStack},

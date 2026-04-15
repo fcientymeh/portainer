@@ -10,6 +10,7 @@ import (
 )
 
 func TestIsValidStackFile_DefaultPortEnvSubstitution(t *testing.T) {
+	t.Parallel()
 	yamlContent := []byte(`
 version: "3"
 
@@ -42,6 +43,7 @@ networks:
 // validation when the env var is not provided. Docker accepts an empty host port (left side)
 // but requires a valid container port (right side).
 func TestIsValidStackFile_MissingEnvVarBehavior(t *testing.T) {
+	t.Parallel()
 	securitySettings := &portainer.EndpointSecuritySettings{}
 
 	t.Run("var on left side only passes (docker allows :9090)", func(t *testing.T) {
@@ -91,6 +93,7 @@ services:
 }
 
 func TestIsValidStackFile_EnvVarInBothPortFields(t *testing.T) {
+	t.Parallel()
 	securitySettings := &portainer.EndpointSecuritySettings{}
 	err := IsValidStackFile(StackFileValidationConfig{
 		Content: []byte(`
@@ -123,6 +126,7 @@ func (m mockFileService) FormProjectPathByVersion(projectPath string, version in
 }
 
 func TestValidateStackFiles_EnvVars(t *testing.T) {
+	t.Parallel()
 	fileContent := []byte(`
 version: "3"
 
@@ -178,6 +182,7 @@ services:
 }
 
 func TestValidateStackFiles_DotEnvFile(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	err := os.WriteFile(filepath.Join(tmpDir, ".env"), []byte("HOST_PORT=3000\n"), 0600)
@@ -208,6 +213,7 @@ services:
 }
 
 func TestValidateStackFiles_EnvFileAttribute(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	err := os.WriteFile(filepath.Join(tmpDir, "web.env"), []byte("HOST_PORT=3000\n"), 0600)
@@ -238,6 +244,7 @@ services:
 }
 
 func TestValidateStackFiles_BindMountBlockedForNonAdmin(t *testing.T) {
+	t.Parallel()
 	fileContent := []byte(`
 version: "3"
 

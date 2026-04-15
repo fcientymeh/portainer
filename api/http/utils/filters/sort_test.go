@@ -25,6 +25,7 @@ func compareProductByPrice(a, b Product) int {
 }
 
 func TestSortFn_BasicAscending(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{Name: "Charlie", Age: 25},
 		{Name: "Alice", Age: 30},
@@ -47,6 +48,7 @@ func TestSortFn_BasicAscending(t *testing.T) {
 }
 
 func TestSortFn_BasicDescending(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{Name: "Charlie", Age: 25},
 		{Name: "Alice", Age: 30},
@@ -69,6 +71,7 @@ func TestSortFn_BasicDescending(t *testing.T) {
 }
 
 func TestSortFn_SortByAge(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{Name: "Charlie", Age: 25},
 		{Name: "Alice", Age: 30},
@@ -102,6 +105,7 @@ func TestSortFn_SortByAge(t *testing.T) {
 }
 
 func TestSortFn_UnknownSortKey(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{Name: "Charlie", Age: 25},
 		{Name: "Alice", Age: 30},
@@ -124,6 +128,7 @@ func TestSortFn_UnknownSortKey(t *testing.T) {
 }
 
 func TestSortFn_EmptySlice(t *testing.T) {
+	t.Parallel()
 	users := []User{}
 
 	sorts := []SortBinding[User]{
@@ -137,6 +142,7 @@ func TestSortFn_EmptySlice(t *testing.T) {
 }
 
 func TestSortFn_SingleElement(t *testing.T) {
+	t.Parallel()
 	users := []User{{Name: "Alice", Age: 30}}
 
 	sorts := []SortBinding[User]{
@@ -150,6 +156,7 @@ func TestSortFn_SingleElement(t *testing.T) {
 }
 
 func TestSortFn_EmptySortBindings(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{Name: "Charlie", Age: 25},
 		{Name: "Alice", Age: 30},
@@ -168,6 +175,7 @@ func TestSortFn_EmptySortBindings(t *testing.T) {
 }
 
 func TestSortFn_DifferentType(t *testing.T) {
+	t.Parallel()
 	products := []Product{
 		{Name: "Laptop", Price: 1000},
 		{Name: "Mouse", Price: 25},
@@ -201,6 +209,7 @@ func TestSortFn_DifferentType(t *testing.T) {
 }
 
 func TestSortFn_StableSort(t *testing.T) {
+	t.Parallel()
 	// Test that sorting is stable (maintains relative order of equal elements)
 	users := []User{
 		{Name: "Alice", Age: 25},
@@ -226,6 +235,7 @@ func TestSortFn_StableSort(t *testing.T) {
 }
 
 func TestReverseSortFn(t *testing.T) {
+	t.Parallel()
 	originalFn := compareUserByAge
 	reversedFn := reverSortFn(originalFn)
 
@@ -244,6 +254,7 @@ func TestReverseSortFn(t *testing.T) {
 }
 
 func TestSortFn_CaseSensitive(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{Name: "alice", Age: 25},
 		{Name: "Bob", Age: 30},
@@ -266,6 +277,7 @@ func TestSortFn_CaseSensitive(t *testing.T) {
 }
 
 func TestSortFn_ModifiesOriginalSlice(t *testing.T) {
+	t.Parallel()
 	users := []User{
 		{Name: "Charlie", Age: 25},
 		{Name: "Alice", Age: 30},

@@ -9,9 +9,7 @@ import (
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/datastore"
 	"github.com/portainer/portainer/api/http/security"
-	"github.com/portainer/portainer/api/internal/testhelpers"
 
 	"github.com/segmentio/encoding/json"
 	"github.com/stretchr/testify/assert"
@@ -20,6 +18,7 @@ import (
 )
 
 func Test_categorizeRegistryError(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		err         error
@@ -109,6 +108,7 @@ func Test_categorizeRegistryError(t *testing.T) {
 }
 
 func Test_registryPingPayload_Validate(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		payload registryPingPayload
@@ -187,10 +187,9 @@ func Test_registryPingPayload_Validate(t *testing.T) {
 }
 
 func TestHandler_pingRegistry(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, false, false)
+	t.Parallel()
 
-	handler := NewHandler(testhelpers.NewTestRequestBouncer())
-	handler.DataStore = store
+	handler, _ := newTestHandler(t)
 
 	tests := []struct {
 		name           string
@@ -289,10 +288,9 @@ func TestHandler_pingRegistry(t *testing.T) {
 }
 
 func TestHandler_pingRegistry_DockerHubURL(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, false, false)
+	t.Parallel()
 
-	handler := NewHandler(testhelpers.NewTestRequestBouncer())
-	handler.DataStore = store
+	handler, _ := newTestHandler(t)
 
 	t.Run("empty URL for DockerHub gets default URL", func(t *testing.T) {
 		payload := registryPingPayload{

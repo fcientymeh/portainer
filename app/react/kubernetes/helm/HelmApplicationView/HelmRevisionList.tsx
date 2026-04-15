@@ -26,7 +26,7 @@ export function HelmRevisionList({
       <div className="p-5 pb-2.5">
         <span className="vertical-center mb-5">
           <WidgetIcon icon={History} />
-          <h2 className="text-base m-0 ml-1">Revisions</h2>
+          <h2 className="m-0 ml-1 text-base">Revisions</h2>
         </span>
         {history?.map((historyItem) => (
           <HelmRevisionItem

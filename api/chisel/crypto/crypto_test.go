@@ -6,6 +6,7 @@ import (
 )
 
 func TestGenerateGo119CompatibleKey(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		seed string
 	}

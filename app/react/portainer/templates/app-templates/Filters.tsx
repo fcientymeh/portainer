@@ -42,7 +42,7 @@ export function Filters({
   );
 
   return (
-    <div className="flex gap-4 w-full">
+    <div className="flex w-full gap-4">
       {categories.length > 0 && (
         <div className="w-1/4">
           <PortainerSelect
@@ -78,7 +78,7 @@ export function Filters({
           />
         </div>
       )}
-      <div className="w-1/4 ml-auto">
+      <div className="ml-auto w-1/4">
         <TemplateListSort
           onChange={(value) => {
             listState.setSortBy(value?.id, value?.desc ?? false);

@@ -7,6 +7,7 @@ import (
 )
 
 func TestStrengthCheck(t *testing.T) {
+	t.Parallel()
 	checker := NewPasswordStrengthChecker(settingsStub{minLength: 12})
 
 	type args struct {

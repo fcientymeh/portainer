@@ -41,6 +41,7 @@ func setup(t *testing.T) (*portainer.Stack, *portainer.Endpoint) {
 }
 
 func Test_UpAndDown(t *testing.T) {
+	t.Parallel()
 	testhelpers.IntegrationTest(t)
 
 	stack, endpoint := setup(t)

@@ -18,6 +18,7 @@ import (
 )
 
 func TestMigrateGPUs(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/containers/json") {
 			containerSummary := []container.Summary{{ID: "container1"}}
@@ -79,6 +80,7 @@ func TestMigrateGPUs(t *testing.T) {
 }
 
 func TestPostInitMigrate_PendingActionsCreated(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name                   string
 		existingPendingActions []*portainer.PendingAction

@@ -18,6 +18,7 @@ const (
 )
 
 func TestService_ClonePrivateRepository_GitHub(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
@@ -41,6 +42,7 @@ func TestService_ClonePrivateRepository_GitHub(t *testing.T) {
 }
 
 func TestService_LatestCommitID_GitHub(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
@@ -61,6 +63,7 @@ func TestService_LatestCommitID_GitHub(t *testing.T) {
 }
 
 func TestService_ListRefs_GitHub(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
@@ -74,6 +77,7 @@ func TestService_ListRefs_GitHub(t *testing.T) {
 }
 
 func TestService_ListRefs_Github_Concurrently(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
@@ -92,6 +96,7 @@ func TestService_ListRefs_Github_Concurrently(t *testing.T) {
 }
 
 func TestService_ListFiles_GitHub(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	type args struct {
@@ -244,6 +249,7 @@ func TestService_ListFiles_GitHub(t *testing.T) {
 }
 
 func TestService_ListFiles_Github_Concurrently(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	repositoryUrl := privateGitRepoURL
@@ -282,6 +288,7 @@ func TestService_ListFiles_Github_Concurrently(t *testing.T) {
 }
 
 func TestService_purgeCache_Github(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	repositoryUrl := privateGitRepoURL
@@ -314,6 +321,7 @@ func TestService_purgeCache_Github(t *testing.T) {
 }
 
 func TestService_purgeCacheByTTL_Github(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	timeout := 100 * time.Millisecond
@@ -347,6 +355,7 @@ func TestService_purgeCacheByTTL_Github(t *testing.T) {
 }
 
 func TestService_HardRefresh_ListRefs_GitHub(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
@@ -365,6 +374,7 @@ func TestService_HardRefresh_ListRefs_GitHub(t *testing.T) {
 }
 
 func TestService_HardRefresh_ListRefs_And_RemoveAllCaches_GitHub(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	accessToken := getRequiredValue(t, "GITHUB_PAT")
@@ -419,6 +429,7 @@ func TestService_HardRefresh_ListRefs_And_RemoveAllCaches_GitHub(t *testing.T) {
 }
 
 func TestService_HardRefresh_ListFiles_GitHub(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	service := newService(t.Context(), 2, 0)
@@ -456,6 +467,7 @@ func TestService_HardRefresh_ListFiles_GitHub(t *testing.T) {
 }
 
 func TestService_CloneRepository_TokenAuth(t *testing.T) {
+	t.Parallel()
 	ensureIntegrationTest(t)
 
 	service := newService(t.Context(), 2, 0)

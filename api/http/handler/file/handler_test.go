@@ -10,6 +10,7 @@ import (
 )
 
 func TestNormalServe(t *testing.T) {
+	t.Parallel()
 	handler := file.NewHandler("", false, func() bool { return false })
 	require.NotNil(t, handler)
 
@@ -32,6 +33,7 @@ func TestNormalServe(t *testing.T) {
 }
 
 func TestPermissionsPolicyHeader(t *testing.T) {
+	t.Parallel()
 	handler := file.NewHandler("", false, func() bool { return false })
 	require.NotNil(t, handler)
 
@@ -50,6 +52,7 @@ func TestPermissionsPolicyHeader(t *testing.T) {
 }
 
 func TestRedirectInstanceDisabled(t *testing.T) {
+	t.Parallel()
 	handler := file.NewHandler("", false, func() bool { return true })
 	require.NotNil(t, handler)
 

@@ -10,6 +10,7 @@ import (
 )
 
 func Test_Convert(t *testing.T) {
+	t.Parallel()
 	t.Run("successfully maps a sdk release to a release", func(t *testing.T) {
 		is := assert.New(t)
 

@@ -18,6 +18,7 @@ type testStruct struct {
 }
 
 func TestTxs(t *testing.T) {
+	t.Parallel()
 	conn := DbConnection{Path: t.TempDir()}
 
 	err := conn.Open()

@@ -46,6 +46,7 @@ func createTempFile(filename, content string, t *testing.T) string {
 }
 
 func Test_getCertificateAuthorityData(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	t.Run("getCertificateAuthorityData fails on tls cert not provided", func(t *testing.T) {
@@ -75,6 +76,7 @@ func Test_getCertificateAuthorityData(t *testing.T) {
 }
 
 func TestKubeClusterAccessService_IsSecure(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	t.Run("IsSecure should be false", func(t *testing.T) {
@@ -91,6 +93,7 @@ func TestKubeClusterAccessService_IsSecure(t *testing.T) {
 }
 
 func TestKubeClusterAccessService_GetKubeConfigInternal(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	t.Run("GetClusterDetails contains host address", func(t *testing.T) {

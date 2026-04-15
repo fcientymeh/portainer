@@ -11,6 +11,7 @@ import (
 )
 
 func Test_Install(t *testing.T) {
+	t.Parallel()
 	test.EnsureIntegrationTest(t)
 	is := require.New(t)
 

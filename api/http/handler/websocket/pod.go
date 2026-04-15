@@ -9,6 +9,7 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/http/proxy/factory/kubernetes"
 	"github.com/portainer/portainer/api/http/security"
+	kubecli "github.com/portainer/portainer/api/kubernetes/cli"
 	"github.com/portainer/portainer/api/logs"
 	"github.com/portainer/portainer/api/ws"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
@@ -138,13 +139,27 @@ func (handler *Handler) hijackPodExecStartOperation(
 
 	// errorChan is used to propagate errors from the go routines to the caller.
 	errorChan := make(chan error, 3)
-	go ws.StreamFromWebsocketToWriter(websocketConn, stdinWriter, errorChan)
+
+	sizeQueue := kubecli.NewTerminalSizeQueue()
+	defer sizeQueue.Close()
+	go ws.StreamFromWebsocketToWriter(websocketConn, stdinWriter, errorChan, ws.ResizeHandler(sizeQueue))
 	go ws.StreamFromReaderToWebsocket(websocketConn, stdoutReader, errorChan)
 
 	// StartExecProcess is a blocking operation which streams IO to/from pod;
 	// this must execute in asynchronously, since the websocketConn could return errors (e.g. client disconnects) before
 	// the blocking operation is completed.
-	go cli.StartExecProcess(serviceAccountToken, isAdminToken, namespace, podName, containerName, commandArray, stdinReader, stdoutWriter, errorChan)
+	go cli.StartExecProcess(portainer.KubeExecParams{
+		Token:         serviceAccountToken,
+		UseAdminToken: isAdminToken,
+		Namespace:     namespace,
+		PodName:       podName,
+		ContainerName: containerName,
+		Command:       commandArray,
+		Stdin:         stdinReader,
+		Stdout:        stdoutWriter,
+		ResizeQueue:   sizeQueue,
+		ErrChan:       errorChan,
+	})
 
 	err = <-errorChan
 

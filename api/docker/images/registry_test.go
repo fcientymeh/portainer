@@ -10,6 +10,7 @@ import (
 )
 
 func TestFindBestMatchNeedAuthRegistry(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	t.Run("", func(t *testing.T) {

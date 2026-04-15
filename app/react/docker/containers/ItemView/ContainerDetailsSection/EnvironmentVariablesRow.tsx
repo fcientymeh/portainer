@@ -17,7 +17,7 @@ export function EnvironmentVariablesRow({
 
   return (
     <DetailsTable.Row label="ENV">
-      <table className="table table-bordered table-condensed !m-0">
+      <table className="table-bordered table-condensed !m-0 table">
         <tbody>
           {sortedEnv.map((envVar, index) => {
             const { key, value } = parseEnvVariable(envVar);

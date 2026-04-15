@@ -50,7 +50,7 @@ export function DiffViewer({
   return (
     <div
       className={clsx(
-        'overflow-hidden rounded-lg border border-solid border-gray-5 th-dark:border-gray-7 th-highcontrast:border-gray-2',
+        'overflow-hidden rounded-lg border border-solid border-gray-5 th-highcontrast:border-gray-2 th-dark:border-gray-7',
         className
       )}
     >
@@ -72,14 +72,14 @@ export function DiffViewer({
             height,
           } as React.CSSProperties
         }
-        className="h-full [scrollbar-gutter:stable] overflow-y-scroll"
+        className="h-full overflow-y-scroll [scrollbar-gutter:stable]"
       >
         <CodeMirrorMerge
           theme={theme}
           className={clsx(
             styles.root,
             // to give similar sizing to CodeEditor
-            '[&_.cm-content]:!min-h-[var(--editor-min-height)] [&_.cm-gutters]:!min-h-[var(--editor-min-height)] [&_.cm-editor>.cm-scroller]:!min-h-[var(--editor-min-height)]'
+            '[&_.cm-content]:!min-h-[var(--editor-min-height)] [&_.cm-editor>.cm-scroller]:!min-h-[var(--editor-min-height)] [&_.cm-gutters]:!min-h-[var(--editor-min-height)]'
           )}
           id={id}
           data-cy={dataCy}
@@ -125,7 +125,7 @@ function DiffFileNameHeaders({
           data-cy="original"
         />
       </div>
-      <div className="w-px bg-gray-5 th-dark:bg-gray-7 th-highcontrast:bg-gray-2" />
+      <div className="w-px bg-gray-5 th-highcontrast:bg-gray-2 th-dark:bg-gray-7" />
       <div className="flex-1">
         <FileNameHeader
           fileName={modifiedFileName}

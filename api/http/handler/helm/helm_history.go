@@ -18,7 +18,7 @@ import (
 // @security ApiKeyAuth || jwt
 // @produce json
 // @param id path int true "Environment(Endpoint) identifier"
-// @param name path string true "Helm release name"
+// @param release path string true "Helm release name"
 // @param namespace query string false "specify an optional namespace"
 // @success 200 {array} release.Release "Success"
 // @failure 400 "Invalid request payload, such as missing required fields or fields not meeting validation criteria."

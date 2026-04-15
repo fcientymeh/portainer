@@ -33,46 +33,20 @@ func CreateComposeStackGitBuilder(securityContext *security.RestrictedRequestCon
 	}
 }
 
-func (b *ComposeStackGitBuilder) SetGeneralInfo(payload *StackPayload, endpoint *portainer.Endpoint) GitMethodStackBuildProcess {
-	b.GitMethodStackBuilder.SetGeneralInfo(payload, endpoint)
-	return b
-}
-
-func (b *ComposeStackGitBuilder) SetUniqueInfo(payload *StackPayload) GitMethodStackBuildProcess {
-	if b.hasError() {
-		return b
-	}
+func (b *ComposeStackGitBuilder) prepare(ctx context.Context, payload *StackPayload) error {
 	b.stack.Name = payload.Name
 	b.stack.Type = portainer.DockerComposeStack
 	b.stack.EntryPoint = payload.ComposeFile
 	b.stack.FromAppTemplate = payload.FromAppTemplate
 	b.stack.Env = payload.Env
-	return b
+
+	return b.GitMethodStackBuilder.prepare(ctx, payload)
 }
 
-func (b *ComposeStackGitBuilder) SetGitRepository(ctx context.Context, payload *StackPayload) GitMethodStackBuildProcess {
-	b.GitMethodStackBuilder.SetGitRepository(ctx, payload)
-	return b
-}
-
-func (b *ComposeStackGitBuilder) Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) GitMethodStackBuildProcess {
-	if b.hasError() {
-		return b
+func (b *ComposeStackGitBuilder) deploy(ctx context.Context, endpoint *portainer.Endpoint) error {
+	if err := b.initComposeDeployment(b.SecurityContext, endpoint); err != nil {
+		return err
 	}
 
-	composeDeploymentConfig, err := deployments.CreateComposeStackDeploymentConfig(b.SecurityContext, b.stack, endpoint, b.dataStore, b.fileService, b.stackDeployer, false, false, false)
-	if err != nil {
-		b.err = err
-		return b
-	}
-
-	b.deploymentConfiger = composeDeploymentConfig
-	b.stack.CreatedBy = b.deploymentConfiger.GetUsername()
-
-	return b.GitMethodStackBuilder.Deploy(ctx, payload, endpoint)
-}
-
-func (b *ComposeStackGitBuilder) SetAutoUpdate(payload *StackPayload) GitMethodStackBuildProcess {
-	b.GitMethodStackBuilder.SetAutoUpdate(payload)
-	return b
+	return b.deploymentConfiger.Deploy(ctx)
 }

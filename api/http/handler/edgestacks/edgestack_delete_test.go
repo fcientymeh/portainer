@@ -16,6 +16,7 @@ import (
 
 // Delete
 func TestDeleteAndInspect(t *testing.T) {
+	t.Parallel()
 	handler, rawAPIKey := setupHandler(t)
 
 	// Create
@@ -68,6 +69,7 @@ func TestDeleteAndInspect(t *testing.T) {
 }
 
 func TestDeleteInvalidEdgeStack(t *testing.T) {
+	t.Parallel()
 	handler, rawAPIKey := setupHandler(t)
 
 	cases := []struct {
@@ -98,6 +100,7 @@ func TestDeleteInvalidEdgeStack(t *testing.T) {
 }
 
 func TestDeleteEdgeStack_RemoveProjectFolder(t *testing.T) {
+	t.Parallel()
 	handler, rawAPIKey := setupHandler(t)
 
 	edgeGroup := createEdgeGroup(t, handler.DataStore)

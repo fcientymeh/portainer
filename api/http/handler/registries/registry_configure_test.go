@@ -50,6 +50,7 @@ func newConfigureRequest(t *testing.T, tls bool, skipVerify bool, includeCert bo
 }
 
 func Test_registryConfigurePayload_Validate_TLSBundleRules(t *testing.T) {
+	t.Parallel()
 	// passes when all three are uploaded
 	{
 		req := newConfigureRequest(t, true, false, true, true, true)

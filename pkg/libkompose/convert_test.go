@@ -8,6 +8,7 @@ import (
 )
 
 func Test_getDefaultConvertOptions(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		opts        *ConvertOptions
@@ -179,18 +180,21 @@ func Test_getDefaultConvertOptions(t *testing.T) {
 }
 
 func Test_ConvertComposeFiles_EmptyInput(t *testing.T) {
+	t.Parallel()
 	_, err := ConvertComposeFiles(nil, nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "at least one compose file is required")
 }
 
 func Test_ConvertComposeFiles_EmptySlice(t *testing.T) {
+	t.Parallel()
 	_, err := ConvertComposeFiles([]string{}, nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "at least one compose file is required")
 }
 
 func Test_ConvertComposeFiles_InvalidOptions(t *testing.T) {
+	t.Parallel()
 	_, err := ConvertComposeFiles([]string{"/nonexistent/docker-compose.yml"}, &ConvertOptions{
 		Provider: "invalid",
 	})

@@ -25,6 +25,7 @@ func (m *MockDockerClient) ContainerInspect(ctx context.Context, containerID str
 }
 
 func TestCalculateContainerStats(t *testing.T) {
+	t.Parallel()
 	mockClient := new(MockDockerClient)
 
 	// Test containers - using enough containers to test concurrent processing
@@ -105,6 +106,7 @@ func TestCalculateContainerStats(t *testing.T) {
 }
 
 func TestCalculateContainerStatsAllErrors(t *testing.T) {
+	t.Parallel()
 	mockClient := new(MockDockerClient)
 
 	// Test containers
@@ -140,6 +142,7 @@ func TestCalculateContainerStatsAllErrors(t *testing.T) {
 }
 
 func TestGetContainerStatus(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name     string
 		state    *container.State
@@ -232,6 +235,7 @@ func TestGetContainerStatus(t *testing.T) {
 }
 
 func TestCalculateContainerStatsForSwarm(t *testing.T) {
+	t.Parallel()
 	containers := []container.Summary{
 		{State: "running"},
 		{State: "running", Status: "Up 5 minutes (healthy)"},

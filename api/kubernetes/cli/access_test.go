@@ -12,6 +12,7 @@ import (
 )
 
 func Test_NamespaceAccessPoliciesDeleteNamespace_updatesPortainerConfig_whenConfigExists(t *testing.T) {
+	t.Parallel()
 	testcases := []struct {
 		name              string
 		namespaceToDelete string
@@ -69,6 +70,7 @@ func Test_NamespaceAccessPoliciesDeleteNamespace_updatesPortainerConfig_whenConf
 }
 
 func TestKubeAdmin(t *testing.T) {
+	t.Parallel()
 	kcl := &KubeClient{}
 	require.False(t, kcl.GetIsKubeAdmin())
 
@@ -80,6 +82,7 @@ func TestKubeAdmin(t *testing.T) {
 }
 
 func TestClientNonAdminNamespaces(t *testing.T) {
+	t.Parallel()
 	kcl := &KubeClient{}
 
 	require.Empty(t, kcl.GetClientNonAdminNamespaces())

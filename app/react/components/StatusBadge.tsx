@@ -17,38 +17,38 @@ export type StatusBadgeType =
 
 const typeClasses: Record<StatusBadgeType, string> = {
   success: clsx(
-    'text-white bg-success-7',
-    'th-dark:text-white th-dark:bg-success-9'
+    'bg-success-7 text-white',
+    'th-dark:bg-success-9 th-dark:text-white'
   ),
   warning: clsx(
-    'text-white bg-warning-7',
-    'th-dark:text-white th-dark:bg-warning-9'
+    'bg-warning-7 text-white',
+    'th-dark:bg-warning-9 th-dark:text-white'
   ),
   danger: clsx(
-    'text-white bg-error-7',
-    'th-dark:text-white th-dark:bg-error-9'
+    'bg-error-7 text-white',
+    'th-dark:bg-error-9 th-dark:text-white'
   ),
-  info: clsx('text-white bg-blue-7', 'th-dark:text-white th-dark:bg-blue-9'),
+  info: clsx('bg-blue-7 text-white', 'th-dark:bg-blue-9 th-dark:text-white'),
   // the lite classes are a bit lighter in light mode and the same in dark mode
   successLite: clsx(
-    'text-success-9 bg-success-3',
-    'th-dark:text-white th-dark:bg-success-9'
+    'bg-success-3 text-success-9',
+    'th-dark:bg-success-9 th-dark:text-white'
   ),
   warningLite: clsx(
-    'text-warning-9 bg-warning-3',
-    'th-dark:text-white th-dark:bg-warning-9'
+    'bg-warning-3 text-warning-9',
+    'th-dark:bg-warning-9 th-dark:text-white'
   ),
   dangerLite: clsx(
-    'text-error-9 bg-error-3',
-    'th-dark:text-white th-dark:bg-error-9'
+    'bg-error-3 text-error-9',
+    'th-dark:bg-error-9 th-dark:text-white'
   ),
   mutedLite: clsx(
-    'text-gray-9 bg-gray-3',
-    'th-dark:text-white th-dark:bg-gray-9'
+    'bg-gray-3 text-gray-9',
+    'th-dark:bg-gray-9 th-dark:text-white'
   ),
   infoLite: clsx(
-    'text-blue-9 bg-blue-3',
-    'th-dark:text-white th-dark:bg-blue-9'
+    'bg-blue-3 text-blue-9',
+    'th-dark:bg-blue-9 th-dark:text-white'
   ),
   default: '',
 };

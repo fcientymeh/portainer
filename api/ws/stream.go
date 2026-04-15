@@ -10,7 +10,11 @@ import (
 
 const ReaderBufferSize = 2048
 
-func StreamFromWebsocketToWriter(websocketConn *websocket.Conn, writer io.Writer, errorChan chan error) {
+// MessageHandler processes a WebSocket message before it is forwarded to the writer.
+// It returns true if the message was handled and should not be forwarded to the writer.
+type MessageHandler func(messageType int, data []byte) bool
+
+func StreamFromWebsocketToWriter(websocketConn *websocket.Conn, writer io.Writer, errorChan chan error, handlers ...MessageHandler) {
 	for {
 		messageType, in, err := websocketConn.ReadMessage()
 		if err != nil {
@@ -23,6 +27,18 @@ func StreamFromWebsocketToWriter(websocketConn *websocket.Conn, writer io.Writer
 		}
 
 		if messageType != websocket.TextMessage && messageType != websocket.BinaryMessage {
+			continue
+		}
+
+		handled := false
+		for _, h := range handlers {
+			if h(messageType, in) {
+				handled = true
+				break
+			}
+		}
+
+		if handled {
 			continue
 		}
 

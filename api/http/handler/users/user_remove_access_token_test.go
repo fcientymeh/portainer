@@ -5,20 +5,17 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/apikey"
 	"github.com/portainer/portainer/api/datastore"
-	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/testhelpers"
-	"github.com/portainer/portainer/api/jwt"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_userRemoveAccessToken(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	_, store := datastore.MustNewTestStore(t, true, true)
@@ -32,16 +29,7 @@ func Test_userRemoveAccessToken(t *testing.T) {
 	err = store.User().Create(user)
 	require.NoError(t, err, "error creating user")
 
-	// setup services
-	jwtService, err := jwt.NewService("1h", store)
-	require.NoError(t, err, "Error initiating jwt service")
-	apiKeyService := apikey.NewAPIKeyService(store.APIKeyRepository(), store.User())
-	requestBouncer := security.NewRequestBouncer(t.Context(), store, jwtService, apiKeyService)
-	rateLimiter := security.NewRateLimiter(10, 1*time.Second, 1*time.Hour)
-	passwordChecker := security.NewPasswordStrengthChecker(store.SettingsService)
-
-	h := NewHandler(requestBouncer, rateLimiter, apiKeyService, passwordChecker)
-	h.DataStore = store
+	h, jwtService, apiKeyService := newTestHandler(t, store)
 
 	// generate standard and admin user tokens
 	adminJWT, _, _ := jwtService.GenerateToken(&portainer.TokenData{ID: adminUser.ID, Username: adminUser.Username, Role: adminUser.Role})

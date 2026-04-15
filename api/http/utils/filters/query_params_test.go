@@ -9,6 +9,7 @@ import (
 )
 
 func TestExtractListModifiersQueryParams(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		queryParams    map[string]string
@@ -199,11 +200,13 @@ func TestExtractListModifiersQueryParams(t *testing.T) {
 }
 
 func TestSortOrderConstants(t *testing.T) {
+	t.Parallel()
 	require.Equal(t, SortAsc, SortOrder("asc"), "SortAsc constant should equal 'asc'")
 	require.Equal(t, SortDesc, SortOrder("desc"), "SortDesc constant should equal 'desc'")
 }
 
 func TestQueryParamsStructEmbedding(t *testing.T) {
+	t.Parallel()
 	qp := QueryParams{
 		SearchQueryParams:     SearchQueryParams{search: "test"},
 		SortQueryParams:       SortQueryParams{sort: "name", order: SortAsc},
@@ -219,6 +222,7 @@ func TestQueryParamsStructEmbedding(t *testing.T) {
 }
 
 func TestExtractListModifiersQueryParamsEdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("special characters in search", func(t *testing.T) {
 		req := createRequestWithParams(map[string]string{
 			"search": "test & special chars %20",

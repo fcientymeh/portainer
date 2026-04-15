@@ -49,6 +49,7 @@ var errChartNameInvalid = errors.New("invalid chart name. " +
 // @param payload body installChartPayload true "Chart details"
 // @param dryRun query bool false "Dry run"
 // @success 201 {object} release.Release "Created"
+// @failure 400 "Invalid request payload"
 // @failure 401 "Unauthorized"
 // @failure 404 "Environment(Endpoint) or ServiceAccount not found"
 // @failure 500 "Server error"

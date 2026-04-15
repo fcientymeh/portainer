@@ -7,6 +7,7 @@ import (
 )
 
 func TestResourcesToArgsHelper(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		resources    []string

@@ -28,6 +28,7 @@ import { HelmApplicationView } from '@/react/kubernetes/helm/HelmApplicationView
 import { HelmInstallView } from '@/react/kubernetes/helm/install/HelmInstallView';
 import { NodeView } from '@/react/kubernetes/cluster/NodeView/NodeView';
 import { KubectlShellView } from '@/react/kubernetes/cluster/KubectlShell/KubectlShellView';
+import { ResourceDetailsYAMLView } from '@/react/kubernetes/more-resources/ResourceDetailsYAMLView';
 
 export const viewsModule = angular
   .module('portainer.kubernetes.react.views', [])
@@ -135,4 +136,11 @@ export const viewsModule = angular
   .component(
     'k8sRolesView',
     r2a(withUIRouter(withReactQuery(withCurrentUser(RolesView))), [])
+  )
+  .component(
+    'kubernetesResourceDetailsYAMLView',
+    r2a(
+      withUIRouter(withReactQuery(withCurrentUser(ResourceDetailsYAMLView))),
+      []
+    )
   ).name;

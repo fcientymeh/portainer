@@ -8,6 +8,7 @@ import (
 )
 
 func TestParseLocalImage(t *testing.T) {
+	t.Parallel()
 	// Test with a regular image
 
 	img, err := ParseLocalImage(image.InspectResponse{

@@ -47,7 +47,7 @@ function DeployCode({ code }: DeployCodeProps) {
         container with the following Podman flag:
       </TextTip>
       <Code>{bindMountCode}</Code>
-      <div className="mt-2 mb-4">
+      <div className="mb-4 mt-2">
         <CopyButton copyText={bindMountCode} data-cy="copy-deployment-command">
           Copy command
         </CopyButton>

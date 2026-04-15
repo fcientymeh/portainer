@@ -11,6 +11,7 @@ import (
 )
 
 func Test_createRewriteFn(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name        string
 		target      *url.URL

@@ -26,7 +26,7 @@ export function useColumns() {
         columnHelper.accessor('Name', {
           header: 'Name',
           cell: ({ row: { original: item } }) => (
-            <div className="flex flex-0">
+            <div className="flex-0 flex">
               <Link
                 to="kubernetes.applications.application"
                 params={{ name: item.Name, namespace: item.ResourcePool }}

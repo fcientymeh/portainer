@@ -42,7 +42,7 @@ export function InputListActionButtons<T = DefaultType>({
   'data-cy': dataCy = '',
 }: InputListActionButtonsProps<T>) {
   return (
-    <div className="items-start flex gap-2">
+    <div className="flex items-start gap-2">
       {movable && (
         <>
           <Button

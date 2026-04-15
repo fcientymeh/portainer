@@ -22,7 +22,7 @@ export function RangeOrNumberField({
   label: string;
 } & AutomationTestingProps) {
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex items-center gap-2">
       <RangeCheckbox value={value} onChange={onChange} data-cy={dataCy} />
       {isRange(value) ? (
         <RangeInput
@@ -71,7 +71,7 @@ function RangeInput({
 } & AutomationTestingProps) {
   return (
     <div className="flex items-center gap-2">
-      <label className="font-normal m-0">{label}</label>
+      <label className="m-0 font-normal">{label}</label>
       <InputLabeled
         label="from"
         size="small"

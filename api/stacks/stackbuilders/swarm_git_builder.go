@@ -33,48 +33,22 @@ func CreateSwarmStackGitBuilder(securityContext *security.RestrictedRequestConte
 	}
 }
 
-func (b *SwarmStackGitBuilder) SetGeneralInfo(payload *StackPayload, endpoint *portainer.Endpoint) GitMethodStackBuildProcess {
-	b.GitMethodStackBuilder.SetGeneralInfo(payload, endpoint)
-	return b
-}
-
-func (b *SwarmStackGitBuilder) SetUniqueInfo(payload *StackPayload) GitMethodStackBuildProcess {
-	if b.hasError() {
-		return b
-	}
+func (b *SwarmStackGitBuilder) prepare(ctx context.Context, payload *StackPayload) error {
 	b.stack.Name = payload.Name
 	b.stack.Type = portainer.DockerSwarmStack
 	b.stack.SwarmID = payload.SwarmID
 	b.stack.EntryPoint = payload.ComposeFile
 	b.stack.FromAppTemplate = payload.FromAppTemplate
 	b.stack.Env = payload.Env
-	return b
+
+	return b.GitMethodStackBuilder.prepare(ctx, payload)
 }
 
-func (b *SwarmStackGitBuilder) SetGitRepository(ctx context.Context, payload *StackPayload) GitMethodStackBuildProcess {
-	b.GitMethodStackBuilder.SetGitRepository(ctx, payload)
-	return b
-}
-
-// Deploy creates deployment configuration for swarm stack
-func (b *SwarmStackGitBuilder) Deploy(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) GitMethodStackBuildProcess {
-	if b.hasError() {
-		return b
+// deploy creates deployment configuration for swarm stack
+func (b *SwarmStackGitBuilder) deploy(ctx context.Context, endpoint *portainer.Endpoint) error {
+	if err := b.initSwarmDeployment(b.SecurityContext, endpoint); err != nil {
+		return err
 	}
 
-	swarmDeploymentConfig, err := deployments.CreateSwarmStackDeploymentConfig(b.SecurityContext, b.stack, endpoint, b.dataStore, b.fileService, b.stackDeployer, false, true)
-	if err != nil {
-		b.err = err
-		return b
-	}
-
-	b.deploymentConfiger = swarmDeploymentConfig
-	b.stack.CreatedBy = b.deploymentConfiger.GetUsername()
-
-	return b.GitMethodStackBuilder.Deploy(ctx, payload, endpoint)
-}
-
-func (b *SwarmStackGitBuilder) SetAutoUpdate(payload *StackPayload) GitMethodStackBuildProcess {
-	b.GitMethodStackBuilder.SetAutoUpdate(payload)
-	return b
+	return b.deploymentConfiger.Deploy(ctx)
 }

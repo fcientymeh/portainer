@@ -48,7 +48,7 @@ export function DashboardItem({
         )}
       >
         Refreshing total
-        <Loader2 className="h-4 animate-spin-slow" />
+        <Loader2 className="ml-1 h-4 animate-spin-slow" />
       </div>
       <div
         className={clsx(
@@ -57,7 +57,7 @@ export function DashboardItem({
         )}
       >
         Loading total
-        <Loader2 className="h-4 animate-spin-slow" />
+        <Loader2 className="ml-1 h-4 animate-spin-slow" />
       </div>
       <div className="flex items-center" aria-label={type}>
         <div

@@ -73,7 +73,7 @@ export function GitFormUrlField({
                 id="stack_repository_url"
               />
               {debouncedValue !== '' && (
-                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center">
+                <div className="absolute right-2 top-1/2 flex -translate-y-1/2 transform items-center">
                   {isChecking && (
                     <span
                       className="inline-flex items-center"

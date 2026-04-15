@@ -11,6 +11,7 @@ import (
 )
 
 func Test_updateEndpointRelation_successfulRuns(t *testing.T) {
+	t.Parallel()
 	edgeStackID := portainer.EdgeStackID(5)
 	endpointRelations := []portainer.EndpointRelation{
 		{EndpointID: 1, EdgeStacks: map[portainer.EdgeStackID]bool{}},

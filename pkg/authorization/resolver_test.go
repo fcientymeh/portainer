@@ -40,6 +40,7 @@ var (
 )
 
 func TestComputeBaseRole_UserEndpointAccess(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	user := &portainer.User{ID: 1}
@@ -67,6 +68,7 @@ func TestComputeBaseRole_UserEndpointAccess(t *testing.T) {
 }
 
 func TestComputeBaseRole_UserGroupAccess(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	user := &portainer.User{ID: 1}
@@ -100,6 +102,7 @@ func TestComputeBaseRole_UserGroupAccess(t *testing.T) {
 }
 
 func TestComputeBaseRole_TeamEndpointAccess(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	user := &portainer.User{ID: 1}
@@ -130,6 +133,7 @@ func TestComputeBaseRole_TeamEndpointAccess(t *testing.T) {
 }
 
 func TestComputeBaseRole_TeamGroupAccess(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	user := &portainer.User{ID: 1}
@@ -167,6 +171,7 @@ func TestComputeBaseRole_TeamGroupAccess(t *testing.T) {
 }
 
 func TestComputeBaseRole_Precedence(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	t.Run("User endpoint access takes precedence over group access", func(t *testing.T) {
@@ -263,6 +268,7 @@ func TestComputeBaseRole_Precedence(t *testing.T) {
 }
 
 func TestComputeBaseRole_NoAccess(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	user := &portainer.User{ID: 1}
@@ -293,6 +299,7 @@ func TestComputeBaseRole_NoAccess(t *testing.T) {
 }
 
 func TestComputeBaseRole_MultipleTeams_HighestPriorityWins(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	user := &portainer.User{ID: 1}
@@ -326,6 +333,7 @@ func TestComputeBaseRole_MultipleTeams_HighestPriorityWins(t *testing.T) {
 }
 
 func TestResolveUserEndpointAccess(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	t.Run("Returns resolved access with role and authorizations", func(t *testing.T) {
@@ -366,6 +374,7 @@ func TestResolveUserEndpointAccess(t *testing.T) {
 }
 
 func TestFindRoleByID(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	t.Run("Finds existing role", func(t *testing.T) {
@@ -386,6 +395,7 @@ func TestFindRoleByID(t *testing.T) {
 }
 
 func TestGetHighestPriorityRole(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	t.Run("Returns nil for empty slice", func(t *testing.T) {

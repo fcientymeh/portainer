@@ -10,6 +10,7 @@ import (
 )
 
 func TestNewService(t *testing.T) {
+	t.Parallel()
 	fips.InitFIPS(false)
 
 	service := NewService(true)

@@ -20,7 +20,7 @@ import (
 // @tags helm
 // @param repo query string true "Helm repository URL"
 // @param chart query string true "Chart name"
-// @param version query string true "Chart version"
+// @param version query string false "Chart version"
 // @param command path string true "chart/values/readme"
 // @security ApiKeyAuth
 // @security jwt

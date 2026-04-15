@@ -18,7 +18,7 @@ import (
 // @security ApiKeyAuth || jwt
 // @produce json
 // @param id path int true "Environment(Endpoint) identifier"
-// @param name path string true "Helm release name"
+// @param release path string true "Helm release name"
 // @param namespace query string false "specify an optional namespace"
 // @param showResources query boolean false "show resources of the release"
 // @param revision query int false "specify an optional revision"
@@ -28,7 +28,7 @@ import (
 // @failure 403 "Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions."
 // @failure 404 "Unable to find an environment with the specified identifier."
 // @failure 500 "Server error occurred while attempting to retrieve the release."
-// @router /endpoints/{id}/kubernetes/helm/{name} [get]
+// @router /endpoints/{id}/kubernetes/helm/{release} [get]
 func (handler *Handler) helmGet(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	release, err := request.RetrieveRouteVariableValue(r, "release")
 	if err != nil {

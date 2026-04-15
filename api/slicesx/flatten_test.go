@@ -8,6 +8,7 @@ import (
 )
 
 func Test_Flatten(t *testing.T) {
+	t.Parallel()
 	t.Run("Flatten an array of arrays", func(t *testing.T) {
 		is := assert.New(t)
 

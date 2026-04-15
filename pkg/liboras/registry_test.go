@@ -161,6 +161,7 @@ func TestCreateClient_AuthenticationScenarios(t *testing.T) {
 }
 
 func TestCreateClient_RegistryTypes(t *testing.T) {
+	t.Parallel()
 	registryTypes := []struct {
 		name         string
 		registryType portainer.RegistryType
@@ -196,6 +197,7 @@ func TestCreateClient_RegistryTypes(t *testing.T) {
 }
 
 func TestGetRegistryTypeName(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		registryType portainer.RegistryType
 		expectedName string
@@ -219,6 +221,7 @@ func TestGetRegistryTypeName(t *testing.T) {
 }
 
 func TestCreateClient_ErrorHandling(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		registry    portainer.Registry

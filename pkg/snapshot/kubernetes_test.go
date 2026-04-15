@@ -17,6 +17,7 @@ import (
 )
 
 func TestKubernetesSnapshotNodes(t *testing.T) {
+	t.Parallel()
 	// Create a fake client
 	fakeClient := kfake.NewClientset()
 
@@ -82,6 +83,7 @@ func TestKubernetesSnapshotNodes(t *testing.T) {
 }
 
 func TestKubernetesSnapshotNodesEmptyCluster(t *testing.T) {
+	t.Parallel()
 	// Test with no nodes to verify early return behavior
 	fakeClient := kfake.NewClientset()
 	snapshot := &portainer.KubernetesSnapshot{}
@@ -99,6 +101,7 @@ func TestKubernetesSnapshotNodesEmptyCluster(t *testing.T) {
 }
 
 func TestCreateKubernetesSnapshotIntegration(t *testing.T) {
+	t.Parallel()
 	// Integration test to verify CreateKubernetesSnapshot calls kubernetesSnapshotNodes correctly
 	fakeClient := kfake.NewClientset()
 
@@ -158,6 +161,7 @@ func TestCreateKubernetesSnapshotIntegration(t *testing.T) {
 }
 
 func TestKubernetesSnapshotNodesWithAPIError(t *testing.T) {
+	t.Parallel()
 	// Test error handling when the Kubernetes API returns an error
 	fakeClient := kfake.NewClientset()
 
@@ -183,6 +187,7 @@ func TestKubernetesSnapshotNodesWithAPIError(t *testing.T) {
 }
 
 func TestKubernetesSnapshotNodesSingleNode(t *testing.T) {
+	t.Parallel()
 	// Test with a single node to verify calculations work for edge case
 	fakeClient := kfake.NewClientset()
 
@@ -215,6 +220,7 @@ func TestKubernetesSnapshotNodesSingleNode(t *testing.T) {
 }
 
 func TestKubernetesSnapshotNodesZeroResources(t *testing.T) {
+	t.Parallel()
 	// Test with nodes that have zero or very small resources
 	fakeClient := kfake.NewClientset()
 
@@ -246,6 +252,7 @@ func TestKubernetesSnapshotNodesZeroResources(t *testing.T) {
 }
 
 func TestCalculateNodeMetrics(t *testing.T) {
+	t.Parallel()
 	// Create a test node with specific capacity
 	node := corev1.Node{
 		Status: corev1.NodeStatus{

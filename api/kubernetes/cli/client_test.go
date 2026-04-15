@@ -5,6 +5,7 @@ import (
 )
 
 func TestClearUserClientCache(t *testing.T) {
+	t.Parallel()
 	factory, _ := NewClientFactory(nil, nil, nil, "", "", "")
 	kcl := &KubeClient{}
 	factory.endpointProxyClients.Set("12.1", kcl, 0)

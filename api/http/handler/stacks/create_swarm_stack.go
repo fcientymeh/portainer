@@ -50,7 +50,7 @@ func createStackPayloadFromSwarmFileContentPayload(name string, swarmID string, 
 	return stackbuilders.StackPayload{
 		Name:             name,
 		SwarmID:          swarmID,
-		StackFileContent: fileContent,
+		StackFileContent: []byte(fileContent),
 		Env:              env,
 		FromAppTemplate:  fromAppTemplate,
 	}
@@ -112,13 +112,12 @@ func (handler *Handler) createSwarmStackFromFileContent(w http.ResponseWriter, r
 
 	stackPayload := createStackPayloadFromSwarmFileContentPayload(payload.Name, payload.SwarmID, payload.StackFileContent, payload.Env, payload.FromAppTemplate)
 
-	swarmStackBuilder := stackbuilders.CreateSwarmStackFileContentBuilder(securityContext,
+	swarmStackBuilder := stackbuilders.CreateSwarmStackFileBuilder(securityContext,
 		handler.DataStore,
 		handler.FileService,
 		handler.StackDeployer)
 
-	stackBuilderDirector := stackbuilders.NewStackBuilderDirector(swarmStackBuilder)
-	stack, httpErr := stackBuilderDirector.Build(context.TODO(), &stackPayload, endpoint)
+	stack, httpErr := stackbuilders.Build(context.TODO(), handler.DataStore, swarmStackBuilder, &stackPayload, endpoint)
 	if httpErr != nil {
 		return httpErr
 	}
@@ -175,10 +174,8 @@ func (payload *swarmStackFromGitRepositoryPayload) Validate(r *http.Request) err
 	if payload.RepositoryAuthentication && len(payload.RepositoryPassword) == 0 {
 		return errors.New("Invalid repository credentials. Password must be specified when authentication is enabled")
 	}
-	if err := update.ValidateAutoUpdateSettings(payload.AutoUpdate); err != nil {
-		return err
-	}
-	return nil
+
+	return update.ValidateAutoUpdateSettings(payload.AutoUpdate)
 }
 
 func createStackPayloadFromSwarmGitPayload(name, swarmID, repoUrl, repoReference, repoUsername, repoPassword string, repoAuthentication bool, composeFile string, additionalFiles []string, autoUpdate *portainer.AutoUpdateSettings, env []portainer.Pair, fromAppTemplate bool, repoSkipSSLVerify bool) stackbuilders.StackPayload {
@@ -281,8 +278,7 @@ func (handler *Handler) createSwarmStackFromGitRepository(w http.ResponseWriter,
 		handler.Scheduler,
 		handler.StackDeployer)
 
-	stackBuilderDirector := stackbuilders.NewStackBuilderDirector(swarmStackBuilder)
-	stack, httpErr := stackBuilderDirector.Build(context.TODO(), &stackPayload, endpoint)
+	stack, httpErr := stackbuilders.Build(context.TODO(), handler.DataStore, swarmStackBuilder, &stackPayload, endpoint)
 	if httpErr != nil {
 		return httpErr
 	}
@@ -312,10 +308,10 @@ type swarmStackFromFileUploadPayload struct {
 
 func createStackPayloadFromSwarmFileUploadPayload(name, swarmID string, fileContentBytes []byte, env []portainer.Pair) stackbuilders.StackPayload {
 	return stackbuilders.StackPayload{
-		Name:                  name,
-		SwarmID:               swarmID,
-		StackFileContentBytes: fileContentBytes,
-		Env:                   env,
+		Name:             name,
+		SwarmID:          swarmID,
+		StackFileContent: fileContentBytes,
+		Env:              env,
 	}
 }
 
@@ -404,13 +400,12 @@ func (handler *Handler) createSwarmStackFromFileUpload(w http.ResponseWriter, r 
 
 	stackPayload := createStackPayloadFromSwarmFileUploadPayload(payload.Name, payload.SwarmID, payload.StackFileContent, payload.Env)
 
-	swarmStackBuilder := stackbuilders.CreateSwarmStackFileUploadBuilder(securityContext,
+	swarmStackBuilder := stackbuilders.CreateSwarmStackFileBuilder(securityContext,
 		handler.DataStore,
 		handler.FileService,
 		handler.StackDeployer)
 
-	stackBuilderDirector := stackbuilders.NewStackBuilderDirector(swarmStackBuilder)
-	stack, httpErr := stackBuilderDirector.Build(context.TODO(), &stackPayload, endpoint)
+	stack, httpErr := stackbuilders.Build(context.TODO(), handler.DataStore, swarmStackBuilder, &stackPayload, endpoint)
 	if httpErr != nil {
 		return httpErr
 	}

@@ -1,11 +1,17 @@
 import { useState } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import { Stack, StackStatus, StackType } from '@/react/common/stacks/types';
+import {
+  Stack,
+  StackDeploymentStatus,
+  StackStatus,
+  StackType,
+} from '@/react/common/stacks/types';
 import { Authorized } from '@/react/hooks/useUser';
 import { InfoPanel } from '@/react/portainer/gitops/InfoPanel';
 
+import { Alert } from '@@/Alert';
 import { Icon } from '@@/Icon';
 import { Button } from '@@/buttons';
 import { FormSection } from '@@/form-components/FormSection';
@@ -56,12 +62,19 @@ export function StackInfoTab({
         isOrphaned={isOrphaned || isOrphanedRunning}
       />
 
+      {stack && (
+        <DeploymentStatusSection
+          status={stack.Status}
+          deploymentStatus={stack.DeploymentStatus}
+        />
+      )}
+
       <FormSection title="Stack details">
         <div className="form-group">
           {stackName}
 
           {stack && (
-            <div className="inline-flex ml-3">
+            <div className="ml-3 inline-flex">
               <StackActions
                 stack={stack}
                 fileContent={stackFileContent}
@@ -156,6 +169,48 @@ export function StackInfoTab({
       )}
     </>
   );
+}
+
+function DeploymentStatusSection({
+  status,
+  deploymentStatus,
+}: {
+  status: StackStatus;
+  deploymentStatus?: StackDeploymentStatus[];
+}) {
+  if (status === StackStatus.Deploying) {
+    return (
+      <FormSection title="Deployment">
+        <div className="form-group">
+          <p className="text-muted flex items-center gap-2">
+            <Loader2 className="animate-spin" size={14} />
+            Deployment in progress...
+          </p>
+        </div>
+      </FormSection>
+    );
+  }
+
+  if (status === StackStatus.Error) {
+    const errorMessage = getLastDeploymentError(deploymentStatus);
+    return (
+      <FormSection title="Deployment error">
+        <div className="form-group">
+          <Alert color="error">{errorMessage || 'Deployment failed.'}</Alert>
+        </div>
+      </FormSection>
+    );
+  }
+
+  return null;
+}
+
+function getLastDeploymentError(
+  deploymentStatus?: StackDeploymentStatus[]
+): string | undefined {
+  if (!deploymentStatus?.length) return undefined;
+  const last = deploymentStatus[deploymentStatus.length - 1];
+  return last.Status === StackStatus.Error ? last.Message : undefined;
 }
 
 function ExternalOrphanedWarning({

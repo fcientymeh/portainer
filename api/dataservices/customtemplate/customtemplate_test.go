@@ -9,7 +9,8 @@ import (
 )
 
 func TestCustomTemplateCreate(t *testing.T) {
-	_, ds := datastore.MustNewTestStore(t, true, false)
+	t.Parallel()
+	_, ds := datastore.MustNewTestStore(t, false, false)
 	require.NotNil(t, ds)
 
 	require.NoError(t, ds.CustomTemplate().Create(&portainer.CustomTemplate{ID: 1}))

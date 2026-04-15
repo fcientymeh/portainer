@@ -20,7 +20,8 @@ import (
 )
 
 func TestStackFile_GitPendingRedeploy_Returns409(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, true, true)
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
 
 	_, err := mockCreateUser(store)
 	require.NoError(t, err)
@@ -63,7 +64,8 @@ func TestStackFile_GitPendingRedeploy_Returns409(t *testing.T) {
 }
 
 func TestStackFile_MatchingGitSettings_ReturnsFileContent(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, true, true)
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
 
 	_, err := mockCreateUser(store)
 	require.NoError(t, err)

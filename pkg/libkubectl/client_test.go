@@ -7,6 +7,7 @@ import (
 )
 
 func TestGenerateConfigFlags(t *testing.T) {
+	t.Parallel()
 	config, err := generateConfigFlags("test-token", "https://api.example.com", "", "", false)
 	require.NoError(t, err)
 	require.NotNil(t, config)
@@ -16,6 +17,7 @@ func TestGenerateConfigFlags(t *testing.T) {
 }
 
 func TestNewClient(t *testing.T) {
+	t.Parallel()
 	// Test with server and token
 	client, err := NewClient(&ClientAccess{
 		Token:     "test-token",
@@ -31,6 +33,7 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestNewClientWithKubeconfig(t *testing.T) {
+	t.Parallel()
 	// Test with kubeconfig path
 	client, err := NewClient(&ClientAccess{
 		Token:     "",
@@ -46,6 +49,7 @@ func TestNewClientWithKubeconfig(t *testing.T) {
 }
 
 func TestNewClientError(t *testing.T) {
+	t.Parallel()
 	// Test error case when both server and kubeconfig are empty
 	client, err := NewClient(&ClientAccess{
 		Token:     "",

@@ -1,6 +1,6 @@
 import { QueryKey, useQuery } from '@tanstack/react-query';
 
-import { withError } from '@/react-tools/react-query';
+import { withGlobalError } from '@/react-tools/react-query';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 
 import { Registry, RegistryTypes } from '../types/registry';
@@ -8,6 +8,7 @@ import { usePublicSettings } from '../../settings/queries';
 
 import { queryKeys } from './query-keys';
 
+/** ADMIN-ONLY QUERY. Will get an access denied error for non-admin users. */
 export function useRegistries<T = Registry[]>(
   queryOptions: GenericRegistriesQueryOptions<T> = {}
 ) {
@@ -26,6 +27,8 @@ export type GenericRegistriesQueryOptions<T> = {
   hideDefault?: boolean;
   /** is used to filter the registries by namespace. Kubernetes views use this. */
   namespace?: string;
+  /** showError */
+  showError?: boolean;
 };
 
 export function useGenericRegistriesQuery<T = Registry[]>(
@@ -36,6 +39,7 @@ export function useGenericRegistriesQuery<T = Registry[]>(
     select,
     onSuccess,
     hideDefault: hideDefaultOverride,
+    showError = true,
   }: GenericRegistriesQueryOptions<T> = {}
 ) {
   const hideDefaultRegistryQuery = usePublicSettings({
@@ -69,7 +73,7 @@ export function useGenericRegistriesQuery<T = Registry[]>(
     },
     {
       select,
-      ...withError('Unable to retrieve registries'),
+      ...(showError && withGlobalError('Unable to retrieve registries')),
       enabled:
         (hideDefaultOverride || hideDefaultRegistryQuery.isSuccess) && enabled,
       onSuccess,

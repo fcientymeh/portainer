@@ -140,7 +140,7 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 			return httperror.InternalServerError("Unable to retrieve a resource control associated to the stack", err)
 		}
 
-		if access, err := handler.userCanAccessStack(securityContext, endpoint.ID, resourceControl); err != nil {
+		if access, err := handler.userCanAccessStack(securityContext, resourceControl); err != nil {
 			return httperror.InternalServerError("Unable to verify user authorizations to validate stack access", err)
 		} else if !access {
 			return httperror.Forbidden("Access denied to resource", httperrors.ErrResourceAccessDenied)

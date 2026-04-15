@@ -7,6 +7,7 @@ import (
 )
 
 func TestGetResourceQuotas(t *testing.T) {
+	t.Parallel()
 	kcl := &KubeClient{}
 
 	resourceQuotas, err := kcl.GetResourceQuotas("default")

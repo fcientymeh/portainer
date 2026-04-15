@@ -22,6 +22,7 @@ import (
 // Currently this test just tests the HTTP Handler is setup correctly, in the future we should move the ClientFactory to a mock in order
 // test the logic in event.go
 func TestGetKubernetesEvents(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

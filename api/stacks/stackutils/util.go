@@ -9,10 +9,8 @@ import (
 	"github.com/portainer/portainer/api/filesystem"
 )
 
-func UserIsAdminOrEndpointAdmin(user *portainer.User, endpointID portainer.EndpointID) (bool, error) {
-	isAdmin := user.Role == portainer.AdministratorRole
-
-	return isAdmin, nil
+func UserIsAdminOrEndpointAdmin(user *portainer.User) bool {
+	return user.Role == portainer.AdministratorRole
 }
 
 // GetStackFilePaths returns a list of file paths based on stack project path

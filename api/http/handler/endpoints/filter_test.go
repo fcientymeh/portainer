@@ -23,6 +23,7 @@ type filterTest struct {
 }
 
 func Test_Filter_AgentVersion(t *testing.T) {
+	t.Parallel()
 	version1Endpoint := portainer.Endpoint{ID: 1, GroupID: 1,
 		Type: portainer.AgentOnDockerEnvironment,
 		Agent: struct {
@@ -78,6 +79,7 @@ func Test_Filter_AgentVersion(t *testing.T) {
 }
 
 func Test_Filter_edgeFilter(t *testing.T) {
+	t.Parallel()
 	trustedEdgeAsync := portainer.Endpoint{ID: 1, UserTrusted: true, Edge: portainer.EnvironmentEdgeSettings{AsyncMode: true}, GroupID: 1, Type: portainer.EdgeAgentOnDockerEnvironment}
 	untrustedEdgeAsync := portainer.Endpoint{ID: 2, UserTrusted: false, Edge: portainer.EnvironmentEdgeSettings{AsyncMode: true}, GroupID: 1, Type: portainer.EdgeAgentOnDockerEnvironment}
 	regularUntrustedEdgeStandard := portainer.Endpoint{ID: 3, UserTrusted: false, Edge: portainer.EnvironmentEdgeSettings{AsyncMode: false}, GroupID: 1, Type: portainer.EdgeAgentOnDockerEnvironment}
@@ -130,6 +132,7 @@ func Test_Filter_edgeFilter(t *testing.T) {
 }
 
 func Test_Filter_excludeIDs(t *testing.T) {
+	t.Parallel()
 	ids := []portainer.EndpointID{1, 2, 3, 4, 5, 6, 7, 8, 9}
 
 	environments := slicesx.Map(ids, func(id portainer.EndpointID) portainer.Endpoint {
@@ -152,6 +155,7 @@ func Test_Filter_excludeIDs(t *testing.T) {
 }
 
 func Test_Filter_excludeGroupIDs(t *testing.T) {
+	t.Parallel()
 	groupA := portainer.EndpointGroupID(10)
 	groupB := portainer.EndpointGroupID(20)
 	groupC := portainer.EndpointGroupID(30)
@@ -335,6 +339,7 @@ func setupFilterTest(t *testing.T, endpoints []portainer.Endpoint) *Handler {
 }
 
 func TestFilterEndpointsByEdgeStack(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, false, false)
 
 	endpoints := []portainer.Endpoint{
@@ -403,6 +408,7 @@ func TestFilterEndpointsByEdgeStack(t *testing.T) {
 }
 
 func TestErrorsFilterEndpointsByEdgeStack(t *testing.T) {
+	t.Parallel()
 	t.Run("must error by edge stack not found", func(t *testing.T) {
 		_, store := datastore.MustNewTestStore(t, false, false)
 		require.NotNil(t, store)
@@ -438,6 +444,7 @@ func TestErrorsFilterEndpointsByEdgeStack(t *testing.T) {
 }
 
 func TestFilterEndpointsByEdgeGroup(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, false, false)
 
 	endpoints := []portainer.Endpoint{
@@ -479,6 +486,7 @@ func TestFilterEndpointsByEdgeGroup(t *testing.T) {
 }
 
 func TestFilterEndpointsByExcludeEdgeGroupIDs(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, false, false)
 
 	endpoints := []portainer.Endpoint{
@@ -520,6 +528,7 @@ func TestFilterEndpointsByExcludeEdgeGroupIDs(t *testing.T) {
 }
 
 func TestGetShortestAsyncInterval(t *testing.T) {
+	t.Parallel()
 	endpoint := &portainer.Endpoint{
 		ID:   1,
 		Name: "Test Endpoint",

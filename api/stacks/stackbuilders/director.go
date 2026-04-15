@@ -2,93 +2,105 @@ package stackbuilders
 
 import (
 	"context"
-	"errors"
+	"time"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
-	"github.com/portainer/portainer/pkg/libhttp/request"
+
+	"github.com/rs/zerolog/log"
 )
 
-type StackBuilderDirector struct {
-	builder any
+// stackBuildProcess is the common interface shared by all stack build methods.
+type stackBuildProcess interface {
+	setGeneralInfo(payload *StackPayload, endpoint *portainer.Endpoint)
+	// prepare handles all pre-save steps: sets type-specific metadata, stores
+	// files on disk, or clones the git repository.
+	prepare(ctx context.Context, payload *StackPayload) error
+	saveStack() (*portainer.Stack, error)
+	deploy(ctx context.Context, endpoint *portainer.Endpoint) error
+	// postDeploy runs after a successful deployment: for git builders it enables
+	// auto-update; for other builders it is a no-op.
+	postDeploy(ctx context.Context, stack *portainer.Stack) error
 }
 
-func NewStackBuilderDirector(b any) *StackBuilderDirector {
-	return &StackBuilderDirector{
-		builder: b,
+// Build executes the stack build process. It returns the created stack and any
+// error encountered during the process. The returned error is of type
+// *httperror.HandlerError, which could be an InternalServerError depending on
+// the error encountered during the stack build process.
+//
+// The stack is saved to DB with Status=Deploying and returned immediately.
+// Deployment runs in a background goroutine. The caller must poll
+// GET /stacks/{id} to track completion.
+func Build(ctx context.Context, dataStore dataservices.DataStore, builder stackBuildProcess, payload *StackPayload, endpoint *portainer.Endpoint) (*portainer.Stack, *httperror.HandlerError) {
+	builder.setGeneralInfo(payload, endpoint)
+
+	if err := builder.prepare(ctx, payload); err != nil {
+		return nil, httperror.InternalServerError("Failed to prepare stack", err)
 	}
-}
 
-// Build executes the stack build process based on the builder type. It returns the
-// created stack and any error encountered during the process.
-// The returned error is of type *httperror.HandlerError, which could be a BadRequest
-// or InternalServerError depending on the error encountered during the stack build process.
-func (d *StackBuilderDirector) Build(ctx context.Context, payload *StackPayload, endpoint *portainer.Endpoint) (*portainer.Stack, *httperror.HandlerError) {
-	var (
-		stack *portainer.Stack
-		err   error
-	)
-	// To align with the flow of the actual service deployment tools, we save
-	// the stack before the deployment. This allows us to track the stack
-	// metadata and partially created resources.
-	switch builder := d.builder.(type) {
-	case GitMethodStackBuildProcess:
-		stack, err = builder.SetGeneralInfo(payload, endpoint).
-			SetUniqueInfo(payload).
-			SetGitRepository(ctx, payload).
-			SaveStack()
-		if err != nil {
-			return nil, httperror.InternalServerError("Failed to save stack via Git repository method", err)
-		}
-
-		// Since AutoUpdate job for stack is created after a successful
-		// deployment, we need to update the stack with the new generated job ID
-		stack, err = builder.Deploy(ctx, payload, endpoint).
-			SetAutoUpdate(payload).
-			UpdateStack(stack)
-
-	case FileUploadMethodStackBuildProcess:
-		stack, err = builder.SetGeneralInfo(payload, endpoint).
-			SetUniqueInfo(payload).
-			SetUploadedFile(payload).
-			SaveStack()
-		if err != nil {
-			return nil, httperror.InternalServerError("Failed to save stack via File Upload method", err)
-		}
-
-		builder.Deploy(ctx, payload, endpoint)
-		err = builder.Error()
-
-	case FileContentMethodStackBuildProcess:
-		stack, err = builder.SetGeneralInfo(payload, endpoint).
-			SetUniqueInfo(payload).
-			SetFileContent(payload).
-			SaveStack()
-		if err != nil {
-			return nil, httperror.InternalServerError("Failed to save stack via File Content method", err)
-		}
-
-		builder.Deploy(ctx, payload, endpoint)
-		err = builder.Error()
-
-	case UrlMethodStackBuildProcess:
-		stack, err = builder.SetGeneralInfo(payload, endpoint).
-			SetUniqueInfo(payload).
-			SetURL(payload).
-			SaveStack()
-		if err != nil {
-			return nil, httperror.InternalServerError("Failed to save stack via URL method", err)
-		}
-
-		builder.Deploy(ctx, payload, endpoint)
-		err = builder.Error()
-
-	default:
-		return nil, httperror.BadRequest("Invalid value for query parameter: method. Value must be one of: string or repository or url or file", errors.New(request.ErrInvalidQueryParameter))
-	}
+	stack, err := builder.saveStack()
 	if err != nil {
-		return nil, httperror.InternalServerError("Failed to deploy stack", err)
+		return nil, httperror.InternalServerError("Failed to save stack", err)
 	}
+
+	go deploy(ctx, dataStore, builder, stack.ID, endpoint)
 
 	return stack, nil
+}
+
+func deploy(ctx context.Context, dataStore dataservices.DataStore, builder stackBuildProcess, stackID portainer.StackID, endpoint *portainer.Endpoint) {
+	deployErr := builder.deploy(ctx, endpoint)
+
+	var stack *portainer.Stack
+
+	if err := dataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		var err error
+
+		stack, err = tx.Stack().Read(stackID)
+		if err != nil {
+			return err
+		}
+
+		updateStackStatus(stack, deployErr)
+
+		return tx.Stack().Update(stack.ID, stack)
+	}); err != nil {
+		log.Error().Err(err).
+			Int("stack_id", int(stackID)).
+			Str("context", "deploy").
+			Msg("Failed to update stack status after async deployment")
+
+		return
+	}
+
+	if deployErr != nil {
+		return
+	}
+
+	if err := builder.postDeploy(ctx, stack); err != nil {
+		log.Error().Err(err).
+			Int("stack_id", int(stackID)).
+			Str("context", "deploy").
+			Msg("Failed to run post-deployment hook")
+	}
+}
+
+func updateStackStatus(stack *portainer.Stack, deployErr error) {
+	if deployErr != nil {
+		stack.Status = portainer.StackStatusError
+		stack.DeploymentStatus = append(stack.DeploymentStatus, portainer.StackDeploymentStatus{
+			Status:  portainer.StackStatusError,
+			Time:    time.Now().Unix(),
+			Message: deployErr.Error(),
+		})
+
+		return
+	}
+
+	stack.Status = portainer.StackStatusActive
+	stack.DeploymentStatus = append(stack.DeploymentStatus, portainer.StackDeploymentStatus{
+		Status: portainer.StackStatusActive,
+		Time:   time.Now().Unix(),
+	})
 }

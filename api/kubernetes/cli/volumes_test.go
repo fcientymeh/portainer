@@ -7,6 +7,7 @@ import (
 )
 
 func TestGetVolumes(t *testing.T) {
+	t.Parallel()
 	kcl := &KubeClient{}
 
 	volumes, err := kcl.GetVolumes("default")

@@ -12,6 +12,7 @@ import (
 )
 
 func TestExecutePingOperationFailure(t *testing.T) {
+	t.Parallel()
 	fips.InitFIPS(false)
 
 	host := "http://localhost:1"
@@ -36,6 +37,7 @@ func TestExecutePingOperationFailure(t *testing.T) {
 }
 
 func TestPingOperation(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add(portainer.PortainerAgentHeader, "1")
 	}))

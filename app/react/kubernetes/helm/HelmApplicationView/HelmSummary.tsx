@@ -22,7 +22,7 @@ export function HelmSummary({ release }: Props) {
 
   return (
     <div>
-      <div className="flex flex-col gap-y-4 mt-4">
+      <div className="mt-4 flex flex-col gap-y-4">
         <div>
           <Badge type={getStatusColor(release.info?.status)}>
             {getStatusText(release.info?.status)}
@@ -36,7 +36,7 @@ export function HelmSummary({ release }: Props) {
         <Card>
           <div className="form-section-title">Details</div>
           <div
-            className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-1 text-sm"
+            className="grid grid-cols-1 gap-x-6 gap-y-1 text-sm lg:grid-cols-2 xl:grid-cols-3"
             data-cy="helm-release-info"
           >
             {!!release.namespace && (
@@ -71,7 +71,7 @@ export function HelmSummary({ release }: Props) {
             {!!release.chart?.metadata?.version && (
               <div className="min-w-0">
                 <span className="text-muted">Chart version: </span>
-                <span className="inline-flex items-center gap-1 flex-wrap">
+                <span className="inline-flex flex-wrap items-center gap-1">
                   <span data-cy="helm-info-chart-version">
                     {release.chart.metadata.name}-
                     {release.chart.metadata.version}

@@ -8,6 +8,7 @@ import (
 )
 
 func Test_apiKeyCacheGet(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	keyCache := NewAPIKeyCache(10, compareUser)
@@ -43,6 +44,7 @@ func Test_apiKeyCacheGet(t *testing.T) {
 }
 
 func Test_apiKeyCacheSet(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	keyCache := NewAPIKeyCache(10, compareUser)
@@ -68,6 +70,7 @@ func Test_apiKeyCacheSet(t *testing.T) {
 }
 
 func Test_apiKeyCacheDelete(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	keyCache := NewAPIKeyCache(10, compareUser)
@@ -87,6 +90,7 @@ func Test_apiKeyCacheDelete(t *testing.T) {
 }
 
 func Test_apiKeyCacheLRU(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	tests := []struct {
@@ -148,6 +152,7 @@ func Test_apiKeyCacheLRU(t *testing.T) {
 }
 
 func Test_apiKeyCacheInvalidateUserKeyCache(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	keyCache := NewAPIKeyCache(10, compareUser)

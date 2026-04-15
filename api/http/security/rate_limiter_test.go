@@ -11,6 +11,7 @@ import (
 )
 
 func TestLimitAccess(t *testing.T) {
+	t.Parallel()
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 
 	t.Run("Request below the limit", func(t *testing.T) {
@@ -57,6 +58,7 @@ func TestLimitAccess(t *testing.T) {
 }
 
 func TestStripAddrPort(t *testing.T) {
+	t.Parallel()
 	t.Run("IP with port", func(t *testing.T) {
 		result := StripAddrPort("127.0.0.1:1000")
 		if result != "127.0.0.1" {

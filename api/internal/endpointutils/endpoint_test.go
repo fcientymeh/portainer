@@ -16,6 +16,7 @@ type isEndpointTypeTest struct {
 }
 
 func Test_IsDockerEndpoint(t *testing.T) {
+	t.Parallel()
 	tests := []isEndpointTypeTest{
 		{endpointType: portainer.DockerEnvironment, expected: true},
 		{endpointType: portainer.AgentOnDockerEnvironment, expected: true},
@@ -33,6 +34,7 @@ func Test_IsDockerEndpoint(t *testing.T) {
 }
 
 func Test_IsKubernetesEndpoint(t *testing.T) {
+	t.Parallel()
 	tests := []isEndpointTypeTest{
 		{endpointType: portainer.DockerEnvironment, expected: false},
 		{endpointType: portainer.AgentOnDockerEnvironment, expected: false},
@@ -50,6 +52,7 @@ func Test_IsKubernetesEndpoint(t *testing.T) {
 }
 
 func Test_IsAgentEndpoint(t *testing.T) {
+	t.Parallel()
 	tests := []isEndpointTypeTest{
 		{endpointType: portainer.DockerEnvironment, expected: false},
 		{endpointType: portainer.AgentOnDockerEnvironment, expected: true},
@@ -67,6 +70,7 @@ func Test_IsAgentEndpoint(t *testing.T) {
 }
 
 func Test_FilterByExcludeIDs(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name            string
 		inputArray      []portainer.Endpoint
@@ -124,6 +128,7 @@ func Test_FilterByExcludeIDs(t *testing.T) {
 }
 
 func TestUpdateEdgeEndpointHeartbeat(t *testing.T) {
+	t.Parallel()
 	endpoint := &portainer.Endpoint{
 		Type:                portainer.EdgeAgentOnDockerEnvironment,
 		LastCheckInDate:     time.Now().Unix(),

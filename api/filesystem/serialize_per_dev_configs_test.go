@@ -10,6 +10,7 @@ import (
 )
 
 func TestMultiFilterDirForPerDevConfigs(t *testing.T) {
+	t.Parallel()
 	f := func(dirEntries []DirEntry, configPath string, multiFilterArgs MultiFilterArgs, wantDirEntries []DirEntry) {
 		t.Helper()
 
@@ -80,6 +81,7 @@ func TestMultiFilterDirForPerDevConfigs(t *testing.T) {
 }
 
 func TestMultiFilterDirForPerDevConfigsWithDefaults(t *testing.T) {
+	t.Parallel()
 	f := func(dirEntries []DirEntry, configPath string, multiFilterArgs MultiFilterArgs, defaultFilenames []string, wantDirEntries []DirEntry) {
 		t.Helper()
 
@@ -180,6 +182,7 @@ func TestMultiFilterDirForPerDevConfigsWithDefaults(t *testing.T) {
 }
 
 func TestMultiFilterDirForPerDevConfigsEnvFiles(t *testing.T) {
+	t.Parallel()
 	f := func(dirEntries []DirEntry, configPath string, multiFilterArgs MultiFilterArgs, wantEnvFiles []string) {
 		t.Helper()
 
@@ -204,6 +207,7 @@ func TestMultiFilterDirForPerDevConfigsEnvFiles(t *testing.T) {
 }
 
 func TestIsInConfigDir(t *testing.T) {
+	t.Parallel()
 	f := func(dirEntry DirEntry, configPath string, expect bool) {
 		t.Helper()
 
@@ -225,6 +229,7 @@ func TestIsInConfigDir(t *testing.T) {
 }
 
 func TestShouldIncludeDir(t *testing.T) {
+	t.Parallel()
 	f := func(dirEntry DirEntry, deviceName, configPath string, expect bool) {
 		t.Helper()
 

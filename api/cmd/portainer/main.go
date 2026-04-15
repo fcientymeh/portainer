@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/apikey"
@@ -54,7 +55,6 @@ import (
 	"github.com/portainer/portainer/pkg/featureflags"
 	"github.com/portainer/portainer/pkg/fips"
 	"github.com/portainer/portainer/pkg/libhelm"
-	libhelmtypes "github.com/portainer/portainer/pkg/libhelm/types"
 	"github.com/portainer/portainer/pkg/libstack/compose"
 	"github.com/portainer/portainer/pkg/validate"
 
@@ -182,10 +182,6 @@ func checkDBSchemaServerVersionMatch(dbStore dataservices.DataStore, serverVersi
 
 func initKubernetesDeployer(kubernetesTokenCacheManager *kubeproxy.TokenCacheManager, kubernetesClientFactory *kubecli.ClientFactory, dataStore dataservices.DataStore, reverseTunnelService portainer.ReverseTunnelService, signatureService portainer.DigitalSignatureService, proxyManager *proxy.Manager) portainer.KubernetesDeployer {
 	return exec.NewKubernetesDeployer(kubernetesTokenCacheManager, kubernetesClientFactory, dataStore, reverseTunnelService, signatureService, proxyManager)
-}
-
-func initHelmPackageManager() (libhelmtypes.HelmPackageManager, error) {
-	return libhelm.NewHelmPackageManager()
 }
 
 func initAPIKeyService(datastore dataservices.DataStore) apikey.APIKeyService {
@@ -478,10 +474,7 @@ func buildServer(flags *portainer.CLIFlags, shutdownCtx context.Context, shutdow
 
 	proxyManager.NewProxyFactory(dataStore, signatureService, reverseTunnelService, dockerClientFactory, kubernetesClientFactory, kubernetesTokenCacheManager, gitService, snapshotService, jwtService)
 
-	helmPackageManager, err := initHelmPackageManager()
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed initializing helm package manager")
-	}
+	helmPackageManager := libhelm.NewHelmPackageManager()
 
 	applicationStatus := initStatus(instanceID)
 
@@ -547,10 +540,7 @@ func buildServer(flags *portainer.CLIFlags, shutdownCtx context.Context, shutdow
 		log.Fatal().Msg("failed to fetch SSL settings from DB")
 	}
 
-	platformService, err := platform.NewService(dataStore)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed initializing platform service")
-	}
+	platformService := platform.NewService(dataStore)
 
 	upgradeService, err := upgrade.NewService(
 		*flags.Assets,
@@ -578,6 +568,13 @@ func buildServer(flags *portainer.CLIFlags, shutdownCtx context.Context, shutdow
 	)
 	if err := postInitMigrator.PostInitMigrate(); err != nil {
 		log.Fatal().Err(err).Msg("failure during post init migrations")
+	}
+
+	if err := dataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		return recoverStaleDeployingStacks(tx)
+	}); err != nil {
+		log.Info().Err(err).
+			Msg("Error recovering stale deploying stacks")
 	}
 
 	return &http.Server{
@@ -744,4 +741,40 @@ func main() {
 		err := server.Start(shutdownCtx)
 		log.Info().Err(err).Msg("HTTP server exited")
 	}
+}
+
+// recoverStaleDeployingStacks resets any stack that was left in the Deploying state
+// (e.g. because the server was restarted mid-deployment) to the Error state so the
+// user can retry.
+func recoverStaleDeployingStacks(tx dataservices.DataStoreTx) error {
+	stacks, err := tx.Stack().ReadAll(func(s portainer.Stack) bool {
+		return s.Status == portainer.StackStatusDeploying
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, stack := range stacks {
+		stack.Status = portainer.StackStatusError
+		stack.DeploymentStatus = append(stack.DeploymentStatus, portainer.StackDeploymentStatus{
+			Status:  portainer.StackStatusError,
+			Time:    time.Now().Unix(),
+			Message: "Deployment interrupted by server restart",
+		})
+
+		if err := tx.Stack().Update(stack.ID, &stack); err != nil {
+			log.Warn().Err(err).
+				Int("stack_id", int(stack.ID)).
+				Str("context", "RecoverStaleDeployingStacks").
+				Msg("Unable to recover stale deploying stack")
+			continue
+		}
+		log.Debug().
+			Int("stack_id", int(stack.ID)).
+			Str("stack_name", stack.Name).
+			Str("context", "RecoverStaleDeployingStacks").
+			Msg("Recovered stale deploying stack to error state")
+	}
+
+	return nil
 }

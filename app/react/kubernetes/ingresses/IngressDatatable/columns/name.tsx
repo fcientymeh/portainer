@@ -20,7 +20,7 @@ function Cell({ row, getValue }: CellContext<Ingress, string>) {
   const namespace = row.original.Namespace;
 
   return (
-    <div className="flex flex-nowrap whitespace-nowrap gap-2">
+    <div className="flex flex-nowrap gap-2 whitespace-nowrap">
       <Authorized authorizations="K8sIngressesW" childrenUnauthorized={name}>
         <Link
           to="kubernetes.ingresses.edit"

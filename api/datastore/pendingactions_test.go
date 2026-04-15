@@ -14,6 +14,7 @@ type cleanNAPWithOverridePolicies struct {
 }
 
 func Test_ConvertCleanNAPWithOverridePoliciesPayload(t *testing.T) {
+	t.Parallel()
 	t.Run("test ConvertCleanNAPWithOverridePoliciesPayload", func(t *testing.T) {
 
 		_, store := MustNewTestStore(t, true, false)

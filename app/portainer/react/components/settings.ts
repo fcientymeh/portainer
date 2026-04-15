@@ -19,6 +19,7 @@ import { LdapSettingsTestLogin } from '@/react/portainer/settings/Authentication
 import { SessionLifetimeSelect } from '@/react/portainer/settings/AuthenticationView/SessionLifetimeSelect';
 import { LdapSecurityFieldset } from '@/react/portainer/settings/AuthenticationView/LDAPAuth/LdapSecurityFieldset/LdapSecurityFieldset';
 import { DnBuilder } from '@/react/portainer/settings/AuthenticationView/LDAPAuth/DnEntriesField/DnBuilder';
+import { GroupDnBuilder } from '@/react/portainer/settings/AuthenticationView/LDAPAuth/DnEntriesField/GroupDnBuilder';
 
 export const settingsModule = angular
   .module('portainer.app.react.components.settings', [])
@@ -40,6 +41,17 @@ export const settingsModule = angular
   .component(
     'ldapSettingsDnBuilder',
     r2a(DnBuilder, ['value', 'onChange', 'suffix', 'label', 'limitedFeatureId'])
+  )
+  .component(
+    'ldapSettingsGroupDnBuilder',
+    r2a(GroupDnBuilder, [
+      'value',
+      'onChange',
+      'suffix',
+      'index',
+      'onRemoveClick',
+      'limitedFeatureId',
+    ])
   )
   .component(
     'applicationSettingsPanel',

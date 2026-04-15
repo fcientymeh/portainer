@@ -12,20 +12,24 @@ import (
 )
 
 func Test_fileSystemService_FileExists_whenFileExistsShouldReturnTrue(t *testing.T) {
+	t.Parallel()
 	service := createService(t)
 	testHelperFileExists_fileExists(t, service.FileExists)
 }
 
 func Test_fileSystemService_FileExists_whenFileNotExistsShouldReturnFalse(t *testing.T) {
+	t.Parallel()
 	service := createService(t)
 	testHelperFileExists_fileNotExists(t, service.FileExists)
 }
 
 func Test_FileExists_whenFileExistsShouldReturnTrue(t *testing.T) {
+	t.Parallel()
 	testHelperFileExists_fileExists(t, FileExists)
 }
 
 func Test_FileExists_whenFileNotExistsShouldReturnFalse(t *testing.T) {
+	t.Parallel()
 	testHelperFileExists_fileNotExists(t, FileExists)
 }
 

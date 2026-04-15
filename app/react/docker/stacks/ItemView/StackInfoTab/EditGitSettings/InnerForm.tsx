@@ -48,13 +48,13 @@ export function InnerForm({
         onDismiss={onDismiss}
         aria-label="edit-git-settings"
         size="xl"
-        className="flex flex-col h-[80vh] px-0"
+        className="flex h-[80vh] flex-col px-0"
       >
         <Modal.Header
           title={
             <div className="inline-flex items-center gap-1 px-5">
               <WidgetIcon icon={Settings} />
-              <h2 className="text-base m-0 ml-1">
+              <h2 className="m-0 ml-1 text-base">
                 Edit Git settings — {stackName}
               </h2>
             </div>
@@ -101,7 +101,7 @@ export function InnerForm({
             </div>
           </Modal.Body>
         </div>
-        <div className="px-5 border-solid border-0 border-t border-gray-5 th-dark:border-gray-7 th-highcontrast:border-white">
+        <div className="border-0 border-t border-solid border-gray-5 px-5 th-highcontrast:border-white th-dark:border-gray-7">
           <Modal.Footer>
             <div className="flex flex-1 justify-between">
               <Button
@@ -113,7 +113,7 @@ export function InnerForm({
               >
                 Cancel
               </Button>
-              <div className="flex gap-4 items-center">
+              <div className="flex items-center gap-4">
                 <span className="flex items-center">
                   <Checkbox
                     id="redeploy-checkbox"

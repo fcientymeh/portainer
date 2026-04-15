@@ -7,15 +7,10 @@ import (
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/datastore"
-	"github.com/portainer/portainer/api/exec/exectest"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/testhelpers"
-	"github.com/portainer/portainer/api/jwt"
-	"github.com/portainer/portainer/api/kubernetes"
 	"github.com/portainer/portainer/pkg/libhelm/options"
 	"github.com/portainer/portainer/pkg/libhelm/release"
-	"github.com/portainer/portainer/pkg/libhelm/test"
 
 	"github.com/segmentio/encoding/json"
 	"github.com/stretchr/testify/assert"
@@ -24,27 +19,12 @@ import (
 
 func Test_helmList(t *testing.T) {
 	is := assert.New(t)
-
-	_, store := datastore.MustNewTestStore(t, true, true)
-
-	err := store.Endpoint().Create(&portainer.Endpoint{ID: 1})
-	require.NoError(t, err, "error creating environment")
-
-	err = store.User().Create(&portainer.User{Username: "admin", Role: portainer.AdministratorRole})
-	require.NoError(t, err, "error creating a user")
-
-	jwtService, err := jwt.NewService("1h", store)
-	require.NoError(t, err, "Error initialising jwt service")
-
-	kubernetesDeployer := exectest.NewKubernetesDeployer()
-	helmPackageManager := test.NewMockHelmPackageManager()
-	kubeClusterAccessService := kubernetes.NewKubeClusterAccessService("", "", "")
-	h := NewHandler(testhelpers.NewTestRequestBouncer(), store, jwtService, kubernetesDeployer, helmPackageManager, kubeClusterAccessService)
+	h := newTestHelmHandler(t)
 
 	// Install a single chart.  We expect to get these values back
 	options := options.InstallOptions{Name: "nginx-1", Chart: "nginx", Namespace: "default"}
 
-	_, err = h.helmPackageManager.Upgrade(options)
+	_, err := h.helmPackageManager.Upgrade(options)
 	require.NoError(t, err)
 
 	t.Run("helmList", func(t *testing.T) {

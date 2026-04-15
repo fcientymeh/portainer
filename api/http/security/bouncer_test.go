@@ -41,6 +41,7 @@ func tokenLookupEmpty(r *http.Request) (*portainer.TokenData, error) {
 }
 
 func Test_mwAuthenticateFirst(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, true, true)
 
 	jwtService, err := jwt.NewService("1h", store)
@@ -117,6 +118,7 @@ func Test_mwAuthenticateFirst(t *testing.T) {
 }
 
 func Test_extractKeyFromCookie(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	tt := []struct {
@@ -155,6 +157,7 @@ func Test_extractKeyFromCookie(t *testing.T) {
 }
 
 func Test_extractBearerToken(t *testing.T) {
+	t.Parallel()
 	tt := []struct {
 		name               string
 		requestHeader      string
@@ -205,6 +208,7 @@ func Test_extractBearerToken(t *testing.T) {
 }
 
 func Test_extractAPIKeyHeader(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	tt := []struct {
@@ -254,6 +258,7 @@ func Test_extractAPIKeyHeader(t *testing.T) {
 }
 
 func Test_extractAPIKeyQueryParam(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	tt := []struct {
@@ -306,6 +311,7 @@ func Test_extractAPIKeyQueryParam(t *testing.T) {
 }
 
 func Test_apiKeyLookup(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	_, store := datastore.MustNewTestStore(t, true, true)
@@ -394,6 +400,7 @@ func Test_apiKeyLookup(t *testing.T) {
 }
 
 func Test_ShouldSkipCSRFCheck(t *testing.T) {
+	t.Parallel()
 	tt := []struct {
 		name                     string
 		cookieValue              string
@@ -470,6 +477,7 @@ func Test_ShouldSkipCSRFCheck(t *testing.T) {
 }
 
 func TestJWTRevocation(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, true, true)
 
 	jwtService, err := jwt.NewService("1h", store)
@@ -539,6 +547,7 @@ func TestJWTRevocation(t *testing.T) {
 }
 
 func TestCSPHeaderDefault(t *testing.T) {
+	t.Parallel()
 	b := NewRequestBouncer(t.Context(), nil, nil, nil)
 
 	srv := httptest.NewServer(
@@ -557,6 +566,7 @@ func TestCSPHeaderDefault(t *testing.T) {
 }
 
 func TestCSPHeaderDisabled(t *testing.T) {
+	t.Parallel()
 	b := NewRequestBouncer(t.Context(), nil, nil, nil)
 	b.DisableCSP()
 

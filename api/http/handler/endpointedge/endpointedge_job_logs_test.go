@@ -11,6 +11,7 @@ import (
 )
 
 func TestUpdateUnrelatedEdgeJobLogs(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, false, false)
 
 	h := &Handler{DataStore: store}

@@ -79,11 +79,16 @@ func (kcl *KubeClient) parseCronJob(cronJob batchv1.CronJob, jobsList *batchv1.J
 		suspend = *cronJob.Spec.Suspend
 	}
 
+	var command string
+	if len(cronJob.Spec.JobTemplate.Spec.Template.Spec.Containers) > 0 {
+		command = strings.Join(cronJob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Command, " ")
+	}
+
 	return models.K8sCronJob{
 		Id:        string(cronJob.UID),
 		Name:      cronJob.Name,
 		Namespace: cronJob.Namespace,
-		Command:   strings.Join(cronJob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Command, " "),
+		Command:   command,
 		Schedule:  cronJob.Spec.Schedule,
 		Timezone:  timezone,
 		Suspend:   suspend,

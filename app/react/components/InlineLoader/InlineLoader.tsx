@@ -27,7 +27,7 @@ export function InlineLoader({ children, className, size = 'sm' }: Props) {
         sizeStyles[size]
       )}
     >
-      <Icon icon={Loader2} className="animate-spin-slow flex-none" />
+      <Icon icon={Loader2} className="flex-none animate-spin-slow" />
       {children}
     </div>
   );

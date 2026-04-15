@@ -24,6 +24,7 @@ var tests = []testCase{
 }
 
 func Test_SearchRepo(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	// Create a new SDK package manager

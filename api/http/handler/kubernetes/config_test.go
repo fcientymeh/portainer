@@ -8,6 +8,7 @@ import (
 )
 
 func TestIsSelfSignedCertificate(t *testing.T) {
+	t.Parallel()
 
 	tc := []struct {
 		name     string

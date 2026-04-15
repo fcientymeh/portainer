@@ -23,6 +23,7 @@ func run(ctx context.Context, interval time.Duration, fn func(), cleanup func())
 }
 
 func TestRunOnInterval_CallsFnOnTick(t *testing.T) {
+	t.Parallel()
 	var calls atomic.Int32
 
 	run(t.Context(), time.Millisecond, func() { calls.Add(1) }, nil)
@@ -33,6 +34,7 @@ func TestRunOnInterval_CallsFnOnTick(t *testing.T) {
 }
 
 func TestRunOnInterval_StopsWhenContextCancelled(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 
@@ -46,6 +48,7 @@ func TestRunOnInterval_StopsWhenContextCancelled(t *testing.T) {
 }
 
 func TestRunOnInterval_CallsCleanupOnCancellation(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithCancel(t.Context())
 
 	var cleanupCalled atomic.Bool
@@ -58,6 +61,7 @@ func TestRunOnInterval_CallsCleanupOnCancellation(t *testing.T) {
 }
 
 func TestRunOnInterval_CleanupCalledExactlyOnce(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithCancel(t.Context())
 
 	var cleanupCount atomic.Int32
@@ -72,6 +76,7 @@ func TestRunOnInterval_CleanupCalledExactlyOnce(t *testing.T) {
 }
 
 func TestRunOnInterval_NilCleanupDoesNotPanic(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 
@@ -85,6 +90,7 @@ func TestRunOnInterval_NilCleanupDoesNotPanic(t *testing.T) {
 }
 
 func TestRunOnInterval_FnNotCalledAfterCancellation(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 

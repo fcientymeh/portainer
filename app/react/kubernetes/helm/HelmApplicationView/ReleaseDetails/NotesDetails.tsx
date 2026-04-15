@@ -30,7 +30,7 @@ export function NotesDetails({
     <>
       {diffControl}
       {diffViewMode === 'view' ? (
-        <Markdown className="list-inside mt-6">{notes}</Markdown>
+        <Markdown className="mt-6 list-inside">{notes}</Markdown>
       ) : (
         <DiffViewSection
           isCompareReleaseLoading={isCompareReleaseLoading}

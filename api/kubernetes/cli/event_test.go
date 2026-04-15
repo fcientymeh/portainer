@@ -14,6 +14,7 @@ import (
 // It creates a fake Kubernetes client and passes it to the GetEvents method
 // It then logs the fetched events and validated the data returned
 func TestGetEvents(t *testing.T) {
+	t.Parallel()
 	t.Run("can get events for resource id when admin", func(t *testing.T) {
 		kcl := &KubeClient{
 			cli:         kfake.NewSimpleClientset(),

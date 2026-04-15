@@ -21,7 +21,7 @@ export function HelmTemplatesSelectedItem({
   return (
     <Widget>
       <div className="flex">
-        <div className="basis-3/4 rounded-lg m-2 bg-gray-4 th-highcontrast:bg-black th-highcontrast:text-white th-dark:bg-gray-iron-10 th-dark:text-white">
+        <div className="m-2 basis-3/4 rounded-lg bg-gray-4 th-highcontrast:bg-black th-highcontrast:text-white th-dark:bg-gray-iron-10 th-dark:text-white">
           <div className="vertical-center p-5">
             <FallbackImage
               src={selectedChart.icon}
@@ -35,12 +35,12 @@ export function HelmTemplatesSelectedItem({
                   {selectedChart.repo}
                 </div>
               </div>
-              <div className="text-xs mt-2">{selectedChart.description}</div>
+              <div className="mt-2 text-xs">{selectedChart.description}</div>
             </div>
           </div>
         </div>
         <div className="basis-1/4">
-          <div className="h-full w-full vertical-center justify-end pr-5">
+          <div className="vertical-center h-full w-full justify-end pr-5">
             <Button
               color="link"
               className="!text-gray-8 hover:no-underline th-highcontrast:!text-white th-dark:!text-white"

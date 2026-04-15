@@ -11,6 +11,7 @@ func init() {
 }
 
 func TestIntn(t *testing.T) {
+	t.Parallel()
 	i := Intn(10)
 
 	if i >= 10 || i < 0 {
@@ -19,6 +20,7 @@ func TestIntn(t *testing.T) {
 }
 
 func TestInternalIntn(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name string
 		max  int
@@ -48,6 +50,7 @@ func TestInternalIntn(t *testing.T) {
 }
 
 func TestFloat64(t *testing.T) {
+	t.Parallel()
 	f := Float64()
 
 	if f >= 1 || f < 0 {
@@ -56,6 +59,7 @@ func TestFloat64(t *testing.T) {
 }
 
 func TestInternalFloat64(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name string
 		fips bool

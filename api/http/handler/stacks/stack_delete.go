@@ -110,7 +110,7 @@ func (handler *Handler) stackDelete(w http.ResponseWriter, r *http.Request) *htt
 		}
 
 		if stack.Type == portainer.DockerSwarmStack || stack.Type == portainer.DockerComposeStack {
-			access, err := handler.userCanAccessStack(securityContext, endpoint.ID, resourceControl)
+			access, err := handler.userCanAccessStack(securityContext, resourceControl)
 			if err != nil {
 				return httperror.InternalServerError("Unable to verify user authorizations to validate stack access", err)
 			}

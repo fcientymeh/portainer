@@ -39,7 +39,7 @@ interface Props {
   url: string;
   connect: boolean;
   onStateChange?: (state: ShellState) => void;
-  onResize?: ((dimensions: TerminalDimensions) => void) | null;
+  onResize?: ((dimensions: TerminalDimensions) => void) | 'socket' | null;
   initialCommands?: string[];
 }
 
@@ -47,7 +47,7 @@ export function Terminal({
   url,
   connect,
   onStateChange = () => {},
-  onResize = () => {},
+  onResize,
   initialCommands,
 }: Props) {
   const terminalRef = useRef<HTMLDivElement>(null);
@@ -61,6 +61,7 @@ export function Terminal({
 
     let fitAddon: FitAddon | null = null;
     let cleaned = false;
+    let lastSentSize: { rows: number; cols: number } | null = null;
 
     onStateChange('connecting');
 
@@ -95,11 +96,6 @@ export function Terminal({
       term.onData((data) => {
         if (socket.readyState === WebSocket.OPEN) {
           socket.send(data);
-        }
-      });
-      term.onKey(({ domEvent }) => {
-        if (domEvent.ctrlKey && domEvent.key === 'd') {
-          cleanup();
         }
       });
       resizeObserver.observe(terminalRef.current);
@@ -142,7 +138,25 @@ export function Terminal({
     function handleResize() {
       fitAddon?.fit();
       if (termRef.current) {
-        onResize?.({ rows: termRef.current.rows, cols: termRef.current.cols });
+        const { rows, cols } = termRef.current;
+        if (lastSentSize?.rows === rows && lastSentSize?.cols === cols) {
+          return;
+        }
+
+        lastSentSize = { rows, cols };
+        if (typeof onResize === 'function') {
+          onResize({ rows, cols });
+        } else if (
+          onResize === 'socket' &&
+          socket.readyState === WebSocket.OPEN
+        ) {
+          socket.send(
+            JSON.stringify({
+              type: 'resize',
+              data: { width: cols, height: rows },
+            })
+          );
+        }
       }
     }
     // onStateChange, onResize, and initialCommands intentionally excluded — callers pass stable refs

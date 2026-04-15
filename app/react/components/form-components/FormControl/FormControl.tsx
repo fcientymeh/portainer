@@ -62,7 +62,7 @@ export function FormControl({
       <div className={clsx('flex flex-col', sizeClassChildren(size))}>
         {isLoading && (
           // 34px height to reduce layout shift when loading is complete
-          <div className="h-[34px] flex items-center">
+          <div className="flex h-[34px] items-center">
             <InlineLoader>{loadingText}</InlineLoader>
           </div>
         )}

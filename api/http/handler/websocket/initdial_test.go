@@ -13,6 +13,7 @@ import (
 )
 
 func TestInitDial(t *testing.T) {
+	t.Parallel()
 	fips.InitFIPS(false)
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))

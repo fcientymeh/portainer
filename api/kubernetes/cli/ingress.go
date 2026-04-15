@@ -190,8 +190,10 @@ func parseIngress(ingress netv1.Ingress) models.K8sIngressInfo {
 			if p.PathType != nil {
 				path.PathType = string(*p.PathType)
 			}
-			path.ServiceName = p.Backend.Service.Name
-			path.Port = int(p.Backend.Service.Port.Number)
+			if p.Backend.Service != nil {
+				path.ServiceName = p.Backend.Service.Name
+				path.Port = int(p.Backend.Service.Port.Number)
+			}
 			result.Paths = append(result.Paths, path)
 		}
 	}

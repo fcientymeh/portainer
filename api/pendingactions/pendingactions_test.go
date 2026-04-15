@@ -10,6 +10,7 @@ import (
 )
 
 func TestExecute(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		endpoint       *portainer.Endpoint

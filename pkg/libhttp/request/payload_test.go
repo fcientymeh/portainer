@@ -22,6 +22,7 @@ func (p *requestPayload) Validate(r *http.Request) error {
 }
 
 func Test_GetPayload(t *testing.T) {
+	t.Parallel()
 	payload := requestPayload{
 		FirstName: "John",
 		LastName:  "Doe",

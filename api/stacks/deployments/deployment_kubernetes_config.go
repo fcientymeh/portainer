@@ -22,15 +22,14 @@ type KubernetesStackDeploymentConfig struct {
 	output             string
 }
 
-func CreateKubernetesStackDeploymentConfig(stack *portainer.Stack, kubeDeployer portainer.KubernetesDeployer, appLabels k.KubeAppLabels, user *portainer.User, endpoint *portainer.Endpoint) (*KubernetesStackDeploymentConfig, error) {
-
+func CreateKubernetesStackDeploymentConfig(stack *portainer.Stack, kubeDeployer portainer.KubernetesDeployer, appLabels k.KubeAppLabels, user *portainer.User, endpoint *portainer.Endpoint) *KubernetesStackDeploymentConfig {
 	return &KubernetesStackDeploymentConfig{
 		stack:              stack,
 		kubernetesDeployer: kubeDeployer,
 		appLabels:          appLabels,
 		user:               user,
 		endpoint:           endpoint,
-	}, nil
+	}
 }
 
 func (config *KubernetesStackDeploymentConfig) GetUsername() string {

@@ -60,7 +60,7 @@ function NodeTaintItem({
 }: ItemProps<NodeTaint>) {
   const formikError = isErrorType(error) ? error : undefined;
   return (
-    <div className="flex items-start gap-2 flex-wrap">
+    <div className="flex flex-wrap items-start gap-2">
       <div className="w-64 flex-none">
         <InputGroup
           size="small"

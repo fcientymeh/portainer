@@ -160,6 +160,8 @@ async function createStack(payload: CreateStackPayload) {
       resourceControl.Id
     );
   }
+
+  return stack;
 }
 
 function createActualStack(payload: CreateStackPayload) {

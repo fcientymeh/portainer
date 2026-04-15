@@ -10,6 +10,7 @@ import (
 )
 
 func Test_NewHelmSDKPackageManager(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	// Test that NewHelmSDKPackageManager returns a non-nil HelmPackageManager

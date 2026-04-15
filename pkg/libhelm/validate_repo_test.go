@@ -11,6 +11,7 @@ import (
 )
 
 func Test_ValidateHelmRepositoryURL(t *testing.T) {
+	t.Parallel()
 	test.EnsureIntegrationTest(t)
 
 	type testCase struct {
@@ -53,6 +54,7 @@ func Test_ValidateHelmRepositoryURL(t *testing.T) {
 }
 
 func TestValidateHelmRepositoryURL(t *testing.T) {
+	t.Parallel()
 	var fail bool
 
 	const indexYAML = "apiVersion: v1\nentries: {}\ngenerated: \"2020-01-01T00:00:00Z\"\n"

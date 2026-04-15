@@ -10,6 +10,7 @@ import (
 )
 
 func TestK8sServiceAccountDeleteRequests_Validate(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		payload K8sServiceAccountDeleteRequests
@@ -80,6 +81,7 @@ func TestK8sServiceAccountDeleteRequests_Validate(t *testing.T) {
 }
 
 func TestK8sServiceAccount_Structure(t *testing.T) {
+	t.Parallel()
 	sa := K8sServiceAccount{
 		Name:      "test-sa",
 		Namespace: "default",
@@ -95,6 +97,7 @@ func TestK8sServiceAccount_Structure(t *testing.T) {
 }
 
 func TestK8sServiceAccount_WithAllFields(t *testing.T) {
+	t.Parallel()
 	automountToken := true
 	sa := K8sServiceAccount{
 		Name:      "full-sa",

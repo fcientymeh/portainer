@@ -12,6 +12,7 @@ import (
 )
 
 func TestMigrateStackEntryPoint(t *testing.T) {
+	t.Parallel()
 	_, store := MustNewTestStore(t, false, true)
 
 	stackService := store.Stack()

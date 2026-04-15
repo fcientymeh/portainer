@@ -10,6 +10,7 @@ import (
 )
 
 func TestUpgrade(t *testing.T) {
+	t.Parallel()
 	test.EnsureIntegrationTest(t)
 	is := require.New(t)
 

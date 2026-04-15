@@ -16,6 +16,7 @@ import (
 
 // Create
 func TestCreateAndInspect(t *testing.T) {
+	t.Parallel()
 	handler, rawAPIKey := setupHandler(t)
 
 	// Create Endpoint, EdgeGroup and EndpointRelation
@@ -90,6 +91,7 @@ func TestCreateAndInspect(t *testing.T) {
 }
 
 func TestCreateWithInvalidPayload(t *testing.T) {
+	t.Parallel()
 	handler, rawAPIKey := setupHandler(t)
 
 	endpoint := createEndpoint(t, handler.DataStore)

@@ -70,7 +70,7 @@ export function DiffControl({
   ];
 
   return (
-    <div className="flex flex-wrap gap-x-16 gap-y-1 items-center">
+    <div className="flex flex-wrap items-center gap-x-16 gap-y-1">
       {showViewOptions && (
         <RadioGroup
           options={options}
@@ -88,7 +88,7 @@ export function DiffControl({
           checked={isUserSupplied}
           onChange={() => setIsUserSupplied(!isUserSupplied)}
           data-cy="values-details-user-supplied"
-          className="font-normal control-label"
+          className="control-label font-normal"
           bold={false}
         />
       )}
@@ -124,7 +124,7 @@ function DiffWithSpecificRevision({
         max={latestRevisionNumber}
         value={debouncedSetCompareRevisionNumber}
         onChange={handleSpecificRevisionChange}
-        className="w-20 ml-2"
+        className="ml-2 w-20"
         data-cy="revision-specific-input"
       />
     </>

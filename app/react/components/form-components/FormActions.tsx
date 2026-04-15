@@ -29,7 +29,7 @@ export function FormActions({
     <FormSection title="Actions">
       <div className="form-group">
         <div className="col-sm-12">
-          <div className="flex item-center gap-3">
+          <div className="item-center flex gap-3">
             <LoadingButton
               className="!ml-0"
               loadingText={loadingText}

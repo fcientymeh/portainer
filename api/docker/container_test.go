@@ -8,6 +8,7 @@ import (
 )
 
 func TestApplyVersionConstraint(t *testing.T) {
+	t.Parallel()
 	initialNet := network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
 			"key1": {

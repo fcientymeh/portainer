@@ -10,6 +10,7 @@ import (
 )
 
 func TestHttpClient(t *testing.T) {
+	t.Parallel()
 	fips.InitFIPS(false)
 
 	// Valid TLS configuration

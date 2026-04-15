@@ -8,6 +8,7 @@ import (
 )
 
 func Test_Unique(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 	t.Run("Should extract unique numbers", func(t *testing.T) {
 
@@ -27,6 +28,7 @@ func Test_Unique(t *testing.T) {
 }
 
 func Test_UniqueBy(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 	t.Run("Should extract unique numbers by property", func(t *testing.T) {
 

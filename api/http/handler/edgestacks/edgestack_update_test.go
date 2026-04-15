@@ -17,6 +17,7 @@ import (
 
 // Update
 func TestUpdateAndInspect(t *testing.T) {
+	t.Parallel()
 	handler, rawAPIKey := setupHandler(t)
 
 	endpoint := createEndpoint(t, handler.DataStore)
@@ -103,6 +104,7 @@ func TestUpdateAndInspect(t *testing.T) {
 }
 
 func TestUpdateWithInvalidEdgeGroups(t *testing.T) {
+	t.Parallel()
 	handler, rawAPIKey := setupHandler(t)
 
 	endpoint := createEndpoint(t, handler.DataStore)
@@ -182,6 +184,7 @@ func TestUpdateWithInvalidEdgeGroups(t *testing.T) {
 }
 
 func TestUpdateWithInvalidPayload(t *testing.T) {
+	t.Parallel()
 	handler, rawAPIKey := setupHandler(t)
 
 	endpoint := createEndpoint(t, handler.DataStore)

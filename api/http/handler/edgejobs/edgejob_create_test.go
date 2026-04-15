@@ -70,6 +70,7 @@ func initStore(t *testing.T) *datastore.Store {
 }
 
 func Test_edgeJobCreate_StringMethod_Success(t *testing.T) {
+	t.Parallel()
 	store := initStore(t)
 
 	fileService := &mockFileService{}
@@ -113,6 +114,7 @@ func Test_edgeJobCreate_StringMethod_Success(t *testing.T) {
 }
 
 func Test_edgeJobCreate_FileMethod_Success(t *testing.T) {
+	t.Parallel()
 	store := initStore(t)
 
 	fileService := &mockFileService{}

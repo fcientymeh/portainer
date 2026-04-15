@@ -66,6 +66,7 @@ func (kcl *KubeClient) TestFetchJobs(t *testing.T) {
 }
 
 func TestParseJobTimes(t *testing.T) {
+	t.Parallel()
 	// Empty job
 	jobTimes := parseJobTimes(batchv1.Job{})
 

@@ -17,6 +17,7 @@ import (
 )
 
 func Test_EdgeJobTasksListHandler(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, true, false)
 
 	handler := NewHandler(testhelpers.NewTestRequestBouncer())

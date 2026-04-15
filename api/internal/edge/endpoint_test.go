@@ -11,6 +11,7 @@ import (
 )
 
 func TestEndpointInEdgeGroup(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, true, false)
 
 	endpointGroups := []portainer.EndpointGroup{{ID: 1, Name: "test-group"}}

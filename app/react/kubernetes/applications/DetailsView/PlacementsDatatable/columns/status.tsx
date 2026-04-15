@@ -11,7 +11,7 @@ export const status = columnHelper.accessor('acceptsApplication', {
   cell: ({ getValue }) => {
     const acceptsApplication = getValue();
     return (
-      <div className="flex items-center h-full">
+      <div className="flex h-full items-center">
         <Icon
           icon={acceptsApplication ? Check : X}
           mode={acceptsApplication ? 'success' : 'danger'}

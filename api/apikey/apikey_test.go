@@ -7,6 +7,7 @@ import (
 )
 
 func Test_generateRandomKey(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	tests := []struct {

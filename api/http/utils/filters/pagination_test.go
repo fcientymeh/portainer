@@ -7,6 +7,7 @@ import (
 )
 
 func TestPaginateFn_BasicPagination(t *testing.T) {
+	t.Parallel()
 	items := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
 	// First page
@@ -31,6 +32,7 @@ func TestPaginateFn_BasicPagination(t *testing.T) {
 }
 
 func TestPaginateFn_ZeroLimit(t *testing.T) {
+	t.Parallel()
 	items := []int{1, 2, 3, 4, 5}
 
 	params := PaginationQueryParams{start: 2, limit: 0}
@@ -41,6 +43,7 @@ func TestPaginateFn_ZeroLimit(t *testing.T) {
 }
 
 func TestPaginateFn_NegativeLimit(t *testing.T) {
+	t.Parallel()
 	items := []int{1, 2, 3, 4, 5}
 
 	params := PaginationQueryParams{start: 2, limit: -5}
@@ -51,6 +54,7 @@ func TestPaginateFn_NegativeLimit(t *testing.T) {
 }
 
 func TestPaginateFn_NegativeStart(t *testing.T) {
+	t.Parallel()
 	items := []int{1, 2, 3, 4, 5}
 
 	params := PaginationQueryParams{start: -3, limit: 2}
@@ -61,6 +65,7 @@ func TestPaginateFn_NegativeStart(t *testing.T) {
 }
 
 func TestPaginateFn_StartBeyondLength(t *testing.T) {
+	t.Parallel()
 	items := []int{1, 2, 3, 4, 5}
 
 	params := PaginationQueryParams{start: 10, limit: 3}
@@ -71,6 +76,7 @@ func TestPaginateFn_StartBeyondLength(t *testing.T) {
 }
 
 func TestPaginateFn_StartAtLength(t *testing.T) {
+	t.Parallel()
 	items := []int{1, 2, 3, 4, 5}
 
 	params := PaginationQueryParams{start: 5, limit: 3}
@@ -81,6 +87,7 @@ func TestPaginateFn_StartAtLength(t *testing.T) {
 }
 
 func TestPaginateFn_LimitLargerThanRemaining(t *testing.T) {
+	t.Parallel()
 	items := []int{1, 2, 3, 4, 5}
 
 	params := PaginationQueryParams{start: 3, limit: 10}
@@ -91,6 +98,7 @@ func TestPaginateFn_LimitLargerThanRemaining(t *testing.T) {
 }
 
 func TestPaginateFn_EmptySlice(t *testing.T) {
+	t.Parallel()
 	items := []int{}
 
 	params := PaginationQueryParams{start: 0, limit: 5}
@@ -101,6 +109,7 @@ func TestPaginateFn_EmptySlice(t *testing.T) {
 }
 
 func TestPaginateFn_EmptySliceWithNegativeStart(t *testing.T) {
+	t.Parallel()
 	items := []int{}
 
 	params := PaginationQueryParams{start: -5, limit: 3}
@@ -111,6 +120,7 @@ func TestPaginateFn_EmptySliceWithNegativeStart(t *testing.T) {
 }
 
 func TestPaginateFn_SingleElement(t *testing.T) {
+	t.Parallel()
 	items := []int{42}
 
 	// Take the single element
@@ -125,6 +135,7 @@ func TestPaginateFn_SingleElement(t *testing.T) {
 }
 
 func TestPaginateFn_LimitOfOne(t *testing.T) {
+	t.Parallel()
 	items := []int{1, 2, 3, 4, 5}
 
 	results := [][]int{}
@@ -141,6 +152,7 @@ func TestPaginateFn_LimitOfOne(t *testing.T) {
 }
 
 func TestPaginateFn_StringSlice(t *testing.T) {
+	t.Parallel()
 	items := []string{"apple", "banana", "cherry", "date", "elderberry"}
 
 	params := PaginationQueryParams{start: 1, limit: 3}
@@ -150,6 +162,7 @@ func TestPaginateFn_StringSlice(t *testing.T) {
 }
 
 func TestPaginateFn_StructSlice(t *testing.T) {
+	t.Parallel()
 	type User struct {
 		ID   int
 		Name string
@@ -173,6 +186,7 @@ func TestPaginateFn_StructSlice(t *testing.T) {
 }
 
 func TestPaginateFn_BoundaryConditions(t *testing.T) {
+	t.Parallel()
 	items := []int{1, 2, 3, 4, 5}
 
 	testCases := []struct {
@@ -202,6 +216,7 @@ func TestPaginateFn_BoundaryConditions(t *testing.T) {
 }
 
 func TestPaginateFn_ReturnsSliceView(t *testing.T) {
+	t.Parallel()
 	items := []int{1, 2, 3, 4, 5}
 
 	params := PaginationQueryParams{start: 1, limit: 3}
@@ -218,6 +233,7 @@ func TestPaginateFn_ReturnsSliceView(t *testing.T) {
 }
 
 func TestPaginateFn_TypicalAPIUseCases(t *testing.T) {
+	t.Parallel()
 	// Simulate API responses with different page sizes
 	items := make([]int, 100)
 	for i := range items {

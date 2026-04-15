@@ -34,6 +34,7 @@ func listFiles(dir string) []string {
 }
 
 func Test_shouldCreateArchive(t *testing.T) {
+	t.Parallel()
 	tmpdir := t.TempDir()
 	content := []byte("content")
 
@@ -74,6 +75,7 @@ func Test_shouldCreateArchive(t *testing.T) {
 }
 
 func Test_shouldCreateArchive2(t *testing.T) {
+	t.Parallel()
 	tmpdir := t.TempDir()
 	content := []byte("content")
 
@@ -113,6 +115,7 @@ func Test_shouldCreateArchive2(t *testing.T) {
 }
 
 func TestExtractTarGzPathTraversal(t *testing.T) {
+	t.Parallel()
 	testDir := t.TempDir()
 
 	// Create an evil file with a path traversal attempt

@@ -116,7 +116,7 @@ export function WebhookRow({
       </td>
       <td>
         {!!webhookUrl && (
-          <div className="flex gap-2 items-center">
+          <div className="flex items-center gap-2">
             <span className="text-muted">{truncateLeftRight(webhookUrl)}</span>
             <CopyButton
               copyText={webhookUrl}

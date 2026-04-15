@@ -38,7 +38,7 @@ export function HelmTemplatesList({
 
   return (
     <section className="datatable" aria-label="Helm charts">
-      <div className="toolBar vertical-center relative w-full !gap-x-5 !gap-y-1 !px-0 overflow-auto">
+      <div className="toolBar vertical-center relative w-full !gap-x-5 !gap-y-1 overflow-auto !px-0">
         <div className="toolBarTitle vertical-center whitespace-nowrap">
           Select a helm chart from {selectedRegistry?.name}
         </div>
@@ -51,7 +51,7 @@ export function HelmTemplatesList({
           className="!mr-0 h-9"
         />
 
-        <div className="w-full sm:w-1/4 flex-none">
+        <div className="w-full flex-none sm:w-1/4">
           <PortainerSelect
             placeholder="Select a category"
             value={selectedCategory}

@@ -30,8 +30,8 @@ type service struct {
 	mu          sync.Mutex
 }
 
-func NewService(dataStore dataservices.DataStore) (*service, error) {
-	return &service{dataStore: dataStore}, nil
+func NewService(dataStore dataservices.DataStore) *service {
+	return &service{dataStore: dataStore}
 }
 
 func (service *service) loadEnvAndPlatform() error {

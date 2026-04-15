@@ -15,7 +15,8 @@ import (
 )
 
 func TestHandler_webhookInvoke(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, true, true)
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
 
 	webhookID := newGuidString(t)
 	err := store.StackService.Create(&portainer.Stack{

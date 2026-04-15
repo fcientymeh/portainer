@@ -7,6 +7,7 @@ import (
 )
 
 func Test_Every(t *testing.T) {
+	t.Parallel()
 	test(t, slicesx.Every, "All start with an A (ok)",
 		[]string{"Apple", "Avocado", "Apricot"},
 		true,
@@ -43,6 +44,7 @@ func Test_Every(t *testing.T) {
 }
 
 func Test_Some(t *testing.T) {
+	t.Parallel()
 	test(t, slicesx.Some, "Some start with an A (ok)",
 		[]string{"Apple", "Avocado", "Banana"},
 		true,

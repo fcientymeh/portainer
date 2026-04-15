@@ -19,6 +19,7 @@ import (
 )
 
 func TestTagDeleteEdgeGroupsConcurrently(t *testing.T) {
+	t.Parallel()
 	const tagsCount = 100
 
 	handler, store := setUpHandler(t)
@@ -83,6 +84,7 @@ func TestTagDeleteEdgeGroupsConcurrently(t *testing.T) {
 }
 
 func TestHandler_tagDelete(t *testing.T) {
+	t.Parallel()
 	t.Run("should delete tag and update related endpoints and edge groups", func(t *testing.T) {
 		handler, store := setUpHandler(t)
 

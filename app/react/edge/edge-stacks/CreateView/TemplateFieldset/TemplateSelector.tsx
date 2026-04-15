@@ -177,7 +177,7 @@ function useOptions(value: SelectedTemplateValue) {
 
 function GroupLabel({ label }: GroupBase<unknown>) {
   return (
-    <span className="font-bold text-black th-dark:text-white th-highcontrast:text-white">
+    <span className="font-bold text-black th-highcontrast:text-white th-dark:text-white">
       {label}
     </span>
   );

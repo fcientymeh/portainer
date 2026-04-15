@@ -16,7 +16,8 @@ import (
 )
 
 func Test_RegistryAccess_RequiresAuthentication(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, true, true)
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
 	registry := &portainer.Registry{
 		ID:   1,
 		Name: "test-registry",
@@ -37,7 +38,8 @@ func Test_RegistryAccess_RequiresAuthentication(t *testing.T) {
 }
 
 func Test_RegistryAccess_InvalidRegistryID(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, true, true)
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
 	user := &portainer.User{ID: 1, Username: "test", Role: portainer.StandardUserRole}
 	err := store.User().Create(user)
 	require.NoError(t, err)
@@ -57,7 +59,8 @@ func Test_RegistryAccess_InvalidRegistryID(t *testing.T) {
 }
 
 func Test_RegistryAccess_RegistryNotFound(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, true, true)
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
 
 	user := &portainer.User{ID: 1, Username: "test", Role: portainer.StandardUserRole}
 	err := store.User().Create(user)

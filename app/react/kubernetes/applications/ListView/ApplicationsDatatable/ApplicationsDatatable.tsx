@@ -127,7 +127,7 @@ export function ApplicationsDatatable({
       )}
       description={
         <div className="w-full">
-          <div className="min-w-[140px] float-right">
+          <div className="float-right min-w-[140px]">
             <NamespaceFilter
               namespaces={namespaceListQuery.data ?? []}
               value={tableState.namespace}

@@ -180,6 +180,28 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
         docs: '/user/kubernetes/networking/services',
       },
     };
+    const service = {
+      name: 'kubernetes.services.service',
+      url: '/:namespace/:name?tab',
+      views: {
+        'content@': {
+          component: 'kubernetesResourceDetailsYAMLView',
+        },
+      },
+      data: {
+        resourceConfig: {
+          title: 'Service details',
+          breadcrumbLabel: 'Services',
+          breadcrumbLink: 'kubernetes.services',
+          resourceType: 'service',
+          apiVersion: 'v1',
+          resourcePlural: 'services',
+          namespaced: true,
+          yamlIdentifier: 'service-yaml',
+          dataCy: 'service-yaml',
+        },
+      },
+    };
 
     const ingresses = {
       name: 'kubernetes.ingresses',
@@ -632,6 +654,52 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
         docs: '/user/kubernetes/more-resources/jobs',
       },
     };
+    const job = {
+      name: 'kubernetes.moreResources.job',
+      url: '/jobs/:namespace/:name?tab',
+      views: {
+        'content@': {
+          component: 'kubernetesResourceDetailsYAMLView',
+        },
+      },
+      data: {
+        resourceConfig: {
+          title: 'Job details',
+          breadcrumbLabel: 'Cron Jobs & Jobs',
+          breadcrumbLink: 'kubernetes.moreResources.jobs',
+          breadcrumbTab: 'jobs',
+          resourceType: 'job',
+          apiVersion: 'batch/v1',
+          resourcePlural: 'jobs',
+          namespaced: true,
+          yamlIdentifier: 'job-yaml',
+          dataCy: 'job-yaml',
+        },
+      },
+    };
+    const cronJob = {
+      name: 'kubernetes.moreResources.cronJob',
+      url: '/cronjobs/:namespace/:name?tab',
+      views: {
+        'content@': {
+          component: 'kubernetesResourceDetailsYAMLView',
+        },
+      },
+      data: {
+        resourceConfig: {
+          title: 'Cron Job details',
+          breadcrumbLabel: 'Cron Jobs & Jobs',
+          breadcrumbLink: 'kubernetes.moreResources.jobs',
+          breadcrumbTab: 'cronJobs',
+          resourceType: 'cronjob',
+          apiVersion: 'batch/v1',
+          resourcePlural: 'cronjobs',
+          namespaced: true,
+          yamlIdentifier: 'cronjob-yaml',
+          dataCy: 'cronjob-yaml',
+        },
+      },
+    };
 
     const serviceAccounts = {
       name: 'kubernetes.moreResources.serviceAccounts',
@@ -671,6 +739,52 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
         docs: '/user/kubernetes/more-resources/cluster-roles',
       },
     };
+    const clusterRole = {
+      name: 'kubernetes.moreResources.clusterRole',
+      url: '/clusterRoles/:name?tab',
+      views: {
+        'content@': {
+          component: 'kubernetesResourceDetailsYAMLView',
+        },
+      },
+      data: {
+        resourceConfig: {
+          title: 'Cluster Role details',
+          breadcrumbLabel: 'Cluster Roles',
+          breadcrumbLink: 'kubernetes.moreResources.clusterRoles',
+          breadcrumbTab: 'clusterRoles',
+          resourceType: 'clusterrole',
+          apiVersion: 'rbac.authorization.k8s.io/v1',
+          resourcePlural: 'clusterroles',
+          namespaced: false,
+          yamlIdentifier: 'cluster-role-yaml',
+          dataCy: 'cluster-role-yaml',
+        },
+      },
+    };
+    const clusterRoleBinding = {
+      name: 'kubernetes.moreResources.clusterRoleBinding',
+      url: '/clusterRoleBindings/:name?tab',
+      views: {
+        'content@': {
+          component: 'kubernetesResourceDetailsYAMLView',
+        },
+      },
+      data: {
+        resourceConfig: {
+          title: 'Cluster Role Binding details',
+          breadcrumbLabel: 'Cluster Roles',
+          breadcrumbLink: 'kubernetes.moreResources.clusterRoles',
+          breadcrumbTab: 'clusterRoleBindings',
+          resourceType: 'clusterrolebinding',
+          apiVersion: 'rbac.authorization.k8s.io/v1',
+          resourcePlural: 'clusterrolebindings',
+          namespaced: false,
+          yamlIdentifier: 'cluster-role-binding-yaml',
+          dataCy: 'cluster-role-binding-yaml',
+        },
+      },
+    };
 
     const roles = {
       name: 'kubernetes.moreResources.roles',
@@ -682,6 +796,52 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
       },
       data: {
         docs: '/user/kubernetes/more-resources/namespace-roles',
+      },
+    };
+    const role = {
+      name: 'kubernetes.moreResources.role',
+      url: '/roles/:namespace/:name?tab',
+      views: {
+        'content@': {
+          component: 'kubernetesResourceDetailsYAMLView',
+        },
+      },
+      data: {
+        resourceConfig: {
+          title: 'Role details',
+          breadcrumbLabel: 'Roles',
+          breadcrumbLink: 'kubernetes.moreResources.roles',
+          breadcrumbTab: 'roles',
+          resourceType: 'role',
+          apiVersion: 'rbac.authorization.k8s.io/v1',
+          resourcePlural: 'roles',
+          namespaced: true,
+          yamlIdentifier: 'role-yaml',
+          dataCy: 'role-yaml',
+        },
+      },
+    };
+    const roleBinding = {
+      name: 'kubernetes.moreResources.roleBinding',
+      url: '/roleBindings/:namespace/:name?tab',
+      views: {
+        'content@': {
+          component: 'kubernetesResourceDetailsYAMLView',
+        },
+      },
+      data: {
+        resourceConfig: {
+          title: 'Role Binding details',
+          breadcrumbLabel: 'Roles',
+          breadcrumbLink: 'kubernetes.moreResources.roles',
+          breadcrumbTab: 'roleBindings',
+          resourceType: 'rolebinding',
+          apiVersion: 'rbac.authorization.k8s.io/v1',
+          resourcePlural: 'rolebindings',
+          namespaced: true,
+          yamlIdentifier: 'role-binding-yaml',
+          dataCy: 'role-binding-yaml',
+        },
       },
     };
 
@@ -723,15 +883,22 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
     $stateRegistryProvider.register(endpointKubernetesSecurityConstraint);
 
     $stateRegistryProvider.register(services);
+    $stateRegistryProvider.register(service);
     $stateRegistryProvider.register(ingresses);
     $stateRegistryProvider.register(ingressesCreate);
     $stateRegistryProvider.register(ingressesEdit);
 
     $stateRegistryProvider.register(moreResources);
     $stateRegistryProvider.register(jobs);
+    $stateRegistryProvider.register(job);
+    $stateRegistryProvider.register(cronJob);
     $stateRegistryProvider.register(serviceAccounts);
     $stateRegistryProvider.register(serviceAccount);
     $stateRegistryProvider.register(clusterRoles);
+    $stateRegistryProvider.register(clusterRole);
+    $stateRegistryProvider.register(clusterRoleBinding);
     $stateRegistryProvider.register(roles);
+    $stateRegistryProvider.register(role);
+    $stateRegistryProvider.register(roleBinding);
   },
 ]);

@@ -13,6 +13,7 @@ import (
 )
 
 func TestRetryTime(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		failures int
 		secGte   int
@@ -41,6 +42,7 @@ func TestRetryTime(t *testing.T) {
 }
 
 func TestRetryWithWarnings(t *testing.T) {
+	t.Parallel()
 	// different number of retries than the default
 	settings := Settings{
 		MaxRetries:    7,

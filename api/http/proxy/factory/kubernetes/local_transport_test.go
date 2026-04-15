@@ -9,6 +9,7 @@ import (
 )
 
 func TestNewLocalTransport(t *testing.T) {
+	t.Parallel()
 	fips.InitFIPS(false)
 
 	transport, err := NewLocalTransport(nil, nil, nil, nil, nil)

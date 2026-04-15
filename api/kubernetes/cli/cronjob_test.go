@@ -71,6 +71,7 @@ func (kcl *KubeClient) TestFetchCronJobs(t *testing.T) {
 // executions belonging to the CronJob's own namespace, even when same-named CronJobs
 // exist across multiple namespaces.
 func TestGetCronJobExecutionsNamespaceFilter(t *testing.T) {
+	t.Parallel()
 	backoffLimit := int32(3)
 	completions := int32(1)
 

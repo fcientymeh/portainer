@@ -25,10 +25,7 @@ func UpdateGitObject(ctx context.Context, gitService portainer.GitService, objId
 		Str("object", objId).
 		Msg("the object has a git config, try to poll from git repository")
 
-	username, password, err := git.GetCredentials(gitConfig.Authentication)
-	if err != nil {
-		return false, "", errors.WithMessagef(err, "failed to get credentials for %v", objId)
-	}
+	username, password := git.GetCredentials(gitConfig.Authentication)
 
 	newHash, err := gitService.LatestCommitID(
 		ctx,

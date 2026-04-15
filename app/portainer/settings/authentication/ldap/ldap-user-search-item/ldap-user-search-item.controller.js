@@ -17,8 +17,10 @@ export default class LdapUserSearchItemController {
   }
 
   onGroupChange(index, group) {
-    this.groups[index] = group;
-    this.onGroupsChange(this.groups);
+    this.$scope.$evalAsync(() => {
+      this.groups = this.groups.map((g, i) => (i === index ? group : g));
+      this.onGroupsChange(this.groups);
+    });
   }
 
   onGroupsChange(groups) {

@@ -97,10 +97,7 @@ func (d *stackDeployer) DeployKubernetesStack(ctx context.Context, stack *portai
 		appLabels.Kind = "git"
 	}
 
-	k8sDeploymentConfig, err := CreateKubernetesStackDeploymentConfig(stack, d.kubernetesDeployer, appLabels, user, endpoint)
-	if err != nil {
-		return errors.Wrap(err, "failed to create temp kub deployment files")
-	}
+	k8sDeploymentConfig := CreateKubernetesStackDeploymentConfig(stack, d.kubernetesDeployer, appLabels, user, endpoint)
 
 	if err := k8sDeploymentConfig.Deploy(ctx); err != nil {
 		return errors.Wrap(err, "failed to deploy kubernetes application")

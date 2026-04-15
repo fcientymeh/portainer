@@ -26,7 +26,7 @@ interface Props {
 export function KubernetesSidebar({ environmentId }: Props) {
   return (
     <>
-      <div className="w-full flex mb-2 justify-center -mt-2">
+      <div className="-mt-2 mb-2 flex w-full justify-center">
         <KubectlShellButton environmentId={environmentId} />
       </div>
 

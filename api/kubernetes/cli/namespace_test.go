@@ -14,6 +14,7 @@ import (
 )
 
 func Test_ToggleSystemState(t *testing.T) {
+	t.Parallel()
 	t.Run("should skip is default (exit without error)", func(t *testing.T) {
 		nsName := "default"
 		kcl := &KubeClient{

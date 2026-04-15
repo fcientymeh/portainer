@@ -8,6 +8,7 @@ import (
 )
 
 func Test_Map(t *testing.T) {
+	t.Parallel()
 	test(t, slicesx.Map, "Map integers to strings",
 		[]int{1, 2, 3, 4, 5},
 		[]string{"1", "2", "3", "4", "5"},
@@ -24,6 +25,7 @@ func Test_Map(t *testing.T) {
 }
 
 func Test_FlatMap(t *testing.T) {
+	t.Parallel()
 	test(t, slicesx.FlatMap, "Map integers to strings and flatten",
 		[]int{1, 2, 3, 4, 5},
 		[]string{"1", "1", "2", "2", "3", "3", "4", "4", "5", "5"},

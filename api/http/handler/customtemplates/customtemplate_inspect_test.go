@@ -17,9 +17,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestInspectHandler(t *testing.T) {
+// newTestHandler creates a handler with a test datastore, filesystem service, and common fixtures:
+// admin user (ID=1), standard users (ID=2,3,4), endpoint (ID=1) with access for users 2 and 3,
+// team (ID=1), and team membership for user 3.
+func newTestHandler(t *testing.T) (*Handler, dataservices.DataStore, portainer.FileService) {
+	t.Helper()
+
 	_, ds := datastore.MustNewTestStore(t, true, false)
-	require.NotNil(t, ds)
 
 	fs, err := filesystem.NewService(t.TempDir(), t.TempDir())
 	require.NoError(t, err)
@@ -36,7 +40,20 @@ func TestInspectHandler(t *testing.T) {
 			}}))
 		require.NoError(t, tx.Team().Create(&portainer.Team{ID: 1}))
 		require.NoError(t, tx.TeamMembership().Create(&portainer.TeamMembership{ID: 1, UserID: 3, TeamID: 1, Role: portainer.TeamMember}))
+		return nil
+	}))
 
+	handler := NewHandler(testhelpers.NewTestRequestBouncer(), ds, fs, nil)
+
+	return handler, ds, fs
+}
+
+func TestInspectHandler(t *testing.T) {
+	t.Parallel()
+
+	handler, ds, _ := newTestHandler(t)
+
+	require.NoError(t, ds.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		require.NoError(t, tx.CustomTemplate().Create(&portainer.CustomTemplate{ID: 1}))
 		require.NoError(t, tx.CustomTemplate().Create(&portainer.CustomTemplate{ID: 2}))
 		require.NoError(t, tx.ResourceControl().Create(&portainer.ResourceControl{ID: 1, ResourceID: "2", Type: portainer.CustomTemplateResourceControl,
@@ -45,8 +62,6 @@ func TestInspectHandler(t *testing.T) {
 		}))
 		return nil
 	}))
-
-	handler := NewHandler(testhelpers.NewTestRequestBouncer(), ds, fs, nil)
 
 	test := func(templateID string, restrictedContext *security.RestrictedRequestContext) (*httptest.ResponseRecorder, *httperror.HandlerError) {
 		r := httptest.NewRequest(http.MethodGet, "/custom_templates/"+templateID, nil)

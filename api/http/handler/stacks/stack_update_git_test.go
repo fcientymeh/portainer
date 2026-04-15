@@ -19,6 +19,7 @@ import (
 )
 
 func TestStackUpdateGitWebhookUniqueness(t *testing.T) {
+	t.Parallel()
 	webhook, err := uuid.NewRandom()
 	require.NoError(t, err)
 

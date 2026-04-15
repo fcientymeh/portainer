@@ -7,9 +7,7 @@ import (
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/datastore"
 	"github.com/portainer/portainer/api/http/security"
-	"github.com/portainer/portainer/api/internal/testhelpers"
 
 	"github.com/segmentio/encoding/json"
 	"github.com/stretchr/testify/assert"
@@ -17,6 +15,7 @@ import (
 )
 
 func Test_registryCreatePayload_Validate(t *testing.T) {
+	t.Parallel()
 	basePayload := registryCreatePayload{Name: "Test registry", URL: "http://example.com"}
 	t.Run("Can't create a ProGet registry if BaseURL is empty", func(t *testing.T) {
 		payload := basePayload
@@ -54,7 +53,9 @@ func Test_registryCreatePayload_Validate(t *testing.T) {
 }
 
 func TestHandler_registryCreate(t *testing.T) {
-	_, store := datastore.MustNewTestStore(t, false, false)
+	t.Parallel()
+
+	handler, _ := newTestHandler(t)
 
 	payload := registryCreatePayload{
 		Name:           "Test registry",
@@ -76,9 +77,6 @@ func TestHandler_registryCreate(t *testing.T) {
 
 	ctx := security.StoreRestrictedRequestContext(r, restrictedContext)
 	r = r.WithContext(ctx)
-
-	handler := NewHandler(testhelpers.NewTestRequestBouncer())
-	handler.DataStore = store
 
 	handlerError := handler.registryCreate(w, r)
 	require.Nil(t, handlerError)

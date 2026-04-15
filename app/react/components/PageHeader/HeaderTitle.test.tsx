@@ -7,8 +7,9 @@ import { withTestQueryProvider } from '@/react/test-utils/withTestQuery';
 
 import { HeaderContainer } from './HeaderContainer';
 import { HeaderTitle } from './HeaderTitle';
+import { PageTitle } from './PageTitle';
 
-test('should display a HeaderTitle', async () => {
+test('should display the page title via PageTitle and the user menu via HeaderTitle', async () => {
   const username = 'username';
   const user = new UserViewModel({ Username: username });
 
@@ -17,9 +18,12 @@ test('should display a HeaderTitle', async () => {
   const Wrapped = withTestQueryProvider(
     withUserProvider(
       withTestRouter(() => (
-        <HeaderContainer>
-          <HeaderTitle title={title} />
-        </HeaderContainer>
+        <>
+          <HeaderContainer>
+            <HeaderTitle />
+          </HeaderContainer>
+          <PageTitle title={title} />
+        </>
       )),
       user
     )

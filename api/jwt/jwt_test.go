@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"testing"
+	"testing/synctest"
 	"time"
 
 	portainer "github.com/portainer/portainer/api"
@@ -14,6 +15,7 @@ import (
 )
 
 func TestGenerateSignedToken(t *testing.T) {
+	t.Parallel()
 	dataStore := testhelpers.NewDatastore(testhelpers.WithSettingsService(&portainer.Settings{}))
 	svc, err := NewService("24h", dataStore)
 	require.NoError(t, err, "failed to create a copy of service")
@@ -43,6 +45,7 @@ func TestGenerateSignedToken(t *testing.T) {
 }
 
 func TestGenerateSignedToken_InvalidScope(t *testing.T) {
+	t.Parallel()
 	dataStore := testhelpers.NewDatastore(testhelpers.WithSettingsService(&portainer.Settings{}))
 	svc, err := NewService("24h", dataStore)
 	require.NoError(t, err, "failed to create a copy of service")
@@ -60,6 +63,7 @@ func TestGenerateSignedToken_InvalidScope(t *testing.T) {
 }
 
 func TestGenerationAndParsing(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, true, false)
 
 	err := store.User().Create(&portainer.User{ID: 1})
@@ -85,6 +89,11 @@ func TestGenerationAndParsing(t *testing.T) {
 }
 
 func TestExpiration(t *testing.T) {
+	t.Parallel()
+	synctest.Test(t, testExpiration)
+}
+
+func testExpiration(t *testing.T) {
 	_, store := datastore.MustNewTestStore(t, true, false)
 
 	err := store.User().Create(&portainer.User{ID: 1})

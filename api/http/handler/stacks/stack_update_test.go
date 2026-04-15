@@ -24,6 +24,7 @@ import (
 )
 
 func Test_updateStackInTx(t *testing.T) {
+	t.Parallel()
 	t.Run("Transaction commits successfully - changes are persisted", func(t *testing.T) {
 		payload := &updateComposeStackPayload{
 			StackFileContent: "version: '3'\nservices:\n  web:\n    image: nginx:latest",
@@ -197,8 +198,9 @@ func Test_updateStackInTx(t *testing.T) {
 }
 
 func TestStackUpdate(t *testing.T) {
+	t.Parallel()
 	t.Helper()
-	_, store := datastore.MustNewTestStore(t, true, true)
+	_, store := datastore.MustNewTestStore(t, false, true)
 
 	testDataPath := filepath.Join(t.TempDir())
 	fileService, err := filesystem.NewService(testDataPath, "")
@@ -324,7 +326,7 @@ type testUpdateStackPayload interface {
 func setupUpdateStackInTxTest[T testUpdateStackPayload](t *testing.T, stack *portainer.Stack, payload T) *updateStackInTxTestSetup {
 	t.Helper()
 
-	_, store := datastore.MustNewTestStore(t, true, true)
+	_, store := datastore.MustNewTestStore(t, false, true)
 
 	testDataPath := filepath.Join(t.TempDir())
 	fileService, err := filesystem.NewService(testDataPath, "")
@@ -402,6 +404,7 @@ func (manager swarmStackManager) NormalizeStackName(name string) string {
 }
 
 func Test_updateSwarmStack_Prune(t *testing.T) {
+	t.Parallel()
 	fips.InitFIPS(false)
 
 	payload := &updateSwarmStackPayload{
@@ -438,6 +441,7 @@ func Test_updateSwarmStack_Prune(t *testing.T) {
 }
 
 func Test_updateComposeStack_Prune(t *testing.T) {
+	t.Parallel()
 	fips.InitFIPS(false)
 
 	payload := &updateComposeStackPayload{

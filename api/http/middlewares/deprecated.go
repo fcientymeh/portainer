@@ -22,7 +22,7 @@ func Deprecated(router http.Handler, urlBuilder func(w http.ResponseWriter, r *h
 			return
 		}
 
-		log.Warn().Msgf("This api is deprecated. Use %s instead", newUrl)
+		log.Warn().Str("new_url", newUrl).Msg("this API endpoint is deprecated")
 
 		redirectedRequest := r.Clone(r.Context())
 		redirectedRequest.URL.Path = newUrl

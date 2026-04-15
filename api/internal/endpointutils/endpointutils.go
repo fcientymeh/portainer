@@ -80,7 +80,7 @@ func EndpointSet(endpointIDs []portainer.EndpointID) map[portainer.EndpointID]bo
 	return set
 }
 
-func InitialIngressClassDetection(endpoint *portainer.Endpoint, endpointService dataservices.EndpointService, factory *cli.ClientFactory) {
+func InitialIngressClassDetection(tx dataservices.DataStoreTx, endpoint *portainer.Endpoint, factory *cli.ClientFactory) {
 	if endpoint.Kubernetes.Flags.IsServerIngressClassDetected {
 		return
 	}
@@ -88,7 +88,7 @@ func InitialIngressClassDetection(endpoint *portainer.Endpoint, endpointService 
 	defer func() {
 		endpoint.Kubernetes.Flags.IsServerIngressClassDetected = true
 
-		if err := endpointService.UpdateEndpoint(endpoint.ID, endpoint); err != nil {
+		if err := tx.Endpoint().UpdateEndpoint(endpoint.ID, endpoint); err != nil {
 			log.Debug().Err(err).Msg("unable to store found IngressClasses inside the database")
 		}
 	}()
@@ -118,14 +118,14 @@ func InitialIngressClassDetection(endpoint *portainer.Endpoint, endpointService 
 	endpoint.Kubernetes.Configuration.IngressClasses = updatedClasses
 }
 
-func InitialMetricsDetection(endpoint *portainer.Endpoint, endpointService dataservices.EndpointService, factory *cli.ClientFactory) {
+func InitialMetricsDetection(tx dataservices.DataStoreTx, endpoint *portainer.Endpoint, factory *cli.ClientFactory) {
 	if endpoint.Kubernetes.Flags.IsServerMetricsDetected {
 		return
 	}
 
 	defer func() {
 		endpoint.Kubernetes.Flags.IsServerMetricsDetected = true
-		if err := endpointService.UpdateEndpoint(endpoint.ID, endpoint); err != nil {
+		if err := tx.Endpoint().UpdateEndpoint(endpoint.ID, endpoint); err != nil {
 			log.Debug().Err(err).Msg("unable to enable UseServerMetrics inside the database")
 		}
 	}()
@@ -146,14 +146,14 @@ func InitialMetricsDetection(endpoint *portainer.Endpoint, endpointService datas
 	endpoint.Kubernetes.Configuration.UseServerMetrics = true
 }
 
-func storageDetect(endpoint *portainer.Endpoint, endpointService dataservices.EndpointService, factory *cli.ClientFactory) error {
+func storageDetect(tx dataservices.DataStoreTx, endpoint *portainer.Endpoint, factory *cli.ClientFactory) error {
 	if endpoint.Kubernetes.Flags.IsServerStorageDetected {
 		return nil
 	}
 
 	defer func() {
 		endpoint.Kubernetes.Flags.IsServerStorageDetected = true
-		if err := endpointService.UpdateEndpoint(endpoint.ID, endpoint); err != nil {
+		if err := tx.Endpoint().UpdateEndpoint(endpoint.ID, endpoint); err != nil {
 			log.Info().Err(err).Msg("unable to enable storage class inside the database")
 		}
 	}()
@@ -181,31 +181,28 @@ func storageDetect(endpoint *portainer.Endpoint, endpointService dataservices.En
 	return nil
 }
 
-func InitialStorageDetection(endpoint *portainer.Endpoint, endpointService dataservices.EndpointService, factory *cli.ClientFactory) {
-	if endpoint.Kubernetes.Flags.IsServerStorageDetected {
-		return
-	}
-	defer func() {
-		endpoint.Kubernetes.Flags.IsServerStorageDetected = true
-
-		if err := endpointService.UpdateEndpoint(endpoint.ID, endpoint); err != nil {
-			log.Warn().Err(err).Msg("unable to store found StorageClasses inside the database")
-		}
-	}()
-
+func InitialStorageDetection(tx dataservices.DataStoreTx, dataStore dataservices.DataStore, endpoint *portainer.Endpoint, factory *cli.ClientFactory) {
 	log.Info().Msg("attempting to detect storage classes in the cluster")
-
-	err := storageDetect(endpoint, endpointService, factory)
+	err := storageDetect(tx, endpoint, factory)
 	if err == nil {
 		return
 	}
 	log.Err(err).Msg("error while detecting storage classes")
 
+	endpointID := endpoint.ID
 	go func() {
 		// Retry after 30 seconds if the initial detection failed.
 		log.Info().Msg("retrying storage detection in 30 seconds")
 		time.Sleep(30 * time.Second)
-		err := storageDetect(endpoint, endpointService, factory)
+
+		err := dataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+			endpoint, err := tx.Endpoint().Endpoint(endpointID)
+			if err != nil {
+				return err
+			}
+
+			return storageDetect(tx, endpoint, factory)
+		})
 		log.Err(err).Msg("final error while detecting storage classes")
 	}()
 }
@@ -259,8 +256,5 @@ func InitializeEdgeEndpointRelation(endpoint *portainer.Endpoint, tx dataservice
 		EdgeStacks: make(map[portainer.EdgeStackID]bool),
 	}
 
-	if err := tx.EndpointRelation().Create(relation); err != nil {
-		return err
-	}
-	return nil
+	return tx.EndpointRelation().Create(relation)
 }

@@ -8,6 +8,7 @@ import (
 )
 
 func Test_AddAppLabels(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name       string
 		input      string
@@ -437,6 +438,7 @@ spec:
 }
 
 func Test_AddAppLabels_HelmApp(t *testing.T) {
+	t.Parallel()
 	labels := GetHelmAppLabels("best-name", "best-owner")
 
 	tests := []struct {
@@ -601,6 +603,7 @@ spec:
 }
 
 func Test_DocumentSeperator(t *testing.T) {
+	t.Parallel()
 	labels := KubeAppLabels{
 		StackID:   123,
 		StackName: "best-name",
@@ -650,6 +653,7 @@ metadata:
 }
 
 func Test_GetNamespace(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		input string
@@ -683,6 +687,7 @@ kind: Namespace
 }
 
 func Test_ExtractDocuments(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		input string

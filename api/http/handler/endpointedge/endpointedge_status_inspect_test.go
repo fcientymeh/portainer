@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	portainer "github.com/portainer/portainer/api"
@@ -127,6 +128,7 @@ func createEndpoint(handler *Handler, endpoint portainer.Endpoint, endpointRelat
 }
 
 func TestMissingEdgeIdentifier(t *testing.T) {
+	t.Parallel()
 	handler := mustSetupHandler(t)
 	endpointID := portainer.EndpointID(45)
 
@@ -154,6 +156,7 @@ func TestMissingEdgeIdentifier(t *testing.T) {
 }
 
 func TestWithEndpoints(t *testing.T) {
+	t.Parallel()
 	handler := mustSetupHandler(t)
 
 	for _, test := range endpointTestCases {
@@ -180,6 +183,11 @@ func TestWithEndpoints(t *testing.T) {
 }
 
 func TestLastCheckInDateIncreases(t *testing.T) {
+	t.Parallel()
+	synctest.Test(t, testLastCheckInDateIncreases)
+}
+
+func testLastCheckInDateIncreases(t *testing.T) {
 	handler := mustSetupHandler(t)
 
 	endpointID := portainer.EndpointID(56)
@@ -226,6 +234,7 @@ func TestLastCheckInDateIncreases(t *testing.T) {
 }
 
 func TestEmptyEdgeIdWithAgentPlatformHeader(t *testing.T) {
+	t.Parallel()
 	handler := mustSetupHandler(t)
 
 	endpointID := portainer.EndpointID(44)
@@ -269,6 +278,7 @@ func TestEmptyEdgeIdWithAgentPlatformHeader(t *testing.T) {
 }
 
 func TestEdgeStackStatus(t *testing.T) {
+	t.Parallel()
 	handler := mustSetupHandler(t)
 
 	endpointID := portainer.EndpointID(7)
@@ -334,6 +344,7 @@ func TestEdgeStackStatus(t *testing.T) {
 }
 
 func TestEdgeJobsResponse(t *testing.T) {
+	t.Parallel()
 	handler := mustSetupHandler(t)
 
 	localCreateEndpoint := func(endpointID portainer.EndpointID, tagIDs []portainer.TagID) *portainer.Endpoint {

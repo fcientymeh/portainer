@@ -100,9 +100,7 @@ export function CronJobsDatatable() {
         withColumnFilters(tableState.columnFilters, tableState.setColumnFilters)
       )}
       getRowCanExpand={(row) => (row.original.Jobs ?? []).length > 0}
-      renderSubRow={(row) => (
-        <SubRow item={row.original.Jobs ?? []} />
-      )}
+      renderSubRow={(row) => <SubRow item={row.original.Jobs ?? []} />}
     />
   );
 }

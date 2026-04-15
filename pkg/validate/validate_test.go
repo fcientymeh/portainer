@@ -7,6 +7,7 @@ import (
 )
 
 func Test_IsURL(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name           string
 		url            string
@@ -58,6 +59,7 @@ func Test_IsURL(t *testing.T) {
 }
 
 func Test_IsUUID(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name           string
 		uuid           string
@@ -99,6 +101,7 @@ func Test_IsUUID(t *testing.T) {
 }
 
 func Test_IsHexadecimal(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name           string
 		hex            string
@@ -130,6 +133,7 @@ func Test_IsHexadecimal(t *testing.T) {
 }
 
 func Test_HasWhitespaceOnly(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name           string
 		s              string
@@ -171,6 +175,7 @@ func Test_HasWhitespaceOnly(t *testing.T) {
 }
 
 func Test_MinStringLength(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name           string
 		s              string
@@ -218,6 +223,7 @@ func Test_MinStringLength(t *testing.T) {
 }
 
 func Test_Matches(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name           string
 		s              string
@@ -247,6 +253,7 @@ func Test_Matches(t *testing.T) {
 }
 
 func Test_IsNonPositive(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name           string
 		f              float64
@@ -278,6 +285,7 @@ func Test_IsNonPositive(t *testing.T) {
 }
 
 func Test_InRange(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name           string
 		f              float64
@@ -331,6 +339,7 @@ func Test_InRange(t *testing.T) {
 }
 
 func Test_IsHost(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name           string
 		s              string
@@ -367,6 +376,7 @@ func Test_IsHost(t *testing.T) {
 }
 
 func Test_IsIP(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name           string
 		s              string
@@ -403,6 +413,7 @@ func Test_IsIP(t *testing.T) {
 }
 
 func Test_IsDNSName(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name           string
 		s              string
@@ -439,6 +450,7 @@ func Test_IsDNSName(t *testing.T) {
 }
 
 func Test_IsTrustedOrigin(t *testing.T) {
+	t.Parallel()
 	f := func(s string, expected bool) {
 		t.Helper()
 

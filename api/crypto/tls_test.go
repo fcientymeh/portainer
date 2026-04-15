@@ -10,6 +10,7 @@ import (
 )
 
 func TestCreateTLSConfiguration(t *testing.T) {
+	t.Parallel()
 	// InsecureSkipVerify = false
 	config := CreateTLSConfiguration(false)
 	require.Equal(t, config.MinVersion, uint16(tls.VersionTLS12)) //nolint:forbidigo
@@ -22,6 +23,7 @@ func TestCreateTLSConfiguration(t *testing.T) {
 }
 
 func TestCreateTLSConfigurationFIPS(t *testing.T) {
+	t.Parallel()
 	fips := true
 
 	fipsCipherSuites := []uint16{
@@ -42,6 +44,7 @@ func TestCreateTLSConfigurationFIPS(t *testing.T) {
 }
 
 func TestCreateTLSConfigurationFromBytes(t *testing.T) {
+	t.Parallel()
 	// No TLS
 	config, err := CreateTLSConfigurationFromBytes(false, nil, nil, nil, false, false)
 	require.NoError(t, err)
@@ -59,6 +62,7 @@ func TestCreateTLSConfigurationFromBytes(t *testing.T) {
 }
 
 func TestCreateTLSConfigurationFromDisk(t *testing.T) {
+	t.Parallel()
 	// No TLS
 	config, err := CreateTLSConfigurationFromDisk(portainer.TLSConfiguration{})
 	require.NoError(t, err)
@@ -74,6 +78,7 @@ func TestCreateTLSConfigurationFromDisk(t *testing.T) {
 }
 
 func TestCreateTLSConfigurationFromDiskFIPS(t *testing.T) {
+	t.Parallel()
 	fips := true
 
 	// Skipping TLS verifications cannot be done in FIPS mode

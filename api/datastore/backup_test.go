@@ -13,6 +13,7 @@ import (
 )
 
 func TestStoreCreation(t *testing.T) {
+	t.Parallel()
 	_, store := MustNewTestStore(t, true, true)
 	require.NotNil(t, store)
 
@@ -31,6 +32,7 @@ func TestStoreCreation(t *testing.T) {
 }
 
 func TestBackup(t *testing.T) {
+	t.Parallel()
 	_, store := MustNewTestStore(t, true, true)
 	backupFileName := store.backupFilename()
 	t.Run("Backup should create "+backupFileName, func(t *testing.T) {
@@ -52,6 +54,7 @@ func TestBackup(t *testing.T) {
 }
 
 func TestRestore(t *testing.T) {
+	t.Parallel()
 	_, store := MustNewTestStore(t, true, false)
 
 	t.Run("Basic Restore", func(t *testing.T) {
@@ -93,6 +96,7 @@ func TestRestore(t *testing.T) {
 }
 
 func TestBackupDBFile(t *testing.T) {
+	t.Parallel()
 	_, store := MustNewTestStore(t, true, false)
 
 	t.Run("creates backup file without managing connection state", func(t *testing.T) {
@@ -122,6 +126,7 @@ func TestBackupDBFile(t *testing.T) {
 }
 
 func TestBackupDBFileUsesCorrectPath(t *testing.T) {
+	t.Parallel()
 	_, store := MustNewTestStore(t, true, false)
 
 	t.Run("backs up unencrypted db when encrypted flag is false", func(t *testing.T) {

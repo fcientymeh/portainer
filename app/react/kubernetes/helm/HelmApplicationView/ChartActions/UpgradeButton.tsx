@@ -120,7 +120,7 @@ export function UpgradeButton({
         </InlineLoader>
       )}
       {!isLoading && !isError && (
-        <span className="absolute flex items-center -bottom-5 left-0 right-0 text-xs text-muted text-center whitespace-nowrap">
+        <span className="text-muted absolute -bottom-5 left-0 right-0 flex items-center whitespace-nowrap text-center text-xs">
           {getStatusMessage(
             versions.length === 0,
             latestVersionAvailable,

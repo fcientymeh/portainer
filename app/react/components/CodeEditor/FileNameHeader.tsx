@@ -27,7 +27,7 @@ export function FileNameHeaderRow({
   return (
     <div
       className={clsx(
-        'flex w-full text-sm text-muted border-0 border-b border-solid border-b-gray-5 th-dark:border-b-gray-7 th-highcontrast:border-b-gray-2 bg-gray-2 th-dark:bg-gray-10 th-highcontrast:bg-black [scrollbar-gutter:stable] overflow-auto',
+        'text-muted flex w-full overflow-auto border-0 border-b border-solid border-b-gray-5 bg-gray-2 text-sm [scrollbar-gutter:stable] th-highcontrast:border-b-gray-2 th-highcontrast:bg-black th-dark:border-b-gray-7 th-dark:bg-gray-10',
         className
       )}
       style={style}
@@ -51,7 +51,7 @@ export function FileNameHeader({
   return (
     <div
       className={clsx(
-        'w-full overflow-auto flex justify-between items-center gap-x-2 px-4 py-1 text-sm text-muted',
+        'text-muted flex w-full items-center justify-between gap-x-2 overflow-auto px-4 py-1 text-sm',
         className
       )}
       style={style}

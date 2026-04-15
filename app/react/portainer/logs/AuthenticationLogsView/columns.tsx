@@ -64,7 +64,7 @@ export const columns = [
       const { label, icon, mode } = props;
 
       return (
-        <span className="flex gap-1 items-center">
+        <span className="flex items-center gap-1">
           {label}
           {icon && mode && <Icon icon={icon} mode={mode} />}
         </span>

@@ -15,6 +15,7 @@ import (
 
 // Update Status
 func TestUpdateStatusAndInspect(t *testing.T) {
+	t.Parallel()
 	handler, rawAPIKey := setupHandler(t)
 
 	endpoint := createEndpoint(t, handler.DataStore)
@@ -78,6 +79,7 @@ func TestUpdateStatusAndInspect(t *testing.T) {
 }
 
 func TestUpdateStatusWithInvalidPayload(t *testing.T) {
+	t.Parallel()
 	handler, _ := setupHandler(t)
 
 	endpoint := createEndpoint(t, handler.DataStore)

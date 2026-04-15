@@ -48,7 +48,7 @@ func (payload *composeStackFromFileContentPayload) Validate(r *http.Request) err
 func createStackPayloadFromComposeFileContentPayload(name string, fileContent string, env []portainer.Pair, fromAppTemplate bool) stackbuilders.StackPayload {
 	return stackbuilders.StackPayload{
 		Name:             name,
-		StackFileContent: fileContent,
+		StackFileContent: []byte(fileContent),
 		Env:              env,
 		FromAppTemplate:  fromAppTemplate,
 	}
@@ -86,6 +86,38 @@ func (handler *Handler) checkAndCleanStackDupFromSwarm(w http.ResponseWriter, r 
 				Str("stack", fmt.Sprintf("%+v", stack)).
 				Msg("unable to remove stack files from disk for stack")
 		}
+	}
+
+	return nil
+}
+
+func (handler *Handler) ensureUniqueComposeStackName(w http.ResponseWriter, r *http.Request, endpoint *portainer.Endpoint, userID portainer.UserID, name string) *httperror.HandlerError {
+	isUnique, err := handler.checkUniqueStackNameInDocker(endpoint, name, 0, false)
+	if err != nil {
+		return httperror.InternalServerError("Unable to check for name collision", err)
+	} else if isUnique {
+		return nil
+	}
+
+	stacks, err := handler.DataStore.Stack().StacksByName(name)
+	if err != nil {
+		return httperror.InternalServerError("Unable to retrieve the stack from the database", err)
+	}
+
+	for _, stack := range stacks {
+		if stack.EndpointID != endpoint.ID {
+			continue
+		}
+
+		if stack.Type != portainer.DockerComposeStack {
+			if err := handler.checkAndCleanStackDupFromSwarm(w, r, endpoint, userID, &stack); err != nil {
+				return httperror.BadRequest("Invalid request payload", err)
+			}
+
+			continue
+		}
+
+		return stackExistsError(name)
 	}
 
 	return nil
@@ -129,26 +161,8 @@ func (handler *Handler) createComposeStackFromFileContent(w http.ResponseWriter,
 	//------------------------
 	payload.Name = handler.ComposeStackManager.NormalizeStackName(payload.Name)
 
-	isUnique, err := handler.checkUniqueStackNameInDocker(endpoint, payload.Name, 0, false)
-	if err != nil {
-		return httperror.InternalServerError("Unable to check for name collision", err)
-	}
-
-	if !isUnique {
-		stacks, err := handler.DataStore.Stack().StacksByName(payload.Name)
-		if err != nil {
-			return stackExistsError(payload.Name)
-		}
-		for _, stack := range stacks {
-			if stack.Type != portainer.DockerComposeStack && stack.EndpointID == endpoint.ID {
-				err := handler.checkAndCleanStackDupFromSwarm(w, r, endpoint, userID, &stack)
-				if err != nil {
-					return httperror.BadRequest("Invalid request payload", err)
-				}
-			} else {
-				return stackExistsError(payload.Name)
-			}
-		}
+	if err := handler.ensureUniqueComposeStackName(w, r, endpoint, userID, payload.Name); err != nil {
+		return err
 	}
 
 	securityContext, err := security.RetrieveRestrictedRequestContext(r)
@@ -158,13 +172,12 @@ func (handler *Handler) createComposeStackFromFileContent(w http.ResponseWriter,
 
 	stackPayload := createStackPayloadFromComposeFileContentPayload(payload.Name, payload.StackFileContent, payload.Env, payload.FromAppTemplate)
 
-	composeStackBuilder := stackbuilders.CreateComposeStackFileContentBuilder(securityContext,
+	composeStackBuilder := stackbuilders.CreateComposeStackFileBuilder(securityContext,
 		handler.DataStore,
 		handler.FileService,
 		handler.StackDeployer)
 
-	stackBuilderDirector := stackbuilders.NewStackBuilderDirector(composeStackBuilder)
-	stack, httpErr := stackBuilderDirector.Build(context.TODO(), &stackPayload, endpoint)
+	stack, httpErr := stackbuilders.Build(context.TODO(), handler.DataStore, composeStackBuilder, &stackPayload, endpoint)
 	if httpErr != nil {
 		return httpErr
 	}
@@ -232,10 +245,8 @@ func (payload *composeStackFromGitRepositoryPayload) Validate(r *http.Request) e
 	if payload.RepositoryAuthentication && len(payload.RepositoryPassword) == 0 {
 		return errors.New("Invalid repository credentials. Password must be specified when authentication is enabled")
 	}
-	if err := update.ValidateAutoUpdateSettings(payload.AutoUpdate); err != nil {
-		return err
-	}
-	return nil
+
+	return update.ValidateAutoUpdateSettings(payload.AutoUpdate)
 }
 
 // @id StackCreateDockerStandaloneRepository
@@ -280,26 +291,8 @@ func (handler *Handler) createComposeStackFromGitRepository(w http.ResponseWrite
 		payload.ComposeFile = filesystem.ComposeFileDefaultName
 	}
 
-	isUnique, err := handler.checkUniqueStackNameInDocker(endpoint, payload.Name, 0, false)
-	if err != nil {
-		return httperror.InternalServerError("Unable to check for name collision", err)
-	}
-
-	if !isUnique {
-		stacks, err := handler.DataStore.Stack().StacksByName(payload.Name)
-		if err != nil {
-			return stackExistsError(payload.Name)
-		}
-		for _, stack := range stacks {
-			if stack.Type != portainer.DockerComposeStack && stack.EndpointID == endpoint.ID {
-				err := handler.checkAndCleanStackDupFromSwarm(w, r, endpoint, userID, &stack)
-				if err != nil {
-					return httperror.BadRequest("Invalid request payload", err)
-				}
-			} else {
-				return stackExistsError(payload.Name)
-			}
-		}
+	if err := handler.ensureUniqueComposeStackName(w, r, endpoint, userID, payload.Name); err != nil {
+		return err
 	}
 
 	//make sure the webhook ID is unique
@@ -339,8 +332,7 @@ func (handler *Handler) createComposeStackFromGitRepository(w http.ResponseWrite
 		handler.Scheduler,
 		handler.StackDeployer)
 
-	stackBuilderDirector := stackbuilders.NewStackBuilderDirector(composeStackBuilder)
-	stack, httpErr := stackBuilderDirector.Build(context.TODO(), &stackPayload, endpoint)
+	stack, httpErr := stackbuilders.Build(context.TODO(), handler.DataStore, composeStackBuilder, &stackPayload, endpoint)
 	if httpErr != nil {
 		return httpErr
 	}
@@ -360,9 +352,9 @@ type composeStackFromFileUploadPayload struct {
 
 func createStackPayloadFromComposeFileUploadPayload(name string, fileContentBytes []byte, env []portainer.Pair) stackbuilders.StackPayload {
 	return stackbuilders.StackPayload{
-		Name:                  name,
-		StackFileContentBytes: fileContentBytes,
-		Env:                   env,
+		Name:             name,
+		StackFileContent: fileContentBytes,
+		Env:              env,
 	}
 }
 
@@ -428,26 +420,8 @@ func (handler *Handler) createComposeStackFromFileUpload(w http.ResponseWriter, 
 	//------------------------
 	payload.Name = handler.ComposeStackManager.NormalizeStackName(payload.Name)
 
-	isUnique, err := handler.checkUniqueStackNameInDocker(endpoint, payload.Name, 0, false)
-	if err != nil {
-		return httperror.InternalServerError("Unable to check for name collision", err)
-	}
-
-	if !isUnique {
-		stacks, err := handler.DataStore.Stack().StacksByName(payload.Name)
-		if err != nil {
-			return stackExistsError(payload.Name)
-		}
-		for _, stack := range stacks {
-			if stack.Type != portainer.DockerComposeStack && stack.EndpointID == endpoint.ID {
-				err := handler.checkAndCleanStackDupFromSwarm(w, r, endpoint, userID, &stack)
-				if err != nil {
-					return httperror.BadRequest("Invalid request payload", err)
-				}
-			} else {
-				return stackExistsError(payload.Name)
-			}
-		}
+	if err := handler.ensureUniqueComposeStackName(w, r, endpoint, userID, payload.Name); err != nil {
+		return err
 	}
 
 	securityContext, err := security.RetrieveRestrictedRequestContext(r)
@@ -457,13 +431,12 @@ func (handler *Handler) createComposeStackFromFileUpload(w http.ResponseWriter, 
 
 	stackPayload := createStackPayloadFromComposeFileUploadPayload(payload.Name, payload.StackFileContent, payload.Env)
 
-	composeStackBuilder := stackbuilders.CreateComposeStackFileUploadBuilder(securityContext,
+	composeStackBuilder := stackbuilders.CreateComposeStackFileBuilder(securityContext,
 		handler.DataStore,
 		handler.FileService,
 		handler.StackDeployer)
 
-	stackBuilderDirector := stackbuilders.NewStackBuilderDirector(composeStackBuilder)
-	stack, httpErr := stackBuilderDirector.Build(context.TODO(), &stackPayload, endpoint)
+	stack, httpErr := stackbuilders.Build(context.TODO(), handler.DataStore, composeStackBuilder, &stackPayload, endpoint)
 	if httpErr != nil {
 		return httpErr
 	}

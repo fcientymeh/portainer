@@ -10,6 +10,7 @@ import (
 )
 
 func Test_Show(t *testing.T) {
+	t.Parallel()
 	test.EnsureIntegrationTest(t)
 	is := assert.New(t)
 

@@ -5,21 +5,18 @@
   "trailingComma": "es5",
   "overrides": [
     {
-      "files": [
-        "*.html"
-      ],
+      "files": ["*.html"],
       "options": {
         "parser": "angular"
       }
     },
     {
-      "files": [
-        "*.{j,t}sx",
-        "*.ts"
-      ],
+      "files": ["*.{j,t}sx", "*.ts"],
       "options": {
         "printWidth": 80
       }
     }
-  ]
+  ],
+  "plugins": ["prettier-plugin-tailwindcss"],
+  "tailwindFunctions": ["clsx"]
 }

@@ -27,7 +27,7 @@ export function PublishedPorts({ item }: { item: Application }) {
           >
             <Icon icon={ExternalLinkIcon} />
             {type && (
-              <span className="text-muted w-24 inline-block">{type}</span>
+              <span className="text-muted inline-block w-24">{type}</span>
             )}
             <span>{url}</span>
           </a>

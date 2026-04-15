@@ -13,6 +13,7 @@ import (
 )
 
 func Test_NeedsEncryptionMigration(t *testing.T) {
+	t.Parallel()
 	// Test the specific scenarios mentioned in NeedsEncryptionMigration
 
 	// i.e.
@@ -143,6 +144,7 @@ func Test_NeedsEncryptionMigration(t *testing.T) {
 }
 
 func TestDBCompaction(t *testing.T) {
+	t.Parallel()
 	db := &DbConnection{Path: t.TempDir()}
 
 	err := db.Open()

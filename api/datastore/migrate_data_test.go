@@ -174,6 +174,7 @@ func TestMigrateData(t *testing.T) {
 }
 
 func TestRollback(t *testing.T) {
+	t.Parallel()
 	t.Run("Rollback should restore upgrade after backup", func(t *testing.T) {
 		version := "2.11"
 

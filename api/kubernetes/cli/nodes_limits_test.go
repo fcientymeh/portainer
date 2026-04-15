@@ -90,6 +90,7 @@ func newPods() *v1.PodList {
 }
 
 func TestKubeClient_GetNodesLimits(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		cli kubernetes.Interface
 	}

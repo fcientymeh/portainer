@@ -7,6 +7,7 @@ import (
 )
 
 func TestInitFIPS(t *testing.T) {
+	t.Parallel()
 	InitFIPS(false)
 
 	require.False(t, FIPSMode())

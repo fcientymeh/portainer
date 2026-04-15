@@ -11,6 +11,7 @@ import (
 )
 
 func TestJSONWithStatus(t *testing.T) {
+	t.Parallel()
 	type TestData struct {
 		Message string `json:"message"`
 	}
@@ -52,6 +53,7 @@ func TestJSONWithStatus(t *testing.T) {
 }
 
 func TestJSON(t *testing.T) {
+	t.Parallel()
 	type TestData struct {
 		Message string `json:"message"`
 	}
@@ -87,6 +89,7 @@ func TestJSON(t *testing.T) {
 }
 
 func TestYAML(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		data     any
@@ -135,6 +138,7 @@ func TestYAML(t *testing.T) {
 }
 
 func TestEmpty(t *testing.T) {
+	t.Parallel()
 	recorder := httptest.NewRecorder()
 
 	httpErr := Empty(recorder)

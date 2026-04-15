@@ -11,6 +11,7 @@ import { PortainerSelect } from '@@/form-components/PortainerSelect';
 import { FormSection } from '@@/form-components/FormSection';
 
 import { HelmTemplates } from '../HelmTemplates/HelmTemplates';
+import { K8sRegistryAccessNotice } from '../../components/K8sRegistryAccessNotice';
 
 export function HelmInstallView() {
   const environmentId = useEnvironmentId();
@@ -46,6 +47,12 @@ export function HelmInstallView() {
             <WidgetBody>
               <FormSection title="Deploy to">
                 <FormControl label="Namespace" required>
+                  <div className="mb-1">
+                    <K8sRegistryAccessNotice
+                      namespace={namespace}
+                      environmentId={environmentId}
+                    />
+                  </div>
                   <PortainerSelect
                     value={namespace}
                     onChange={setNamespace}

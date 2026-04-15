@@ -74,7 +74,7 @@ export function StackEditorTabInner({
   return (
     <Form className="form-horizontal">
       {/* Docker Compose Info Section */}
-      <div className="form-group space-y-2 mb-0">
+      <div className="form-group mb-0 space-y-2">
         {stackType === StackType.DockerCompose &&
           composeSyntaxMaxVersion === 2 && (
             <span className="col-sm-12 text-muted small">

@@ -22,6 +22,7 @@ func compareYAMLStrings(in1, in2 string) int {
 }
 
 func Test_GenerateYAML(t *testing.T) {
+	t.Parallel()
 	resourceYAMLTests := []struct {
 		title    string
 		resource runtime.Object
@@ -97,6 +98,7 @@ func Test_GenerateYAML(t *testing.T) {
 }
 
 func TestGetResourceQuotaFromNamespace(t *testing.T) {
+	t.Parallel()
 	kcl := &KubeClient{}
 
 	namespace := portainer.K8sNamespaceInfo{Name: "my-namespace"}

@@ -10,6 +10,7 @@ import (
 )
 
 func TestPathHash_File(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	path := filepath.Join(dir, "file.txt")
 
@@ -32,6 +33,7 @@ func TestPathHash_File(t *testing.T) {
 }
 
 func TestPathHash_Directory(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "a.txt"), []byte("aaa"), 0644))
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "b.txt"), []byte("bbb"), 0644))
@@ -59,6 +61,7 @@ func TestPathHash_Directory(t *testing.T) {
 }
 
 func TestAddBindMountHashLabel(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	webDir := filepath.Join(dir, "web")
 	require.NoError(t, os.MkdirAll(webDir, 0755))

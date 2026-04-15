@@ -8,6 +8,7 @@ import (
 )
 
 func Test_GetStackFilePaths(t *testing.T) {
+	t.Parallel()
 	stack := &portainer.Stack{
 		ProjectPath: "/tmp/stack/1",
 		EntryPoint:  "file-one.yml",

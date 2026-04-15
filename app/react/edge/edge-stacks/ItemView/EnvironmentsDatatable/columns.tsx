@@ -138,7 +138,7 @@ function ErrorCell({
         <Icon icon={isExpanded ? ChevronDown : ChevronRight} />
       </div>
       <div
-        className={clsx('overflow-hidden whitespace-normal break-keep ', {
+        className={clsx('overflow-hidden whitespace-normal break-keep', {
           'line-clamp-1': !isExpanded,
           'min-w-[150px]': isExpanded,
         })}

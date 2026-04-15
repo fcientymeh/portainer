@@ -7,6 +7,7 @@ import (
 )
 
 func Test_getUniqueElements(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		description string
 		input       string

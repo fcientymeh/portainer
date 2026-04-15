@@ -10,6 +10,7 @@ import (
 )
 
 func TestSortEndpointsByField(t *testing.T) {
+	t.Parallel()
 	environments := []portainer.Endpoint{
 		{ID: 0, Name: "Environment 1", GroupID: 1, Status: 1, LastCheckInDate: 3, EdgeID: "edge32"},
 		{ID: 1, Name: "Environment 2", GroupID: 2, Status: 2, LastCheckInDate: 6, EdgeID: "edge57"},

@@ -28,7 +28,7 @@ describe('parseDN', () => {
   });
 
   it('should filter out non-OU/CN entries', () => {
-    const dn = 'ou=Users,dc=example,dc=com';
+    const dn = 'uid=john,ou=Users,dc=example,dc=com';
     const suffix = 'dc=example,dc=com';
 
     const result = parseDN(dn, suffix);

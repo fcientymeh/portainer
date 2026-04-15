@@ -18,6 +18,7 @@ func createPasswordFile(t *testing.T, secretPath, password string) string {
 }
 
 func TestLoadEncryptionSecretKey(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	secretPath := path.Join(tempDir, secretFileName)
 
@@ -39,6 +40,7 @@ func TestLoadEncryptionSecretKey(t *testing.T) {
 }
 
 func TestDBSecretPath(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		keyFilenameFlag string
 		expected        string

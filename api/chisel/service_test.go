@@ -18,6 +18,7 @@ func init() {
 }
 
 func TestPingAgentPanic(t *testing.T) {
+	t.Parallel()
 	endpoint := &portainer.Endpoint{
 		ID:          1,
 		EdgeID:      "test-edge-id",
@@ -25,7 +26,7 @@ func TestPingAgentPanic(t *testing.T) {
 		UserTrusted: true,
 	}
 
-	_, store := datastore.MustNewTestStore(t, true, true)
+	_, store := datastore.MustNewTestStore(t, false, true)
 
 	s := NewService(store, nil, nil)
 

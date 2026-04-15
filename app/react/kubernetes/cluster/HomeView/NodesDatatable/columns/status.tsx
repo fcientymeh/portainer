@@ -23,7 +23,7 @@ function StatusCell({
   }
 
   return (
-    <div className="inline-flex whitespace-nowrap gap-x-2">
+    <div className="inline-flex gap-x-2 whitespace-nowrap">
       <StatusBadge color={status === 'Ready' ? 'success' : 'warning'}>
         {status}
       </StatusBadge>

@@ -11,6 +11,7 @@ import (
 )
 
 func Test_createProject_win(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	projectName := "create-project-test"
 

@@ -7,6 +7,7 @@ import (
 )
 
 func TestGetServices(t *testing.T) {
+	t.Parallel()
 	kcl := &KubeClient{}
 
 	services, err := kcl.GetServices("default")

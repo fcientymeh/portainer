@@ -14,6 +14,7 @@ func init() {
 }
 
 func TestEncryptDecrypt(t *testing.T) {
+	t.Parallel()
 	dataFn := func() []byte {
 		data := make([]byte, 1024)
 		_, err := io.ReadFull(rand.Reader, data)

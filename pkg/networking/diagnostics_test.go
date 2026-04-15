@@ -37,6 +37,7 @@ type proxyResponse struct {
 }
 
 func TestProbeDNSConnection(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		host           string
@@ -74,6 +75,7 @@ func TestProbeDNSConnection(t *testing.T) {
 }
 
 func TestProbeTelnetConnection(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		url            string
@@ -112,6 +114,7 @@ func TestProbeTelnetConnection(t *testing.T) {
 }
 
 func TestDetectProxy(t *testing.T) {
+	t.Parallel()
 	fips.InitFIPS(false)
 
 	tests := []struct {

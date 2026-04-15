@@ -9,6 +9,7 @@ import (
 )
 
 func Test_Filter(t *testing.T) {
+	t.Parallel()
 	test(t, slicesx.Filter, "Filter even numbers",
 		[]int{1, 2, 3, 4, 5, 6, 7, 8, 9},
 		[]int{2, 4, 6, 8},
@@ -32,6 +33,7 @@ func Test_Filter(t *testing.T) {
 }
 
 func Test_Retain(t *testing.T) {
+	t.Parallel()
 	test(t, slicesx.FilterInPlace, "Filter even numbers",
 		[]int{1, 2, 3, 4, 5, 6, 7, 8, 9},
 		[]int{2, 4, 6, 8},

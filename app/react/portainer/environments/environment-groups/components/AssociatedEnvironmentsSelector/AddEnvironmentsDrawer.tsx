@@ -117,7 +117,7 @@ export function AddEnvironmentsDrawer({
       }}
     >
       <SheetContent className="flex flex-col !p-0">
-        <div className="flex-1 p-4 overflow-auto">
+        <div className="flex-1 overflow-auto p-4">
           <SheetHeader title="Add environments" />
           <Datatable<EnvironmentTableData>
             title="Available environments"
@@ -148,9 +148,9 @@ export function AddEnvironmentsDrawer({
         {/* Don't use StickyFooter here. StickyFooter has classes for the menu to the left that we don't want here */}
         <div
           className={clsx(
-            'bottom-0 left-0 right-0 w-full z-50 h-16 sticky justify-end gap-4',
+            'sticky bottom-0 left-0 right-0 z-50 h-16 w-full justify-end gap-4',
             'flex items-center px-6',
-            'bg-[var(--bg-widget-color)] border-t border-[var(--border-widget-color)]',
+            'border-t border-[var(--border-widget-color)] bg-[var(--bg-widget-color)]',
             'shadow-[0_-2px_5px_rgba(0,0,0,0.1)]'
           )}
         >
