@@ -22,7 +22,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
 )
 
 type endpointCreatePayload struct {
