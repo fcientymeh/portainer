@@ -25,6 +25,7 @@ import { columns as defColumns } from './columns';
 import { host as hostColumn } from './columns/host';
 import { RemoveButtonMenu } from './RemoveButtonMenu';
 import { ImportExportButtons } from './ImportExportButtons';
+import { PruneButton } from './PruneButton';
 
 const tableKey = 'images';
 
@@ -68,6 +69,8 @@ export function ImagesDatatable({
       renderTableActions={(selectedItems) => (
         <div className="flex items-center gap-2">
           <RemoveButtonMenu selectedItems={selectedItems} />
+
+          <PruneButton images={imagesQuery.data || []} />
 
           <ImportExportButtons selectedItems={selectedItems} />
 

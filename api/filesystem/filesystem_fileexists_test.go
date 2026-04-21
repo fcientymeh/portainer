@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -49,7 +48,7 @@ func testHelperFileExists_fileExists(t *testing.T, checker func(path string) (bo
 }
 
 func testHelperFileExists_fileNotExists(t *testing.T, checker func(path string) (bool, error)) {
-	filePath := path.Join(t.TempDir(), fmt.Sprintf("%s%d", t.Name(), rand.Int()))
+	filePath := JoinPaths(t.TempDir(), fmt.Sprintf("%s%d", t.Name(), rand.Int()))
 
 	err := os.RemoveAll(filePath)
 	require.NoError(t, err, "RemoveAll should not fail")

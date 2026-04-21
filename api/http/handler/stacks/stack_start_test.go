@@ -40,6 +40,7 @@ func newStackStartHandler(t *testing.T) (*Handler, *datastore.Store) {
 }
 
 func TestStackStart_ActiveStack_ReturnsConflict(t *testing.T) {
+	t.Parallel()
 	h, store := newStackStartHandler(t)
 	stack := &portainer.Stack{ID: 1, Status: portainer.StackStatusActive}
 	require.NoError(t, store.Stack().Create(stack))
@@ -51,6 +52,7 @@ func TestStackStart_ActiveStack_ReturnsConflict(t *testing.T) {
 }
 
 func TestStackStart_DeployingStack_ReturnsConflict(t *testing.T) {
+	t.Parallel()
 	h, store := newStackStartHandler(t)
 	stack := &portainer.Stack{ID: 1, Status: portainer.StackStatusDeploying}
 	require.NoError(t, store.Stack().Create(stack))
@@ -62,6 +64,7 @@ func TestStackStart_DeployingStack_ReturnsConflict(t *testing.T) {
 }
 
 func TestStackStart_ErrorStack_ReturnsConflict(t *testing.T) {
+	t.Parallel()
 	h, store := newStackStartHandler(t)
 	stack := &portainer.Stack{ID: 1, Status: portainer.StackStatusError}
 	require.NoError(t, store.Stack().Create(stack))
@@ -82,6 +85,7 @@ func newStartableStack(endpointID portainer.EndpointID) *portainer.Stack {
 }
 
 func TestStackStart_StartSuccess_StackStatusSetToActive(t *testing.T) {
+	t.Parallel()
 	h, store := newStackStartHandler(t)
 	_, err := mockCreateUser(store)
 	require.NoError(t, err)
@@ -103,6 +107,7 @@ func TestStackStart_StartSuccess_StackStatusSetToActive(t *testing.T) {
 }
 
 func TestStackStart_StartFailure_StackStatusSetToError(t *testing.T) {
+	t.Parallel()
 	deployErr := errors.New("failed to pull image nginx:999")
 	h, store := newStackStartHandler(t)
 	_, err := mockCreateUser(store)

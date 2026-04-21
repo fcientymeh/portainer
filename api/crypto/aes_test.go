@@ -6,9 +6,9 @@ import (
 	"io"
 	"math/rand"
 	"os"
-	"path/filepath"
 	"testing"
 
+	"github.com/portainer/portainer/api/filesystem"
 	"github.com/portainer/portainer/api/logs"
 	"github.com/portainer/portainer/pkg/fips"
 
@@ -42,9 +42,9 @@ func Test_encryptAndDecrypt_withTheSamePassword(t *testing.T) {
 		tmpdir := t.TempDir()
 
 		var (
-			originFilePath    = filepath.Join(tmpdir, "origin")
-			encryptedFilePath = filepath.Join(tmpdir, "encrypted")
-			decryptedFilePath = filepath.Join(tmpdir, "decrypted")
+			originFilePath    = filesystem.JoinPaths(tmpdir, "origin")
+			encryptedFilePath = filesystem.JoinPaths(tmpdir, "encrypted")
+			decryptedFilePath = filesystem.JoinPaths(tmpdir, "decrypted")
 		)
 
 		content := randBytes(1024*1024*100 + 523)
@@ -148,9 +148,9 @@ func Test_encryptAndDecrypt_withStrongPassphrase(t *testing.T) {
 		tmpdir := t.TempDir()
 
 		var (
-			originFilePath    = filepath.Join(tmpdir, "origin2")
-			encryptedFilePath = filepath.Join(tmpdir, "encrypted2")
-			decryptedFilePath = filepath.Join(tmpdir, "decrypted2")
+			originFilePath    = filesystem.JoinPaths(tmpdir, "origin2")
+			encryptedFilePath = filesystem.JoinPaths(tmpdir, "encrypted2")
+			decryptedFilePath = filesystem.JoinPaths(tmpdir, "decrypted2")
 		)
 
 		content := randBytes(500)
@@ -206,9 +206,9 @@ func Test_encryptAndDecrypt_withTheSamePasswordSmallFile(t *testing.T) {
 		tmpdir := t.TempDir()
 
 		var (
-			originFilePath    = filepath.Join(tmpdir, "origin2")
-			encryptedFilePath = filepath.Join(tmpdir, "encrypted2")
-			decryptedFilePath = filepath.Join(tmpdir, "decrypted2")
+			originFilePath    = filesystem.JoinPaths(tmpdir, "origin2")
+			encryptedFilePath = filesystem.JoinPaths(tmpdir, "encrypted2")
+			decryptedFilePath = filesystem.JoinPaths(tmpdir, "decrypted2")
 		)
 
 		content := randBytes(500)
@@ -264,9 +264,9 @@ func Test_encryptAndDecrypt_withEmptyPassword(t *testing.T) {
 		tmpdir := t.TempDir()
 
 		var (
-			originFilePath    = filepath.Join(tmpdir, "origin")
-			encryptedFilePath = filepath.Join(tmpdir, "encrypted")
-			decryptedFilePath = filepath.Join(tmpdir, "decrypted")
+			originFilePath    = filesystem.JoinPaths(tmpdir, "origin")
+			encryptedFilePath = filesystem.JoinPaths(tmpdir, "encrypted")
+			decryptedFilePath = filesystem.JoinPaths(tmpdir, "decrypted")
 		)
 
 		content := randBytes(1024 * 50)
@@ -322,9 +322,9 @@ func Test_decryptWithDifferentPassphrase_shouldProduceWrongResult(t *testing.T) 
 		tmpdir := t.TempDir()
 
 		var (
-			originFilePath    = filepath.Join(tmpdir, "origin")
-			encryptedFilePath = filepath.Join(tmpdir, "encrypted")
-			decryptedFilePath = filepath.Join(tmpdir, "decrypted")
+			originFilePath    = filesystem.JoinPaths(tmpdir, "origin")
+			encryptedFilePath = filesystem.JoinPaths(tmpdir, "encrypted")
+			decryptedFilePath = filesystem.JoinPaths(tmpdir, "decrypted")
 		)
 
 		content := randBytes(1034)

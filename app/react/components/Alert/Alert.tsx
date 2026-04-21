@@ -53,6 +53,14 @@ export const alertSettings: Record<
   },
 };
 
+const roleMap: Record<AlertType, 'alert' | 'status'> = {
+  error: 'alert',
+  warn: 'alert',
+  success: 'status',
+  info: 'status',
+  default: 'status',
+};
+
 export function Alert({
   color,
   title,
@@ -66,7 +74,10 @@ export function Alert({
   const { container, header, body, icon } = alertSettings[color];
 
   return (
-    <AlertContainer className={clsx(container, className)}>
+    <AlertContainer
+      role={roleMap[color]}
+      className={clsx(container, className)}
+    >
       {title ? (
         <>
           <AlertHeader className={header}>
@@ -92,9 +103,11 @@ export function Alert({
 export function AlertContainer({
   className,
   children,
-}: PropsWithChildren<{ className?: string }>) {
+  role,
+}: PropsWithChildren<{ className?: string; role?: 'alert' | 'status' }>) {
   return (
     <div
+      role={role}
       className={clsx(
         'rounded-xl border border-solid [&_ul]:ps-8',
         'p-3',

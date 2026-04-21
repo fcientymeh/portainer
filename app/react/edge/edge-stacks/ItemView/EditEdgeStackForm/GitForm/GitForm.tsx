@@ -8,7 +8,6 @@ import {
   parseAutoUpdateResponse,
   transformAutoUpdateViewModel,
 } from '@/react/portainer/gitops/AutoUpdateFieldset/utils';
-import { InfoPanel } from '@/react/portainer/gitops/InfoPanel';
 import { RefField } from '@/react/portainer/gitops/RefField';
 import {
   AutoUpdateModel,
@@ -92,7 +91,6 @@ export function GitForm({ stack }: { stack: EdgeStack }) {
           <InnerForm
             webhookId={webhookId}
             onUpdateSettingsClick={handleUpdateSettings}
-            gitPath={gitConfig.ConfigFilePath}
             gitUrl={gitConfig.URL}
             isLoading={
               updateStackMutation.isLoading || isSaveCredentialsLoading
@@ -154,15 +152,12 @@ export function GitForm({ stack }: { stack: EdgeStack }) {
 
 function InnerForm({
   gitUrl,
-  gitPath,
   isLoading,
   isUpdateVersion,
   onUpdateSettingsClick,
   webhookId,
 }: {
   gitUrl: string;
-  gitPath: string;
-
   isLoading: boolean;
   isUpdateVersion: boolean;
   onUpdateSettingsClick(): void;
@@ -211,18 +206,6 @@ function InnerForm({
       />
 
       <FormSection title="Update from git repository">
-        <div className="row small">
-          <div className="col-sm-12">
-            <InfoPanel
-              type="Edge stack"
-              currentDeployment={{
-                repositoryUrl: gitUrl,
-                configFilePath: gitPath,
-              }}
-            />
-          </div>
-        </div>
-
         <AutoUpdateFieldset
           webhookId={webhookId}
           value={values.autoUpdate}

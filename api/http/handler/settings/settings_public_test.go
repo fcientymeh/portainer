@@ -15,18 +15,13 @@ const (
 	dummyOAuthLogoutURI         = "example.com/logout"
 )
 
-var (
-	dummyOAuthLoginURI string
-	mockAppSettings    *portainer.Settings
-)
-
-func setup() {
-	dummyOAuthLoginURI = fmt.Sprintf("%s?response_type=code&client_id=%s&redirect_uri=%s&scope=%s",
+func newTestSettings() (loginURI string, settings *portainer.Settings) {
+	loginURI = fmt.Sprintf("%s?response_type=code&client_id=%s&redirect_uri=%s&scope=%s",
 		dummyOAuthAuthenticationURI,
 		dummyOAuthClientID,
 		dummyOAuthRedirectURI,
 		dummyOAuthScopes)
-	mockAppSettings = &portainer.Settings{
+	settings = &portainer.Settings{
 		AuthenticationMethod: portainer.AuthenticationOAuth,
 		OAuthSettings: portainer.OAuthSettings{
 			AuthorizationURI: dummyOAuthAuthenticationURI,
@@ -36,10 +31,12 @@ func setup() {
 			LogoutURI:        dummyOAuthLogoutURI,
 		},
 	}
+	return
 }
 
 func TestGeneratePublicSettingsWithSSO(t *testing.T) {
-	setup()
+	t.Parallel()
+	dummyOAuthLoginURI, mockAppSettings := newTestSettings()
 
 	mockAppSettings.OAuthSettings.SSO = true
 	publicSettings := generatePublicSettings(mockAppSettings)
@@ -57,7 +54,8 @@ func TestGeneratePublicSettingsWithSSO(t *testing.T) {
 }
 
 func TestGeneratePublicSettingsWithoutSSO(t *testing.T) {
-	setup()
+	t.Parallel()
+	dummyOAuthLoginURI, mockAppSettings := newTestSettings()
 
 	mockAppSettings.OAuthSettings.SSO = false
 	publicSettings := generatePublicSettings(mockAppSettings)

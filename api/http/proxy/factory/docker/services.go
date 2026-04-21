@@ -3,7 +3,6 @@ package docker
 import (
 	"bytes"
 	"context"
-	"errors"
 	"io"
 	"net/http"
 
@@ -17,6 +16,56 @@ import (
 )
 
 const serviceObjectIdentifier = "ID"
+
+type partialServiceSpec struct {
+	TaskTemplate struct {
+		ContainerSpec struct {
+			CapabilityAdd  []string       `json:"CapabilityAdd"`
+			CapabilityDrop []string       `json:"CapabilityDrop"`
+			Sysctls        map[string]any `json:"Sysctls"`
+			Privileges     *struct {
+				Seccomp  *struct{ Mode string } `json:"Seccomp"`
+				AppArmor *struct{ Mode string } `json:"AppArmor"`
+			} `json:"Privileges"`
+			Mounts []struct {
+				Type string
+			} `json:"Mounts"`
+		} `json:"ContainerSpec"`
+	} `json:"TaskTemplate"`
+}
+
+func checkServiceBodyRestrictions(body []byte, securitySettings *portainer.EndpointSecuritySettings) error {
+	spec := &partialServiceSpec{}
+	if err := json.Unmarshal(body, spec); err != nil {
+		return err
+	}
+
+	containerSpec := spec.TaskTemplate.ContainerSpec
+
+	if !securitySettings.AllowContainerCapabilitiesForRegularUsers && (len(containerSpec.CapabilityAdd) > 0 || len(containerSpec.CapabilityDrop) > 0) {
+		return ErrContainerCapabilitiesForbidden
+	}
+
+	if !securitySettings.AllowSysctlSettingForRegularUsers && len(containerSpec.Sysctls) > 0 {
+		return ErrSysCtlSettingsForbidden
+	}
+
+	if !securitySettings.AllowSecurityOptForRegularUsers && containerSpec.Privileges != nil {
+		if containerSpec.Privileges.Seccomp != nil || containerSpec.Privileges.AppArmor != nil {
+			return ErrSecurityOptSettingsForbidden
+		}
+	}
+
+	if !securitySettings.AllowBindMountsForRegularUsers {
+		for _, mount := range containerSpec.Mounts {
+			if mount.Type == "bind" {
+				return ErrBindMountsForbidden
+			}
+		}
+	}
+
+	return nil
+}
 
 func getInheritedResourceControlFromServiceLabels(dockerClient *client.Client, endpointID portainer.EndpointID, serviceID string, resourceControls []portainer.ResourceControl) (*portainer.ResourceControl, error) {
 	service, _, err := dockerClient.ServiceInspectWithRaw(context.Background(), serviceID, swarm.ServiceInspectOptions{})
@@ -90,20 +139,6 @@ func selectorServiceLabels(responseObject map[string]any) map[string]any {
 }
 
 func (transport *Transport) decorateServiceCreationOperation(request *http.Request) (*http.Response, error) {
-	type PartialService struct {
-		TaskTemplate struct {
-			ContainerSpec struct {
-				Mounts []struct {
-					Type string
-				}
-			}
-		}
-	}
-
-	forbiddenResponse := &http.Response{
-		StatusCode: http.StatusForbidden,
-	}
-
 	isAdminOrEndpointAdmin, err := transport.isAdminOrEndpointAdmin(request)
 	if err != nil {
 		return nil, err
@@ -123,20 +158,54 @@ func (transport *Transport) decorateServiceCreationOperation(request *http.Reque
 		return nil, err
 	}
 
-	partialService := &PartialService{}
-	if err := json.Unmarshal(body, partialService); err != nil {
-		return nil, err
-	}
-
-	if !securitySettings.AllowBindMountsForRegularUsers && (len(partialService.TaskTemplate.ContainerSpec.Mounts) > 0) {
-		for _, mount := range partialService.TaskTemplate.ContainerSpec.Mounts {
-			if mount.Type == "bind" {
-				return forbiddenResponse, errors.New("forbidden to use bind mounts")
-			}
-		}
+	if err := checkServiceBodyRestrictions(body, securitySettings); err != nil {
+		return &http.Response{
+			StatusCode: http.StatusForbidden,
+			Body:       io.NopCloser(bytes.NewBufferString("Access denied: insufficient permissions to create service with specified configuration")),
+		}, err
 	}
 
 	request.Body = io.NopCloser(bytes.NewBuffer(body))
 
 	return transport.replaceRegistryAuthenticationHeader(request)
+}
+
+func (transport *Transport) decorateServiceUpdateOperation(request *http.Request, serviceID string) (*http.Response, error) {
+	isAdminOrEndpointAdmin, err := transport.isAdminOrEndpointAdmin(request)
+	if err != nil {
+		return nil, err
+	}
+
+	if isAdminOrEndpointAdmin {
+		if err := transport.decorateRegistryAuthenticationHeader(request); err != nil {
+			return nil, err
+		}
+
+		return transport.executeDockerRequest(request)
+	}
+
+	securitySettings, err := transport.fetchEndpointSecuritySettings()
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := io.ReadAll(request.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := checkServiceBodyRestrictions(body, securitySettings); err != nil {
+		return &http.Response{
+			StatusCode: http.StatusForbidden,
+			Body:       io.NopCloser(bytes.NewBufferString("Access denied: insufficient permissions to update service with specified configuration")),
+		}, err
+	}
+
+	request.Body = io.NopCloser(bytes.NewBuffer(body))
+
+	if err := transport.decorateRegistryAuthenticationHeader(request); err != nil {
+		return nil, err
+	}
+
+	return transport.restrictedResourceOperation(request, serviceID, serviceID, portainer.ServiceResourceControl, false)
 }

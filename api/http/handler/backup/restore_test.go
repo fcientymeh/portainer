@@ -21,6 +21,7 @@ import (
 )
 
 func Test_restoreArchive_usingCombinationOfPasswords(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name            string
 		backupPassword  string
@@ -59,7 +60,7 @@ func Test_restoreArchive_usingCombinationOfPasswords(t *testing.T) {
 				testhelpers.NewTestRequestBouncer(),
 				datastore,
 				offlinegate.NewOfflineGate(),
-				"./test_assets/handler_test",
+				prepareFilestorePath(t),
 				func() {},
 				adminMonitor,
 			)
@@ -78,6 +79,7 @@ func Test_restoreArchive_usingCombinationOfPasswords(t *testing.T) {
 }
 
 func Test_restoreArchive_shouldFailIfSystemWasAlreadyInitialized(t *testing.T) {
+	t.Parallel()
 	admin := portainer.User{
 		Role: portainer.AdministratorRole,
 	}
@@ -90,7 +92,7 @@ func Test_restoreArchive_shouldFailIfSystemWasAlreadyInitialized(t *testing.T) {
 	h := NewHandler(testhelpers.NewTestRequestBouncer(),
 		datastore,
 		offlinegate.NewOfflineGate(),
-		"./test_assets/handler_test",
+		prepareFilestorePath(t),
 		func() {},
 		adminMonitor,
 	)

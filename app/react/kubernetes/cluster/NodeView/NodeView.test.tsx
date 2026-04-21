@@ -31,7 +31,6 @@ vi.mock('@@/Link', () => ({
       href={`#?tab=${params?.tab ?? ''}`}
       onClick={() => {
         if (params?.tab) {
-          // eslint-disable-next-line @typescript-eslint/no-use-before-define
           mockParams = { ...mockParams, tab: params.tab };
         }
       }}

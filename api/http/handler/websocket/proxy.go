@@ -40,7 +40,6 @@ func (handler *Handler) proxyAgentWebsocketRequest(w http.ResponseWriter, r *htt
 		return err
 	}
 
-	agentURL.Scheme = "ws"
 	return handler.doProxyWebsocketRequest(w, r, params, agentURL, false)
 }
 

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
 import { EnvironmentId } from '@/react/portainer/environments/types';
@@ -8,19 +7,16 @@ import {
   StackStatus,
   StackType,
 } from '@/react/common/stacks/types';
-import { Authorized } from '@/react/hooks/useUser';
-import { InfoPanel } from '@/react/portainer/gitops/InfoPanel';
+import { GitReferenceCard } from '@/react/portainer/gitops/GitReferenceCard';
 
 import { Alert } from '@@/Alert';
 import { Icon } from '@@/Icon';
-import { Button } from '@@/buttons';
 import { FormSection } from '@@/form-components/FormSection';
 
 import { useSwarmStackResources } from '../useSwarmStackServices';
 import { useComposeStackContainers } from '../useComposeStackContainers';
 
 import { StackDuplicationForm } from './StackDuplicationForm/StackDuplicationForm';
-import { EditGitSettingsModal } from './EditGitSettings/EditGitSettingsModal';
 import { StackActions } from './StackActions';
 import { AssociateStackForm } from './AssociateStackForm';
 
@@ -47,7 +43,6 @@ export function StackInfoTab({
   environmentId,
   yamlError,
 }: StackInfoTabProps) {
-  const [isEditOpen, setIsEditOpen] = useState(false);
   const status = useStackStatus({
     status: stack?.Status,
     environmentId,
@@ -98,61 +93,15 @@ export function StackInfoTab({
               stackId={stack.Id}
             />
           ) : (
-            <>
+            <div className="space-y-4">
               {stack.GitConfig && !stack.FromAppTemplate && (
-                <>
-                  <InfoPanel
-                    type="stack"
-                    currentDeployment={
-                      stack.CurrentDeploymentInfo
-                        ? {
-                            repositoryUrl:
-                              stack.CurrentDeploymentInfo.RepositoryURL ??
-                              stack.GitConfig.URL,
-                            configFilePath:
-                              stack.CurrentDeploymentInfo.ConfigFilePath ??
-                              stack.GitConfig.ConfigFilePath,
-                            additionalFiles:
-                              stack.CurrentDeploymentInfo.AdditionalFiles,
-                            commitHash:
-                              stack.CurrentDeploymentInfo.ConfigHash ??
-                              stack.GitConfig.ConfigHash,
-                          }
-                        : {
-                            repositoryUrl: stack.GitConfig.URL,
-                            configFilePath: stack.GitConfig.ConfigFilePath,
-                            additionalFiles: stack.AdditionalFiles ?? [],
-                            commitHash: stack.GitConfig.ConfigHash,
-                          }
-                    }
-                    nextDeployment={
-                      stack.CurrentDeploymentInfo
-                        ? {
-                            repositoryUrl: stack.GitConfig.URL,
-                            configFilePath: stack.GitConfig.ConfigFilePath,
-                            additionalFiles: stack.AdditionalFiles ?? [],
-                            commitHash: stack.GitConfig.ConfigHash,
-                          }
-                        : undefined
-                    }
-                  />
-                  <Authorized authorizations="PortainerStackUpdate">
-                    <Button
-                      size="small"
-                      color="default"
-                      onClick={() => setIsEditOpen(true)}
-                      data-cy="edit-git-settings-button"
-                    >
-                      Edit Git settings
-                    </Button>
-                  </Authorized>
-                  {isEditOpen && (
-                    <EditGitSettingsModal
-                      onClose={() => setIsEditOpen(false)}
-                      stack={stack}
-                    />
-                  )}
-                </>
+                <GitReferenceCard
+                  stackId={stack.Id}
+                  gitConfig={stack.GitConfig}
+                  autoUpdate={stack.AutoUpdate}
+                  currentDeploymentInfo={stack.CurrentDeploymentInfo}
+                  stackType="docker"
+                />
               )}
 
               {isRegular && !!stackFileContent && (
@@ -163,7 +112,7 @@ export function StackInfoTab({
                   stack={stack}
                 />
               )}
-            </>
+            </div>
           )}
         </>
       )}

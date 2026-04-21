@@ -11,6 +11,8 @@ export const InputWithRef = forwardRef<
   (props, ref) => <Input {...props} mRef={ref} />
 );
 
+InputWithRef.displayName = 'InputWithRef';
+
 export function Input({
   className,
   mRef: ref,

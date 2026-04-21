@@ -2,8 +2,9 @@ package sdk
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
+
+	"github.com/portainer/portainer/api/filesystem"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -197,13 +198,13 @@ func TestGetHelmValuesFromFile(t *testing.T) {
 	})
 
 	t.Run("non-existent file returns error", func(t *testing.T) {
-		_, err := GetHelmValuesFromFile(filepath.Join(tempDir, "nonexistent.yaml"))
+		_, err := GetHelmValuesFromFile(filesystem.JoinPaths(tempDir, "nonexistent.yaml"))
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to read values file")
 	})
 
 	t.Run("valid values file", func(t *testing.T) {
-		valuesPath := filepath.Join(tempDir, "values.yaml")
+		valuesPath := filesystem.JoinPaths(tempDir, "values.yaml")
 		valuesContent := []byte(`
 replicaCount: 3
 image:
@@ -228,7 +229,7 @@ service:
 	})
 
 	t.Run("invalid YAML in file returns error", func(t *testing.T) {
-		invalidPath := filepath.Join(tempDir, "invalid.yaml")
+		invalidPath := filesystem.JoinPaths(tempDir, "invalid.yaml")
 		invalidContent := []byte(`
 invalid: yaml: content: [[[
 `)

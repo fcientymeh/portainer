@@ -2,7 +2,6 @@ package filesystem
 
 import (
 	"os"
-	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -61,30 +60,30 @@ func Test_movePath_succesIfOverwriteSetWhenDestinationDirExists(t *testing.T) {
 func Test_movePath_successWhenSourceExistsAndDestinationIsMissing(t *testing.T) {
 	t.Parallel()
 	tmp := t.TempDir()
-	sourceDir := path.Join(tmp, "source")
+	sourceDir := JoinPaths(tmp, "source")
 	err := os.Mkdir(sourceDir, 0766)
 	require.NoError(t, err)
 
 	file1 := addFile(t, sourceDir, "dir", "file")
 	file2 := addFile(t, sourceDir, "file")
-	destinationDir := path.Join(tmp, "destination")
+	destinationDir := JoinPaths(tmp, "destination")
 
 	err = MoveDirectory(sourceDir, destinationDir, false)
 	require.NoError(t, err)
 	assert.NoFileExists(t, file1, "source dir contents should be moved")
 	assert.NoFileExists(t, file2, "source dir contents should be moved")
-	assertFileContent(t, path.Join(destinationDir, "file"))
-	assertFileContent(t, path.Join(destinationDir, "dir", "file"))
+	assertFileContent(t, JoinPaths(destinationDir, "file"))
+	assertFileContent(t, JoinPaths(destinationDir, "dir", "file"))
 }
 
 func addFile(t *testing.T, fileParts ...string) (filepath string) {
 	if len(fileParts) > 2 {
-		dir := path.Join(fileParts[:len(fileParts)-1]...)
+		dir := JoinPaths(fileParts[0], fileParts[1:len(fileParts)-1]...)
 		err := os.MkdirAll(dir, 0766)
 		require.NoError(t, err)
 	}
 
-	p := path.Join(fileParts...)
+	p := JoinPaths(fileParts[0], fileParts[1:]...)
 	err := os.WriteFile(p, content, 0766)
 	require.NoError(t, err)
 

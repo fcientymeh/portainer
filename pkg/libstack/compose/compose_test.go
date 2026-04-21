@@ -4,10 +4,10 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/portainer/portainer/api/filesystem"
 	"github.com/portainer/portainer/pkg/libstack"
 	"github.com/portainer/portainer/pkg/libstack/compose"
 	"github.com/portainer/portainer/pkg/testhelpers"
@@ -79,7 +79,7 @@ func Test_UpAndDown(t *testing.T) {
 }
 
 func createFile(dir, fileName, content string) (string, error) {
-	filePath := filepath.Join(dir, fileName)
+	filePath := filesystem.JoinPaths(dir, fileName)
 
 	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
 		return "", err

@@ -52,6 +52,8 @@ export const ButtonWithRef = forwardRef<HTMLButtonElement, Omit<Props, 'mRef'>>(
   )
 );
 
+ButtonWithRef.displayName = 'ButtonWithRef';
+
 export function Button<TasProps = unknown>({
   type = 'button',
   color = 'primary',
@@ -71,7 +73,6 @@ export function Button<TasProps = unknown>({
   return (
     <Component
       ref={mRef}
-      /* eslint-disable-next-line react/button-has-type */
       type={type}
       disabled={disabled}
       className={clsx(`btn btn-${color}`, sizeClass(size), className, {

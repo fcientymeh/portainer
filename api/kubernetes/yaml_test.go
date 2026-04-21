@@ -1,7 +1,9 @@
 package kubernetes
 
 import (
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -716,6 +718,21 @@ kind: Namespace
 kind: Namespace
 `},
 		},
+		{
+			name: "empty document separator is skipped",
+			input: `apiVersion: v1
+kind: Namespace
+---
+---
+apiVersion: v1
+kind: Service
+`,
+			want: []string{`apiVersion: v1
+kind: Namespace
+`, `apiVersion: v1
+kind: Service
+`},
+		},
 	}
 
 	for _, tt := range tests {
@@ -727,5 +744,80 @@ kind: Namespace
 				assert.Equal(t, tt.want[i], string(results[i]))
 			}
 		})
+	}
+}
+
+func Test_ExtractDocuments_PostProcess(t *testing.T) {
+	t.Parallel()
+
+	input := `apiVersion: v1
+kind: Namespace
+metadata:
+  name: test
+`
+
+	t.Run("post-process callback is applied to each document", func(t *testing.T) {
+		called := 0
+		result, err := ExtractDocuments([]byte(input), func(doc any) error {
+			called++
+			m := doc.(map[string]any)
+			m["injected"] = "value"
+			return nil
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 1, called)
+		assert.Contains(t, string(result[0]), "injected")
+	})
+
+	t.Run("post-process callback error is returned", func(t *testing.T) {
+		_, err := ExtractDocuments([]byte(input), func(any) error {
+			return errors.New("post-process failed")
+		})
+		require.ErrorContains(t, err, "post-process failed")
+	})
+}
+
+// Test_ExtractDocuments_MalformedYAML is a regression test for the infinite loop
+// described in https://github.com/portainer/portainer/issues/13051.
+// Previously, a malformed YAML document (bad indentation) caused Decode() to
+// return both err != nil and m == nil. The pre-fix implementation checked
+// m == nil first and continued, skipping the EOF check and looping forever.
+func Test_ExtractDocuments_MalformedYAML(t *testing.T) {
+	malformedYAML := `---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: error
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: error
+  template:
+    metadata:
+      labels:
+        app: error
+    spec:
+      containers:
+        - name: alpine
+          image: alpine:latest
+          command: [ "/bin/bash", "-c" ]
+          args:
+            - |
+            echo "crash"
+`
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := ExtractDocuments([]byte(malformedYAML), nil)
+		done <- err
+	}()
+
+	select {
+	case err := <-done:
+		// Should return an error, not hang
+		require.Error(t, err, "expected an error for malformed YAML, not a hang")
+	case <-time.After(3 * time.Second):
+		t.Fatal("ExtractDocuments hung on malformed YAML (infinite loop — issue #13051 reproduced)")
 	}
 }

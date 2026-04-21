@@ -16,6 +16,7 @@ import (
 )
 
 func Test_helmShow(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	helmPackageManager := test.NewMockHelmPackageManager()

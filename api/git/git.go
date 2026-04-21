@@ -3,19 +3,38 @@ package git
 import (
 	"context"
 	"os"
-	"path/filepath"
 	"strings"
 
+	"github.com/portainer/portainer/api/filesystem"
 	gittypes "github.com/portainer/portainer/api/git/types"
-	"github.com/rs/zerolog/log"
 
+	"github.com/go-git/go-billy/v5"
+	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing/cache"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	gogitfs "github.com/go-git/go-git/v5/storage/filesystem"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
+
+// noSymlinkFS wraps a billy.Filesystem and rejects symlink creation to prevent
+// symlink traversal attacks from untrusted git repositories
+type noSymlinkFS struct {
+	billy.Filesystem
+}
+
+func (fs noSymlinkFS) Symlink(_, _ string) error {
+	return gittypes.ErrSymlinkDetected
+}
+
+// NewNoSymlinkFS wraps fs and rejects any symlink creation
+func NewNoSymlinkFS(fs billy.Filesystem) billy.Filesystem {
+	return noSymlinkFS{fs}
+}
 
 type gitClient struct {
 	preserveGitDirectory bool
@@ -28,19 +47,25 @@ func NewGitClient(preserveGitDir bool) *gitClient {
 }
 
 func (c *gitClient) Download(ctx context.Context, dst string, opt *git.CloneOptions) error {
-	_, err := git.PlainCloneContext(ctx, dst, false, opt)
+	wt := NewNoSymlinkFS(osfs.New(dst))
+	dot := osfs.New(filesystem.JoinPaths(dst, ".git"))
+	storer := gogitfs.NewStorage(dot, cache.NewObjectLRU(0))
+
+	_, err := git.CloneContext(ctx, storer, wt, opt)
 	if err != nil {
 		if err.Error() == "authentication required" {
 			return gittypes.ErrAuthenticationFailure
 		}
+
 		return errors.Wrap(err, "failed to clone git repository")
 	}
 
-	if !c.preserveGitDirectory {
-		err := os.RemoveAll(filepath.Join(dst, ".git"))
-		if err != nil {
-			log.Error().Err(err).Msg("failed to remove .git directory")
-		}
+	if c.preserveGitDirectory {
+		return nil
+	}
+
+	if err := os.RemoveAll(filesystem.JoinPaths(dst, ".git")); err != nil {
+		log.Error().Err(err).Msg("failed to remove .git directory")
 	}
 
 	return nil
@@ -57,6 +82,7 @@ func (c *gitClient) LatestCommitID(ctx context.Context, repositoryUrl, reference
 		if err.Error() == "authentication required" {
 			return "", gittypes.ErrAuthenticationFailure
 		}
+
 		return "", errors.Wrap(err, "failed to list repository refs")
 	}
 
@@ -93,6 +119,7 @@ func (c *gitClient) ListRefs(ctx context.Context, repositoryUrl string, opt *git
 		if ref.Name().String() == "HEAD" {
 			continue
 		}
+
 		ret = append(ret, ref.Name().String())
 	}
 
@@ -148,5 +175,6 @@ func checkGitError(err error) error {
 	} else if errMsg == "authentication required" {
 		return gittypes.ErrAuthenticationFailure
 	}
+
 	return err
 }

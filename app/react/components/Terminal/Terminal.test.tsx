@@ -85,7 +85,6 @@ beforeEach(() => {
   mockResizeObserverDisconnect = vi.fn();
   globalThis.ResizeObserver = vi
     .fn()
-    // eslint-disable-next-line prefer-arrow-callback
     .mockImplementation(function ResizeObserver(
       this: ResizeObserver,
       callback: ResizeObserverCallback

@@ -36,7 +36,7 @@ export interface ItemProps<T> {
   error?: ItemError<T>;
   disabled?: boolean;
   readOnly?: boolean;
-  // eslint-disable-next-line react/no-unused-prop-types
+
   index: number;
   needsDeletion?: boolean;
 }

@@ -2,6 +2,7 @@ package ws
 
 import (
 	"io"
+	"time"
 	"unicode/utf8"
 
 	"github.com/gorilla/websocket"
@@ -63,6 +64,13 @@ func StreamFromReaderToWebsocket(websocketConn *websocket.Conn, reader io.Reader
 		}
 
 		processedOutput := ValidString(string(out[:n]))
+
+		if err := websocketConn.SetWriteDeadline(time.Now().Add(WriteWait)); err != nil {
+			errorChan <- err
+
+			break
+		}
+
 		if err := websocketConn.WriteMessage(websocket.TextMessage, []byte(processedOutput)); err != nil {
 			errorChan <- err
 

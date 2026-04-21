@@ -3,10 +3,7 @@ import { Formik } from 'formik';
 
 import { Stack, StackType } from '@/react/common/stacks/types';
 import { toGitFormModel } from '@/react/portainer/gitops/types';
-import {
-  parseAutoUpdateResponse,
-  transformAutoUpdateViewModel,
-} from '@/react/portainer/gitops/AutoUpdateFieldset/utils';
+import { parseAutoUpdateResponse } from '@/react/portainer/gitops/AutoUpdateFieldset/utils';
 import { createWebhookId } from '@/portainer/helpers/webhookHelper';
 import { notifyError, notifySuccess } from '@/portainer/services/notifications';
 import { confirmStackUpdate } from '@/react/common/stacks/common/confirm-stack-update';
@@ -22,6 +19,7 @@ interface Props {
 }
 
 export function EditGitSettingsModal({ stack, onClose }: Props) {
+  const validationSchema = useValidationSchema(stack.Type);
   const [webhookId] = useState(
     () => stack.AutoUpdate?.Webhook || createWebhookId()
   );
@@ -32,6 +30,7 @@ export function EditGitSettingsModal({ stack, onClose }: Props) {
   );
 
   const initialValues: FormValues = {
+    kube: { name: stack.Name },
     git: {
       ...gitModel,
       AdditionalFiles: stack.AdditionalFiles || [],
@@ -42,13 +41,12 @@ export function EditGitSettingsModal({ stack, onClose }: Props) {
   };
 
   const mutation = useUpdateGitStack(stack);
-  const validationSchema = useValidationSchema(stack.Type);
 
   return (
     <Formik
       initialValues={initialValues}
-      validationSchema={validationSchema}
       onSubmit={handleSubmit}
+      validationSchema={validationSchema}
     >
       <InnerForm
         stackName={stack.Name}
@@ -73,39 +71,18 @@ export function EditGitSettingsModal({ stack, onClose }: Props) {
       repullImageAndRedeploy = result.repullImageAndRedeploy;
     }
 
-    const autoUpdate = transformAutoUpdateViewModel(
-      values.git.AutoUpdate,
-      webhookId
-    );
-
     mutation.mutate(
       {
-        payload: {
-          RepositoryURL: values.git.RepositoryURL,
-          ConfigFilePath: values.git.ComposeFilePathInRepository,
-          RepositoryReferenceName: values.git.RepositoryReferenceName,
-          RepositoryAuthentication: values.git.RepositoryAuthentication,
-          RepositoryGitCredentialID: values.git.RepositoryGitCredentialID,
-          RepositoryUsername: values.git.RepositoryUsername,
-          RepositoryPassword: values.git.RepositoryPassword,
-          RepositoryAuthorizationType: values.git.RepositoryAuthorizationType,
-          TLSSkipVerify: values.git.TLSSkipVerify,
-          AutoUpdate: autoUpdate,
-          AdditionalFiles: values.git.AdditionalFiles,
-          env: values.env,
-          prune: values.prune,
-        },
+        values,
         repullImageAndRedeploy,
+        webhookId,
       },
       {
-        onError(err) {
-          notifyError('Failure', err as Error, 'Unable to save stack settings');
-        },
         onSuccess({ redeployAttempted, redeployFailed, redeployError }) {
           if (redeployFailed) {
             notifyError(
               'Failure',
-              redeployError as Error,
+              redeployError,
               'Stack settings saved but redeploy failed'
             );
           } else if (redeployAttempted) {

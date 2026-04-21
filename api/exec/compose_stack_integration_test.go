@@ -3,11 +3,11 @@ package exec
 import (
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/filesystem"
 	"github.com/portainer/portainer/pkg/libstack/compose"
 	"github.com/portainer/portainer/pkg/testhelpers"
 	"github.com/stretchr/testify/require"
@@ -25,7 +25,7 @@ const composedContainerName = "compose_wrapper_test"
 func setup(t *testing.T) (*portainer.Stack, *portainer.Endpoint) {
 	dir := t.TempDir()
 	composeFileName := "compose_wrapper_test.yml"
-	f, err := os.Create(filepath.Join(dir, composeFileName))
+	f, err := os.Create(filesystem.JoinPaths(dir, composeFileName))
 	require.NoError(t, err)
 
 	_, err = f.WriteString(composeFile)

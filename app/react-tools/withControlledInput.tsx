@@ -107,7 +107,7 @@ export function withControlledInput<T>(
               );
 
               // call the bound handler func to update the value outside of React
-              // eslint-disable-next-line react/destructuring-assignment
+
               const onChange = props[onChangeKey];
               if (typeof onChange === 'function') {
                 onChange(value);
@@ -122,7 +122,6 @@ export function withControlledInput<T>(
     // limit keys to update to only tracked values ; ignore untracked props and handler functions
     useEffect(() => {
       const toUpdate = Object.fromEntries(
-        // eslint-disable-next-line react/destructuring-assignment
         keysToControl.map(([key]) => [key, props[key]])
       ) as KeyRecord<T>;
 

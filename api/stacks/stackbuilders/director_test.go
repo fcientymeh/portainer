@@ -77,6 +77,7 @@ func waitForStackStatus(t *testing.T, store *datastore.Store, id portainer.Stack
 // Tests
 
 func TestBuild_SaveError_ErrUnauthorized_ReturnsInternalServerError(t *testing.T) {
+	t.Parallel()
 	builder := &stubBuilder{saveErr: httperrors.ErrUnauthorized}
 
 	_, herr := Build(t.Context(), nil, builder, &StackPayload{}, &portainer.Endpoint{})
@@ -86,6 +87,7 @@ func TestBuild_SaveError_ErrUnauthorized_ReturnsInternalServerError(t *testing.T
 }
 
 func TestBuild_SaveError_ReturnsInternalServerError(t *testing.T) {
+	t.Parallel()
 	builder := &stubBuilder{saveErr: errors.New("db error")}
 
 	_, herr := Build(t.Context(), nil, builder, &StackPayload{}, &portainer.Endpoint{})
@@ -95,6 +97,7 @@ func TestBuild_SaveError_ReturnsInternalServerError(t *testing.T) {
 }
 
 func TestBuild_SpawnAsync_DeploySuccess_UpdatesStackStatusToActive(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, true, false)
 	stack := &portainer.Stack{ID: 1}
 	builder := &stubBuilder{store: store, savedStack: stack}
@@ -111,6 +114,7 @@ func TestBuild_SpawnAsync_DeploySuccess_UpdatesStackStatusToActive(t *testing.T)
 }
 
 func TestBuild_SpawnAsync_DeployFailure_UpdatesStackStatusToError(t *testing.T) {
+	t.Parallel()
 	deployErr := errors.New("failed to pull image nginx:999")
 	_, store := datastore.MustNewTestStore(t, true, false)
 	stack := &portainer.Stack{ID: 1}
@@ -130,6 +134,7 @@ func TestBuild_SpawnAsync_DeployFailure_UpdatesStackStatusToError(t *testing.T) 
 }
 
 func TestBuild_SpawnAsync_PostDeployHook_CalledOnSuccess(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, true, false)
 	stack := &portainer.Stack{ID: 1}
 	builder := &stubBuilder{store: store, savedStack: stack}
@@ -143,6 +148,7 @@ func TestBuild_SpawnAsync_PostDeployHook_CalledOnSuccess(t *testing.T) {
 }
 
 func TestBuild_SpawnAsync_PostDeployHook_NotCalledOnDeployFailure(t *testing.T) {
+	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, true, false)
 	stack := &portainer.Stack{ID: 1}
 	builder := &stubBuilder{store: store, savedStack: stack, deployErr: errors.New("failed to deploy")}

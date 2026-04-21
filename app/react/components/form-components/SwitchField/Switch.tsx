@@ -37,6 +37,7 @@ export function Switch({
 
   return (
     <>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- accessible text is provided by the parent SwitchField label */}
       <label
         className={clsx('switch', className, styles.root, {
           business: limitedToBE,

@@ -9,7 +9,20 @@ import {
 import { isEditableTableMeta } from '@@/datatables/editable/isEditableTableMeta';
 
 function defaultIsNewRow(row: unknown): boolean {
-  return (row as { Id: number }).Id === NEW_ROW_ID;
+  if (
+    !row ||
+    typeof row !== 'object' ||
+    !('Id' in row) ||
+    typeof row.Id !== 'number'
+  ) {
+    // set custom isNewRow function if object does not use `Id`
+    return false;
+  }
+  return isIdForNewRow(row.Id);
+}
+
+export function isIdForNewRow(id: number) {
+  return id <= NEW_ROW_ID;
 }
 
 export function actionsColumn<T>(
@@ -24,7 +37,9 @@ export function actionsColumn<T>(
     enableSorting: false,
     cell: ({ row: { original, index }, table }) => {
       if (!isEditableTableMeta(table.options.meta)) {
-        return null;
+        throw new Error(
+          'actionsColumn() should be used within the EditableDatatable component'
+        );
       }
 
       const {
@@ -41,14 +56,14 @@ export function actionsColumn<T>(
         <EditActionsCell
           acceptRow={() => {
             if (isNewRow(original)) {
-              acceptRow();
+              acceptRow(index);
             } else {
               editRow(UNSET_EDITABLE_ROW, undefined);
             }
           }}
           revertRow={() => {
             if (isNewRow(original)) {
-              revertRow();
+              revertRow(index);
             } else {
               updateRow(index, getEditableRowOriginalData());
               editRow(UNSET_EDITABLE_ROW, undefined);

@@ -12,6 +12,9 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/portainer/portainer/api/filesystem"
+	"github.com/portainer/portainer/pkg/libstack"
+
 	"github.com/compose-spec/compose-go/v2/consts"
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/docker/cli/cli/command"
@@ -21,9 +24,7 @@ import (
 	"github.com/docker/compose/v2/pkg/api"
 	"github.com/docker/compose/v2/pkg/compose"
 	"github.com/google/go-cmp/cmp"
-	"github.com/portainer/portainer/pkg/libstack"
 	zerolog "github.com/rs/zerolog/log"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -161,7 +162,7 @@ services:
 }
 
 func createFile(t *testing.T, dir, fileName, content string) string {
-	filePath := filepath.Join(dir, fileName)
+	filePath := filesystem.JoinPaths(dir, fileName)
 
 	err := os.WriteFile(filePath, []byte(content), 0o644)
 	require.NoError(t, err)
@@ -1372,7 +1373,7 @@ func Test_CredentialsStore_Behavior(t *testing.T) {
 	"credsStore": "test-store",
 	"auths": {}
 }`
-	configPath := filepath.Join(tmpDir, "config.json")
+	configPath := filesystem.JoinPaths(tmpDir, "config.json")
 	err := os.WriteFile(configPath, []byte(configJSON), 0644)
 	require.NoError(t, err)
 

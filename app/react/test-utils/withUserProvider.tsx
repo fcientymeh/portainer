@@ -32,7 +32,6 @@ export function withUserProvider<T>(
 
     return (
       <UserContext.Provider value={state}>
-        {/* eslint-disable-next-line react/jsx-props-no-spreading */}
         <WrappedComponent {...props} />
       </UserContext.Provider>
     );

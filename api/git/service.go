@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/rs/zerolog/log"
@@ -85,11 +86,24 @@ func (service *Service) CloneRepository(
 	password string,
 	tlsSkipVerify bool,
 ) error {
+	return service.CloneRepositoryWithAuth(ctx, destination, repositoryURL, referenceName, GetBasicAuth(username, password), tlsSkipVerify)
+}
+
+// CloneRepositoryWithAuth clones a git repository using the specified URL in the specified
+// destination folder, using the provided auth method.
+func (service *Service) CloneRepositoryWithAuth(
+	ctx context.Context,
+	destination,
+	repositoryURL,
+	referenceName string,
+	auth transport.AuthMethod,
+	tlsSkipVerify bool,
+) error {
 	gitOptions := &git.CloneOptions{
 		URL:             repositoryURL,
 		Depth:           1,
 		InsecureSkipTLS: tlsSkipVerify,
-		Auth:            GetBasicAuth(username, password),
+		Auth:            auth,
 		Tags:            git.NoTags,
 	}
 
@@ -119,8 +133,20 @@ func (service *Service) LatestCommitID(
 	password string,
 	tlsSkipVerify bool,
 ) (string, error) {
+	return service.LatestCommitIDWithAuth(ctx, repositoryURL, referenceName, GetBasicAuth(username, password), tlsSkipVerify)
+}
+
+// LatestCommitIDWithAuth returns SHA1 of the latest commit of the specified reference,
+// using the provided auth method.
+func (service *Service) LatestCommitIDWithAuth(
+	ctx context.Context,
+	repositoryURL,
+	referenceName string,
+	auth transport.AuthMethod,
+	tlsSkipVerify bool,
+) (string, error) {
 	listOptions := &git.ListOptions{
-		Auth:            GetBasicAuth(username, password),
+		Auth:            auth,
 		InsecureSkipTLS: tlsSkipVerify,
 	}
 
@@ -136,10 +162,23 @@ func (service *Service) ListRefs(
 	hardRefresh bool,
 	tlsSkipVerify bool,
 ) ([]string, error) {
-	refCacheKey := generateCacheKey(repositoryURL, username, password, strconv.FormatBool(tlsSkipVerify))
+	cacheKey := GenerateCacheKey(repositoryURL, username, password, strconv.FormatBool(tlsSkipVerify))
+	return service.ListRefsWithAuth(ctx, repositoryURL, hardRefresh, GetBasicAuth(username, password), tlsSkipVerify, cacheKey)
+}
+
+// ListRefsWithAuth will list target repository's references without cloning the repository,
+// using the provided auth method. The cacheKey is supplied by the caller.
+func (service *Service) ListRefsWithAuth(
+	ctx context.Context,
+	repositoryURL string,
+	hardRefresh bool,
+	auth transport.AuthMethod,
+	tlsSkipVerify bool,
+	cacheKey string,
+) ([]string, error) {
 	if service.cacheEnabled && hardRefresh {
 		// Should remove the cache explicitly, so that the following normal list can show the correct result
-		service.repoRefCache.Remove(refCacheKey)
+		service.repoRefCache.Remove(cacheKey)
 		// Remove file caches pointed to the same repository
 		for _, fileCacheKey := range service.repoFileCache.Keys() {
 			if key, ok := fileCacheKey.(string); ok && strings.HasPrefix(key, repositoryURL) {
@@ -150,7 +189,7 @@ func (service *Service) ListRefs(
 
 	if service.repoRefCache != nil {
 		// Lookup the refs cache first
-		if cache, ok := service.repoRefCache.Get(refCacheKey); ok {
+		if cache, ok := service.repoRefCache.Get(cacheKey); ok {
 			if refs, ok := cache.([]string); ok {
 				return refs, nil
 			}
@@ -158,7 +197,7 @@ func (service *Service) ListRefs(
 	}
 
 	options := &git.ListOptions{
-		Auth:            GetBasicAuth(username, password),
+		Auth:            auth,
 		InsecureSkipTLS: tlsSkipVerify,
 	}
 
@@ -168,7 +207,7 @@ func (service *Service) ListRefs(
 	}
 
 	if service.cacheEnabled && service.repoRefCache != nil {
-		service.repoRefCache.Add(refCacheKey, refs)
+		service.repoRefCache.Add(cacheKey, refs)
 	}
 
 	return refs, nil
@@ -189,7 +228,7 @@ func (service *Service) ListFiles(
 	includedExts []string,
 	tlsSkipVerify bool,
 ) ([]string, error) {
-	repoKey := generateCacheKey(
+	cacheKey := GenerateCacheKey(
 		repositoryURL,
 		referenceName,
 		username,
@@ -197,50 +236,47 @@ func (service *Service) ListFiles(
 		strconv.FormatBool(tlsSkipVerify),
 		strconv.FormatBool(dirOnly),
 	)
+	return service.ListFilesWithAuth(ctx, repositoryURL, referenceName, dirOnly, hardRefresh, GetBasicAuth(username, password), includedExts, tlsSkipVerify, cacheKey)
+}
 
-	fs, err, _ := singleflightGroup.Do(repoKey, func() (any, error) {
-		return service.listFiles(
-			ctx,
-			repositoryURL,
-			referenceName,
-			username,
-			password,
-			dirOnly,
-			hardRefresh,
-			tlsSkipVerify,
-		)
+// ListFilesWithAuth will list all the files of the target repository with specific extensions,
+// using the provided auth method. The cacheKey is supplied by the caller.
+func (service *Service) ListFilesWithAuth(
+	ctx context.Context,
+	repositoryURL,
+	referenceName string,
+	dirOnly,
+	hardRefresh bool,
+	auth transport.AuthMethod,
+	includedExts []string,
+	tlsSkipVerify bool,
+	cacheKey string,
+) ([]string, error) {
+	fs, err, _ := singleflightGroup.Do(cacheKey, func() (any, error) {
+		return service.listFilesWithAuth(ctx, repositoryURL, referenceName, dirOnly, hardRefresh, auth, tlsSkipVerify, cacheKey)
 	})
 
 	return filterFiles(fs.([]string), includedExts), err
 }
 
-func (service *Service) listFiles(
+func (service *Service) listFilesWithAuth(
 	ctx context.Context,
 	repositoryURL,
-	referenceName,
-	username,
-	password string,
+	referenceName string,
 	dirOnly,
 	hardRefresh bool,
+	auth transport.AuthMethod,
 	tlsSkipVerify bool,
+	cacheKey string,
 ) ([]string, error) {
-	repoKey := generateCacheKey(
-		repositoryURL,
-		referenceName,
-		username,
-		password,
-		strconv.FormatBool(tlsSkipVerify),
-		strconv.FormatBool(dirOnly),
-	)
-
 	if service.cacheEnabled && hardRefresh {
 		// Should remove the cache explicitly, so that the following normal list can show the correct result
-		service.repoFileCache.Remove(repoKey)
+		service.repoFileCache.Remove(cacheKey)
 	}
 
 	if service.repoFileCache != nil {
 		// lookup the files cache first
-		if cache, ok := service.repoFileCache.Get(repoKey); ok {
+		if cache, ok := service.repoFileCache.Get(cacheKey); ok {
 			if files, ok := cache.([]string); ok {
 				return files, nil
 			}
@@ -253,7 +289,7 @@ func (service *Service) listFiles(
 		Depth:           1,
 		SingleBranch:    true,
 		ReferenceName:   plumbing.ReferenceName(referenceName),
-		Auth:            GetBasicAuth(username, password),
+		Auth:            auth,
 		InsecureSkipTLS: tlsSkipVerify,
 		Tags:            git.NoTags,
 	}
@@ -264,7 +300,7 @@ func (service *Service) listFiles(
 	}
 
 	if service.cacheEnabled && service.repoFileCache != nil {
-		service.repoFileCache.Add(repoKey, files)
+		service.repoFileCache.Add(cacheKey, files)
 	}
 
 	return files, nil
@@ -280,7 +316,8 @@ func (service *Service) purgeCache() {
 	}
 }
 
-func generateCacheKey(names ...string) string {
+// GenerateCacheKey generates a cache key from the given parts.
+func GenerateCacheKey(names ...string) string {
 	return strings.Join(names, "-")
 }
 

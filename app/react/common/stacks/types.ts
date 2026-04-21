@@ -54,6 +54,7 @@ export interface StackDeploymentInfo {
    */
   ConfigHash?: string;
   RepositoryURL?: string;
+  ReferenceName?: string;
   ConfigFilePath?: string;
   AdditionalFiles?: string[];
 }

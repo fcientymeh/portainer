@@ -4,15 +4,26 @@ import { useEnvironmentId } from '@/react/hooks/useEnvironmentId';
 import { baseHref } from '@/portainer/helpers/pathHelper';
 import { terminalClose } from '@/portainer/services/terminal-window';
 import { EnvironmentId } from '@/react/portainer/environments/types';
+import { useEnvironment } from '@/react/portainer/environments/queries';
+import { isVersionSmaller } from '@/react/common/semver-utils';
 
 import { Alert } from '@@/Alert';
 import { Button } from '@@/buttons';
 import { Terminal, LINUX_SHELL_INIT_COMMANDS } from '@@/Terminal/Terminal';
 import type { ShellState } from '@@/Terminal/Terminal';
 
+const RESIZE_LAST_UNSUPPORTED_AGENT_VERSION = '2.40.0';
+
 export function KubectlShellView() {
   const environmentId = useEnvironmentId();
   const [shellState, setShellState] = useState<ShellState>('idle');
+  const { data: agentVersion } = useEnvironment(
+    environmentId,
+    (env) => env.Agent.Version
+  );
+  const supportsResizeOverSocket =
+    !!agentVersion &&
+    isVersionSmaller(RESIZE_LAST_UNSUPPORTED_AGENT_VERSION, agentVersion);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 top-0 z-[10000] bg-black text-white">
@@ -44,8 +55,14 @@ export function KubectlShellView() {
         url={buildUrl(environmentId)}
         connect
         onStateChange={onStateChange}
-        initialCommands={LINUX_SHELL_INIT_COMMANDS}
-        onResize="socket"
+        initialCommands={[
+          ...LINUX_SHELL_INIT_COMMANDS,
+
+          '# Run kubectl commands inside here',
+          '# e.g. kubectl get all',
+          '',
+        ]}
+        onResize={supportsResizeOverSocket ? 'socket' : null}
       />
     </div>
   );

@@ -285,6 +285,11 @@ func (transport *Transport) proxyContainerRequest(request *http.Request, unversi
 			if action == "json" {
 				return transport.rewriteOperation(request, transport.containerInspectOperation)
 			}
+
+			if action == "update" {
+				return transport.decorateContainerUpdateOperation(request, containerID)
+			}
+
 			return transport.restrictedResourceOperation(request, containerID, containerID, portainer.ContainerResourceControl, false)
 		} else if match, _ := path.Match("/containers/*", requestPath); match {
 			// Handle /containers/{id} requests
@@ -316,6 +321,11 @@ func (transport *Transport) proxyServiceRequest(request *http.Request, unversion
 		if match, _ := path.Match("/services/*/*", requestPath); match {
 			// Handle /services/{id}/{action} requests
 			serviceID := path.Base(path.Dir(requestPath))
+			action := path.Base(requestPath)
+
+			if action == "update" {
+				return transport.decorateServiceUpdateOperation(request, serviceID)
+			}
 
 			if err := transport.decorateRegistryAuthenticationHeader(request); err != nil {
 				return nil, err
@@ -495,6 +505,8 @@ func (transport *Transport) proxyImageRequest(request *http.Request, unversioned
 	switch requestPath {
 	case "/images/create":
 		return transport.replaceRegistryAuthenticationHeader(request)
+	case "/images/prune":
+		return transport.administratorOperation(request)
 	default:
 		if path.Base(requestPath) == "push" && request.Method == http.MethodPost {
 			return transport.replaceRegistryAuthenticationHeader(request)

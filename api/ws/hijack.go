@@ -41,7 +41,7 @@ func HijackRequest(websocketConn *websocket.Conn, conn net.Conn, request *http.R
 
 	var mu sync.Mutex
 
-	errorChan := make(chan error, 1)
+	errorChan := make(chan error, 2)
 	go StreamFromWebsocketToWriter(websocketConn, conn, errorChan)
 	go WriteReaderToWebSocket(websocketConn, &mu, conn, errorChan)
 
@@ -52,7 +52,7 @@ func HijackRequest(websocketConn *websocket.Conn, conn net.Conn, request *http.R
 		return err
 	}
 
-	log.Info().Msg("session ended")
+	log.Debug().Msg("session ended")
 
 	return nil
 }
@@ -77,15 +77,27 @@ func WriteReaderToWebSocket(websocketConn *websocket.Conn, mu *sync.Mutex, reade
 	out := make([]byte, ReaderBufferSize)
 	input := make(chan string)
 	pingTicker := time.NewTicker(PingPeriod)
-	defer pingTicker.Stop()
+
 	defer logs.CloseAndLogErr(websocketConn)
+
+	done := make(chan struct{})
+	defer close(done)
+
+	if err := websocketConn.SetReadDeadline(time.Now().Add(PingPeriod + WriteWait)); err != nil {
+		errorChan <- err
+
+		return
+	}
 
 	mu.Lock()
 	websocketConn.SetPongHandler(func(string) error {
-		return nil
+		return websocketConn.SetReadDeadline(time.Now().Add(PingPeriod + WriteWait))
 	})
 
 	websocketConn.SetPingHandler(func(data string) error {
+		mu.Lock()
+		defer mu.Unlock()
+
 		if err := websocketConn.SetWriteDeadline(time.Now().Add(WriteWait)); err != nil {
 			return err
 		}
@@ -108,7 +120,12 @@ func WriteReaderToWebSocket(websocketConn *websocket.Conn, mu *sync.Mutex, reade
 			}
 
 			processedOutput := ValidString(string(out[:n]))
-			input <- processedOutput
+
+			select {
+			case input <- processedOutput:
+			case <-done:
+				return
+			}
 		}
 	}()
 

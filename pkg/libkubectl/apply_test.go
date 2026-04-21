@@ -2,9 +2,10 @@ package libkubectl
 
 import (
 	"os"
-	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/portainer/portainer/api/filesystem"
 )
 
 // BenchmarkApply tests require a Kubernetes cluster.
@@ -19,7 +20,7 @@ func BenchmarkApply(b *testing.B) {
 
 	// Apply expects file paths, so create a temp file
 	tmpDir := b.TempDir()
-	manifestFile := filepath.Join(tmpDir, "manifest.yaml")
+	manifestFile := filesystem.JoinPaths(tmpDir, "manifest.yaml")
 	manifestContent := `apiVersion: v1
 kind: ConfigMap
 metadata:

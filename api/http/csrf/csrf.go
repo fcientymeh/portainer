@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/portainer/portainer/api/http/security"
+	"github.com/portainer/portainer/pkg/featureflags"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 
 	gcsrf "github.com/gorilla/csrf"
@@ -17,19 +18,65 @@ import (
 
 const csrfSkipHeader = "X-CSRF-Token-Skip"
 
+// SkipCSRFToken signals that the X-CSRF-Token header should not be sent in the response.
+// Deprecated: only meaningful when the "legacy-csrf" feature flag is enabled.
 func SkipCSRFToken(w http.ResponseWriter) {
 	w.Header().Set(csrfSkipHeader, "1")
 }
 
 func WithProtect(handler http.Handler, trustedOrigins []string) (http.Handler, error) {
-	// IsDockerDesktopExtension is used to check if we should skip csrf checks in the request bouncer (ShouldSkipCSRFCheck)
-	// DOCKER_EXTENSION is set to '1' in build/docker-extension/docker-compose.yml
+	// DOCKER_EXTENSION=1 is set in build/docker-extension/docker-compose.yml
 	isDockerDesktopExtension := false
 	if val, ok := os.LookupEnv("DOCKER_EXTENSION"); ok && val == "1" {
 		isDockerDesktopExtension = true
 	}
 
-	handler = withSendCSRFToken(handler)
+	if featureflags.IsEnabled("legacy-csrf") {
+		return withLegacyProtect(handler, trustedOrigins, isDockerDesktopExtension)
+	}
+
+	cop := http.NewCrossOriginProtection()
+	for _, origin := range trustedOrigins {
+		if err := cop.AddTrustedOrigin(origin); err != nil {
+			return nil, fmt.Errorf("failed to add trusted origin %q: %w", origin, err)
+		}
+	}
+
+	cop.SetDenyHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Error().Err(cop.Check(r)).
+			Str("request_url", r.URL.String()).
+			Str("host", r.Host).
+			Str("origin", r.Header.Get("Origin")).
+			Str("sec_fetch_site", r.Header.Get("Sec-Fetch-Site")).
+			Strs("trusted_origins", trustedOrigins).
+			Msg("CSRF check failed")
+
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+	}))
+
+	protected := cop.Handler(handler)
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		skip, err := security.ShouldSkipCSRFCheck(r, isDockerDesktopExtension)
+		if err != nil {
+			httperror.WriteError(w, http.StatusForbidden, err.Error(), err)
+
+			return
+		}
+
+		if skip {
+			handler.ServeHTTP(w, r)
+
+			return
+		}
+
+		protected.ServeHTTP(w, r)
+	}), nil
+}
+
+// Deprecated: use WithProtect without the "legacy-csrf" feature flag instead.
+func withLegacyProtect(handler http.Handler, trustedOrigins []string, isDockerDesktopExtension bool) (http.Handler, error) {
+	handler = withLegacySendCSRFToken(handler)
 
 	token := make([]byte, 32)
 	if _, err := rand.Read(token); err != nil {
@@ -41,13 +88,14 @@ func WithProtect(handler http.Handler, trustedOrigins []string) (http.Handler, e
 		gcsrf.Path("/"),
 		gcsrf.Secure(false),
 		gcsrf.TrustedOrigins(trustedOrigins),
-		gcsrf.ErrorHandler(withErrorHandler(trustedOrigins)),
+		gcsrf.ErrorHandler(withLegacyErrorHandler(trustedOrigins)),
 	)(handler)
 
-	return withSkipCSRF(handler, isDockerDesktopExtension), nil
+	return withLegacySkipCSRF(handler, isDockerDesktopExtension), nil
 }
 
-func withSendCSRFToken(handler http.Handler) http.Handler {
+// Deprecated: use WithProtect without the "legacy-csrf" feature flag instead.
+func withLegacySendCSRFToken(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sw := negroni.NewResponseWriter(w)
 
@@ -67,7 +115,8 @@ func withSendCSRFToken(handler http.Handler) http.Handler {
 	})
 }
 
-func withSkipCSRF(handler http.Handler, isDockerDesktopExtension bool) http.Handler {
+// Deprecated: use WithProtect without the "legacy-csrf" feature flag instead.
+func withLegacySkipCSRF(handler http.Handler, isDockerDesktopExtension bool) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		skip, err := security.ShouldSkipCSRFCheck(r, isDockerDesktopExtension)
 		if err != nil {
@@ -84,7 +133,8 @@ func withSkipCSRF(handler http.Handler, isDockerDesktopExtension bool) http.Hand
 	})
 }
 
-func withErrorHandler(trustedOrigins []string) http.Handler {
+// Deprecated: use WithProtect without the "legacy-csrf" feature flag instead.
+func withLegacyErrorHandler(trustedOrigins []string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		err := gcsrf.FailureReason(r)
 

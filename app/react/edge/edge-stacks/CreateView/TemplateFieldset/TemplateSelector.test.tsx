@@ -48,7 +48,6 @@ test.todo('selects an edge app template', async () => {
   });
 });
 
-// eslint-disable-next-line @vitest/expect-expect
 test.todo('selects an edge custom template', async () => {
   const onChange = vi.fn();
 

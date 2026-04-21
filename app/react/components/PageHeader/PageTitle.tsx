@@ -5,9 +5,9 @@ export function PageTitle({
   children,
 }: PropsWithChildren<{ title: string }>) {
   return (
-    <div className="flex items-center gap-2 px-[15px] pt-3">
+    <div className="mb-2 flex items-center gap-2 px-[15px]">
       <h1
-        className="m-0 text-2xl font-medium text-gray-11 th-highcontrast:text-white th-dark:text-white"
+        className="m-0 text-lg font-medium text-gray-11 th-highcontrast:text-white th-dark:text-white"
         data-cy="page-title"
       >
         {title}

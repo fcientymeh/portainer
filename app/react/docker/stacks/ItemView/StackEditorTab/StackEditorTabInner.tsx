@@ -3,6 +3,7 @@ import { JSONSchema7 } from 'json-schema';
 import { useCallback } from 'react';
 
 import { Stack, StackType } from '@/react/common/stacks/types';
+import { PruneField } from '@/react/common/stacks/PruneField';
 import { EnvironmentType } from '@/react/portainer/environments/types';
 import { Authorized, useAuthorizations } from '@/react/hooks/useUser';
 
@@ -13,7 +14,6 @@ import { usePreventExit } from '@@/WebEditorForm';
 import { FormError } from '@@/form-components/FormError';
 
 import { WebhookFieldset } from '../../common/WebhookFieldset';
-import { PruneField } from '../components/PruneField';
 
 import { StackEditorFormValues } from './StackEditorTab.types';
 import { useVersionedStackFile } from './useVersionedStackFile';

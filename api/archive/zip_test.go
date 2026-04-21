@@ -1,8 +1,9 @@
 package archive
 
 import (
-	"path/filepath"
 	"testing"
+
+	"github.com/portainer/portainer/api/filesystem"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,8 +25,8 @@ func TestUnzipFile(t *testing.T) {
 
 	require.NoError(t, err)
 	archiveDir := dir + "/sample_archive"
-	assert.FileExists(t, filepath.Join(archiveDir, "0.txt"))
-	assert.FileExists(t, filepath.Join(archiveDir, "0", "1.txt"))
-	assert.FileExists(t, filepath.Join(archiveDir, "0", "1", "2.txt"))
+	assert.FileExists(t, filesystem.JoinPaths(archiveDir, "0.txt"))
+	assert.FileExists(t, filesystem.JoinPaths(archiveDir, "0", "1.txt"))
+	assert.FileExists(t, filesystem.JoinPaths(archiveDir, "0", "1", "2.txt"))
 
 }

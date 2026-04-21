@@ -7,9 +7,9 @@ import { withUIRouter } from '@/react-tools/withUIRouter';
 import { AutoUpdateFieldset } from '@/react/portainer/gitops/AutoUpdateFieldset';
 import { GitForm } from '@/react/portainer/gitops/GitForm';
 import { AuthFieldset } from '@/react/portainer/gitops/AuthFieldset';
-import { InfoPanel } from '@/react/portainer/gitops/InfoPanel';
 import { RefField } from '@/react/portainer/gitops/RefField';
 import { TimeWindowDisplay } from '@/react/portainer/gitops/TimeWindowDisplay';
+import { GitReferenceCard } from '@/react/portainer/gitops/GitReferenceCard';
 
 export const gitFormModule = angular
   .module('portainer.app.components.forms.git', [])
@@ -32,9 +32,16 @@ export const gitFormModule = angular
       'isAutoUpdateVisible',
     ])
   )
+
   .component(
-    'gitFormInfoPanel',
-    r2a(InfoPanel, ['type', 'currentDeployment', 'nextDeployment'])
+    'gitFormGitReferenceCard',
+    r2a(withReactQuery(GitReferenceCard), [
+      'stackId',
+      'stackType',
+      'gitConfig',
+      'autoUpdate',
+      'currentDeploymentInfo',
+    ])
   )
   .component(
     'reactGitFormAutoUpdateFieldset',

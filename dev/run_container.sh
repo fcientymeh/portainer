@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-PORTAINER_DATA=${PORTAINER_DATA:-/tmp/portainer}
+PORTAINER_DATA=${PORTAINER_DATA:-/tmp/portainer-ce}
 PORTAINER_PROJECT=${PORTAINER_PROJECT:-$(pwd)}
 PORTAINER_FLAGS=${PORTAINER_FLAGS:-}
 

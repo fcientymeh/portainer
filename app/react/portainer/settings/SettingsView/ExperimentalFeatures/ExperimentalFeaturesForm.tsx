@@ -10,6 +10,7 @@ import { useUpdateExperimentalSettingsMutation } from '@/react/portainer/setting
 import { LoadingButton } from '@@/buttons/LoadingButton';
 import { TextTip } from '@@/Tip/TextTip';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface FormValues {}
 
 const validation = yup.object({});

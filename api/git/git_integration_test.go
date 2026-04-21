@@ -3,10 +3,10 @@ package git
 import (
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/portainer/portainer/api/filesystem"
 	gittypes "github.com/portainer/portainer/api/git/types"
 
 	"github.com/stretchr/testify/assert"
@@ -38,7 +38,7 @@ func TestService_ClonePrivateRepository_GitHub(t *testing.T) {
 		false,
 	)
 	require.NoError(t, err)
-	assert.FileExists(t, filepath.Join(dst, "README.md"))
+	assert.FileExists(t, filesystem.JoinPaths(dst, "README.md"))
 }
 
 func TestService_LatestCommitID_GitHub(t *testing.T) {

@@ -92,7 +92,7 @@ export function HeaderLayout({
             {badge && <div className="flex flex-wrap gap-1">{badge}</div>}
           </div>
           {description && (
-            <span className="text-xs text-muted">{description}</span>
+            <span className="text-muted text-xs">{description}</span>
           )}
         </div>
 

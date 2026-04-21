@@ -54,7 +54,7 @@ export function ResourceReservationFormSection({
         <div className="col-xs-10">
           {maxMemoryLimit > 0 && (
             <SliderWithInput
-              value={Number(values.memoryLimit) ?? 0}
+              value={Number(values.memoryLimit) || 0}
               onChange={(value) => onChange({ ...values, memoryLimit: value })}
               min={minMemoryLimit}
               max={maxMemoryLimit}

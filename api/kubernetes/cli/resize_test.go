@@ -8,6 +8,7 @@ import (
 )
 
 func Test_TerminalSizeQueue(t *testing.T) {
+	t.Parallel()
 	t.Run("Next returns pushed size", func(t *testing.T) {
 		q := NewTerminalSizeQueue()
 		defer q.Close()

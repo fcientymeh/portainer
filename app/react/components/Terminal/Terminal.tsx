@@ -98,6 +98,11 @@ export function Terminal({
           socket.send(data);
         }
       });
+      term.onKey(({ domEvent }) => {
+        if (domEvent.ctrlKey && domEvent.key === 'd') {
+          cleanup();
+        }
+      });
       resizeObserver.observe(terminalRef.current);
       initialCommands?.forEach((cmd) => socket.send(cmd));
       onStateChange('connected');

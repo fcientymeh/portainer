@@ -1,4 +1,5 @@
 import { Fragment } from 'react';
+import { Home, ChevronRight } from 'lucide-react';
 
 import { Link } from '@@/Link';
 
@@ -17,11 +18,21 @@ export function Breadcrumbs({ breadcrumbs }: Props) {
     : [breadcrumbs];
 
   return (
-    <div className="space-x-2 text-xs font-medium text-gray-7 th-highcontrast:text-white th-dark:text-gray-5">
+    <div className="flex items-center gap-2 text-sm font-medium text-gray-8 th-highcontrast:text-white th-dark:text-gray-5">
+      <Link
+        to="portainer.home"
+        className="text-gray-8 hover:text-blue-11 th-highcontrast:text-white th-dark:text-gray-5 th-dark:hover:text-blue-9"
+        data-cy="breadcrumb-home"
+      >
+        <Home className="h-4 w-4" />
+      </Link>
+      <ChevronRight className="h-3 w-3" aria-hidden="true" />
       {breadcrumbsArray.map((crumb, index) => (
         <Fragment key={index}>
           <span>{renderCrumb(crumb)}</span>
-          {index !== breadcrumbsArray.length - 1 && <span>&gt;</span>}
+          {index !== breadcrumbsArray.length - 1 && (
+            <ChevronRight className="h-3 w-3" aria-hidden="true" />
+          )}
         </Fragment>
       ))}
     </div>

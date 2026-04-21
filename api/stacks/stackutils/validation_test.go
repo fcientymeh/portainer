@@ -2,10 +2,10 @@ package stackutils
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/filesystem"
 	"github.com/stretchr/testify/require"
 )
 
@@ -185,7 +185,7 @@ func TestValidateStackFiles_DotEnvFile(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
 
-	err := os.WriteFile(filepath.Join(tmpDir, ".env"), []byte("HOST_PORT=3000\n"), 0600)
+	err := os.WriteFile(filesystem.JoinPaths(tmpDir, ".env"), []byte("HOST_PORT=3000\n"), 0600)
 	require.NoError(t, err)
 
 	fileContent := []byte(`
@@ -216,7 +216,7 @@ func TestValidateStackFiles_EnvFileAttribute(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
 
-	err := os.WriteFile(filepath.Join(tmpDir, "web.env"), []byte("HOST_PORT=3000\n"), 0600)
+	err := os.WriteFile(filesystem.JoinPaths(tmpDir, "web.env"), []byte("HOST_PORT=3000\n"), 0600)
 	require.NoError(t, err)
 
 	fileContent := []byte(`

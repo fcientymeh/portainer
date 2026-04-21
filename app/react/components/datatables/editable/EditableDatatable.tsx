@@ -11,12 +11,11 @@ import {
 import { DefaultType } from '../types';
 
 export const NEW_ROW_ID = -1;
-export const NEW_ROW_INDEX = 0;
 export const UNSET_EDITABLE_ROW = -1;
 
 interface Props<D extends DefaultType> extends Omit<DatatableProps<D>, 'meta'> {
-  revertRow(): void;
-  acceptRow(): void;
+  revertRow(rowIndex: number): void;
+  acceptRow(rowIndex: number): void;
 }
 
 export function EditableDatatable<D extends DefaultType>({

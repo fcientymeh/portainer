@@ -84,7 +84,7 @@ export function ResourceQuotaFormSection({
           >
             {memoryLimit >= 0 && (
               <SliderWithInput
-                value={Number(values.memory) ?? 0}
+                value={Number(values.memory) || 0}
                 onChange={(value) =>
                   onChange({ ...values, memory: `${value}` })
                 }
@@ -109,7 +109,7 @@ export function ResourceQuotaFormSection({
                 min={0}
                 max={cpuLimit / 1000}
                 step={0.1}
-                value={Number(values.cpu) ?? 0}
+                value={Number(values.cpu) || 0}
                 onChange={(cpu) => {
                   if (Array.isArray(cpu)) {
                     return;

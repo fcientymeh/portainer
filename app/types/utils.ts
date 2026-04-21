@@ -7,7 +7,6 @@ export type PathToStringArray<T extends string | string[]> = T extends string[]
   ? [...PathToStringArray<Head>, ...PathToStringArray<Tail>]
   : [T];
 
-/* eslint-disable @typescript-eslint/ban-types */
 /**
  * VSCode helper to recursively pretty print the constructed types instead of
  * displaying the sub types.
@@ -18,4 +17,3 @@ export type PathToStringArray<T extends string | string[]> = T extends string[]
 export type Prettify<T> = {
   [K in keyof T]: Prettify<T[K]>;
 } & {};
-/* eslint-enable @typescript-eslint/ban-types */

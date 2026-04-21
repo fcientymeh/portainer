@@ -20,6 +20,7 @@ func init() {
 }
 
 func TestIsOCIRegistry(t *testing.T) {
+	t.Parallel()
 	t.Run("should return false for nil registry (HTTP repo)", func(t *testing.T) {
 		assert.False(t, IsOCIRegistry(nil))
 	})
@@ -30,6 +31,7 @@ func TestIsOCIRegistry(t *testing.T) {
 }
 
 func TestIsHTTPRepository(t *testing.T) {
+	t.Parallel()
 	t.Run("should return true for nil registry (HTTP repo)", func(t *testing.T) {
 		assert.True(t, IsHTTPRepository(nil))
 	})
@@ -40,6 +42,7 @@ func TestIsHTTPRepository(t *testing.T) {
 }
 
 func TestParseHTTPRepoChartRef(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	chartRef, repoURL, err := parseHTTPRepoChartRef("my-chart", "https://my.repo/charts")
@@ -49,6 +52,7 @@ func TestParseHTTPRepoChartRef(t *testing.T) {
 }
 
 func TestParseOCIChartRef(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	registry := &portainer.Registry{
@@ -65,6 +69,7 @@ func TestParseOCIChartRef(t *testing.T) {
 }
 
 func TestParseOCIChartRef_GitLab(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	registry := &portainer.Registry{
@@ -87,6 +92,7 @@ func TestParseOCIChartRef_GitLab(t *testing.T) {
 }
 
 func TestParseChartRef(t *testing.T) {
+	t.Parallel()
 	t.Run("should parse HTTP repo chart ref when registry is nil", func(t *testing.T) {
 		is := assert.New(t)
 
@@ -114,6 +120,7 @@ func TestParseChartRef(t *testing.T) {
 }
 
 func TestConfigureHTTPRepoChartPathOptions(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 	chartPathOptions := &action.ChartPathOptions{}
 
@@ -123,6 +130,7 @@ func TestConfigureHTTPRepoChartPathOptions(t *testing.T) {
 }
 
 func TestConfigureOCIChartPathOptions(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 	chartPathOptions := &action.ChartPathOptions{}
 
@@ -140,6 +148,7 @@ func TestConfigureOCIChartPathOptions(t *testing.T) {
 }
 
 func TestConfigureOCIChartPathOptions_NoAuth(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 	chartPathOptions := &action.ChartPathOptions{}
 
@@ -155,6 +164,7 @@ func TestConfigureOCIChartPathOptions_NoAuth(t *testing.T) {
 }
 
 func TestConfigureChartPathOptions(t *testing.T) {
+	t.Parallel()
 	t.Run("should configure HTTP repo when registry is nil", func(t *testing.T) {
 		is := assert.New(t)
 		chartPathOptions := &action.ChartPathOptions{}
@@ -186,6 +196,7 @@ func TestConfigureChartPathOptions(t *testing.T) {
 }
 
 func TestLoginToOCIRegistry(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	t.Run("should return nil for HTTP repository (nil registry)", func(t *testing.T) {
@@ -243,7 +254,7 @@ func TestLoginToOCIRegistry(t *testing.T) {
 
 	t.Run("should attempt login for valid credentials", func(t *testing.T) {
 		registry := &portainer.Registry{
-			ID:             123,
+			ID:             9877,
 			URL:            "my-registry.io",
 			Authentication: true,
 			Username:       "user",
@@ -281,6 +292,7 @@ func TestLoginToOCIRegistry(t *testing.T) {
 }
 
 func TestAuthenticateChartSource(t *testing.T) {
+	t.Parallel()
 	t.Run("should do return default client for HTTP repo", func(t *testing.T) {
 		is := assert.New(t)
 		actionConfig := &action.Configuration{}
@@ -340,8 +352,9 @@ func TestGetRegistryClientFromCache(t *testing.T) {
 		t.Fatalf("Failed to initialize cache: %v", err)
 	}
 
-	// Clear cache before each test
+	// Clear cache before and after so parallel tests don't see leftover entries
 	helmregistrycache.FlushAll()
+	t.Cleanup(helmregistrycache.FlushAll)
 
 	t.Run("should return nil for invalid registry ID", func(t *testing.T) {
 		is := assert.New(t)
@@ -380,8 +393,9 @@ func TestSetRegistryClientInCache(t *testing.T) {
 		t.Fatalf("Failed to initialize cache: %v", err)
 	}
 
-	// Clear cache before each test
+	// Clear cache before and after so parallel tests don't see leftover entries
 	helmregistrycache.FlushAll()
+	t.Cleanup(helmregistrycache.FlushAll)
 
 	t.Run("should store and retrieve client successfully", func(t *testing.T) {
 		is := assert.New(t)
@@ -434,8 +448,9 @@ func TestFlushRegistryCache(t *testing.T) {
 		t.Fatalf("Failed to initialize cache: %v", err)
 	}
 
-	// Clear cache before test
+	// Clear cache before and after so parallel tests don't see leftover entries
 	helmregistrycache.FlushAll()
+	t.Cleanup(helmregistrycache.FlushAll)
 
 	t.Run("should flush specific registry cache", func(t *testing.T) {
 		is := assert.New(t)
@@ -475,6 +490,8 @@ func TestFlushAllRegistryCache(t *testing.T) {
 		t.Fatalf("Failed to initialize cache: %v", err)
 	}
 
+	t.Cleanup(helmregistrycache.FlushAll)
+
 	t.Run("should flush all registry cache", func(t *testing.T) {
 		is := assert.New(t)
 		// Create mock clients
@@ -510,6 +527,7 @@ func TestFlushAllRegistryCache(t *testing.T) {
 }
 
 func TestValidateRegistryCredentials(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		registry    *portainer.Registry
@@ -659,6 +677,7 @@ func TestValidateRegistryCredentials(t *testing.T) {
 // instead of endpoint/session-based caching for better rate limiting protection
 
 func TestShouldFlushCacheOnError(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		err         error

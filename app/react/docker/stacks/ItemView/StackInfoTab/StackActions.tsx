@@ -11,6 +11,8 @@ import { Authorized } from '@/react/hooks/useUser';
 import { Stack, StackStatus } from '@/react/common/stacks/types';
 import { useDeleteStackMutation } from '@/react/common/stacks/queries/useDeleteStackMutation';
 import { notifyError, notifySuccess } from '@/portainer/services/notifications';
+import { EditGitSettingsButton } from '@/react/common/stacks/EditGitSettingsButton';
+import { GitPullButton } from '@/react/common/stacks/GitPullButton';
 
 import { Button, LoadingButton } from '@@/buttons';
 import { Link } from '@@/Link';
@@ -62,7 +64,7 @@ export function StackActions({
             <Button
               icon={StopCircleIcon}
               color="dangerlight"
-              size="xsmall"
+              size="small"
               onClick={() => handleStop()}
               disabled={isMutating}
               data-cy="stack-stop-btn"
@@ -75,7 +77,7 @@ export function StackActions({
               icon={PlayIcon}
               color="success"
               data-cy="stack-start-btn"
-              size="xsmall"
+              size="small"
               disabled={isMutating}
               onClick={() => handleStart()}
             >
@@ -89,7 +91,7 @@ export function StackActions({
         <Button
           icon={Trash2Icon}
           color="dangerlight"
-          size="xsmall"
+          size="small"
           onClick={() => handleDelete()}
           disabled={isMutating || isDeploying}
           data-cy="stack-delete-btn"
@@ -103,7 +105,7 @@ export function StackActions({
           as={Link}
           icon={PlusIcon}
           color="primary"
-          size="xsmall"
+          size="small"
           data-cy="stack-create-template-btn"
           props={{
             to: 'docker.templates.custom.new',
@@ -117,26 +119,28 @@ export function StackActions({
         </Button>
       )}
 
-      {!!(
-        isRegular &&
-        fileContent &&
-        !stack.FromAppTemplate &&
-        stack.GitConfig
-      ) && (
-        <Authorized authorizations="PortainerStackUpdate">
-          <LoadingButton
-            icon={ArrowRightIcon}
-            color="primary"
-            size="xsmall"
-            onClick={() => handleDetachFromGit()}
-            disabled={isMutating}
-            data-cy="stack-detach-git-btn"
-            isLoading={detachFromGitMutation.isLoading}
-            loadingText="Detachment in progress..."
-          >
-            Detach from Git
-          </LoadingButton>
-        </Authorized>
+      {!!stack.GitConfig && !stack.FromAppTemplate && (
+        <>
+          <EditGitSettingsButton stack={stack} />
+
+          <GitPullButton stack={stack} />
+
+          {!!(isRegular && fileContent) && (
+            <Authorized authorizations="PortainerStackUpdate">
+              <LoadingButton
+                icon={ArrowRightIcon}
+                color="primary"
+                onClick={() => handleDetachFromGit()}
+                disabled={isMutating}
+                data-cy="stack-detach-git-btn"
+                isLoading={detachFromGitMutation.isLoading}
+                loadingText="Detachment in progress..."
+              >
+                Detach from Git
+              </LoadingButton>
+            </Authorized>
+          )}
+        </>
       )}
     </div>
   );

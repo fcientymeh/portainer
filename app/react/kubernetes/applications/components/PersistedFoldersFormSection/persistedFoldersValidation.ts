@@ -27,8 +27,7 @@ export function persistedFoldersValidation(
           .test(
             'quotaExceeded',
             'Requested size exceeds available quota for this storage class.',
-            // eslint-disable-next-line prefer-arrow-callback, func-names
-            function (this) {
+            function quotaExceeded(this) {
               const persistedFolderFormValue = this
                 .parent as PersistedFolderFormValue;
               const quota = formData?.namespaceQuotas;

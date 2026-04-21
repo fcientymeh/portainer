@@ -37,7 +37,7 @@ export function getResourceQuotaValidationSchema(
     memory,
     cpu,
   }: Partial<ResourceQuotaFormValues>) {
-    return !enabled || (Number(memory) ?? 0) > 0 || (Number(cpu) ?? 0) > 0;
+    return !enabled || (Number(memory) || 0) > 0 || (Number(cpu) || 0) > 0;
   }
 
   function nonNegativeLimit(limit: number) {
@@ -45,13 +45,13 @@ export function getResourceQuotaValidationSchema(
   }
 
   function memoryValidation(this: TestContext, memoryValue?: string) {
-    const memory = Number(memoryValue) ?? 0;
+    const memory = Number(memoryValue) || 0;
     const { enabled } = this.parent;
     return !enabled || (memory >= 0 && memory <= memoryLimit);
   }
 
   function cpuValidation(this: TestContext, cpuValue?: string) {
-    const cpu = Number(cpuValue) ?? 0;
+    const cpu = Number(cpuValue) || 0;
     const { enabled } = this.parent;
     return !enabled || cpu >= 0;
   }

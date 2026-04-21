@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/database/boltdb"
 	"github.com/portainer/portainer/api/database/models"
 	"github.com/portainer/portainer/api/datastore/migrator"
+	"github.com/portainer/portainer/api/filesystem"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/google/go-cmp/cmp"
@@ -325,7 +325,7 @@ func migrateDBTestHelper(t *testing.T, srcPath, wantPath string, overrideInstanc
 
 	// Compare the result we got with the one we wanted.
 	if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
-		gotPath := filepath.Join(os.TempDir(), "portainer-migrator-test-fail.json")
+		gotPath := filesystem.JoinPaths(os.TempDir(), "portainer-migrator-test-fail.json")
 		err = os.WriteFile(
 			gotPath,
 			gotJSON,

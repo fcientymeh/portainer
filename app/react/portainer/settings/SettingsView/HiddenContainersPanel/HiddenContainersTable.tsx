@@ -28,6 +28,7 @@ export function HiddenContainersTable({
           columns={[
             <Button
               color="danger"
+              key={`remove-${index}`}
               data-cy="hidden-containers-remove-filter-button"
               size="xsmall"
               icon={Trash2}

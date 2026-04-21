@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/datastore"
+	"github.com/portainer/portainer/api/filesystem"
 	gittypes "github.com/portainer/portainer/api/git/types"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/authorization"
@@ -71,7 +71,7 @@ type TestFileService struct {
 }
 
 func (f *TestFileService) GetFileContent(projectPath, configFilePath string) ([]byte, error) {
-	return os.ReadFile(filepath.Join(projectPath, configFilePath))
+	return os.ReadFile(filesystem.JoinPaths(projectPath, configFilePath))
 }
 
 type InvalidTestGitService struct {
@@ -119,7 +119,7 @@ func prepareTestFolder(projectPath, filename string) error {
 		return err
 	}
 
-	return createTestFile(filepath.Join(projectPath, filename))
+	return createTestFile(filesystem.JoinPaths(projectPath, filename))
 }
 
 func singleAPIRequest(h *Handler, jwt string, expect string) error {
@@ -172,7 +172,7 @@ func Test_customTemplateGitFetch(t *testing.T) {
 	dir, err := os.Getwd()
 	require.NoError(t, err, "error to get working directory")
 
-	template1 := &portainer.CustomTemplate{ID: 1, Title: "custom-template-1", ProjectPath: filepath.Join(dir, "fixtures/custom_template_1"), GitConfig: &gittypes.RepoConfig{ConfigFilePath: "test-config-path.txt"}}
+	template1 := &portainer.CustomTemplate{ID: 1, Title: "custom-template-1", ProjectPath: filesystem.JoinPaths(dir, "fixtures/custom_template_1"), GitConfig: &gittypes.RepoConfig{ConfigFilePath: "test-config-path.txt"}}
 	err = store.CustomTemplateService.Create(template1)
 	require.NoError(t, err, "error creating custom template 1")
 
@@ -181,7 +181,7 @@ func Test_customTemplateGitFetch(t *testing.T) {
 	require.NoError(t, err, "error creating testing folder")
 
 	defer func() {
-		err := os.RemoveAll(filepath.Join(dir, "fixtures"))
+		err := os.RemoveAll(filesystem.JoinPaths(dir, "fixtures"))
 		require.NoError(t, err)
 	}()
 
@@ -192,7 +192,7 @@ func Test_customTemplateGitFetch(t *testing.T) {
 	requestBouncer := security.NewRequestBouncer(t.Context(), store, jwtService, nil)
 
 	gitService := &TestGitService{
-		targetFilePath: filepath.Join(template1.ProjectPath, template1.GitConfig.ConfigFilePath),
+		targetFilePath: filesystem.JoinPaths(template1.ProjectPath, template1.GitConfig.ConfigFilePath),
 	}
 	fileService := &TestFileService{}
 
@@ -252,7 +252,7 @@ func Test_customTemplateGitFetch(t *testing.T) {
 
 	t.Run("restore git repository if it is failed to download the new git repository", func(t *testing.T) {
 		invalidGitService := &InvalidTestGitService{
-			targetFilePath: filepath.Join(template1.ProjectPath, template1.GitConfig.ConfigFilePath),
+			targetFilePath: filesystem.JoinPaths(template1.ProjectPath, template1.GitConfig.ConfigFilePath),
 		}
 		h := NewHandler(requestBouncer, store, fileService, invalidGitService)
 

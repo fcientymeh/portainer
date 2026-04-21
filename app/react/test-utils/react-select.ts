@@ -79,7 +79,7 @@ export async function select(
     : [optionOrOptions];
 
   // Select the items we care about
-  // eslint-disable-next-line no-restricted-syntax
+
   for (const option of options) {
     await openMenu(input, { user });
 

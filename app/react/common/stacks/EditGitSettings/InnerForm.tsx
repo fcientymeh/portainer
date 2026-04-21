@@ -8,14 +8,16 @@ import { useIsStandalone } from '@/react/docker/proxy/queries/useInfo';
 import { useCurrentEnvironment } from '@/react/hooks/useCurrentEnvironment';
 import { getPlatformType } from '@/react/portainer/environments/utils';
 import { PlatformType } from '@/react/portainer/environments/types';
+import { StackName } from '@/react/kubernetes/DeployView/StackName/StackName';
 
 import { Modal } from '@@/modals/Modal';
+import { TextTip } from '@@/Tip/TextTip';
 import { Button, LoadingButton } from '@@/buttons';
 import { WidgetIcon } from '@@/Widget/WidgetIcon';
 import { Checkbox } from '@@/form-components/Checkbox';
 import { StackEnvironmentVariablesPanel } from '@@/form-components/EnvironmentVariablesFieldset';
 
-import { PruneField } from '../../components/PruneField';
+import { PruneField } from '../PruneField';
 
 import { FormValues } from './types';
 
@@ -36,8 +38,9 @@ export function InnerForm({
   const platform = environmentQuery.data
     ? getPlatformType(environmentQuery.data.Type)
     : null;
+  const isDocker = platform === PlatformType.Docker;
   const isDockerStandalone = useIsStandalone(environmentQuery.data?.Id, {
-    enabled: platform === PlatformType.Docker,
+    enabled: isDocker,
   });
   const { values, setFieldValue, submitForm, errors } =
     useFormikContext<FormValues>();
@@ -63,6 +66,23 @@ export function InnerForm({
         <div className="flex-1 overflow-y-auto px-5">
           <Modal.Body>
             <div className="form-horizontal">
+              {stackType === StackType.Kubernetes && (
+                <>
+                  <StackName
+                    stackName={values.kube?.name ?? ''}
+                    setStackName={(value) => {
+                      setFieldValue('kube.name', value);
+                      setFieldValue('redeployNow', true);
+                    }}
+                    error={errors.kube?.name}
+                  />
+                  <TextTip color="blue" className="mb-4">
+                    Changing the stack name requires a redeploy to update the
+                    deployed resources.
+                  </TextTip>
+                </>
+              )}
+
               <GitForm
                 value={values.git}
                 onChange={(partial) => {
@@ -93,11 +113,13 @@ export function InnerForm({
                 errors={errors.env}
               />
 
-              <PruneField
-                stackType={stackType}
-                checked={values.prune}
-                onChange={(value) => setFieldValue('prune', value)}
-              />
+              {isDocker && (
+                <PruneField
+                  stackType={stackType}
+                  checked={values.prune}
+                  onChange={(value) => setFieldValue('prune', value)}
+                />
+              )}
             </div>
           </Modal.Body>
         </div>

@@ -99,6 +99,7 @@ export interface DefaultRegistry {
   Hide: boolean;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ExperimentalFeatures {}
 
 export interface Settings {

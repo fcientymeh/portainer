@@ -3,10 +3,10 @@ package git
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/portainer/portainer/api/filesystem"
 	gittypes "github.com/portainer/portainer/api/git/types"
 
 	_ "github.com/joho/godotenv/autoload"
@@ -69,7 +69,7 @@ func TestService_ClonePublicRepository_Azure(t *testing.T) {
 				false,
 			)
 			require.NoError(t, err)
-			assert.FileExists(t, filepath.Join(dst, "README.md"))
+			assert.FileExists(t, filesystem.JoinPaths(dst, "README.md"))
 		})
 	}
 }
@@ -93,7 +93,7 @@ func TestService_ClonePrivateRepository_Azure(t *testing.T) {
 		false,
 	)
 	require.NoError(t, err)
-	assert.FileExists(t, filepath.Join(dst, "README.md"))
+	assert.FileExists(t, filesystem.JoinPaths(dst, "README.md"))
 }
 
 func TestService_LatestCommitID_Azure(t *testing.T) {

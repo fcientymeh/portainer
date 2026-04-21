@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-loss-of-precision */
-
+/* eslint-disable no-loss-of-precision */
 import { abbreviateNumber } from './numbers';
 
 describe('abbreviateNumber', () => {
@@ -72,4 +71,4 @@ describe('abbreviateNumber', () => {
   });
 });
 
-/* eslint-enable @typescript-eslint/no-loss-of-precision */
+/* eslint-enable no-loss-of-precision */

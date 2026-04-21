@@ -245,6 +245,11 @@ func createOCIRegistryClient(portainerRegistry *portainer.Registry) (*registry.C
 		return nil, nil
 	}
 
+	// Validate credentials before cache check so invalid credentials always fail
+	if err := validateRegistryCredentials(portainerRegistry); err != nil {
+		return nil, err
+	}
+
 	// Check cache first using registry ID-based key
 	if cachedClient, found := cache.GetCachedRegistryClientByID(portainerRegistry.ID); found {
 		return cachedClient, nil

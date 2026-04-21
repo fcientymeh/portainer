@@ -3,11 +3,10 @@ package exec
 import (
 	"io"
 	"os"
-	"path"
-	"path/filepath"
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/filesystem"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -57,9 +56,9 @@ func Test_createEnvFile(t *testing.T) {
 			result, _ := createEnvFile(tt.stack)
 
 			if tt.expected != "" {
-				assert.Equal(t, filepath.Join(tt.stack.ProjectPath, "stack.env"), result)
+				assert.Equal(t, filesystem.JoinPaths(tt.stack.ProjectPath, "stack.env"), result)
 
-				f, _ := os.Open(path.Join(dir, "stack.env"))
+				f, _ := os.Open(filesystem.JoinPaths(dir, "stack.env"))
 				content, _ := io.ReadAll(f)
 
 				assert.Equal(t, tt.expected, string(content))
@@ -73,7 +72,7 @@ func Test_createEnvFile(t *testing.T) {
 func Test_createEnvFile_mergesDefultAndInplaceEnvVars(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
-	err := os.WriteFile(path.Join(dir, ".env"), []byte("VAR1=VAL1\nVAR2=VAL2\n"), 0600)
+	err := os.WriteFile(filesystem.JoinPaths(dir, ".env"), []byte("VAR1=VAL1\nVAR2=VAL2\n"), 0600)
 	require.NoError(t, err)
 
 	stack := &portainer.Stack{
@@ -84,11 +83,11 @@ func Test_createEnvFile_mergesDefultAndInplaceEnvVars(t *testing.T) {
 		},
 	}
 	result, err := createEnvFile(stack)
-	assert.Equal(t, filepath.Join(stack.ProjectPath, "stack.env"), result)
+	assert.Equal(t, filesystem.JoinPaths(stack.ProjectPath, "stack.env"), result)
 	require.NoError(t, err)
-	assert.FileExists(t, path.Join(dir, "stack.env"))
+	assert.FileExists(t, filesystem.JoinPaths(dir, "stack.env"))
 
-	f, err := os.Open(path.Join(dir, "stack.env"))
+	f, err := os.Open(filesystem.JoinPaths(dir, "stack.env"))
 	require.NoError(t, err)
 
 	content, err := io.ReadAll(f)

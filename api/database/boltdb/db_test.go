@@ -2,7 +2,6 @@ package boltdb
 
 import (
 	"os"
-	"path"
 	"testing"
 
 	"github.com/portainer/portainer/api/filesystem"
@@ -97,7 +96,7 @@ func Test_NeedsEncryptionMigration(t *testing.T) {
 
 			if tc.dbname == "both" {
 				// Special case.  If portainer.db and portainer.edb exist.
-				dbFile1 := path.Join(connection.Path, DatabaseFileName)
+				dbFile1 := filesystem.JoinPaths(connection.Path, DatabaseFileName)
 				f, _ := os.Create(dbFile1)
 
 				err := f.Close()
@@ -108,7 +107,7 @@ func Test_NeedsEncryptionMigration(t *testing.T) {
 					require.NoError(t, err)
 				}()
 
-				dbFile2 := path.Join(connection.Path, EncryptedDatabaseFileName)
+				dbFile2 := filesystem.JoinPaths(connection.Path, EncryptedDatabaseFileName)
 				f, _ = os.Create(dbFile2)
 
 				err = f.Close()
@@ -119,7 +118,7 @@ func Test_NeedsEncryptionMigration(t *testing.T) {
 					require.NoError(t, err)
 				}()
 			} else if tc.dbname != "" {
-				dbFile := path.Join(connection.Path, tc.dbname)
+				dbFile := filesystem.JoinPaths(connection.Path, tc.dbname)
 				f, _ := os.Create(dbFile)
 
 				err := f.Close()

@@ -49,7 +49,6 @@ export function NavTabs<T extends string | number = string>({
                 key={option.id}
               >
                 {/* rule disabled because `nav-tabs` requires an anchor */}
-                {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                 <Button
                   color="none"
                   onClick={() => handleSelect(option)}

@@ -2,8 +2,9 @@ package main
 
 import (
 	"os"
-	"path"
 	"testing"
+
+	"github.com/portainer/portainer/api/filesystem"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,7 +21,7 @@ func createPasswordFile(t *testing.T, secretPath, password string) string {
 func TestLoadEncryptionSecretKey(t *testing.T) {
 	t.Parallel()
 	tempDir := t.TempDir()
-	secretPath := path.Join(tempDir, secretFileName)
+	secretPath := filesystem.JoinPaths(tempDir, secretFileName)
 
 	// first pointing to file that does not exist, gives nil hash (no encryption)
 	encryptionKey := loadEncryptionSecretKey(secretPath)

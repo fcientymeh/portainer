@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
 	"strconv"
 	"testing"
 
@@ -202,7 +201,7 @@ func TestStackUpdate(t *testing.T) {
 	t.Helper()
 	_, store := datastore.MustNewTestStore(t, false, true)
 
-	testDataPath := filepath.Join(t.TempDir())
+	testDataPath := filesystem.JoinPaths(t.TempDir())
 	fileService, err := filesystem.NewService(testDataPath, "")
 	require.NoError(t, err, "error init file service")
 
@@ -328,7 +327,7 @@ func setupUpdateStackInTxTest[T testUpdateStackPayload](t *testing.T, stack *por
 
 	_, store := datastore.MustNewTestStore(t, false, true)
 
-	testDataPath := filepath.Join(t.TempDir())
+	testDataPath := filesystem.JoinPaths(t.TempDir())
 	fileService, err := filesystem.NewService(testDataPath, "")
 	require.NoError(t, err, "error init file service")
 

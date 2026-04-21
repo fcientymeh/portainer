@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"testing"
 
@@ -38,21 +37,21 @@ func Test_shouldCreateArchive(t *testing.T) {
 	tmpdir := t.TempDir()
 	content := []byte("content")
 
-	err := os.WriteFile(path.Join(tmpdir, "outer"), content, 0600)
+	err := os.WriteFile(filesystem.JoinPaths(tmpdir, "outer"), content, 0600)
 	require.NoError(t, err)
 
-	err = os.MkdirAll(path.Join(tmpdir, "dir"), 0700)
+	err = os.MkdirAll(filesystem.JoinPaths(tmpdir, "dir"), 0700)
 	require.NoError(t, err)
 
-	err = os.WriteFile(path.Join(tmpdir, "dir", ".dotfile"), content, 0600)
+	err = os.WriteFile(filesystem.JoinPaths(tmpdir, "dir", ".dotfile"), content, 0600)
 	require.NoError(t, err)
 
-	err = os.WriteFile(path.Join(tmpdir, "dir", "inner"), content, 0600)
+	err = os.WriteFile(filesystem.JoinPaths(tmpdir, "dir", "inner"), content, 0600)
 	require.NoError(t, err)
 
 	gzPath, err := TarGzDir(tmpdir)
 	require.NoError(t, err)
-	assert.Equal(t, filepath.Join(tmpdir, filepath.Base(tmpdir)+".tar.gz"), gzPath)
+	assert.Equal(t, filesystem.JoinPaths(tmpdir, filepath.Base(tmpdir)+".tar.gz"), gzPath)
 
 	extractionDir := t.TempDir()
 	cmd := exec.Command("tar", "-xzf", gzPath, "-C", extractionDir)
@@ -62,7 +61,7 @@ func Test_shouldCreateArchive(t *testing.T) {
 	extractedFiles := listFiles(extractionDir)
 
 	wasExtracted := func(p string) {
-		fullpath := path.Join(extractionDir, p)
+		fullpath := filesystem.JoinPaths(extractionDir, p)
 		assert.Contains(t, extractedFiles, fullpath)
 		copyContent, err := os.ReadFile(fullpath)
 		require.NoError(t, err)
@@ -79,21 +78,21 @@ func Test_shouldCreateArchive2(t *testing.T) {
 	tmpdir := t.TempDir()
 	content := []byte("content")
 
-	err := os.WriteFile(path.Join(tmpdir, "outer"), content, 0600)
+	err := os.WriteFile(filesystem.JoinPaths(tmpdir, "outer"), content, 0600)
 	require.NoError(t, err)
 
-	err = os.MkdirAll(path.Join(tmpdir, "dir"), 0700)
+	err = os.MkdirAll(filesystem.JoinPaths(tmpdir, "dir"), 0700)
 	require.NoError(t, err)
 
-	err = os.WriteFile(path.Join(tmpdir, "dir", ".dotfile"), content, 0600)
+	err = os.WriteFile(filesystem.JoinPaths(tmpdir, "dir", ".dotfile"), content, 0600)
 	require.NoError(t, err)
 
-	err = os.WriteFile(path.Join(tmpdir, "dir", "inner"), content, 0600)
+	err = os.WriteFile(filesystem.JoinPaths(tmpdir, "dir", "inner"), content, 0600)
 	require.NoError(t, err)
 
 	gzPath, err := TarGzDir(tmpdir)
 	require.NoError(t, err)
-	assert.Equal(t, filepath.Join(tmpdir, filepath.Base(tmpdir)+".tar.gz"), gzPath)
+	assert.Equal(t, filesystem.JoinPaths(tmpdir, filepath.Base(tmpdir)+".tar.gz"), gzPath)
 
 	extractionDir := t.TempDir()
 	r, _ := os.Open(gzPath)
@@ -103,7 +102,7 @@ func Test_shouldCreateArchive2(t *testing.T) {
 	extractedFiles := listFiles(extractionDir)
 
 	wasExtracted := func(p string) {
-		fullpath := path.Join(extractionDir, p)
+		fullpath := filesystem.JoinPaths(extractionDir, p)
 		assert.Contains(t, extractedFiles, fullpath)
 		copyContent, _ := os.ReadFile(fullpath)
 		assert.Equal(t, content, copyContent)

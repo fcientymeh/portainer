@@ -65,7 +65,7 @@ export function useGitRepoValidity({
   const hasCreds =
     !!(creds?.username && creds?.password) || !!creds?.gitCredentialId;
 
-  const errorMessage = getError(query.error, hasCreds);
+  const errorMessage = getGitValidityError(query.error, hasCreds);
 
   const isChecking = query.isInitialLoading || query.isFetching;
 
@@ -78,7 +78,7 @@ export function useGitRepoValidity({
   } as const;
 }
 
-function getError(error: unknown, hasCreds: boolean) {
+export function getGitValidityError(error: unknown, hasCreds: boolean) {
   if (!isAxiosError(error)) return undefined;
   const responseData = error.response?.data;
   const details = isDefaultResponse(responseData)

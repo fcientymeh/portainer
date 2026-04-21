@@ -29,8 +29,10 @@ vi.mock('./StackDuplicationForm/StackDuplicationForm', () => ({
   )),
 }));
 
-vi.mock('@/react/portainer/gitops/InfoPanel', () => ({
-  InfoPanel: vi.fn(() => <div data-cy="info-panel">InfoPanel</div>),
+vi.mock('@/react/portainer/gitops/GitReferenceCard', () => ({
+  GitReferenceCard: vi.fn(() => (
+    <div data-cy="git-reference-card">GitReferenceCard</div>
+  )),
 }));
 
 beforeEach(() => {
@@ -127,7 +129,7 @@ describe('conditional form rendering', () => {
     expect(
       screen.queryByTestId('stack-duplication-form')
     ).not.toBeInTheDocument();
-    expect(screen.queryByTestId('info-panel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('git-reference-card')).not.toBeInTheDocument();
   });
 
   it('should not render AssociateStackForm when only isOrphanedRunning is true', () => {
@@ -147,7 +149,7 @@ describe('conditional form rendering', () => {
     expect(screen.getByTestId('stack-duplication-form')).toBeVisible();
   });
 
-  it('should render InfoPanel and edit button when stack has GitConfig and is not from template', async () => {
+  it('should render GitReferenceCard when stack has GitConfig and is not from template', async () => {
     const mockStack = createMockStack({
       GitConfig: {
         URL: 'https://github.com/test/repo',
@@ -165,12 +167,11 @@ describe('conditional form rendering', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('info-panel')).toBeVisible();
-      expect(screen.getByText('Edit Git settings')).toBeVisible();
+      expect(screen.getByTestId('git-reference-card')).toBeVisible();
     });
   });
 
-  it('should not render InfoPanel when stack is from app template', () => {
+  it('should not render GitReferenceCard when stack is from app template', () => {
     const mockStack = createMockStack({
       GitConfig: {
         URL: 'https://github.com/test/repo',
@@ -187,10 +188,10 @@ describe('conditional form rendering', () => {
       isRegular: true,
     });
 
-    expect(screen.queryByTestId('info-panel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('git-reference-card')).not.toBeInTheDocument();
   });
 
-  it('should not render InfoPanel when stack has no GitConfig', () => {
+  it('should not render GitReferenceCard when stack has no GitConfig', () => {
     const mockStack = createMockStack({
       GitConfig: undefined,
     });
@@ -200,7 +201,7 @@ describe('conditional form rendering', () => {
       isRegular: true,
     });
 
-    expect(screen.queryByTestId('info-panel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('git-reference-card')).not.toBeInTheDocument();
   });
 
   it('should render StackDuplicationForm when stack is regular and not orphaned and content is available', () => {
@@ -251,12 +252,12 @@ describe('conditional form rendering', () => {
     expect(
       screen.queryByTestId('stack-duplication-form')
     ).not.toBeInTheDocument();
-    expect(screen.queryByTestId('info-panel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('git-reference-card')).not.toBeInTheDocument();
   });
 });
 
 describe('git and duplication form combination', () => {
-  it('should render both InfoPanel and StackDuplicationForm when conditions met', async () => {
+  it('should render both GitReferenceCard and StackDuplicationForm when conditions met', async () => {
     const mockStack = createMockStack({
       GitConfig: {
         URL: 'https://github.com/test/repo',
@@ -275,7 +276,7 @@ describe('git and duplication form combination', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('info-panel')).toBeVisible();
+      expect(screen.getByTestId('git-reference-card')).toBeVisible();
       expect(screen.getByTestId('stack-duplication-form')).toBeVisible();
     });
   });

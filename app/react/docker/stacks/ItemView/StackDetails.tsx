@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import { useEnvironmentId } from '@/react/hooks/useEnvironmentId';
 import { Stack } from '@/react/common/stacks/types';
 import { useStackFile } from '@/react/common/stacks/queries/useStackFile';
+import { isGitConfigDiverged } from '@/react/portainer/gitops/utils';
 
 import { WidgetBody, Widget } from '@@/Widget';
 import { Tab, useCurrentTabIndex, WidgetTabs } from '@@/Widget/WidgetTabs';
@@ -52,13 +53,9 @@ export function StackDetails({
     select: (containers) =>
       containers.flatMap((c) => c.Names).map((n) => _.trimStart(n, '/')),
   });
-  const gitSettingsPendingRedeploy = !!(
-    stack?.GitConfig &&
-    stack?.CurrentDeploymentInfo &&
-    (stack.GitConfig.URL !== stack.CurrentDeploymentInfo.RepositoryURL ||
-      stack.GitConfig.ConfigFilePath !==
-        stack.CurrentDeploymentInfo.ConfigFilePath)
-  );
+  const shouldLoadFile =
+    !stack?.GitConfig ||
+    !isGitConfigDiverged(stack.GitConfig, stack.CurrentDeploymentInfo);
 
   const fileQuery = useStackFile(
     stack?.Id,
@@ -66,8 +63,11 @@ export function StackDetails({
       version: stack?.StackFileVersion,
       commitHash: stack?.GitConfig?.ConfigHash,
     },
-    { enabled: !gitSettingsPendingRedeploy }
+    {
+      enabled: shouldLoadFile,
+    }
   );
+
   const stackFileContent = fileQuery.data?.StackFileContent;
   const originalContainerNames = extractContainerNames(stackFileContent);
   const yamlError = validateYAML(

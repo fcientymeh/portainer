@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 
 import { terminalClose } from '@/portainer/services/terminal-window';
+import { withTestQueryProvider } from '@/react/test-utils/withTestQuery';
 
 import { Terminal } from '@@/Terminal/Terminal';
 import type { ShellState } from '@@/Terminal/Terminal';
@@ -51,7 +52,7 @@ beforeEach(() => {
 describe('KubectlShellView', () => {
   describe('URL construction', () => {
     it('builds wss:// URL when location is https', () => {
-      render(<KubectlShellView />);
+      renderComponent();
       expect(getTerminalProps().url).toBe(
         'wss://localhost:3000/portainer/api/websocket/kubernetes-shell?endpointId=1'
       );
@@ -62,39 +63,39 @@ describe('KubectlShellView', () => {
         value: { protocol: 'http:', host: 'localhost:3000' },
         writable: true,
       });
-      render(<KubectlShellView />);
+      renderComponent();
       expect(getTerminalProps().url).toBe(
         'ws://localhost:3000/portainer/api/websocket/kubernetes-shell?endpointId=1'
       );
     });
 
     it('passes connect=true to Terminal', () => {
-      render(<KubectlShellView />);
+      renderComponent();
       expect(getTerminalProps().connect).toBe(true);
     });
   });
 
   describe('shell state', () => {
     it('shows loading indicator when connecting', () => {
-      render(<KubectlShellView />);
+      renderComponent();
       triggerStateChange('connecting');
       expect(screen.getByText('Loading Terminal...')).toBeInTheDocument();
     });
 
     it('shows disconnected panel when disconnected', () => {
-      render(<KubectlShellView />);
+      renderComponent();
       triggerStateChange('disconnected');
       expect(screen.getByText('Console disconnected')).toBeInTheDocument();
     });
 
     it('calls terminalClose when state becomes disconnected', () => {
-      render(<KubectlShellView />);
+      renderComponent();
       triggerStateChange('disconnected');
       expect(vi.mocked(terminalClose)).toHaveBeenCalled();
     });
 
     it('shows nothing initially (idle state)', () => {
-      render(<KubectlShellView />);
+      renderComponent();
       expect(screen.queryByText('Loading Terminal...')).not.toBeInTheDocument();
       expect(
         screen.queryByText('Console disconnected')
@@ -104,7 +105,7 @@ describe('KubectlShellView', () => {
 
   describe('disconnected buttons', () => {
     beforeEach(() => {
-      render(<KubectlShellView />);
+      renderComponent();
       triggerStateChange('disconnected');
     });
 
@@ -143,3 +144,9 @@ describe('KubectlShellView', () => {
     });
   });
 });
+
+function renderComponent() {
+  const Wrapper = withTestQueryProvider(KubectlShellView);
+
+  return render(<Wrapper />);
+}

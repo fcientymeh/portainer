@@ -32,7 +32,6 @@ import (
 // @param podName query string true "name of the pod containing the container"
 // @param containerName query string true "name of the container"
 // @param command query string true "command to execute in the container"
-// @param token query string true "JWT token used for authentication against this environment(endpoint)"
 // @success 200
 // @failure 400
 // @failure 403
@@ -163,8 +162,15 @@ func (handler *Handler) hijackPodExecStartOperation(
 
 	err = <-errorChan
 
+	if err == nil || errors.Is(err, io.EOF) {
+		// exec process ended normally (shell exited) - send a clean close frame to the browser
+		_ = websocketConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+
+		return nil
+	}
+
 	// websocket client successfully disconnected
-	if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseNoStatusReceived) {
+	if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway, websocket.CloseNoStatusReceived) {
 		log.Debug().Err(err).Msg("websocket error")
 
 		return nil

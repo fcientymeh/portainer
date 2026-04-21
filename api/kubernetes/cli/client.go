@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,7 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/patrickmn/go-cache"
-	"github.com/pkg/errors"
+	pkgerrors "github.com/pkg/errors"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -224,18 +226,49 @@ func (factory *ClientFactory) CreateConfig(endpoint *portainer.Endpoint) (*rest.
 	return nil, errors.New("unsupported environment type")
 }
 
-type agentHeaderRoundTripper struct {
+// AgentHeaderRoundTripper decorates HTTP requests with Portainer agent
+// authentication headers and retries once on stale-connection errors
+type AgentHeaderRoundTripper struct {
 	signatureHeader string
 	publicKeyHeader string
 
 	roundTripper http.RoundTripper
 }
 
-// RoundTrip is the implementation of the http.RoundTripper interface.
-// It decorates the request with specific agent headers
-func (rt *agentHeaderRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+// NewAgentHeaderRoundTripper creates a round tripper that attaches the agent
+// authentication headers to every request
+func NewAgentHeaderRoundTripper(signatureHeader, publicKeyHeader string, rt http.RoundTripper) *AgentHeaderRoundTripper {
+	return &AgentHeaderRoundTripper{
+		signatureHeader: signatureHeader,
+		publicKeyHeader: publicKeyHeader,
+		roundTripper:    rt,
+	}
+}
+
+func (rt *AgentHeaderRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.Header.Add(portainer.PortainerAgentPublicKeyHeader, rt.publicKeyHeader)
 	req.Header.Add(portainer.PortainerAgentSignatureHeader, rt.signatureHeader)
+
+	resp, err := rt.roundTripper.RoundTrip(req)
+	if err == nil {
+		return resp, nil
+	}
+
+	// Retry once if a stale pooled connection was reset (non-timeout transport error)
+	var opErr *net.OpError
+	if !errors.As(err, &opErr) || opErr.Timeout() {
+		return nil, err
+	}
+
+	if req.GetBody != nil {
+		body, bodyErr := req.GetBody()
+		if bodyErr != nil {
+			return nil, err
+		}
+		req.Body = body
+	} else if req.Body != nil {
+		return nil, err
+	}
 
 	return rt.roundTripper.RoundTrip(req)
 }
@@ -263,19 +296,16 @@ func (factory *ClientFactory) buildAgentConfig(endpoint *portainer.Endpoint) (*r
 	config.Burst = defaultKubeClientBurst
 
 	config.Wrap(func(rt http.RoundTripper) http.RoundTripper {
-		return &agentHeaderRoundTripper{
-			signatureHeader: signature,
-			publicKeyHeader: factory.signatureService.EncodedPublicKey(),
-			roundTripper:    rt,
-		}
+		return NewAgentHeaderRoundTripper(signature, factory.signatureService.EncodedPublicKey(), rt)
 	})
+
 	return config, nil
 }
 
 func (factory *ClientFactory) buildEdgeConfig(endpoint *portainer.Endpoint) (*rest.Config, error) {
 	tunnelAddr, err := factory.reverseTunnelService.TunnelAddr(endpoint)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to activate the chisel reverse tunnel. check if the tunnel port is open at the portainer instance")
+		return nil, pkgerrors.Wrap(err, "failed to activate the chisel reverse tunnel. check if the tunnel port is open at the portainer instance")
 	}
 	endpointURL := fmt.Sprintf("http://%s/kubernetes", tunnelAddr)
 
@@ -294,11 +324,7 @@ func (factory *ClientFactory) buildEdgeConfig(endpoint *portainer.Endpoint) (*re
 	config.Burst = defaultKubeClientBurst
 
 	config.Wrap(func(rt http.RoundTripper) http.RoundTripper {
-		return &agentHeaderRoundTripper{
-			signatureHeader: signature,
-			publicKeyHeader: factory.signatureService.EncodedPublicKey(),
-			roundTripper:    rt,
-		}
+		return NewAgentHeaderRoundTripper(signature, factory.signatureService.EncodedPublicKey(), rt)
 	})
 
 	return config, nil

@@ -5,8 +5,8 @@ interface EditableTableMeta<TData extends RowData> {
   getEditableRowOriginalData: () => TData | undefined;
   editRow: (rowIndex: number, row: TData | undefined) => void;
   updateRow: (rowIndex: number, row: TData | undefined) => void;
-  revertRow: () => void;
-  acceptRow: () => void;
+  revertRow: (rowIndex: number) => void;
+  acceptRow: (rowIndex: number) => void;
 }
 
 export function isEditableTableMeta<TData extends RowData>(

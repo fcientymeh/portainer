@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path/filepath"
 	"strconv"
 	"testing"
 
@@ -85,7 +84,7 @@ func TestStackFile_MatchingGitSettings_ReturnsFileContent(t *testing.T) {
 	const configPath = "docker-compose.yml"
 	const fileContent = "version: '3'\nservices:\n  web:\n    image: nginx\n"
 
-	require.NoError(t, os.WriteFile(filepath.Join(tempDir, configPath), []byte(fileContent), 0o644))
+	require.NoError(t, os.WriteFile(filesystem.JoinPaths(tempDir, configPath), []byte(fileContent), 0o644))
 
 	stack := &portainer.Stack{
 		ID:          2,

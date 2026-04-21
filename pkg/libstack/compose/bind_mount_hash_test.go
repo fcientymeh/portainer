@@ -2,8 +2,9 @@ package compose
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
+
+	"github.com/portainer/portainer/api/filesystem"
 
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/stretchr/testify/require"
@@ -12,7 +13,7 @@ import (
 func TestPathHash_File(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
-	path := filepath.Join(dir, "file.txt")
+	path := filesystem.JoinPaths(dir, "file.txt")
 
 	require.NoError(t, os.WriteFile(path, []byte("hello"), 0644))
 
@@ -35,8 +36,8 @@ func TestPathHash_File(t *testing.T) {
 func TestPathHash_Directory(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "a.txt"), []byte("aaa"), 0644))
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "b.txt"), []byte("bbb"), 0644))
+	require.NoError(t, os.WriteFile(filesystem.JoinPaths(dir, "a.txt"), []byte("aaa"), 0644))
+	require.NoError(t, os.WriteFile(filesystem.JoinPaths(dir, "b.txt"), []byte("bbb"), 0644))
 
 	h1, err := pathHash(dir)
 	require.NoError(t, err)
@@ -47,14 +48,14 @@ func TestPathHash_Directory(t *testing.T) {
 	require.Equal(t, h1, h2)
 
 	// Rename a file -> different hash (relative path is part of the hash)
-	require.NoError(t, os.Rename(filepath.Join(dir, "a.txt"), filepath.Join(dir, "c.txt")))
+	require.NoError(t, os.Rename(filesystem.JoinPaths(dir, "a.txt"), filesystem.JoinPaths(dir, "c.txt")))
 	h3, err := pathHash(dir)
 	require.NoError(t, err)
 	require.NotEqual(t, h1, h3, "renaming a file should change the directory hash")
 
 	// Restore and change content -> different hash
-	require.NoError(t, os.Rename(filepath.Join(dir, "c.txt"), filepath.Join(dir, "a.txt")))
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "a.txt"), []byte("modified"), 0644))
+	require.NoError(t, os.Rename(filesystem.JoinPaths(dir, "c.txt"), filesystem.JoinPaths(dir, "a.txt")))
+	require.NoError(t, os.WriteFile(filesystem.JoinPaths(dir, "a.txt"), []byte("modified"), 0644))
 	h4, err := pathHash(dir)
 	require.NoError(t, err)
 	require.NotEqual(t, h1, h4, "changing file content should change the directory hash")
@@ -63,9 +64,9 @@ func TestPathHash_Directory(t *testing.T) {
 func TestAddBindMountHashLabel(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
-	webDir := filepath.Join(dir, "web")
+	webDir := filesystem.JoinPaths(dir, "web")
 	require.NoError(t, os.MkdirAll(webDir, 0755))
-	require.NoError(t, os.WriteFile(filepath.Join(webDir, "nginx.conf"), []byte("server {}"), 0644))
+	require.NoError(t, os.WriteFile(filesystem.JoinPaths(webDir, "nginx.conf"), []byte("server {}"), 0644))
 
 	t.Run("no bind mounts", func(t *testing.T) {
 		svc := types.ServiceConfig{Name: "web"}
@@ -107,7 +108,7 @@ func TestAddBindMountHashLabel(t *testing.T) {
 	t.Run("valid bind mount with file source sets label", func(t *testing.T) {
 		svc := types.ServiceConfig{
 			Name:    "web",
-			Volumes: []types.ServiceVolumeConfig{{Type: "bind", Source: filepath.Join(webDir, "nginx.conf")}},
+			Volumes: []types.ServiceVolumeConfig{{Type: "bind", Source: filesystem.JoinPaths(webDir, "nginx.conf")}},
 		}
 		result, err := addBindMountHashLabel("web", svc)
 		require.NoError(t, err)

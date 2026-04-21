@@ -15,6 +15,7 @@ import (
 )
 
 func Test_helmRepoSearch(t *testing.T) {
+	t.Parallel()
 	is := assert.New(t)
 
 	helmPackageManager := test.NewMockHelmPackageManager()

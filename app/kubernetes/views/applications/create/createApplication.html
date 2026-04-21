@@ -147,21 +147,14 @@
               <!-- #endregion -->
             </div>
             <div ng-if="!ctrl.isExternalApplication()">
-              <div class="form-group">
-                <div class="col-sm-12">
-                  <git-form-info-panel
-                    ng-if="ctrl.state.appType == ctrl.KubernetesDeploymentTypes.GIT"
-                    type="'application'"
-                    current-deployment="{
-                  repositoryUrl: ctrl.stack.GitConfig.URL,
-                  configFilePath: ctrl.stack.GitConfig.ConfigFilePath,
-                  additionalFiles: ctrl.stack.AdditionalFiles,
-                  commitHash: ctrl.stack.GitConfig.ConfigHash
-                }"
-                  >
-                  </git-form-info-panel>
-                </div>
-              </div>
+              <git-form-git-reference-card
+                ng-if="ctrl.state.appType == ctrl.KubernetesDeploymentTypes.GIT && ctrl.stack.GitConfig"
+                stack-id="ctrl.stack.Id"
+                stack-type="'kubernetes'"
+                git-config="ctrl.stack.GitConfig"
+                auto-update="ctrl.stack.AutoUpdate"
+                class="mb-4"
+              ></git-form-git-reference-card>
               <!-- #region NAMESPACE -->
               <namespace-selector
                 values="ctrl.formValues.ResourcePool.Namespace.Name"
