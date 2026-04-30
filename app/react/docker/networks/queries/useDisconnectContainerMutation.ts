@@ -4,7 +4,7 @@ import { EnvironmentId } from '@/react/portainer/environments/types';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import {
   mutationOptions,
-  withGlobalError,
+  withError,
   withInvalidate,
 } from '@/react-tools/react-query';
 
@@ -38,7 +38,7 @@ export function useDisconnectContainer({
         queryKeys.item(environmentId, networkId),
         containerQueryKeys.list(environmentId),
       ]),
-      withGlobalError('Unable to disconnect container from network')
+      withError('Unable to disconnect container from network')
     )
   );
 }

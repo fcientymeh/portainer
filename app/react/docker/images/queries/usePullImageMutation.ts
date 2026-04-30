@@ -4,7 +4,7 @@ import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import { Registry } from '@/react/portainer/registries/types/registry';
 import { useEnvironmentRegistries } from '@/react/portainer/environments/queries/useEnvironmentRegistries';
-import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
+import { withError, withInvalidate } from '@/react-tools/react-query';
 
 import { buildImageFullURI } from '../utils';
 import {
@@ -29,7 +29,7 @@ export function usePullImageMutation(envId: EnvironmentId) {
         ...args,
         registry: getRegistry(registriesQuery.data || [], args.registryId),
       }),
-    ...withGlobalError('Failure', 'Failed pulling image'),
+    ...withError('Failure', 'Failed pulling image'),
     ...withInvalidate(queryClient, [queryKeys.base(envId)]),
   });
 }

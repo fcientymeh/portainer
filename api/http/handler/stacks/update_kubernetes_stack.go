@@ -52,7 +52,7 @@ func (payload *kubernetesGitStackUpdatePayload) Validate(r *http.Request) error 
 	return nil
 }
 
-func (handler *Handler) updateKubernetesStack(r *http.Request, stack *portainer.Stack, endpoint *portainer.Endpoint) *httperror.HandlerError {
+func (handler *Handler) updateKubernetesStack(r *http.Request, stack *portainer.Stack, endpoint *portainer.Endpoint, gate *deployGate) *httperror.HandlerError {
 	if stack.GitConfig != nil {
 		// Stop the autoupdate job if there is any
 		if stack.AutoUpdate != nil {
@@ -116,11 +116,6 @@ func (handler *Handler) updateKubernetesStack(r *http.Request, stack *portainer.
 	}
 
 	tempFileDir, _ := os.MkdirTemp("", "kub_file_content")
-	defer func() {
-		if err := os.RemoveAll(tempFileDir); err != nil {
-			log.Warn().Err(err).Msg("failed to remove temporary stack deployment directory")
-		}
-	}()
 
 	if err := filesystem.WriteToFile(filesystem.JoinPaths(tempFileDir, stack.EntryPoint), []byte(payload.StackFileContent)); err != nil {
 		return httperror.InternalServerError("Failed to persist deployment file in a temp directory", err)
@@ -147,14 +142,16 @@ func (handler *Handler) updateKubernetesStack(r *http.Request, stack *portainer.
 	// so if the deployment failed, the original file won't be over-written
 	stack.ProjectPath = tempFileDir
 
-	if _, err := handler.deployKubernetesStack(context.TODO(), tokenData.ID, endpoint, stack, k.KubeAppLabels{
+	appLabels := k.KubeAppLabels{
 		StackID:   int(stack.ID),
 		StackName: stack.Name,
 		Owner:     stack.CreatedBy,
 		Kind:      "content",
-	}); err != nil {
-		return httperror.InternalServerError("Unable to deploy Kubernetes stack via file content", err)
 	}
+
+	copyStack := *stack
+	user := &portainer.User{ID: tokenData.ID}
+	k8sDeploymentConfig := deployments.CreateKubernetesStackDeploymentConfig(&copyStack, handler.KubernetesDeployer, appLabels, user, endpoint)
 
 	stackFolder := strconv.Itoa(int(stack.ID))
 	projectPath, err := handler.FileService.UpdateStoreStackFileFromBytes(stackFolder, stack.EntryPoint, []byte(payload.StackFileContent))
@@ -167,9 +164,21 @@ func (handler *Handler) updateKubernetesStack(r *http.Request, stack *portainer.
 	}
 	stack.ProjectPath = projectPath
 
-	if err := handler.FileService.RemoveStackFileBackup(stackFolder, stack.EntryPoint); err != nil {
-		log.Warn().Err(err).Msg("remove stack file backup error")
+	postDeploy := func(ctx context.Context, deployErr error) {
+		defer func() {
+			if err := os.RemoveAll(tempFileDir); err != nil {
+				log.Warn().Err(err).Msg("failed to remove temporary stack deployment directory")
+			}
+		}()
+
+		if deployErr == nil {
+			if err := handler.FileService.RemoveStackFileBackup(stackFolder, stack.EntryPoint); err != nil {
+				log.Warn().Err(err).Msg("remove stack file backup error")
+			}
+		}
 	}
+
+	go stackDeploy(handler.DataStore, copyStack.ID, k8sDeploymentConfig, gate, postDeploy)
 
 	return nil
 }

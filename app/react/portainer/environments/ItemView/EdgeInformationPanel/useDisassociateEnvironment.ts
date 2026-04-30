@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
+import { withError, withInvalidate } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import { disassociateEndpoint } from '@/react/portainer/environments/environment.service';
 
@@ -11,7 +11,7 @@ export function useDisassociateEnvironment(environmentId: EnvironmentId) {
 
   return useMutation({
     mutationFn: () => disassociateEndpoint(environmentId),
-    ...withGlobalError('Failed to disassociate environment'),
+    ...withError('Failed to disassociate environment'),
     ...withInvalidate(queryClient, [environmentQueryKeys.item(environmentId)]),
   });
 }

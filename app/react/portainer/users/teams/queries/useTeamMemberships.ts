@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { TeamId, TeamMembership } from '../types';
 
@@ -13,7 +13,7 @@ export function useTeamMemberships(id?: TeamId) {
   return useQuery({
     queryKey: queryKeys.memberships(id),
     queryFn: () => (id ? getTeamMemberships(id) : getTeamsMemberships()),
-    ...withGlobalError('Unable to load team memberships'),
+    ...withError('Unable to load team memberships'),
   });
 }
 

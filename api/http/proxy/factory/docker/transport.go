@@ -29,6 +29,7 @@ import (
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/authorization"
 	"github.com/portainer/portainer/api/logs"
+	"github.com/portainer/portainer/api/slicesx"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/encoding/json"
 )
@@ -122,6 +123,7 @@ var prefixProxyFuncMap = map[string]func(*Transport, *http.Request, string) (*ht
 	"build":      (*Transport).proxyBuildRequest,
 	"configs":    (*Transport).proxyConfigRequest,
 	"containers": (*Transport).proxyContainerRequest,
+	"exec":       (*Transport).proxyExecRequest,
 	"images":     (*Transport).proxyImageRequest,
 	"networks":   (*Transport).proxyNetworkRequest,
 	"nodes":      (*Transport).proxyNodeRequest,
@@ -131,6 +133,28 @@ var prefixProxyFuncMap = map[string]func(*Transport, *http.Request, string) (*ht
 	"tasks":      (*Transport).proxyTaskRequest,
 	"v2":         (*Transport).proxyAgentRequest,
 	"volumes":    (*Transport).proxyVolumeRequest,
+}
+
+type route struct {
+	method  string
+	pattern *regexp.Regexp
+}
+
+var adminOnlyRoutes = []route{
+	{http.MethodPost, regexp.MustCompile(`^/plugins/.+/enable$`)},
+	{http.MethodPost, regexp.MustCompile(`^/plugins/.+/disable$`)},
+	{http.MethodPost, regexp.MustCompile(`^/plugins/pull$`)},
+	{http.MethodPost, regexp.MustCompile(`^/plugins/.+/push$`)},
+	{http.MethodPost, regexp.MustCompile(`^/plugins/.+/upgrade$`)},
+	{http.MethodPost, regexp.MustCompile(`^/plugins/.+/set$`)},
+	{http.MethodPost, regexp.MustCompile(`^/plugins/create$`)},
+	{http.MethodDelete, regexp.MustCompile(`^/plugins/.+$`)},
+}
+
+func isAdminOnlyRoute(method string, path string) bool {
+	return slicesx.Some(adminOnlyRoutes, func(r route) bool {
+		return method == r.method && r.pattern.MatchString(path)
+	})
 }
 
 // ProxyDockerRequest intercepts a Docker API request and apply logic based
@@ -159,6 +183,10 @@ func (transport *Transport) ProxyDockerRequest(request *http.Request) (*http.Res
 
 	if proxyFunc := prefixProxyFuncMap[prefix]; proxyFunc != nil {
 		return proxyFunc(transport, request, unversionedPath)
+	}
+
+	if isAdminOnlyRoute(request.Method, unversionedPath) {
+		return transport.administratorOperation(request)
 	}
 
 	return transport.executeDockerRequest(request)
@@ -300,10 +328,31 @@ func (transport *Transport) proxyContainerRequest(request *http.Request, unversi
 			}
 
 			return transport.restrictedResourceOperation(request, containerID, containerID, portainer.ContainerResourceControl, false)
+		} else if match, _ := path.Match("/containers/*/attach/ws", requestPath); match {
+			containerID := path.Base(path.Dir(path.Dir(requestPath)))
+
+			return transport.restrictedResourceOperation(request, containerID, containerID, portainer.ContainerResourceControl, false)
 		}
 
 		return transport.executeDockerRequest(request)
 	}
+}
+
+func (transport *Transport) proxyExecRequest(request *http.Request, unversionedPath string) (*http.Response, error) {
+	execID := path.Base(path.Dir(unversionedPath))
+
+	client, err := transport.dockerClientFactory.CreateClient(transport.endpoint, request.Header.Get(portainer.PortainerAgentTargetHeader), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer logs.CloseAndLogErr(client)
+
+	execInspect, err := client.ContainerExecInspect(request.Context(), execID)
+	if err != nil {
+		return nil, err
+	}
+
+	return transport.restrictedResourceOperation(request, execInspect.ContainerID, execInspect.ContainerID, portainer.ContainerResourceControl, false)
 }
 
 func (transport *Transport) proxyServiceRequest(request *http.Request, unversionedPath string) (*http.Response, error) {
@@ -463,7 +512,11 @@ func (transport *Transport) proxyTaskRequest(request *http.Request, unversionedP
 	}
 }
 
-func (transport *Transport) proxyBuildRequest(request *http.Request, _ string) (*http.Response, error) {
+func (transport *Transport) proxyBuildRequest(request *http.Request, unversionedPath string) (*http.Response, error) {
+	if unversionedPath == "/build/prune" {
+		return transport.administratorOperation(request)
+	}
+
 	if err := transport.updateDefaultGitBranch(request); err != nil {
 		return nil, err
 	}
@@ -820,7 +873,7 @@ func (transport *Transport) decorateGenericResourceCreationOperation(request *ht
 	teamMemberships_aip, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(tokenData.ID)
 	team_aip, err := transport.dataStore.Team().TeamByName("READONLY")
 	if err != nil {
-		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE] - transport.go:815", tokenData.Username)
+		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE] - transport.go:876", tokenData.Username)
 	}
 	for _, membership_aip := range teamMemberships_aip {
 		if membership_aip.TeamID == team_aip.ID {

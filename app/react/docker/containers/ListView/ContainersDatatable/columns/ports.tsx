@@ -29,12 +29,16 @@ function Cell({ row }: CellContext<ContainerListViewModel, string>) {
     return '-';
   }
 
-  return _.uniqBy(ports, 'public').map((port) => (
-    <PublishedPortLink
-      key={`${port.host}:${port.public}`}
-      hostPort={port.public}
-      containerPort={port.private}
-      hostURL={environment.PublicURL || port.host}
-    />
-  ));
+  return (
+    <div className="flex flex-wrap gap-1">
+      {_.uniqBy(ports, 'public').map((port) => (
+        <PublishedPortLink
+          key={`${port.host}:${port.public}`}
+          hostPort={port.public}
+          containerPort={port.private}
+          hostURL={environment.PublicURL || port.host}
+        />
+      ))}
+    </div>
+  );
 }

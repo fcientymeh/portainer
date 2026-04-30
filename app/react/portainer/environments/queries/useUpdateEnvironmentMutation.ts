@@ -1,6 +1,6 @@
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 
-import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
+import { withError, withInvalidate } from '@/react-tools/react-query';
 import {
   EnvironmentId,
   EnvironmentStatusMessage,
@@ -22,7 +22,7 @@ export function useUpdateEnvironmentMutation() {
   return useMutation({
     mutationFn: updateEnvironment,
     ...withInvalidate(queryClient, [environmentQueryKeys.base()]),
-    ...withGlobalError('Unable to update environment'),
+    ...withError('Unable to update environment'),
   });
 }
 

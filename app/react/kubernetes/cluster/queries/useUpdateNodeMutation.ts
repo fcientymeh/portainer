@@ -4,7 +4,7 @@ import { Node } from 'kubernetes-types/core/v1';
 
 import axios from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
+import { withError, withInvalidate } from '@/react-tools/react-query';
 
 import { parseKubernetesAxiosError } from '../../axiosError';
 import { isSystemLabel, KubernetesPortainerNodeDrainLabel } from '../nodeUtils';
@@ -26,7 +26,7 @@ export function useUpdateNodeMutation(
         queryKeys.nodes(environmentId),
         queryKeys.node(environmentId, nodeName),
       ]),
-      ...withGlobalError('Unable to update node'),
+      ...withError('Unable to update node'),
     }
   );
 }

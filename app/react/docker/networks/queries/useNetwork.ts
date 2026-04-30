@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 
@@ -19,7 +19,7 @@ export function useNetwork(
     [...queryKeys.item(environmentId, networkId), { nodeName }],
     () => getNetwork(environmentId, networkId, { nodeName }),
     {
-      ...withGlobalError('Unable to get network'),
+      ...withError('Unable to get network'),
     }
   );
 }

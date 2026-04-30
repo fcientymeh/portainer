@@ -76,7 +76,7 @@ func (hspm *HelmSDKPackageManager) install(installOpts options.InstallOptions) (
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse chart reference for helm release installation")
 	}
-	chart, err := hspm.loadAndValidateChartWithPathOptions(&installClient.ChartPathOptions, chartRef, installOpts.Version, repoURL, installClient.DependencyUpdate, "release installation")
+	chart, err := hspm.loadAndValidateChartWithPathOptions(actionConfig, &installClient.ChartPathOptions, chartRef, installOpts.Version, repoURL, installClient.DependencyUpdate, "release installation")
 	if err != nil {
 		log.Error().
 			Str("context", "HelmClient").

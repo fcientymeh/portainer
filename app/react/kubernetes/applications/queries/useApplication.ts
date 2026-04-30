@@ -2,7 +2,7 @@ import { UseQueryResult, useQuery } from '@tanstack/react-query';
 import { DaemonSet, Deployment, StatefulSet } from 'kubernetes-types/apps/v1';
 import { Pod } from 'kubernetes-types/core/v1';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import { isFulfilled } from '@/portainer/helpers/promise-utils';
 import axios from '@/portainer/services/axios/axios';
@@ -28,7 +28,7 @@ export function useApplication<T extends Application | string = Application>(
     () =>
       getApplication<T>(environmentId, namespace, name, appKind, options?.yaml),
     {
-      ...withGlobalError('Unable to retrieve application'),
+      ...withError('Unable to retrieve application'),
       refetchInterval() {
         return options?.autoRefreshRate ?? false;
       },

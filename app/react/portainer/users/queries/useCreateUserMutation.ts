@@ -1,7 +1,7 @@
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
+import { withError, withInvalidate } from '@/react-tools/react-query';
 import { userQueryKeys } from '@/portainer/users/queries/queryKeys';
 import { buildUrl } from '@/portainer/users/user.service';
 import { Role, User } from '@/portainer/users/types';
@@ -29,7 +29,7 @@ export function useCreateUserMutation() {
       );
     },
     ...withInvalidate(queryClient, [userQueryKeys.base()]),
-    ...withGlobalError('Unable to create user'),
+    ...withError('Unable to create user'),
   });
 }
 

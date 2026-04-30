@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Pod } from 'kubernetes-types/core/v1';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
 import { getNamespaceServices } from '../../services/service';
@@ -50,7 +50,7 @@ export function useApplicationServices(
       return filteredServices;
     },
     {
-      ...withGlobalError(`Unable to get services for ${appName}`),
+      ...withError(`Unable to get services for ${appName}`),
       enabled: !!app,
     }
   );

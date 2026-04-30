@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
+import { withError, withInvalidate } from '@/react-tools/react-query';
 import { updateEnvironmentRegistryAccess } from '@/react/portainer/environments/environment.service/registries';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
@@ -53,7 +53,7 @@ export function useCreateNamespaceMutation(environmentId: EnvironmentId) {
       ]);
     },
     {
-      ...withGlobalError('Unable to create namespace'),
+      ...withError('Unable to create namespace'),
       ...withInvalidate(queryClient, [queryKeys.list(environmentId)]),
     }
   );

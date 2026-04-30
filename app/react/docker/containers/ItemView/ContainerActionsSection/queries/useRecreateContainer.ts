@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
 import { queryKeys as containerQueryKeys } from '../../../queries/query-keys';
@@ -33,6 +33,6 @@ export function useRecreateContainer() {
         ),
       });
     },
-    ...withGlobalError('Unable to re-create container'),
+    ...withError('Unable to re-create container'),
   });
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/stacks/deployments"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
@@ -20,7 +21,7 @@ import (
 // @param webhookID path string true "Stack identifier"
 // @success 200 "Success"
 // @failure 400 "Invalid request"
-// @failure 409 "Autoupdate for the stack isn't available"
+// @failure 409 "Autoupdate for the stack isn't available" or "Stack deployment is already in progress"
 // @failure 500 "Server error"
 // @router /stacks/webhooks/{webhookID} [post]
 func (handler *Handler) webhookInvoke(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
@@ -37,6 +38,10 @@ func (handler *Handler) webhookInvoke(w http.ResponseWriter, r *http.Request) *h
 		}
 
 		return httperror.NewError(statusCode, "Unable to find the stack by webhook ID", err)
+	}
+
+	if stack.Status == portainer.StackStatusDeploying {
+		return httperror.Conflict("Unable to update stack", errors.New("Stack deployment is already in progress"))
 	}
 
 	if err = deployments.RedeployWhenChanged(context.TODO(), stack.ID, handler.StackDeployer, handler.DataStore, handler.GitService); err != nil {

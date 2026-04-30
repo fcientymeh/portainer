@@ -5,7 +5,7 @@ import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { TaskId } from '@/react/docker/tasks/types';
 import { queryKeys } from '@/react/docker/tasks/queries/query-keys';
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { buildDockerProxyUrl } from '../../proxy/queries/buildDockerProxyUrl';
 
@@ -15,7 +15,7 @@ export function useTask(environmentId: EnvironmentId, taskId: TaskId) {
 
     () => getTask(environmentId, taskId),
     {
-      ...withGlobalError('Unable to retrieve task'),
+      ...withError('Unable to retrieve task'),
     }
   );
 }

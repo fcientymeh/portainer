@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Event } from '@/react/kubernetes/queries/types';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import axios from '@/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { parseKubernetesAxiosError } from '../axiosError';
 
@@ -70,7 +70,7 @@ export function useEvents<T = Event[]>(
     queryKeys.base(environmentId, { params, namespace }),
     () => getEvents(environmentId, { params, namespace }),
     {
-      ...withGlobalError('Unable to retrieve events'),
+      ...withError('Unable to retrieve events'),
       refetchInterval() {
         return queryOptions?.autoRefreshRate ?? false;
       },

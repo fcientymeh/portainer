@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import {
   mutationOptions,
-  withGlobalError,
+  withError,
   withInvalidate,
 } from '@/react-tools/react-query';
 
@@ -48,7 +48,7 @@ export function useIngress(
       return ing;
     },
     {
-      ...withGlobalError('Unable to get ingress'),
+      ...withError('Unable to get ingress'),
     }
   );
 }
@@ -67,7 +67,7 @@ export function useIngresses(
     [...queryKeys.clusterIngresses(environmentId), params],
     async () => getIngresses(environmentId, params),
     {
-      ...withGlobalError('Unable to get ingresses'),
+      ...withError('Unable to get ingresses'),
       refetchInterval: autoRefreshRate,
       enabled,
     }
@@ -85,7 +85,7 @@ export function useCreateIngress() {
       ingress: Ingress;
     }) => createIngress(environmentId, ingress),
     mutationOptions(
-      withGlobalError('Unable to create ingress controller'),
+      withError('Unable to create ingress controller'),
       withInvalidate(queryClient, [queryKeys.base])
     )
   );
@@ -102,7 +102,7 @@ export function useUpdateIngress() {
       ingress: Ingress;
     }) => updateIngress(environmentId, ingress),
     mutationOptions(
-      withGlobalError('Unable to update ingress controller'),
+      withError('Unable to update ingress controller'),
       withInvalidate(queryClient, [queryKeys.base])
     )
   );
@@ -119,7 +119,7 @@ export function useDeleteIngresses() {
       data: DeleteIngressesRequest;
     }) => deleteIngresses(environmentId, data),
     mutationOptions(
-      withGlobalError('Unable to update ingress controller'),
+      withError('Unable to update ingress controller'),
       withInvalidate(queryClient, [queryKeys.base])
     )
   );
@@ -141,7 +141,7 @@ export function useIngressControllers(
         : [],
     {
       enabled: !!namespace,
-      ...withGlobalError('Unable to get ingress controllers'),
+      ...withError('Unable to get ingress controllers'),
     }
   );
 }

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 
 import { HelmRelease } from '../types';
@@ -39,7 +39,7 @@ export function useHelmRelease<T = HelmRelease>(
     {
       enabled:
         !!environmentId && !!name && !!namespace && (options.enabled ?? true),
-      ...withGlobalError('Unable to retrieve helm application details'),
+      ...withError('Unable to retrieve helm application details'),
       retry: 3,
       // occasionally the application shows before the release is created, take some more time to refetch
       retryDelay: 2000,

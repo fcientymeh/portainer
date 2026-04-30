@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
+import { withError, withInvalidate } from '@/react-tools/react-query';
 import { queryKeys as applicationsQueryKeys } from '@/react/kubernetes/applications/queries/query-keys';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
@@ -21,7 +21,7 @@ export function useUninstallHelmAppMutation(environmentId: EnvironmentId) {
       queryKeys.releases(environmentId),
       applicationsQueryKeys.applications(environmentId),
     ]),
-    ...withGlobalError('Unable to uninstall helm application'),
+    ...withError('Unable to uninstall helm application'),
   });
 }
 

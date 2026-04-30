@@ -2,7 +2,7 @@ import { compact } from 'lodash';
 import { useQuery } from '@tanstack/react-query';
 
 import axios from '@/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { Chart, HelmChartsResponse } from '../types';
 
@@ -28,7 +28,7 @@ export function useHelmHTTPChartList(
     enabled: !!userId && !!repository && enabled,
     // one request takes a long time, so fail early to get feedback to the user faster
     retry: false,
-    ...withGlobalError(`Unable to retrieve Helm charts from ${repository}`),
+    ...withError(`Unable to retrieve Helm charts from ${repository}`),
     cacheTime: 1000 * 60 * 60 * 8, // 8 hours so that the chart list populates faster (keep stale time the same to always revalidate)
   });
 }

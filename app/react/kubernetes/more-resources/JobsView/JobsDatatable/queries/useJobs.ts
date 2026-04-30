@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
@@ -16,7 +16,7 @@ export function useJobs(
     queryKeys.list(environmentId),
     async () => getAllJobs(environmentId),
     {
-      ...withGlobalError('Unable to get Jobs'),
+      ...withError('Unable to get Jobs'),
       refetchInterval() {
         return options?.refetchInterval ?? false;
       },

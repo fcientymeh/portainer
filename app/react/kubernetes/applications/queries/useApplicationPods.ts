@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Pod } from 'kubernetes-types/core/v1';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
 import { applicationIsKind, matchLabelsToLabelSelectorValue } from '../utils';
@@ -34,7 +34,7 @@ export function useApplicationPods(
       return pods;
     },
     {
-      ...withGlobalError(`Unable to get pods for ${appName}`),
+      ...withError(`Unable to get pods for ${appName}`),
       enabled: !!app,
       refetchInterval() {
         return options?.autoRefreshRate ?? false;

@@ -354,7 +354,7 @@ func buildServer(flags *portainer.CLIFlags, shutdownCtx context.Context, shutdow
 		// validate if the trusted origins are valid urls
 		for origin := range strings.SplitSeq(*flags.TrustedOrigins, ",") {
 			if !validate.IsTrustedOrigin(origin) {
-				log.Fatal().Str("trusted_origin", origin).Msg("invalid url for trusted origin. Please check the trusted origins flag.")
+				log.Fatal().Str("trusted_origin", origin).Msg("invalid trusted origin: must be scheme://host or scheme://host:port (e.g. https://example.com)")
 			}
 
 			trustedOrigins = append(trustedOrigins, origin)

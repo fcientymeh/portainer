@@ -460,53 +460,50 @@ func Test_IsTrustedOrigin(t *testing.T) {
 		}
 	}
 
-	// Valid trusted origins - host only
-	f("localhost", true)
-	f("example.com", true)
-	f("192.168.1.1", true)
-	f("api.example.com", true)
-	f("subdomain.example.org", true)
+	// Valid trusted origins - scheme + host
+	f("http://localhost", true)
+	f("https://example.com", true)
+	f("http://192.168.1.1", true)
+	f("https://api.example.com", true)
+	f("https://subdomain.example.org", true)
 
-	// Invalid trusted origins - host with port (no longer allowed)
-	f("localhost:8080", false)
-	f("example.com:3000", false)
-	f("192.168.1.1:443", false)
-	f("api.example.com:9000", false)
+	// Valid trusted origins - scheme + host + port
+	f("http://localhost:8080", true)
+	f("https://example.com:3000", true)
+	f("http://192.168.1.1:443", true)
+	f("https://api.example.com:9000", true)
+
+	// Invalid trusted origins - bare hostname (no scheme)
+	f("localhost", false)
+	f("example.com", false)
+	f("192.168.1.1", false)
 
 	// Invalid trusted origins - empty or malformed
 	f("", false)
 	f("invalid url", false)
 	f("://example.com", false)
 
-	// Invalid trusted origins - with scheme
-	f("http://example.com", false)
-	f("https://localhost", false)
+	// Invalid trusted origins - unsupported scheme
 	f("ftp://192.168.1.1", false)
 
 	// Invalid trusted origins - with user info
-	f("user@example.com", false)
-	f("user:pass@localhost", false)
+	f("http://user@example.com", false)
+	f("http://user:pass@localhost", false)
 
 	// Invalid trusted origins - with path
-	f("example.com/path", false)
-	f("localhost/api", false)
-	f("192.168.1.1/static", false)
+	f("https://example.com/path", false)
+	f("http://localhost/api", false)
+	f("http://192.168.1.1/static", false)
 
 	// Invalid trusted origins - with query parameters
-	f("example.com?param=value", false)
-	f("localhost:8080?query=test", false)
+	f("https://example.com?param=value", false)
+	f("http://localhost:8080?query=test", false)
 
 	// Invalid trusted origins - with fragment
-	f("example.com#fragment", false)
-	f("localhost:3000#section", false)
+	f("https://example.com#fragment", false)
+	f("http://localhost:3000#section", false)
 
 	// Invalid trusted origins - with multiple invalid components
 	f("https://user@example.com/path?query=value#fragment", false)
 	f("http://localhost:8080/api/v1?param=test", false)
-
-	// Edge cases - ports are no longer allowed
-	f("example.com:0", false)     // port 0 is no longer valid
-	f("example.com:65535", false) // max port number is no longer valid
-	f("example.com:99999", false) // invalid port number
-	f("example.com:-1", false)    // negative port
 }

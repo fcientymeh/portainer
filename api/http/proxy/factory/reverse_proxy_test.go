@@ -2,12 +2,15 @@ package factory
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"net/http/httputil"
 	"net/url"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	portainer "github.com/portainer/portainer/api"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_createRewriteFn(t *testing.T) {
@@ -197,4 +200,28 @@ func compareRequests(a, b *http.Request) bool {
 	headersEqual := cmp.Diff(a.Header, b.Header) == ""
 
 	return methodEqual && urlEqual && hostEqual && protoEqual && headersEqual
+}
+
+func Test_createRewriteFn_staleRawPath(t *testing.T) {
+	t.Parallel()
+
+	var receivedURI string
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedURI = r.RequestURI
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer backend.Close()
+
+	target, err := url.Parse(backend.URL)
+	require.NoError(t, err)
+
+	proxy := &httputil.ReverseProxy{Rewrite: createRewriteFn(target)}
+	frontend := httptest.NewServer(proxy)
+	defer frontend.Close()
+
+	resp, err := http.Get(frontend.URL + "/%63ontainers/json")
+	require.NoError(t, err)
+	require.NoError(t, resp.Body.Close())
+
+	require.Equal(t, "/containers/json", receivedURI)
 }

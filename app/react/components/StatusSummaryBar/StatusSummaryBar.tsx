@@ -1,24 +1,24 @@
 import { FilterBarButton, Color } from './FilterBarButton';
 import { FilterBarActiveIndicator } from './FilterBarActiveIndicator';
 
-export interface StatusSegment {
-  key: string;
+export interface StatusSegment<TValue = string> {
+  key: TValue;
   label: string;
   count: number;
   color: Color;
 }
 
-interface Props {
+interface Props<TValue> {
   total: number;
-  segments: StatusSegment[];
-  value: string | null;
-  onChange: (filter: string | null) => void;
+  segments: Array<StatusSegment<TValue>>;
+  value: TValue | null;
+  onChange: (filter: TValue | null) => void;
   radioGroupName?: string;
   ariaLabel?: string;
   'data-cy'?: string;
 }
 
-export function StatusSummaryBar({
+export function StatusSummaryBar<TValue extends string = string>({
   total,
   segments,
   value,
@@ -26,11 +26,11 @@ export function StatusSummaryBar({
   radioGroupName = 'status-summary-filter',
   ariaLabel = 'Filter by status',
   'data-cy': dataCy = 'status-summary-bar',
-}: Props) {
-  const isAllSelected = !value;
+}: Props<TValue>) {
+  const isAllSelected = !value || value === 'all' || value === 'custom';
   const activeLabel = segments.find((s) => s.key === value)?.label;
 
-  function handleSegmentClick(key: string) {
+  function handleSegmentClick(key: TValue) {
     onChange(value === key ? null : key);
   }
 

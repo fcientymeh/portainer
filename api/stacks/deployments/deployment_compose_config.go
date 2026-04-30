@@ -69,11 +69,8 @@ func (config *ComposeStackDeploymentConfig) Deploy(ctx context.Context) error {
 	}
 
 	isAdminOrEndpointAdmin := stackutils.UserIsAdminOrEndpointAdmin(config.user)
-
-	securitySettings := &config.endpoint.SecuritySettings
-
-	if !isAdminOrEndpointAdmin {
-		if err := stackutils.ValidateStackFiles(config.stack, securitySettings, config.FileService); err != nil {
+	if !isAdminOrEndpointAdmin && config.endpoint != nil {
+		if err := stackutils.ValidateStackFiles(config.stack, &config.endpoint.SecuritySettings, config.FileService); err != nil {
 			return err
 		}
 	}
@@ -83,6 +80,18 @@ func (config *ComposeStackDeploymentConfig) Deploy(ctx context.Context) error {
 	}
 
 	return config.StackDeployer.DeployComposeStack(ctx, config.stack, config.endpoint, config.registries, config.prune, config.forcePullImage, config.ForceCreate)
+}
+
+func (config *ComposeStackDeploymentConfig) Undeploy(ctx context.Context) error {
+	if config.StackDeployer == nil {
+		log.Debug().Msg("stack deployer is not initialized")
+		return errors.New("stack deployer cannot be nil")
+	}
+
+	if stackutils.IsRelativePathStack(config.stack) {
+		return config.StackDeployer.UndeployRemoteComposeStack(ctx, config.stack, config.endpoint)
+	}
+	return config.StackDeployer.UndeployComposeStack(ctx, config.stack, config.endpoint)
 }
 
 func (config *ComposeStackDeploymentConfig) GetResponse() string {

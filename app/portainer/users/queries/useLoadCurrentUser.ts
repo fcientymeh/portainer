@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import axios from '@/react/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { buildUrl } from '../user.service';
 import { User } from '../types';
@@ -14,7 +14,7 @@ export interface CurrentUserResponse extends User {
 
 export function useLoadCurrentUser({ staleTime }: { staleTime?: number } = {}) {
   return useQuery(userQueryKeys.me(), () => getCurrentUser(), {
-    ...withGlobalError('Unable to retrieve user details'),
+    ...withError('Unable to retrieve user details'),
     staleTime,
   });
 }

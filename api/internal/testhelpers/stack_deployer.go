@@ -22,6 +22,10 @@ func (d *TestStackDeployer) DeployComposeStack(_ context.Context, stack *portain
 	return nil
 }
 
+func (d *TestStackDeployer) UndeployComposeStack(ctx context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
+	return nil
+}
+
 func (d *TestStackDeployer) DeploySwarmStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, pullImage bool) error {
 	d.DeploySwarmCallCount++
 	d.LastPrune = prune

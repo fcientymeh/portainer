@@ -50,6 +50,10 @@ export function getPlatformTypeName(
   return PlatformType[getPlatformType(envType, containerEngine)];
 }
 
+export function isSnapshotBrowsingSupported(environment: Environment) {
+  return isDockerEnvironment(environment.Type) && isEdgeAsync(environment);
+}
+
 export function isAgentEnvironment(envType: EnvironmentType) {
   return (
     isEdgeEnvironment(envType) ||
@@ -159,3 +163,10 @@ export function getEnvironmentTypeIcon(
       throw new Error(`type ${type}-${EnvironmentType[type]} is not supported`);
   }
 }
+
+export type IconSize = 'sm' | 'md';
+
+export const IconSizeClass: Record<IconSize, string> = {
+  sm: 'h-3.5 w-3.5',
+  md: 'h-4 w-4',
+};

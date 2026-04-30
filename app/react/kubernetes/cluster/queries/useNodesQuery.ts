@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import axios from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { parseKubernetesAxiosError } from '../../axiosError';
 
@@ -30,7 +30,7 @@ export function useNodesQuery<T = Node[]>(
     queryKeys.nodes(environmentId),
     async () => getNodes(environmentId),
     {
-      ...withGlobalError(
+      ...withError(
         'Failed to get nodes from the Kubernetes api',
         'Failed to get nodes'
       ),

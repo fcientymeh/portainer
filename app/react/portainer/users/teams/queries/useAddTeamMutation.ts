@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { UserId } from '@/portainer/users/types';
-import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
+import { withError, withInvalidate } from '@/react-tools/react-query';
 
 import { TeamRole } from '../types';
 
@@ -20,7 +20,7 @@ export function useAddTeamMutation() {
 
   return useMutation({
     mutationFn: createTeam,
-    ...withGlobalError('Failed to create team'),
+    ...withError('Failed to create team'),
     ...withInvalidate(queryClient, [queryKeys.base()]),
   });
 }

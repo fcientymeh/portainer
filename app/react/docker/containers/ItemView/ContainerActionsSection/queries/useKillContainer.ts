@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
 import { killContainer } from '../../../containers.service';
@@ -31,6 +31,6 @@ export function useKillContainer() {
         ),
       });
     },
-    ...withGlobalError('Unable to kill container'),
+    ...withError('Unable to kill container'),
   });
 }

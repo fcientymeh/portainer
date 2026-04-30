@@ -5,9 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 
@@ -22,7 +20,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	statsapi "k8s.io/kubelet/pkg/apis/stats/v1alpha1"
 )
 
 func CreateKubernetesSnapshot(cli *kubernetes.Clientset) (*portainer.KubernetesSnapshot, error) {
@@ -70,43 +67,7 @@ func kubernetesSnapshotNodes(snapshot *portainer.KubernetesSnapshot, cli kuberne
 	snapshot.TotalMemory = totalMemory
 	snapshot.NodeCount = len(nodeList.Items)
 
-	// Collect performance metrics if we have a real client, otherwise use zero values
-	if clientset, ok := cli.(*kubernetes.Clientset); ok {
-		kubernetesSnapshotPerformanceMetricsWithClient(nodeList, clientset, snapshot)
-	} else {
-		snapshot.PerformanceMetrics = &portainer.PerformanceMetrics{
-			CPUUsage:     0,
-			MemoryUsage:  0,
-			NetworkUsage: 0,
-		}
-	}
 	return nil
-}
-
-func kubernetesSnapshotPerformanceMetricsWithClient(
-	nodeList *corev1.NodeList,
-	cli *kubernetes.Clientset,
-	snapshot *portainer.KubernetesSnapshot,
-) {
-	performanceMetrics := &portainer.PerformanceMetrics{
-		CPUUsage:     0,
-		MemoryUsage:  0,
-		NetworkUsage: 0,
-	}
-
-	for _, node := range nodeList.Items {
-		nodeMetrics, err := kubernetesSnapshotNodePerformanceMetrics(cli, node, nil)
-		if err != nil {
-			log.Warn().Err(err).Msgf("failed to snapshot performance metrics for node %s", node.Name)
-			continue
-		}
-		if nodeMetrics != nil {
-			performanceMetrics.CPUUsage += nodeMetrics.CPUUsage
-			performanceMetrics.MemoryUsage += nodeMetrics.MemoryUsage
-			performanceMetrics.NetworkUsage += nodeMetrics.NetworkUsage
-		}
-	}
-	snapshot.PerformanceMetrics = performanceMetrics
 }
 
 // KubernetesSnapshotDiagnostics returns the diagnostics data for the agent
@@ -164,58 +125,6 @@ func kubernetesSnapshotPodErrorLogs(snapshot *portainer.KubernetesSnapshot, cli 
 	snapshot.DiagnosticsData.Log = string(jsonLogs)
 
 	return nil
-}
-
-func kubernetesSnapshotNodePerformanceMetrics(cli *kubernetes.Clientset, node corev1.Node, _ *portainer.PerformanceMetrics) (*portainer.PerformanceMetrics, error) {
-	result := cli.RESTClient().Get().AbsPath(fmt.Sprintf("/api/v1/nodes/%s/proxy/stats/summary", node.Name)).Do(context.TODO())
-	if result.Error() != nil {
-		return nil, fmt.Errorf("failed to get node performance metrics: %w", result.Error())
-	}
-
-	raw, err := result.Raw()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get node performance metrics: %w", err)
-	}
-
-	stats := statsapi.Summary{}
-	err = json.Unmarshal(raw, &stats)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal node performance metrics: %w", err)
-	}
-
-	nodeStats := stats.Node
-	metrics := calculateNodeMetrics(nodeStats, node)
-	return metrics, nil
-}
-
-// calculateNodeMetrics calculates performance metrics from node stats - extracted for testability
-func calculateNodeMetrics(nodeStats statsapi.NodeStats, node corev1.Node) *portainer.PerformanceMetrics {
-	if reflect.DeepEqual(nodeStats, statsapi.NodeStats{}) {
-		return nil
-	}
-
-	metrics := &portainer.PerformanceMetrics{}
-
-	// Calculate CPU usage percentage
-	if nodeStats.CPU != nil && nodeStats.CPU.UsageNanoCores != nil {
-		totalCapacityNanoCores := node.Status.Capacity.Cpu().Value() * 1_000_000_000
-		metrics.CPUUsage = math.Round(float64(*nodeStats.CPU.UsageNanoCores) / float64(totalCapacityNanoCores) * 100)
-	}
-
-	// Calculate Memory usage percentage
-	if nodeStats.Memory != nil && nodeStats.Memory.WorkingSetBytes != nil {
-		totalCapacityBytes := node.Status.Capacity.Memory().Value()
-		metrics.MemoryUsage = math.Round(float64(*nodeStats.Memory.WorkingSetBytes) / float64(totalCapacityBytes) * 100)
-	}
-
-	// Calculate Network usage in MB
-	if nodeStats.Network != nil && nodeStats.Network.RxBytes != nil && nodeStats.Network.TxBytes != nil {
-		totalBytes := float64(*nodeStats.Network.RxBytes) + float64(*nodeStats.Network.TxBytes)
-		const bytesToMB = 1024 * 1024
-		metrics.NetworkUsage = math.Round(totalBytes / bytesToMB)
-	}
-
-	return metrics
 }
 
 func filterLogsByPattern(logBytes []byte, patterns []string) []map[string]string {

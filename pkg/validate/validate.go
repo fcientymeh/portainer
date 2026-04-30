@@ -82,19 +82,19 @@ func IsDNSName(s string) bool {
 }
 
 func IsTrustedOrigin(s string) bool {
-	// Reject if a scheme is present
-	if strings.Contains(s, "://") {
+	if !strings.Contains(s, "://") {
 		return false
 	}
 
-	// Prepend http:// for parsing
-	strTemp := "http://" + s
-	parsedOrigin, err := url.Parse(strTemp)
+	parsedOrigin, err := url.Parse(s)
 	if err != nil {
 		return false
 	}
 
-	// Validate host, and ensure no user, path, query, fragment, port, etc.
+	if parsedOrigin.Scheme != "http" && parsedOrigin.Scheme != "https" {
+		return false
+	}
+
 	if parsedOrigin.Host == "" ||
 		parsedOrigin.User != nil ||
 		parsedOrigin.Path != "" ||
@@ -102,8 +102,7 @@ func IsTrustedOrigin(s string) bool {
 		parsedOrigin.Fragment != "" ||
 		parsedOrigin.Opaque != "" ||
 		parsedOrigin.RawFragment != "" ||
-		parsedOrigin.RawPath != "" ||
-		parsedOrigin.Port() != "" {
+		parsedOrigin.RawPath != "" {
 		return false
 	}
 

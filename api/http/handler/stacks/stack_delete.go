@@ -134,7 +134,7 @@ func (handler *Handler) stackDelete(w http.ResponseWriter, r *http.Request) *htt
 		deployments.StopAutoupdate(stack.ID, stack.AutoUpdate.JobID, handler.Scheduler)
 	}
 
-	if err := handler.deleteStack(context.TODO(), securityContext.UserID, stack, endpoint); err != nil {
+	if err := handler.deleteStack(r.Context(), securityContext.UserID, stack, endpoint); err != nil {
 		return httperror.InternalServerError(err.Error(), err)
 	}
 
@@ -220,7 +220,7 @@ func (handler *Handler) deleteStack(ctx context.Context, userID portainer.UserID
 			return handler.StackDeployer.UndeployRemoteComposeStack(ctx, stack, endpoint)
 		}
 
-		return handler.ComposeStackManager.Down(ctx, stack, endpoint)
+		return handler.StackDeployer.UndeployComposeStack(ctx, stack, endpoint)
 	}
 
 	if stack.Type == portainer.KubernetesStack {
@@ -236,9 +236,9 @@ func (handler *Handler) deleteStack(ctx context.Context, userID portainer.UserID
 					return nil
 				}
 			}
+			return fmt.Errorf("failed to remove kubernetes resources: %q. Error: %w", out, err)
 		}
-
-		return fmt.Errorf("failed to remove kubernetes resources: %q: %w", out, err)
+		return nil
 	}
 
 	return fmt.Errorf("unsupported stack type: %v", stack.Type)

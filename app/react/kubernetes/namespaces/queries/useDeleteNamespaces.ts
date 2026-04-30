@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
+import { withError, withInvalidate } from '@/react-tools/react-query';
 
 import { queryKeys } from './queryKeys';
 
@@ -24,7 +24,7 @@ export function useDeleteNamespaces(environmentId: number) {
       deleteNamespaces(environmentId, namespaceNames),
     {
       ...withInvalidate(queryClient, [queryKeys.list(environmentId)]),
-      ...withGlobalError('Unable to delete namespaces'),
+      ...withError('Unable to delete namespaces'),
       // onSuccess handled by the caller
     }
   );

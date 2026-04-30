@@ -1,6 +1,4 @@
-import { ExternalLink } from 'lucide-react';
-
-import { Icon } from '@@/Icon';
+import { ExternalLink } from '@@/ExternalLink';
 
 type Props = {
   hostURL?: string;
@@ -10,15 +8,13 @@ type Props = {
 
 export function PublishedPortLink({ hostURL, hostPort, containerPort }: Props) {
   return (
-    <a
+    <ExternalLink
+      to={generateContainerURL(hostURL, hostPort, containerPort)}
       className="image-tag"
-      href={generateContainerURL(hostURL, hostPort, containerPort)}
-      target="_blank"
-      rel="noreferrer"
+      data-cy="published-port-link"
     >
-      <Icon icon={ExternalLink} />
       {hostPort}:{containerPort}
-    </a>
+    </ExternalLink>
   );
 }
 

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { BackupS3Model } from '../types';
 
@@ -14,7 +14,7 @@ export function useUpdateBackupS3SettingsMutation() {
   return useMutation(updateBackupS3Settings, {
     onSuccess: () =>
       queryClient.invalidateQueries(queryKeys.backupS3Settings()),
-    ...withGlobalError('Unable to save s3 backup settings'),
+    ...withError('Unable to save s3 backup settings'),
   });
 }
 

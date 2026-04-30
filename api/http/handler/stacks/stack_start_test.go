@@ -11,6 +11,7 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/datastore"
 	"github.com/portainer/portainer/api/internal/testhelpers"
+	"github.com/portainer/portainer/api/stacks/deployments"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,11 +19,16 @@ import (
 // Stubs
 type stubComposeStackManager struct {
 	portainer.ComposeStackManager
-	deployErr error
 }
 
 func (s *stubComposeStackManager) NormalizeStackName(name string) string { return name }
-func (s *stubComposeStackManager) Up(_ context.Context, _ *portainer.Stack, _ *portainer.Endpoint, _ portainer.ComposeUpOptions) error {
+
+type stubStackDeployer struct {
+	deployments.StackDeployer
+	deployErr error
+}
+
+func (s *stubStackDeployer) DeployComposeStack(_ context.Context, _ *portainer.Stack, _ *portainer.Endpoint, _ []portainer.Registry, _, _, _ bool) error {
 	return s.deployErr
 }
 
@@ -94,6 +100,7 @@ func TestStackStart_StartSuccess_StackStatusSetToActive(t *testing.T) {
 	stack := newStartableStack(endpoint.ID)
 	require.NoError(t, store.Stack().Create(stack))
 	h.ComposeStackManager = &stubComposeStackManager{}
+	h.StackDeployer = &stubStackDeployer{}
 
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, stackStartRequest(stack.ID, endpoint.ID))
@@ -116,7 +123,8 @@ func TestStackStart_StartFailure_StackStatusSetToError(t *testing.T) {
 	require.NoError(t, err)
 	stack := newStartableStack(endpoint.ID)
 	require.NoError(t, store.Stack().Create(stack))
-	h.ComposeStackManager = &stubComposeStackManager{deployErr: deployErr}
+	h.ComposeStackManager = &stubComposeStackManager{}
+	h.StackDeployer = &stubStackDeployer{deployErr: deployErr}
 
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, stackStartRequest(stack.ID, endpoint.ID))

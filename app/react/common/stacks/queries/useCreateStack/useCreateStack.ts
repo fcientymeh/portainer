@@ -9,7 +9,7 @@ import {
 import { applyResourceControl } from '@/react/portainer/access-control/access-control.service';
 import { AccessControlFormData } from '@/react/portainer/access-control/types';
 import PortainerError from '@/portainer/error';
-import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
+import { withError, withInvalidate } from '@/react-tools/react-query';
 import { transformAutoUpdateViewModel } from '@/react/portainer/gitops/AutoUpdateFieldset/utils';
 import { RegistryId } from '@/react/portainer/registries/types/registry';
 
@@ -28,7 +28,7 @@ import { createKubernetesStackFromFileContent } from './createKubernetesStackFro
 export function useCreateStack() {
   const queryClient = useQueryClient();
   return useMutation(createStack, {
-    ...withGlobalError('Failed to create stack'),
+    ...withError('Failed to create stack'),
     ...withInvalidate(queryClient, [queryKeys.base()]),
   });
 }

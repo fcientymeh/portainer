@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 export function useIsRBACEnabled(environmentId: EnvironmentId) {
   return useQuery<boolean, Error>(
@@ -10,7 +10,7 @@ export function useIsRBACEnabled(environmentId: EnvironmentId) {
     () => getIsRBACEnabled(environmentId),
     {
       enabled: !!environmentId,
-      ...withGlobalError('Unable to check if RBAC is enabled.'),
+      ...withError('Unable to check if RBAC is enabled.'),
     }
   );
 }

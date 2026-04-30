@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
@@ -25,7 +25,7 @@ export function useSecretsForCluster<TData = Configuration[]>(
         isUsed: params?.isUsed,
       }),
     {
-      ...withGlobalError('Unable to retrieve secrets for cluster'),
+      ...withError('Unable to retrieve secrets for cluster'),
       refetchInterval() {
         return options?.autoRefreshRate ?? false;
       },

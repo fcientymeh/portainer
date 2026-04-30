@@ -216,13 +216,7 @@ func (handler *Handler) startStack(
 			return handler.StackDeployer.StartRemoteComposeStack(ctx, stack, endpoint, filteredRegistries)
 		}
 
-		options := portainer.ComposeUpOptions{
-			ComposeOptions: portainer.ComposeOptions{
-				Registries: filteredRegistries,
-			},
-		}
-
-		return handler.ComposeStackManager.Up(ctx, stack, endpoint, options)
+		return handler.StackDeployer.DeployComposeStack(ctx, stack, endpoint, filteredRegistries, false, false, false)
 	case portainer.DockerSwarmStack:
 		stack.Name = handler.SwarmStackManager.NormalizeStackName(stack.Name)
 

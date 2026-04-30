@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { Webhook } from '@/react/portainer/webhooks/types';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { queryKeys } from './query-keys';
 
@@ -17,7 +17,7 @@ export function useDeleteWebhook() {
         queryKey: queryKeys.base(),
       });
     },
-    ...withGlobalError('Failed to delete webhook'),
+    ...withError('Failed to delete webhook'),
   });
 }
 

@@ -37,7 +37,7 @@ const (
 // loadAndValidateChartWithPathOptions locates and loads the chart, and validates it.
 // it also checks for chart dependencies and updates them if necessary.
 // it returns the chart information.
-func (hspm *HelmSDKPackageManager) loadAndValidateChartWithPathOptions(chartPathOptions *action.ChartPathOptions, chartName, version string, repoURL string, dependencyUpdate bool, operation string) (*v2chart.Chart, error) {
+func (hspm *HelmSDKPackageManager) loadAndValidateChartWithPathOptions(actionConfig *action.Configuration, chartPathOptions *action.ChartPathOptions, chartName, version string, repoURL string, dependencyUpdate bool, operation string) (*v2chart.Chart, error) {
 	chartPath, err := chartPathOptions.LocateChart(chartName, hspm.settings)
 	if err != nil {
 		log.Error().
@@ -94,7 +94,9 @@ func (hspm *HelmSDKPackageManager) loadAndValidateChartWithPathOptions(chartPath
 				Getters:          providers,
 				RepositoryConfig: hspm.settings.RepositoryConfig,
 				RepositoryCache:  hspm.settings.RepositoryCache,
+				ContentCache:     hspm.settings.ContentCache,
 				Debug:            hspm.settings.Debug,
+				RegistryClient:   actionConfig.RegistryClient,
 			}
 			if err := manager.Update(); err != nil {
 				log.Error().
@@ -185,6 +187,8 @@ func ensureHelmDirectoriesExist(settings *cli.EnvSettings) error {
 		settings.RepositoryCache,                // Repository cache directory
 		filepath.Dir(settings.RegistryConfig),   // Registry config directory
 		settings.PluginsDirectory,               // Plugins directory
+		filepath.Dir(settings.ContentCache),     // Content cache directory
+		settings.ContentCache,                   // Content cache directory
 	}
 
 	// Create each directory if it doesn't exist

@@ -1,7 +1,6 @@
 package stacks
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -9,8 +8,6 @@ import (
 	"github.com/portainer/portainer/api/git/update"
 	"github.com/portainer/portainer/api/internal/endpointutils"
 	"github.com/portainer/portainer/api/internal/registryutils"
-	k "github.com/portainer/portainer/api/kubernetes"
-	"github.com/portainer/portainer/api/stacks/deployments"
 	"github.com/portainer/portainer/api/stacks/stackbuilders"
 	"github.com/portainer/portainer/api/stacks/stackutils"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
@@ -171,7 +168,7 @@ func (handler *Handler) createKubernetesStackFromFileContent(w http.ResponseWrit
 		}
 	}
 
-	if _, err := stackbuilders.Build(context.TODO(), handler.DataStore, k8sStackBuilder, &stackPayload, endpoint); err != nil {
+	if _, err := stackbuilders.Build(r.Context(), handler.DataStore, k8sStackBuilder, &stackPayload, endpoint); err != nil {
 		return err
 	}
 
@@ -243,7 +240,7 @@ func (handler *Handler) createKubernetesStackFromGitRepository(w http.ResponseWr
 		handler.KubernetesDeployer,
 		user)
 
-	if _, err := stackbuilders.Build(context.TODO(), handler.DataStore, k8sStackBuilder, &stackPayload, endpoint); err != nil {
+	if _, err := stackbuilders.Build(r.Context(), handler.DataStore, k8sStackBuilder, &stackPayload, endpoint); err != nil {
 		return err
 	}
 
@@ -288,27 +285,11 @@ func (handler *Handler) createKubernetesStackFromManifestURL(w http.ResponseWrit
 		handler.KubernetesDeployer,
 		user)
 
-	if _, err := stackbuilders.Build(context.TODO(), handler.DataStore, k8sStackBuilder, &stackPayload, endpoint); err != nil {
+	if _, err := stackbuilders.Build(r.Context(), handler.DataStore, k8sStackBuilder, &stackPayload, endpoint); err != nil {
 		return err
 	}
 
 	return response.JSON(w, &createKubernetesStackResponse{
 		Output: k8sStackBuilder.GetResponse(),
 	})
-}
-
-func (handler *Handler) deployKubernetesStack(ctx context.Context, userID portainer.UserID, endpoint *portainer.Endpoint, stack *portainer.Stack, appLabels k.KubeAppLabels) (string, error) {
-	handler.stackCreationMutex.Lock()
-	defer handler.stackCreationMutex.Unlock()
-
-	user := &portainer.User{
-		ID: userID,
-	}
-	k8sDeploymentConfig := deployments.CreateKubernetesStackDeploymentConfig(stack, handler.KubernetesDeployer, appLabels, user, endpoint)
-
-	if err := k8sDeploymentConfig.Deploy(ctx); err != nil {
-		return "", err
-	}
-
-	return k8sDeploymentConfig.GetResponse(), nil
 }

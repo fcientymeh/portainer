@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { buildDockerProxyUrl } from '../../proxy/queries/buildDockerProxyUrl';
 
@@ -21,7 +21,7 @@ export function useConfigsList<T>(
     queryFn: () => getConfigs(environmentId),
     refetchInterval,
     select,
-    ...withGlobalError('Unable to retrieve configs'),
+    ...withError('Unable to retrieve configs'),
   });
 }
 

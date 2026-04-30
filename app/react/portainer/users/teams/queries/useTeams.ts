@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { Team } from '../types';
 
@@ -22,7 +22,7 @@ export function useTeams<T = Team[]>(
   const teams = useQuery({
     queryKey: queryKeys.list({ onlyLedTeams, environmentId }),
     queryFn: () => getTeams(onlyLedTeams, environmentId),
-    ...withGlobalError('Unable to load teams'),
+    ...withError('Unable to load teams'),
     enabled,
     select,
   });

@@ -33,6 +33,7 @@ import { useRegistries } from '@/react/portainer/registries/queries/useRegistrie
 import { RelativePathFieldset } from '@/react/portainer/gitops/RelativePathFieldset/RelativePathFieldset';
 import { parseRelativePathResponse } from '@/react/portainer/gitops/RelativePathFieldset/utils';
 import { useSaveCredentialsIfRequired } from '@/react/portainer/account/git-credentials/queries/useCreateGitCredentialsMutation';
+import { GitReferenceCard } from '@/react/portainer/gitops/GitReferenceCard';
 
 import { LoadingButton } from '@@/buttons';
 import { FormSection } from '@@/form-components/FormSection';
@@ -96,6 +97,7 @@ export function GitForm({ stack }: { stack: EdgeStack }) {
               updateStackMutation.isLoading || isSaveCredentialsLoading
             }
             isUpdateVersion={!!updateStackMutation.variables?.updateVersion}
+            stack={stack}
           />
         );
 
@@ -156,12 +158,14 @@ function InnerForm({
   isUpdateVersion,
   onUpdateSettingsClick,
   webhookId,
+  stack,
 }: {
   gitUrl: string;
   isLoading: boolean;
   isUpdateVersion: boolean;
   onUpdateSettingsClick(): void;
   webhookId: string;
+  stack: EdgeStack;
 }) {
   const registriesQuery = useRegistries();
   const { values, setFieldValue, isValid, handleSubmit, errors, dirty } =
@@ -204,6 +208,15 @@ function InnerForm({
           setFieldValue('deploymentType', value);
         }}
       />
+
+      {!!stack.GitConfig && (
+        <GitReferenceCard
+          stackId={stack.Id}
+          stackType="edge"
+          autoUpdate={stack.AutoUpdate}
+          gitConfig={stack.GitConfig}
+        />
+      )}
 
       <FormSection title="Update from git repository">
         <AutoUpdateFieldset

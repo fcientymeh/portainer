@@ -6,6 +6,7 @@ import (
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
+	"github.com/portainer/portainer/api/stacks/stackutils"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 
 	"github.com/rs/zerolog/log"
@@ -44,12 +45,15 @@ func Build(ctx context.Context, dataStore dataservices.DataStore, builder stackB
 		return nil, httperror.InternalServerError("Failed to save stack", err)
 	}
 
-	go deploy(ctx, dataStore, builder, stack.ID, endpoint)
+	go deploy(dataStore, builder, stack.ID, endpoint)
 
 	return stack, nil
 }
 
-func deploy(ctx context.Context, dataStore dataservices.DataStore, builder stackBuildProcess, stackID portainer.StackID, endpoint *portainer.Endpoint) {
+func deploy(dataStore dataservices.DataStore, builder stackBuildProcess, stackID portainer.StackID, endpoint *portainer.Endpoint) {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	defer cancel()
+
 	deployErr := builder.deploy(ctx, endpoint)
 
 	var stack *portainer.Stack
@@ -62,11 +66,12 @@ func deploy(ctx context.Context, dataStore dataservices.DataStore, builder stack
 			return err
 		}
 
-		updateStackStatus(stack, deployErr)
+		stackutils.UpdateStackStatusFromDeploymentResult(stack, deployErr)
 
 		return tx.Stack().Update(stack.ID, stack)
 	}); err != nil {
 		log.Error().Err(err).
+			AnErr("deploy_error", deployErr).
 			Int("stack_id", int(stackID)).
 			Str("context", "deploy").
 			Msg("Failed to update stack status after async deployment")
@@ -84,23 +89,4 @@ func deploy(ctx context.Context, dataStore dataservices.DataStore, builder stack
 			Str("context", "deploy").
 			Msg("Failed to run post-deployment hook")
 	}
-}
-
-func updateStackStatus(stack *portainer.Stack, deployErr error) {
-	if deployErr != nil {
-		stack.Status = portainer.StackStatusError
-		stack.DeploymentStatus = append(stack.DeploymentStatus, portainer.StackDeploymentStatus{
-			Status:  portainer.StackStatusError,
-			Time:    time.Now().Unix(),
-			Message: deployErr.Error(),
-		})
-
-		return
-	}
-
-	stack.Status = portainer.StackStatusActive
-	stack.DeploymentStatus = append(stack.DeploymentStatus, portainer.StackDeploymentStatus{
-		Status: portainer.StackStatusActive,
-		Time:   time.Now().Unix(),
-	})
 }

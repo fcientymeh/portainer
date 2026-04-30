@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { StackId } from '../types';
 
@@ -26,7 +26,7 @@ export function useDeleteStackByNameMutation() {
       // Invalidate all stacks queries
       queryClient.invalidateQueries(queryKeys.base());
     },
-    ...withGlobalError('Unable to delete stack'),
+    ...withError('Unable to delete stack'),
   });
 }
 

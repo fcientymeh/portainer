@@ -13,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	kfake "k8s.io/client-go/kubernetes/fake"
 	ktesting "k8s.io/client-go/testing"
-	statsapi "k8s.io/kubelet/pkg/apis/stats/v1alpha1"
 )
 
 func TestKubernetesSnapshotNodes(t *testing.T) {
@@ -76,7 +75,7 @@ func TestKubernetesSnapshotNodes(t *testing.T) {
 	require.Equal(t, 3, snapshot.NodeCount)                    // 3 nodes
 	require.Equal(t, int64(12), snapshot.TotalCPU)             // 6 + 4 + 2 = 12 CPUs
 	require.Equal(t, int64(25769803776), snapshot.TotalMemory) // 12GB + 8GB + 4GB = 24GB in bytes
-	require.NotNil(t, snapshot.PerformanceMetrics)             // Performance metrics should be initialized
+	require.Nil(t, snapshot.PerformanceMetrics)                // Performance metrics are no longer collected server-side
 
 	t.Logf("kubernetesSnapshotNodes test result: Nodes=%d, CPUs=%d, Memory=%d bytes",
 		snapshot.NodeCount, snapshot.TotalCPU, snapshot.TotalMemory)
@@ -150,7 +149,7 @@ func TestCreateKubernetesSnapshotIntegration(t *testing.T) {
 	require.Equal(t, 2, snapshot.NodeCount)
 	require.Equal(t, int64(12), snapshot.TotalCPU)             // 8 + 4 = 12 CPUs
 	require.Equal(t, int64(25769803776), snapshot.TotalMemory) // 16GB + 8GB = 24GB in bytes
-	require.NotNil(t, snapshot.PerformanceMetrics)
+	require.Nil(t, snapshot.PerformanceMetrics)
 
 	// Manually set the version to complete the integration test
 	snapshot.KubernetesVersion = serverInfo.GitVersion
@@ -213,7 +212,7 @@ func TestKubernetesSnapshotNodesSingleNode(t *testing.T) {
 	require.Equal(t, 1, snapshot.NodeCount)
 	require.Equal(t, int64(1), snapshot.TotalCPU)
 	require.Equal(t, int64(1073741824), snapshot.TotalMemory) // 1GB in bytes
-	require.NotNil(t, snapshot.PerformanceMetrics)
+	require.Nil(t, snapshot.PerformanceMetrics)
 
 	t.Logf("Single node test result: Nodes=%d, CPUs=%d, Memory=%d bytes",
 		snapshot.NodeCount, snapshot.TotalCPU, snapshot.TotalMemory)
@@ -246,85 +245,7 @@ func TestKubernetesSnapshotNodesZeroResources(t *testing.T) {
 	require.Equal(t, 1, snapshot.NodeCount)
 	require.Equal(t, int64(0), snapshot.TotalCPU)
 	require.Equal(t, int64(0), snapshot.TotalMemory)
-	require.NotNil(t, snapshot.PerformanceMetrics)
+	require.Nil(t, snapshot.PerformanceMetrics)
 
 	t.Log("Zero resources test passed - handles edge case correctly")
-}
-
-func TestCalculateNodeMetrics(t *testing.T) {
-	t.Parallel()
-	// Create a test node with specific capacity
-	node := corev1.Node{
-		Status: corev1.NodeStatus{
-			Capacity: corev1.ResourceList{
-				corev1.ResourceCPU:    resource.MustParse("4"),   // 4 CPU cores
-				corev1.ResourceMemory: resource.MustParse("8Gi"), // 8GB memory
-			},
-		},
-	}
-
-	t.Run("CalculatesCorrectCPUPercentage", func(t *testing.T) {
-		usageNanoCores := uint64(2_000_000_000) // 2 cores worth of nanocores
-		nodeStats := statsapi.NodeStats{
-			CPU: &statsapi.CPUStats{
-				UsageNanoCores: &usageNanoCores,
-			},
-		}
-
-		metrics := calculateNodeMetrics(nodeStats, node)
-		require.NotNil(t, metrics)
-		require.Equal(t, 50, int(metrics.CPUUsage)) // 2/4 = 50%
-	})
-
-	t.Run("CalculatesCorrectMemoryPercentage", func(t *testing.T) {
-		workingSetBytes := uint64(4 * 1024 * 1024 * 1024) // 4GB
-		nodeStats := statsapi.NodeStats{
-			Memory: &statsapi.MemoryStats{
-				WorkingSetBytes: &workingSetBytes,
-			},
-		}
-
-		metrics := calculateNodeMetrics(nodeStats, node)
-		require.NotNil(t, metrics)
-		require.Equal(t, 50, int(metrics.MemoryUsage)) // 4GB/8GB = 50%
-	})
-
-	t.Run("CalculatesCorrectNetworkUsage", func(t *testing.T) {
-		rxBytes := uint64(1024 * 1024 * 1024) // 1GB
-		txBytes := uint64(1024 * 1024 * 1024) // 1GB
-		nodeStats := statsapi.NodeStats{
-			Network: &statsapi.NetworkStats{
-				InterfaceStats: statsapi.InterfaceStats{
-					RxBytes: &rxBytes,
-					TxBytes: &txBytes,
-				},
-			},
-		}
-
-		metrics := calculateNodeMetrics(nodeStats, node)
-		require.NotNil(t, metrics)
-		require.Equal(t, 2048, int(metrics.NetworkUsage)) // 2GB = 2048MB
-	})
-
-	t.Run("HandlesEmptyStats", func(t *testing.T) {
-		nodeStats := statsapi.NodeStats{}
-		metrics := calculateNodeMetrics(nodeStats, node)
-		require.Nil(t, metrics)
-	})
-
-	t.Run("HandlesPartialStats", func(t *testing.T) {
-		usageNanoCores := uint64(1_000_000_000) // 1 core
-		nodeStats := statsapi.NodeStats{
-			CPU: &statsapi.CPUStats{
-				UsageNanoCores: &usageNanoCores,
-			},
-			// Memory and Network are nil
-		}
-
-		metrics := calculateNodeMetrics(nodeStats, node)
-		require.NotNil(t, metrics)
-		require.Equal(t, 25, int(metrics.CPUUsage)) // 1/4 = 25%
-		require.Equal(t, 0, int(metrics.MemoryUsage))
-		require.Equal(t, 0, int(metrics.NetworkUsage))
-	})
 }

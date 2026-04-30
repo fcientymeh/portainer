@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/portainer/portainer/api/http/security"
@@ -83,11 +84,23 @@ func withLegacyProtect(handler http.Handler, trustedOrigins []string, isDockerDe
 		return nil, fmt.Errorf("failed to generate CSRF token: %w", err)
 	}
 
+	// gorilla/csrf compares referer.Host against trusted origin entries, so it
+	// needs bare host[:port] values rather than full scheme://host[:port] origins.
+	legacyOrigins := make([]string, len(trustedOrigins))
+	for i, origin := range trustedOrigins {
+		parsed, err := url.Parse(origin)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse trusted origin %q: %w", origin, err)
+		}
+
+		legacyOrigins[i] = parsed.Host
+	}
+
 	handler = gcsrf.Protect(
 		token,
 		gcsrf.Path("/"),
 		gcsrf.Secure(false),
-		gcsrf.TrustedOrigins(trustedOrigins),
+		gcsrf.TrustedOrigins(legacyOrigins),
 		gcsrf.ErrorHandler(withLegacyErrorHandler(trustedOrigins)),
 	)(handler)
 

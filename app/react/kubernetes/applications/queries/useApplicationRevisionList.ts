@@ -4,7 +4,7 @@ import {
   ControllerRevisionList,
 } from 'kubernetes-types/apps/v1';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 
@@ -40,7 +40,7 @@ export function useApplicationRevisionList(
         labelSelector
       ),
     {
-      ...withGlobalError('Unable to retrieve application revisions'),
+      ...withError('Unable to retrieve application revisions'),
       enabled: !!labelSelector && !!appKind && !!deploymentUid,
     }
   );

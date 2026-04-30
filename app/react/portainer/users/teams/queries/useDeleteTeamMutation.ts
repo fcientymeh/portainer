@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import {
   mutationOptions,
-  withGlobalError,
+  withError,
   withInvalidate,
 } from '@/react-tools/react-query';
 
@@ -17,7 +17,7 @@ export function useDeleteTeamMutation() {
     (id: TeamId) => deleteTeam(id),
 
     mutationOptions(
-      withGlobalError('Unable to delete team'),
+      withError('Unable to delete team'),
       withInvalidate(queryClient, [['teams']])
     )
   );

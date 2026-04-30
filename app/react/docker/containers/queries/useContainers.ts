@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { DockerContainerResponse } from '../types/response';
 import { toListViewModel } from '../utils';
@@ -39,7 +39,7 @@ export function useContainers<T = ContainerListViewModel[]>(
     queryKeys.filters(environmentId!, params),
     () => getContainers(environmentId!, params),
     {
-      ...withGlobalError('Unable to retrieve containers'),
+      ...withError('Unable to retrieve containers'),
       refetchInterval: autoRefreshRate ?? false,
       select,
       enabled: enabled && !!environmentId,

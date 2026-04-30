@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
 	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/stacks/deployments"
@@ -122,14 +123,22 @@ func (handler *Handler) stackStop(w http.ResponseWriter, r *http.Request) *httpe
 		stack.AutoUpdate.JobID = ""
 	}
 
-	err = handler.stopStack(context.TODO(), stack, endpoint)
-	if err != nil {
-		return httperror.InternalServerError("Unable to stop stack", err)
+	stopErr := handler.stopStack(r.Context(), stack, endpoint)
+	if stopErr != nil {
+		if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+			stackutils.UpdateStackStatusFromUndeploymentResult(stack, stopErr)
+			return tx.Stack().Update(stack.ID, stack)
+		}); err != nil {
+			log.Warn().Err(err).Str("context", "StackStop").Msg("Unable to update stack status after failed stop attempt")
+		}
+
+		return httperror.InternalServerError("Unable to stop stack", stopErr)
 	}
 
-	stack.Status = portainer.StackStatusInactive
-	err = handler.DataStore.Stack().Update(stack.ID, stack)
-	if err != nil {
+	if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		stackutils.UpdateStackStatusFromUndeploymentResult(stack, nil)
+		return tx.Stack().Update(stack.ID, stack)
+	}); err != nil {
 		return httperror.InternalServerError("Unable to update stack status", err)
 	}
 
@@ -154,7 +163,7 @@ func (handler *Handler) stopStack(ctx context.Context, stack *portainer.Stack, e
 			return handler.StackDeployer.StopRemoteComposeStack(ctx, stack, endpoint)
 		}
 
-		return handler.ComposeStackManager.Down(ctx, stack, endpoint)
+		return handler.StackDeployer.UndeployComposeStack(ctx, stack, endpoint)
 	case portainer.DockerSwarmStack:
 		stack.Name = handler.SwarmStackManager.NormalizeStackName(stack.Name)
 

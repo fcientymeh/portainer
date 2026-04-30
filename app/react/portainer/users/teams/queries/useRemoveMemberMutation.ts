@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { promiseSequence } from '@/portainer/helpers/promise-utils';
 import { UserId } from '@/portainer/users/types';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
+import { withError, withInvalidate } from '@/react-tools/react-query';
 
 import { TeamId, TeamMembership, TeamMembershipId } from '../types';
 
@@ -29,7 +29,7 @@ export function useRemoveMemberMutation(
           return deleteTeamMembership(membership.Id);
         })
       ),
-    ...withGlobalError('Failure to remove membership'),
+    ...withError('Failure to remove membership'),
     ...withInvalidate(queryClient, [queryKeys.memberships(teamId)]),
   });
 }

@@ -1,6 +1,6 @@
 import { QueryKey, useQuery } from '@tanstack/react-query';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 
 import { Registry, RegistryTypes } from '../types/registry';
@@ -73,7 +73,7 @@ export function useGenericRegistriesQuery<T = Registry[]>(
     },
     {
       select,
-      ...(showError && withGlobalError('Unable to retrieve registries')),
+      ...(showError && withError('Unable to retrieve registries')),
       enabled:
         (hideDefaultOverride || hideDefaultRegistryQuery.isSuccess) && enabled,
       onSuccess,

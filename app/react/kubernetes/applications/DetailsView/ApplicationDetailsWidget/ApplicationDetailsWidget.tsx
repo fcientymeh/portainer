@@ -1,24 +1,17 @@
 import { useCurrentStateAndParams } from '@uirouter/react';
-import { Pod } from 'kubernetes-types/core/v1';
 
-import { Authorized } from '@/react/hooks/useUser';
 import { useNamespaceQuery } from '@/react/kubernetes/namespaces/queries/useNamespaceQuery';
+import { useStack } from '@/react/common/stacks/queries/useStack';
+import { GitReferenceCard } from '@/react/portainer/gitops/GitReferenceCard';
 
 import { Widget, WidgetBody } from '@@/Widget';
-import { AddButton } from '@@/buttons';
 
-import { applicationIsKind, isExternalApplication } from '../../utils';
+import { isExternalApplication } from '../../utils';
 import { appStackIdLabel, appStackKindLabel } from '../../constants';
 import { useApplication } from '../../queries/useApplication';
 import { useApplicationServices } from '../../queries/useApplicationServices';
-import { useAppStackFile } from '../../queries/useAppStackFile';
 import { Application } from '../../types';
 
-import { EdgeEditButton } from './EdgeEditButton';
-import { EditButton } from './EditButton';
-import { RestartApplicationButton } from './RestartApplicationButton';
-import { RedeployApplicationButton } from './RedeployApplicationButton';
-import { RollbackApplicationButton } from './RollbackApplicationButton';
 import { ApplicationServicesTable } from './ApplicationServicesTable';
 import { ApplicationIngressesTable } from './ApplicationIngressesTable';
 import { ApplicationAutoScalingTable } from './ApplicationAutoScalingTable';
@@ -26,6 +19,7 @@ import { ApplicationEnvVarsTable } from './ApplicationEnvVarsTable';
 import { ApplicationVolumeConfigsTable } from './ApplicationVolumeConfigsTable';
 import { ApplicationPersistentDataTable } from './ApplicationPersistentDataTable';
 import { PlacementsTable } from './PlacementsTable';
+import { ButtonsLine } from './ButtonsLine';
 
 export function ApplicationDetailsWidget() {
   const stateAndParams = useCurrentStateAndParams();
@@ -41,7 +35,6 @@ export function ApplicationDetailsWidget() {
   const namespaceData = useNamespaceQuery(environmentId, namespace);
   const isSystemNamespace = namespaceData.data?.IsSystem;
 
-  // get app info
   const { data: app } = useApplication(
     environmentId,
     namespace,
@@ -52,15 +45,10 @@ export function ApplicationDetailsWidget() {
   const { stackId: appStackId, stackKind: appStackKind } =
     getStackDetailsFromLabels(app);
 
-  const externalApp = app && isExternalApplication(app);
+  const externalApp = !!app && isExternalApplication(app);
 
-  // Use a single query hook that resolves to the stack file content (string)
-  // Only fetch stack file for directly managed apps
-  const appStackFileQuery = useAppStackFile(
-    !externalApp && appStackKind !== 'edge' ? appStackId : undefined,
-    appStackKind
-  );
-  const appStackFileContent = appStackFileQuery.data;
+  const isManagedStack = !externalApp && appStackKind !== 'edge';
+  const stackQuery = useStack(appStackId, { enabled: isManagedStack });
 
   const { data: appServices } = useApplicationServices(
     environmentId,
@@ -69,55 +57,39 @@ export function ApplicationDetailsWidget() {
     app
   );
 
+  const stack = stackQuery?.data;
+
   return (
     <div className="row">
       <div className="col-sm-12">
         <Widget>
           <WidgetBody>
             {!isSystemNamespace && (
-              <div className="mb-4 flex flex-wrap gap-2">
-                <Authorized authorizations="K8sApplicationDetailsW">
-                  {appStackKind === 'edge' ? (
-                    <EdgeEditButton stackId={appStackId} />
-                  ) : (
-                    <EditButton to=".edit">
-                      {externalApp
-                        ? 'Edit external application'
-                        : 'Edit this application'}
-                    </EditButton>
-                  )}
-                </Authorized>
-                {!applicationIsKind<Pod>('Pod', app) && (
-                  <>
-                    <RestartApplicationButton />
-                    <RedeployApplicationButton
-                      environmentId={environmentId}
-                      namespace={namespace}
-                      appName={name}
-                      app={app}
+              <>
+                {!!stack?.GitConfig && (
+                  <div className="mb-4">
+                    <GitReferenceCard
+                      stackId={stack.Id}
+                      autoUpdate={stack.AutoUpdate}
+                      gitConfig={stack.GitConfig}
+                      currentDeploymentInfo={stack.CurrentDeploymentInfo}
+                      stackType="kubernetes"
                     />
-                  </>
+                  </div>
                 )}
-                {!externalApp && (
-                  <RollbackApplicationButton
-                    environmentId={environmentId}
-                    namespace={namespace}
-                    appName={name}
+
+                <div className="mb-4">
+                  <ButtonsLine
                     app={app}
+                    environmentId={environmentId}
+                    externalApp={externalApp}
+                    name={name}
+                    namespace={namespace}
+                    appStackKind={appStackKind}
+                    stack={stack}
                   />
-                )}
-                {appStackFileContent && (
-                  <AddButton
-                    to="kubernetes.templates.custom.new"
-                    data-cy="k8sAppDetail-createCustomTemplateButton"
-                    params={{
-                      fileContent: appStackFileContent,
-                    }}
-                  >
-                    Create template from application
-                  </AddButton>
-                )}
-              </div>
+                </div>
+              </>
             )}
             <ApplicationServicesTable
               environmentId={environmentId}

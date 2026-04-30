@@ -2,7 +2,7 @@ import { useQueryClient, useMutation } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { UserId } from '@/portainer/users/types';
-import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
+import { withError, withInvalidate } from '@/react-tools/react-query';
 
 import { TeamId, TeamMembership, TeamRole, TeamMembershipId } from '../types';
 
@@ -25,7 +25,7 @@ export function useUpdateRoleMutation(
       }
       return updateTeamMembership(membership.Id, userId, teamId, role);
     },
-    ...withGlobalError('Failure to update membership'),
+    ...withError('Failure to update membership'),
     ...withInvalidate(queryClient, [queryKeys.memberships(teamId)]),
   });
 }

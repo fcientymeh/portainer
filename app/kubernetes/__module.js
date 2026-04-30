@@ -268,6 +268,9 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
     const application = {
       name: 'kubernetes.applications.application',
       url: '/:namespace/:name?resource-type',
+      params: {
+        openGitSettings: { value: null, dynamic: true },
+      },
       views: {
         'content@': {
           component: 'applicationDetailsView',

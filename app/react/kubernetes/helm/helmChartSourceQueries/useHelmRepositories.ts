@@ -3,7 +3,7 @@ import { compact } from 'lodash';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { UserId } from '@/portainer/users/types';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import { useCurrentUser } from '@/react/hooks/useUser';
 import { Option } from '@/react/components/form-components/PortainerSelect';
 
@@ -27,7 +27,7 @@ export function useUserHelmRepositories<T = string[]>({
     {
       enabled: !!user.Id,
       select,
-      ...withGlobalError('Unable to retrieve helm registries'),
+      ...withError('Unable to retrieve helm registries'),
     }
   );
 }

@@ -1110,6 +1110,20 @@ class KubernetesCreateApplicationController {
                 this.oldStackFileContent = this.stackFileContent;
               }
             }
+
+            if (this.application.ApplicationKind === KubernetesDeploymentTypes.GIT) {
+              this.$state.go(
+                'kubernetes.applications.application',
+                {
+                  name: this.application.Name,
+                  namespace: this.application.ResourcePool,
+                  endpointId: this.endpoint.Id,
+                  openGitSettings: true,
+                },
+                { inherit: false }
+              );
+              return;
+            }
           }
 
           this.formValues.OriginalIngresses = this.ingresses;

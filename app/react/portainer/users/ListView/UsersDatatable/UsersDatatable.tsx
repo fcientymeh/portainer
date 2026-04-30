@@ -8,7 +8,7 @@ import { useSettings } from '@/react/portainer/settings/queries';
 import { notifySuccess } from '@/portainer/services/notifications';
 import {
   mutationOptions,
-  withGlobalError,
+  withError,
   withInvalidate,
 } from '@/react-tools/react-query';
 import { processItemsInBatches } from '@/react/common/processItemsInBatches';
@@ -100,7 +100,7 @@ function useRemoveMutation() {
   return useMutation(
     async (ids: TeamId[]) => processItemsInBatches(ids, deleteUser),
     mutationOptions(
-      withGlobalError('Unable to remove users'),
+      withError('Unable to remove users'),
       withInvalidate(queryClient, [userQueryKeys.base()])
     )
   );

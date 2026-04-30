@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import { humanize } from '@/portainer/filters/filters';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import axios from '@/portainer/services/axios/axios';
 import { Volume } from '@/kubernetes/models/volume/Volume';
 
@@ -27,7 +27,7 @@ export function useAllVolumesQuery<T = K8sVolumeInfo>(
     {
       refetchInterval: queryOptions?.refetchInterval,
       select: queryOptions?.select,
-      ...withGlobalError('Unable to retrieve volumes'),
+      ...withError('Unable to retrieve volumes'),
     }
   );
 }
@@ -45,7 +45,7 @@ export function useAllStoragesQuery(
     {
       refetchInterval: queryOptions?.refetchInterval,
       select: convertToStorageClassViewModels,
-      ...withGlobalError('Unable to retrieve volumes'),
+      ...withError('Unable to retrieve volumes'),
     }
   );
 }

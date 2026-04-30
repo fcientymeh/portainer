@@ -129,8 +129,7 @@ export interface TableSettingsWithRefreshable
 export function createPersistedStore<T extends BasicTableSettings>(
   storageKey: string,
   initialSortBy?: string | { id: string; desc: boolean },
-  create: (set: ZustandSetFunc<T>) => Omit<T, keyof BasicTableSettings> = () =>
-    ({}) as T
+  create: (set: ZustandSetFunc<T>) => Partial<T> = () => ({}) as T
 ) {
   return createStore<T>()(
     persist(
@@ -145,5 +144,19 @@ export function createPersistedStore<T extends BasicTableSettings>(
         version: 1,
       }
     )
+  );
+}
+
+export function createTableStore<T extends BasicTableSettings>(
+  initialSortBy?: string | { id: string; desc: boolean },
+  create: (set: ZustandSetFunc<T>) => Partial<T> = () => ({}) as T
+) {
+  return createStore<T>()(
+    (set) =>
+      ({
+        ...sortableSettings<T>(set, initialSortBy),
+        ...paginationSettings<T>(set),
+        ...create(set),
+      }) as T
   );
 }

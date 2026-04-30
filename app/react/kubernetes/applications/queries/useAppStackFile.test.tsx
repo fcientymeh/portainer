@@ -9,8 +9,11 @@ import { suppressConsoleLogs } from '@/setup-tests/suppress-console';
 
 import { useAppStackFile } from './useAppStackFile';
 
-function renderQueryHook(id: number | undefined, kind: string) {
-  return renderHook(() => useAppStackFile(id, kind), {
+function renderQueryHook(
+  id: number | undefined,
+  kind: 'edge' | 'compose' | 'kubernetes'
+) {
+  return renderHook(() => useAppStackFile({ id, kind }), {
     wrapper: withTestQueryProvider(({ children }) => <>{children}</>),
   });
 }

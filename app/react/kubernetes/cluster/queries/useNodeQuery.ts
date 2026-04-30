@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import axios from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { parseKubernetesAxiosError } from '../../axiosError';
 
@@ -42,7 +42,7 @@ export function useNodeQuery<T = Node>(
     queryKeys.node(environmentId, nodeName, queryOptions?.isYaml),
     () => getNode(environmentId, nodeName, queryOptions?.isYaml),
     {
-      ...withGlobalError('Unable to get node details'),
+      ...withError('Unable to get node details'),
       ...queryOptions,
     }
   );

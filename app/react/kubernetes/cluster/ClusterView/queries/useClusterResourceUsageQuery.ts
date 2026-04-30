@@ -4,7 +4,7 @@ import filesizeParser from 'filesize-parser';
 
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import { getMetricsForAllNodes } from '@/react/kubernetes/metrics/metrics';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import { NodeMetrics } from '@/react/kubernetes/metrics/types';
 import { getMebibytes, parseCPU } from '@/react/kubernetes/utils';
 
@@ -24,7 +24,7 @@ export function useClusterResourceUsageQuery(
         !!environmentId &&
         nodes.length > 0,
       select: aggregateResourceUsage,
-      ...withGlobalError('Unable to retrieve resource usage data.', 'Failure'),
+      ...withError('Unable to retrieve resource usage data.', 'Failure'),
     }
   );
 }

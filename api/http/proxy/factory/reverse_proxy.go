@@ -51,6 +51,7 @@ func createRewriteFn(target *url.URL) func(*httputil.ProxyRequest) {
 		proxyReq.Out.URL.Scheme = target.Scheme
 		proxyReq.Out.URL.Host = target.Host
 		proxyReq.Out.URL.Path = singleJoiningSlash(target.Path, proxyReq.In.URL.Path)
+		proxyReq.Out.URL.RawPath = ""
 		proxyReq.Out.Host = proxyReq.Out.URL.Host
 		if targetQuery == "" || proxyReq.Out.URL.RawQuery == "" {
 			proxyReq.Out.URL.RawQuery = targetQuery + proxyReq.Out.URL.RawQuery

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
 import { startContainer } from '../../../containers.service';
@@ -31,6 +31,6 @@ export function useStartContainer() {
         ),
       });
     },
-    ...withGlobalError('Unable to start container'),
+    ...withError('Unable to start container'),
   });
 }

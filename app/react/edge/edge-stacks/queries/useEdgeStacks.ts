@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 
 import { EdgeStack } from '../types';
@@ -23,7 +23,7 @@ export function useEdgeStacks<T extends EdgeStack[] = EdgeStack[]>({
     queryKey: queryKeys.base(),
     queryFn: () => getEdgeStacks<T>(params),
     refetchInterval,
-    ...withGlobalError('Failed loading Edge stack'),
+    ...withError('Failed loading Edge stack'),
   });
 }
 

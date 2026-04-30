@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import {
   mutationOptions,
-  withGlobalError,
+  withError,
   withInvalidate,
 } from '@/react-tools/react-query';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
@@ -18,7 +18,7 @@ export function useDeleteTemplateMutation() {
     deleteTemplate,
     mutationOptions(
       withInvalidate(queryClient, [queryKeys.base()]),
-      withGlobalError('Unable to delete custom template')
+      withError('Unable to delete custom template')
     )
   );
 }

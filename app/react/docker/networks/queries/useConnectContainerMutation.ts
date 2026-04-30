@@ -5,7 +5,7 @@ import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import {
   mutationOptions,
-  withGlobalError,
+  withError,
   withInvalidate,
 } from '@/react-tools/react-query';
 
@@ -25,7 +25,7 @@ export function useConnectContainerMutation(environmentId: EnvironmentId) {
     (params: Omit<ConnectContainer, 'environmentId'>) =>
       connectContainer({ ...params, environmentId }),
     mutationOptions(
-      withGlobalError('Failed connecting container to network'),
+      withError('Failed connecting container to network'),
       withInvalidate(queryClient, [containerQueryKeys.list(environmentId)])
     )
   );

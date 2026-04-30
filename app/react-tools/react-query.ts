@@ -11,24 +11,7 @@ import { notifyError } from '@/portainer/services/notifications';
 import { isAxiosError } from '@/react/portainer/services/axios/utils/isAxiosError';
 import { parseAxiosError } from '@/react/portainer/services/axios/utils/parseAxiosError';
 
-/**
- * @deprecated for `useQuery` ONLY. Use `withGlobalError`.
- *
- * `onError` and other callbacks are not supported on `useQuery` in react-query v5
- *
- * Using `withError` is fine for mutations (`useMutation`)
- *
- * see https://tkdodo.eu/blog/breaking-react-querys-api-on-purpose
- */
 export function withError(fallbackMessage?: string, title = 'Failure') {
-  return {
-    onError(error: unknown) {
-      handleError(error, { title, message: fallbackMessage });
-    },
-  };
-}
-
-export function withGlobalError(fallbackMessage?: string, title = 'Failure') {
   return {
     meta: {
       error: { message: fallbackMessage, title },

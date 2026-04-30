@@ -7,7 +7,7 @@ import {
   fullURIIntoRepoAndTag,
 } from '@/react/docker/images/utils';
 import { useEnvironmentRegistries } from '@/react/portainer/environments/queries/useEnvironmentRegistries';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { queryKeys } from '../../containers/queries/query-keys';
 
@@ -62,7 +62,7 @@ export function useCommitContainerMutation(environmentId: EnvironmentId) {
       });
     },
 
-    ...withGlobalError('Unable to create image'),
+    ...withError('Unable to create image'),
     onSuccess: (_, { containerId, environmentId }) =>
       queryClient.invalidateQueries(
         queryKeys.container(environmentId, containerId)

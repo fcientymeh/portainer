@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
 import { restartContainer } from '../../../containers.service';
@@ -31,6 +31,6 @@ export function useRestartContainer() {
         ),
       });
     },
-    ...withGlobalError('Unable to restart container'),
+    ...withError('Unable to restart container'),
   });
 }

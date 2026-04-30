@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import { StackType } from '@/react/common/stacks/types';
 
 import { CustomTemplate } from '../types';
@@ -28,7 +28,7 @@ export function useCustomTemplates<T = Array<CustomTemplate>>({
 }: { params?: Params; select?(templates: Array<CustomTemplate>): T } = {}) {
   return useQuery(queryKeys.list(params), () => getCustomTemplates(params), {
     select,
-    ...withGlobalError('Unable to retrieve custom templates'),
+    ...withError('Unable to retrieve custom templates'),
   });
 }
 

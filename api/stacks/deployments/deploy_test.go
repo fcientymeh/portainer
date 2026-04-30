@@ -87,6 +87,10 @@ func (s noopDeployer) DeployComposeStack(_ context.Context, stack *portainer.Sta
 	return nil
 }
 
+func (s noopDeployer) UndeployComposeStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
+	return nil
+}
+
 func (s noopDeployer) DeployKubernetesStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, user *portainer.User) error {
 	return nil
 }

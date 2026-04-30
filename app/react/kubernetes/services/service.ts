@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ServiceList } from 'kubernetes-types/core/v1';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import { Service } from '@/react/kubernetes/services/types';
@@ -35,7 +35,7 @@ export function useClusterServices<T = Service[]>(
     queryKeys.clusterServices(environmentId),
     async () => getClusterServices(environmentId, options?.withApplications),
     {
-      ...withGlobalError('Unable to get services.'),
+      ...withError('Unable to get services.'),
       refetchInterval: options?.autoRefreshRate,
       select: options?.select,
     }
@@ -61,7 +61,7 @@ export function useServicesQuery<T extends Service | string = Service>(
       return services;
     },
     {
-      ...withGlobalError('Unable to retrieve services.'),
+      ...withError('Unable to retrieve services.'),
       enabled: !!serviceNames?.length,
     }
   );
@@ -72,7 +72,7 @@ export function useMutationDeleteServices(environmentId: EnvironmentId) {
   return useMutation(deleteServices, {
     onSuccess: () =>
       queryClient.invalidateQueries(queryKeys.clusterServices(environmentId)),
-    ...withGlobalError('Unable to delete service(s)'),
+    ...withError('Unable to delete service(s)'),
   });
 }
 

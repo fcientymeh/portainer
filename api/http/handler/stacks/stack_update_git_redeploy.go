@@ -1,6 +1,7 @@
 package stacks
 
 import (
+	"cmp"
 	"context"
 	"net/http"
 	"os"
@@ -28,7 +29,7 @@ type stackGitRedeployPayload struct {
 	RepositoryUsername       string
 	RepositoryPassword       string
 	Env                      []portainer.Pair
-	Prune                    bool
+	Prune                    *bool
 	// RepullImageAndRedeploy indicates whether to force repulling images and redeploying the stack
 	RepullImageAndRedeploy bool
 
@@ -58,6 +59,7 @@ func (payload *stackGitRedeployPayload) Validate(r *http.Request) error {
 // @failure 400 "Invalid request"
 // @failure 403 "Permission denied"
 // @failure 404 "Not found"
+// @failure 409 "Conflict"
 // @failure 500 "Server error"
 // @router /stacks/{id}/git/redeploy [put]
 func (handler *Handler) stackGitRedeploy(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
@@ -89,6 +91,10 @@ func (handler *Handler) stackGitRedeploy(w http.ResponseWriter, r *http.Request)
 
 	if stack.GitConfig == nil {
 		return httperror.BadRequest("Stack is not created from git", err)
+	}
+
+	if stack.Status == portainer.StackStatusDeploying {
+		return httperror.Conflict("Unable to update stack", errors.New("Stack deployment is already in progress"))
 	}
 
 	// TODO: this is a work-around for stacks created with Portainer version >= 1.17.1
@@ -144,16 +150,23 @@ func (handler *Handler) stackGitRedeploy(w http.ResponseWriter, r *http.Request)
 		return httperror.BadRequest("Invalid request payload", err)
 	}
 	payload.RepullImageAndRedeploy = payload.RepullImageAndRedeploy || payload.PullImage
-	stack.GitConfig.ReferenceName = payload.RepositoryReferenceName
-	stack.Env = payload.Env
-	if stack.Type == portainer.DockerSwarmStack || stack.Type == portainer.DockerComposeStack {
-		if stack.Option == nil {
-			stack.Option = &portainer.StackOption{}
-		}
-		stack.Option.Prune = payload.Prune
+
+	stack.GitConfig.ReferenceName = cmp.Or(payload.RepositoryReferenceName, stack.GitConfig.ReferenceName)
+
+	if payload.Env != nil {
+		stack.Env = payload.Env
 	}
 
-	if stack.Type == portainer.KubernetesStack {
+	if payload.Prune != nil {
+		if stack.Type == portainer.DockerSwarmStack || stack.Type == portainer.DockerComposeStack {
+			if stack.Option == nil {
+				stack.Option = &portainer.StackOption{}
+			}
+			stack.Option.Prune = *payload.Prune
+		}
+	}
+
+	if stack.Type == portainer.KubernetesStack && payload.StackName != "" {
 		stack.Name = payload.StackName
 	}
 
@@ -186,7 +199,8 @@ func (handler *Handler) stackGitRedeploy(w http.ResponseWriter, r *http.Request)
 
 	defer clean()
 
-	if err := handler.deployStack(r, stack, payload.RepullImageAndRedeploy, endpoint); err != nil {
+	deployGate := newDeployGate()
+	if err := handler.deployStack(r, stack, payload.RepullImageAndRedeploy, endpoint, deployGate); err != nil {
 		return err
 	}
 
@@ -202,6 +216,7 @@ func (handler *Handler) stackGitRedeploy(w http.ResponseWriter, r *http.Request)
 	}
 	stack.CurrentDeploymentInfo = &portainer.StackDeploymentInfo{
 		RepositoryURL:   stack.GitConfig.URL,
+		ReferenceName:   stack.GitConfig.ReferenceName,
 		ConfigFilePath:  stack.GitConfig.ConfigFilePath,
 		AdditionalFiles: stack.AdditionalFiles,
 		ConfigHash:      stack.GitConfig.ConfigHash,
@@ -209,17 +224,16 @@ func (handler *Handler) stackGitRedeploy(w http.ResponseWriter, r *http.Request)
 
 	stack.UpdatedBy = user.Username
 	stack.UpdateDate = time.Now().Unix()
-	stack.Status = portainer.StackStatusActive
-	// TODO: move to async job when stack update becomes async
-	stack.DeploymentStatus = []portainer.StackDeploymentStatus{
-		{Status: portainer.StackStatusActive, Time: time.Now().Unix()},
-	}
+	stackutils.PrepareStackStatusForDeployment(stack)
 
 	if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		return tx.Stack().Update(stack.ID, stack)
 	}); err != nil {
+		deployGate.abortDeploy()
 		return httperror.InternalServerError("Unable to persist the stack changes inside the database", errors.Wrap(err, "failed to update the stack"))
 	}
+
+	deployGate.startDeploy()
 
 	if stack.GitConfig != nil && stack.GitConfig.Authentication != nil && stack.GitConfig.Authentication.Password != "" {
 		// Sanitize password in the http response to minimise possible security leaks
@@ -240,7 +254,7 @@ func (handler *Handler) stackGitRedeploy(w http.ResponseWriter, r *http.Request)
 	return response.JSON(w, stack)
 }
 
-func (handler *Handler) deployStack(r *http.Request, stack *portainer.Stack, pullImage bool, endpoint *portainer.Endpoint) *httperror.HandlerError {
+func (handler *Handler) deployStack(r *http.Request, stack *portainer.Stack, pullImage bool, endpoint *portainer.Endpoint, gate *deployGate) *httperror.HandlerError {
 	var deploymentConfiger deployments.StackDeploymentConfiger
 
 	switch stack.Type {
@@ -299,9 +313,7 @@ func (handler *Handler) deployStack(r *http.Request, stack *portainer.Stack, pul
 		return httperror.InternalServerError("Unsupported stack", errors.Errorf("unsupported stack type: %v", stack.Type))
 	}
 
-	if err := deploymentConfiger.Deploy(context.TODO()); err != nil {
-		return httperror.InternalServerError(err.Error(), err)
-	}
+	go stackDeploy(handler.DataStore, stack.ID, deploymentConfiger, gate, nil)
 
 	return nil
 }

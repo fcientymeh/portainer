@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
@@ -16,7 +16,7 @@ export function useCronJobs(
     queryKeys.list(environmentId),
     async () => getAllCronJobs(environmentId),
     {
-      ...withGlobalError('Unable to get cron jobs'),
+      ...withError('Unable to get cron jobs'),
       refetchInterval() {
         return options?.refetchInterval ?? false;
       },

@@ -2,7 +2,7 @@ import { Job, JobList } from 'kubernetes-types/batch/v1';
 import { useQuery } from '@tanstack/react-query';
 
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import axios from '@/portainer/services/axios/axios';
 
 import { parseKubernetesAxiosError } from '../axiosError';
@@ -21,7 +21,7 @@ export function useJobs(environmentId: EnvironmentId, namespaces?: string[]) {
     queryKeys.jobsForCluster(environmentId),
     () => getJobsForCluster(environmentId, namespaces),
     {
-      ...withGlobalError('Unable to retrieve Jobs'),
+      ...withError('Unable to retrieve Jobs'),
       enabled: !!namespaces?.length,
     }
   );

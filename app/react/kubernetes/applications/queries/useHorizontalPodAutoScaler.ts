@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import axios from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { parseKubernetesAxiosError } from '../../axiosError';
 
@@ -37,7 +37,7 @@ export function useHorizontalPodAutoScaler<
           )
         : undefined,
     {
-      ...withGlobalError('Unable to get horizontal pod autoscaler'),
+      ...withError('Unable to get horizontal pod autoscaler'),
       enabled: !!name,
     }
   );

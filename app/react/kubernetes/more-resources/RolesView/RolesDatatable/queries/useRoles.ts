@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
@@ -19,7 +19,7 @@ export function useRoles(
     queryKeys.list(environmentId),
     async () => getAllRoles(environmentId),
     {
-      ...withGlobalError('Unable to get roles'),
+      ...withError('Unable to get roles'),
       refetchInterval() {
         return options?.autoRefreshRate ?? false;
       },

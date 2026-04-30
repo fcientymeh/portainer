@@ -162,6 +162,7 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 	if stack.CurrentDeploymentInfo == nil && stack.GitConfig != nil {
 		stack.CurrentDeploymentInfo = &portainer.StackDeploymentInfo{
 			RepositoryURL:   stack.GitConfig.URL,
+			ReferenceName:   stack.GitConfig.ReferenceName,
 			ConfigFilePath:  stack.GitConfig.ConfigFilePath,
 			AdditionalFiles: stack.AdditionalFiles,
 			ConfigHash:      stack.GitConfig.ConfigHash,

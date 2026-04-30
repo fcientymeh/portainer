@@ -100,7 +100,7 @@ func (hspm *HelmSDKPackageManager) Upgrade(upgradeOpts options.InstallOptions) (
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse chart reference for helm release upgrade")
 	}
-	chart, err := hspm.loadAndValidateChartWithPathOptions(&upgradeClient.ChartPathOptions, chartRef, upgradeOpts.Version, repoURL, upgradeClient.DependencyUpdate, "release upgrade")
+	chart, err := hspm.loadAndValidateChartWithPathOptions(actionConfig, &upgradeClient.ChartPathOptions, chartRef, upgradeOpts.Version, repoURL, upgradeClient.DependencyUpdate, "release upgrade")
 	if err != nil {
 		log.Error().
 			Str("context", "HelmClient").

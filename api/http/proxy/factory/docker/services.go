@@ -9,6 +9,7 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/http/proxy/factory/utils"
 	"github.com/portainer/portainer/api/internal/authorization"
+	"github.com/portainer/portainer/api/logs"
 
 	"github.com/docker/docker/api/types/swarm"
 	"github.com/docker/docker/client"
@@ -28,13 +29,25 @@ type partialServiceSpec struct {
 				AppArmor *struct{ Mode string } `json:"AppArmor"`
 			} `json:"Privileges"`
 			Mounts []struct {
-				Type string
+				Type          string `json:"Type"`
+				VolumeOptions *struct {
+					DriverConfig *struct {
+						Options map[string]string `json:"Options"`
+					} `json:"DriverConfig"`
+				} `json:"VolumeOptions"`
 			} `json:"Mounts"`
 		} `json:"ContainerSpec"`
 	} `json:"TaskTemplate"`
 }
 
-func checkServiceBodyRestrictions(body []byte, securitySettings *portainer.EndpointSecuritySettings) error {
+func CheckServiceBodyRestrictions(request *http.Request, securitySettings *portainer.EndpointSecuritySettings) error {
+	defer logs.CloseAndLogErr(request.Body)
+
+	body, err := io.ReadAll(request.Body)
+	if err != nil {
+		return err
+	}
+
 	spec := &partialServiceSpec{}
 	if err := json.Unmarshal(body, spec); err != nil {
 		return err
@@ -61,8 +74,16 @@ func checkServiceBodyRestrictions(body []byte, securitySettings *portainer.Endpo
 			if mount.Type == "bind" {
 				return ErrBindMountsForbidden
 			}
+
+			if mount.VolumeOptions != nil && mount.VolumeOptions.DriverConfig != nil {
+				if mount.VolumeOptions.DriverConfig.Options["type"] == "bind" {
+					return ErrBindMountsForbidden
+				}
+			}
 		}
 	}
+
+	request.Body = io.NopCloser(bytes.NewBuffer(body))
 
 	return nil
 }
@@ -153,19 +174,12 @@ func (transport *Transport) decorateServiceCreationOperation(request *http.Reque
 		return nil, err
 	}
 
-	body, err := io.ReadAll(request.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := checkServiceBodyRestrictions(body, securitySettings); err != nil {
+	if err := CheckServiceBodyRestrictions(request, securitySettings); err != nil {
 		return &http.Response{
 			StatusCode: http.StatusForbidden,
 			Body:       io.NopCloser(bytes.NewBufferString("Access denied: insufficient permissions to create service with specified configuration")),
 		}, err
 	}
-
-	request.Body = io.NopCloser(bytes.NewBuffer(body))
 
 	return transport.replaceRegistryAuthenticationHeader(request)
 }
@@ -189,19 +203,12 @@ func (transport *Transport) decorateServiceUpdateOperation(request *http.Request
 		return nil, err
 	}
 
-	body, err := io.ReadAll(request.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := checkServiceBodyRestrictions(body, securitySettings); err != nil {
+	if err := CheckServiceBodyRestrictions(request, securitySettings); err != nil {
 		return &http.Response{
 			StatusCode: http.StatusForbidden,
 			Body:       io.NopCloser(bytes.NewBufferString("Access denied: insufficient permissions to update service with specified configuration")),
 		}, err
 	}
-
-	request.Body = io.NopCloser(bytes.NewBuffer(body))
 
 	if err := transport.decorateRegistryAuthenticationHeader(request); err != nil {
 		return nil, err

@@ -245,6 +245,7 @@ type (
 	PerformanceMetrics struct {
 		CPUUsage     float64 `json:"CPUUsage,omitempty"`
 		MemoryUsage  float64 `json:"MemoryUsage,omitempty"`
+		DiskUsage    float64 `json:"DiskUsage,omitempty"`
 		NetworkUsage float64 `json:"NetworkUsage,omitempty"`
 	}
 
@@ -344,6 +345,8 @@ type (
 		RepositoryURL string `json:"RepositoryURL,omitempty"`
 		// ConfigFilePath is the path to the config file in the git repository used for deploying the stack
 		ConfigFilePath string `json:"ConfigFilePath,omitempty"`
+		// ReferenceName is the git reference (branch/tag) used for deploying the stack
+		ReferenceName string `json:"ReferenceName,omitempty"`
 		// AdditionalFiles are the additional files used for deploying the stack
 		AdditionalFiles []string `json:"AdditionalFiles,omitempty"`
 	}
@@ -689,6 +692,9 @@ type (
 
 	// EndpointType represents the type of an environment(endpoint)
 	EndpointType int
+
+	// PlatformType represents the platform that an agent is running on
+	PlatformType int
 
 	// EndpointRelation represents a environment(endpoint) relation object
 	EndpointRelation struct {
@@ -1214,8 +1220,12 @@ type (
 		Env []Pair `json:"Env"`
 		//
 		ResourceControl *ResourceControl `json:"ResourceControl"`
-		// Stack status (1 - active, 2 - inactive)
+		// Stack status (1 - active, 2 - inactive, 3 - deploying, 4 - error)
 		Status StackStatus `json:"Status" example:"1"`
+		// DeploymentStartStatus is the stack status captured when the current
+		// deployment starts. It is used by deployment logic during the current
+		// deployment attempt and is cleared/replaced when a new deployment begins.
+		DeploymentStartStatus StackStatus `json:"DeploymentStartStatus" example:"1"`
 		// Path on disk to the repository hosting the Stack file
 		ProjectPath string `example:"/data/compose/myStack_jpofkc0i9uo9wtx1zesuk649w"`
 		// The date in unix time when stack was created
@@ -1935,7 +1945,7 @@ type (
 
 const (
 	// APIVersion is the version number of the Portainer API
-	APIVersion = "2.40.0"
+	APIVersion = "2.41.0"
 	// Support annotation for the API version ("STS" for Short-Term Support or "LTS" for Long-Term Support)
 	APIVersionSupport = "STS"
 	// Edition is what this edition of Portainer is called
@@ -1964,6 +1974,8 @@ const (
 	PortainerAgentPublicKeyHeader = "X-PortainerAgent-PublicKey"
 	// PortainerAgentKubernetesSATokenHeader represent the name of the header containing a Kubernetes SA token
 	PortainerAgentKubernetesSATokenHeader = "X-PortainerAgent-SA-Token"
+	// HTTPAlertStateHeaderName is the name of the header used to transmit edge alert evaluation state
+	HTTPAlertStateHeaderName = "X-PortainerAgent-AlertState"
 	// PortainerAgentSignatureMessage represents the message used to create a digital signature
 	// to be used when communicating with an agent
 	PortainerAgentSignatureMessage = "Portainer-App"
@@ -2131,6 +2143,14 @@ const (
 	AgentOnKubernetesEnvironment
 	// EdgeAgentOnKubernetesEnvironment represents an environment(endpoint) connected to an Edge agent deployed on a Kubernetes environment(endpoint)
 	EdgeAgentOnKubernetesEnvironment
+)
+
+const (
+	DockerPlatformType PlatformType = iota
+	KubernetesPlatformType
+	AzurePlatformType
+	PodmanPlatformType
+	UnknownPlatformType
 )
 
 const (

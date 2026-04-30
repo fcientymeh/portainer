@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { EnvironmentGroupId } from '../types';
 
@@ -34,7 +34,7 @@ export function useGroup<T = EnvironmentGroup>(
       staleTime: 50,
       select,
       enabled: groupId !== undefined,
-      ...withGlobalError('Failed loading group'),
+      ...withError('Failed loading group'),
     }
   );
 }

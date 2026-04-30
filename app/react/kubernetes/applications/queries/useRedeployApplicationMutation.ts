@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { Pod } from 'kubernetes-types/core/v1';
 
-import { queryClient, withGlobalError } from '@/react-tools/react-query';
+import { queryClient, withError } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import axios from '@/portainer/services/axios/axios';
 
@@ -40,7 +40,7 @@ export function useRedeployApplicationMutation(
           queryKeys.application(environmentId, namespace, name)
         );
       },
-      ...withGlobalError('Unable to redeploy application'),
+      ...withError('Unable to redeploy application'),
     }
   );
 }

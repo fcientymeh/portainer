@@ -10,6 +10,9 @@ import (
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/datastore"
 	"github.com/portainer/portainer/api/http/security"
+
+	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/swarm"
 	"github.com/segmentio/encoding/json"
 	"github.com/stretchr/testify/require"
 )
@@ -104,27 +107,10 @@ func (f *serviceCreationFixtures) newTransport() *Transport {
 	}
 }
 
-type serviceBody struct {
-	TaskTemplate struct {
-		ContainerSpec struct {
-			CapabilityAdd  []string       `json:"CapabilityAdd,omitempty"`
-			CapabilityDrop []string       `json:"CapabilityDrop,omitempty"`
-			Sysctls        map[string]any `json:"Sysctls,omitempty"`
-			Privileges     *struct {
-				Seccomp  *struct{ Mode string } `json:"Seccomp,omitempty"`
-				AppArmor *struct{ Mode string } `json:"AppArmor,omitempty"`
-			} `json:"Privileges,omitempty"`
-			Mounts []struct {
-				Type string `json:"Type"`
-			} `json:"Mounts,omitempty"`
-		} `json:"ContainerSpec"`
-	} `json:"TaskTemplate"`
-}
-
-func (f *serviceCreationFixtures) newRequest(t *testing.T, body serviceBody, user portainer.User) *http.Request {
+func (f *serviceCreationFixtures) newRequest(t *testing.T, spec swarm.ServiceSpec, user portainer.User) *http.Request {
 	t.Helper()
 
-	data, err := json.Marshal(body)
+	data, err := json.Marshal(spec)
 	require.NoError(t, err)
 
 	req, err := http.NewRequestWithContext(
@@ -159,13 +145,20 @@ var (
 )
 
 func TestDecorateServiceCreationOperation_CapabilityAddForbidden(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 	f.setSecuritySettings(t, restrictiveSettings)
 
-	var body serviceBody
-	body.TaskTemplate.ContainerSpec.CapabilityAdd = []string{"NET_ADMIN"}
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				CapabilityAdd: []string{"NET_ADMIN"},
+			},
+		},
+	}
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.stdUser))
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
 	require.ErrorIs(t, err, ErrContainerCapabilitiesForbidden)
 	require.NotNil(t, resp)
 	require.Equal(t, http.StatusForbidden, resp.StatusCode)
@@ -175,14 +168,20 @@ func TestDecorateServiceCreationOperation_CapabilityAddForbidden(t *testing.T) {
 }
 
 func TestDecorateServiceCreationOperation_CapabilityDropForbidden(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 	f.setSecuritySettings(t, restrictiveSettings)
 
-	var body serviceBody
-	body.TaskTemplate.ContainerSpec.CapabilityDrop = []string{"MKNOD"}
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				CapabilityDrop: []string{"MKNOD"},
+			},
+		},
+	}
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.stdUser))
-
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
 	require.ErrorIs(t, err, ErrContainerCapabilitiesForbidden)
 	require.NotNil(t, resp)
 	require.Equal(t, http.StatusForbidden, resp.StatusCode)
@@ -192,13 +191,20 @@ func TestDecorateServiceCreationOperation_CapabilityDropForbidden(t *testing.T) 
 }
 
 func TestDecorateServiceCreationOperation_CapabilitiesAllowed(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 	f.setSecuritySettings(t, permissiveSettings)
 
-	var body serviceBody
-	body.TaskTemplate.ContainerSpec.CapabilityAdd = []string{"NET_ADMIN"}
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				CapabilityAdd: []string{"NET_ADMIN"},
+			},
+		},
+	}
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.stdUser))
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.NotEqual(t, http.StatusForbidden, resp.StatusCode)
@@ -208,12 +214,14 @@ func TestDecorateServiceCreationOperation_CapabilitiesAllowed(t *testing.T) {
 }
 
 func TestDecorateServiceCreationOperation_NoCapabilitiesAllowed(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 	f.setSecuritySettings(t, restrictiveSettings)
 
-	var body serviceBody
+	var spec swarm.ServiceSpec
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.stdUser))
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
 	require.NotErrorIs(t, err, ErrContainerCapabilitiesForbidden)
 	require.NotNil(t, resp)
 	require.NotEqual(t, http.StatusForbidden, resp.StatusCode)
@@ -223,14 +231,20 @@ func TestDecorateServiceCreationOperation_NoCapabilitiesAllowed(t *testing.T) {
 }
 
 func TestDecorateServiceCreationOperation_SysctlForbidden(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 	f.setSecuritySettings(t, restrictiveSettings)
 
-	var body serviceBody
-	body.TaskTemplate.ContainerSpec.Sysctls = map[string]any{"net.ipv4.ip_forward": "1"}
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				Sysctls: map[string]string{"net.ipv4.ip_forward": "1"},
+			},
+		},
+	}
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.stdUser))
-
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
 	require.ErrorIs(t, err, ErrSysCtlSettingsForbidden)
 	require.NotNil(t, resp)
 	require.Equal(t, http.StatusForbidden, resp.StatusCode)
@@ -240,14 +254,20 @@ func TestDecorateServiceCreationOperation_SysctlForbidden(t *testing.T) {
 }
 
 func TestDecorateServiceCreationOperation_SysctlAllowed(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 	f.setSecuritySettings(t, permissiveSettings)
 
-	var body serviceBody
-	body.TaskTemplate.ContainerSpec.Sysctls = map[string]any{"net.ipv4.ip_forward": "1"}
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				Sysctls: map[string]string{"net.ipv4.ip_forward": "1"},
+			},
+		},
+	}
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.stdUser))
-
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.NotEqual(t, http.StatusForbidden, resp.StatusCode)
@@ -257,19 +277,22 @@ func TestDecorateServiceCreationOperation_SysctlAllowed(t *testing.T) {
 }
 
 func TestDecorateServiceCreationOperation_SeccompForbidden(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 	f.setSecuritySettings(t, restrictiveSettings)
 
-	var body serviceBody
-	body.TaskTemplate.ContainerSpec.Privileges = &struct {
-		Seccomp  *struct{ Mode string } `json:"Seccomp,omitempty"`
-		AppArmor *struct{ Mode string } `json:"AppArmor,omitempty"`
-	}{
-		Seccomp: &struct{ Mode string }{Mode: "custom"},
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				Privileges: &swarm.Privileges{
+					Seccomp: &swarm.SeccompOpts{Mode: swarm.SeccompModeCustom},
+				},
+			},
+		},
 	}
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.stdUser))
-
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
 	require.ErrorIs(t, err, ErrSecurityOptSettingsForbidden)
 	require.NotNil(t, resp)
 	require.Equal(t, http.StatusForbidden, resp.StatusCode)
@@ -279,18 +302,22 @@ func TestDecorateServiceCreationOperation_SeccompForbidden(t *testing.T) {
 }
 
 func TestDecorateServiceCreationOperation_AppArmorForbidden(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 	f.setSecuritySettings(t, restrictiveSettings)
 
-	var body serviceBody
-	body.TaskTemplate.ContainerSpec.Privileges = &struct {
-		Seccomp  *struct{ Mode string } `json:"Seccomp,omitempty"`
-		AppArmor *struct{ Mode string } `json:"AppArmor,omitempty"`
-	}{
-		AppArmor: &struct{ Mode string }{Mode: "localhost"},
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				Privileges: &swarm.Privileges{
+					AppArmor: &swarm.AppArmorOpts{Mode: swarm.AppArmorModeDefault},
+				},
+			},
+		},
 	}
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.stdUser))
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
 	require.ErrorIs(t, err, ErrSecurityOptSettingsForbidden)
 	require.NotNil(t, resp)
 	require.Equal(t, http.StatusForbidden, resp.StatusCode)
@@ -300,12 +327,14 @@ func TestDecorateServiceCreationOperation_AppArmorForbidden(t *testing.T) {
 }
 
 func TestDecorateServiceCreationOperation_NilPrivilegesNotForbidden(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 	f.setSecuritySettings(t, restrictiveSettings)
 
-	var body serviceBody
+	var spec swarm.ServiceSpec
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.stdUser))
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
 	require.NotErrorIs(t, err, ErrSecurityOptSettingsForbidden)
 	require.NotNil(t, resp)
 	require.NotEqual(t, http.StatusForbidden, resp.StatusCode)
@@ -315,17 +344,20 @@ func TestDecorateServiceCreationOperation_NilPrivilegesNotForbidden(t *testing.T
 }
 
 func TestDecorateServiceCreationOperation_PrivilegesWithNilSeccompAndAppArmorNotForbidden(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 	f.setSecuritySettings(t, restrictiveSettings)
 
-	var body serviceBody
-	body.TaskTemplate.ContainerSpec.Privileges = &struct {
-		Seccomp  *struct{ Mode string } `json:"Seccomp,omitempty"`
-		AppArmor *struct{ Mode string } `json:"AppArmor,omitempty"`
-	}{}
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				Privileges: &swarm.Privileges{},
+			},
+		},
+	}
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.stdUser))
-
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
 	require.NotErrorIs(t, err, ErrSecurityOptSettingsForbidden)
 	require.NotNil(t, resp)
 	require.NotEqual(t, http.StatusForbidden, resp.StatusCode)
@@ -335,19 +367,22 @@ func TestDecorateServiceCreationOperation_PrivilegesWithNilSeccompAndAppArmorNot
 }
 
 func TestDecorateServiceCreationOperation_PrivilegesAllowed(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 	f.setSecuritySettings(t, permissiveSettings)
 
-	var body serviceBody
-	body.TaskTemplate.ContainerSpec.Privileges = &struct {
-		Seccomp  *struct{ Mode string } `json:"Seccomp,omitempty"`
-		AppArmor *struct{ Mode string } `json:"AppArmor,omitempty"`
-	}{
-		Seccomp: &struct{ Mode string }{Mode: "custom"},
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				Privileges: &swarm.Privileges{
+					Seccomp: &swarm.SeccompOpts{Mode: swarm.SeccompModeCustom},
+				},
+			},
+		},
 	}
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.stdUser))
-
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.NotEqual(t, http.StatusForbidden, resp.StatusCode)
@@ -357,15 +392,20 @@ func TestDecorateServiceCreationOperation_PrivilegesAllowed(t *testing.T) {
 }
 
 func TestDecorateServiceCreationOperation_BindMountForbidden(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 	f.setSecuritySettings(t, restrictiveSettings)
 
-	var body serviceBody
-	body.TaskTemplate.ContainerSpec.Mounts = []struct {
-		Type string `json:"Type"`
-	}{{Type: "bind"}}
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				Mounts: []mount.Mount{{Type: mount.TypeBind}},
+			},
+		},
+	}
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.stdUser))
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
 	require.ErrorIs(t, err, ErrBindMountsForbidden)
 	require.NotNil(t, resp)
 	require.Equal(t, http.StatusForbidden, resp.StatusCode)
@@ -375,6 +415,8 @@ func TestDecorateServiceCreationOperation_BindMountForbidden(t *testing.T) {
 }
 
 func TestDecorateServiceCreationOperation_NonBindMountNotForbidden(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 
 	f.setSecuritySettings(t, portainer.EndpointSecuritySettings{
@@ -384,13 +426,15 @@ func TestDecorateServiceCreationOperation_NonBindMountNotForbidden(t *testing.T)
 		AllowBindMountsForRegularUsers:            false,
 	})
 
-	var body serviceBody
-	body.TaskTemplate.ContainerSpec.Mounts = []struct {
-		Type string `json:"Type"`
-	}{{Type: "volume"}}
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				Mounts: []mount.Mount{{Type: mount.TypeVolume}},
+			},
+		},
+	}
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.stdUser))
-
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
 	require.NotErrorIs(t, err, ErrBindMountsForbidden)
 	require.NotNil(t, resp)
 	require.NotEqual(t, http.StatusForbidden, resp.StatusCode)
@@ -400,15 +444,20 @@ func TestDecorateServiceCreationOperation_NonBindMountNotForbidden(t *testing.T)
 }
 
 func TestDecorateServiceCreationOperation_BindMountAllowed(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 	f.setSecuritySettings(t, permissiveSettings)
 
-	var body serviceBody
-	body.TaskTemplate.ContainerSpec.Mounts = []struct {
-		Type string `json:"Type"`
-	}{{Type: "bind"}}
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				Mounts: []mount.Mount{{Type: mount.TypeBind}},
+			},
+		},
+	}
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.stdUser))
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.NotEqual(t, http.StatusForbidden, resp.StatusCode)
@@ -418,24 +467,26 @@ func TestDecorateServiceCreationOperation_BindMountAllowed(t *testing.T) {
 }
 
 func TestDecorateServiceCreationOperation_AdminBypassesAllSecurityChecks(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 	f.setSecuritySettings(t, restrictiveSettings)
 
-	var body serviceBody
-	body.TaskTemplate.ContainerSpec.CapabilityAdd = []string{"NET_ADMIN"}
-	body.TaskTemplate.ContainerSpec.CapabilityDrop = []string{"MKNOD"}
-	body.TaskTemplate.ContainerSpec.Sysctls = map[string]any{"net.ipv4.ip_forward": "1"}
-	body.TaskTemplate.ContainerSpec.Privileges = &struct {
-		Seccomp  *struct{ Mode string } `json:"Seccomp,omitempty"`
-		AppArmor *struct{ Mode string } `json:"AppArmor,omitempty"`
-	}{
-		Seccomp: &struct{ Mode string }{Mode: "custom"},
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				CapabilityAdd:  []string{"NET_ADMIN"},
+				CapabilityDrop: []string{"MKNOD"},
+				Sysctls:        map[string]string{"net.ipv4.ip_forward": "1"},
+				Privileges: &swarm.Privileges{
+					Seccomp: &swarm.SeccompOpts{Mode: swarm.SeccompModeCustom},
+				},
+				Mounts: []mount.Mount{{Type: mount.TypeBind}},
+			},
+		},
 	}
-	body.TaskTemplate.ContainerSpec.Mounts = []struct {
-		Type string `json:"Type"`
-	}{{Type: "bind"}}
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.adminUser))
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.adminUser))
 	require.NotErrorIs(t, err, ErrContainerCapabilitiesForbidden)
 	require.NotErrorIs(t, err, ErrSysCtlSettingsForbidden)
 	require.NotErrorIs(t, err, ErrSecurityOptSettingsForbidden)
@@ -448,20 +499,145 @@ func TestDecorateServiceCreationOperation_AdminBypassesAllSecurityChecks(t *test
 }
 
 func TestDecorateServiceCreationOperation_StandardUserPermissiveSettingsSucceeds(t *testing.T) {
+	t.Parallel()
+
 	f := newServiceCreationFixtures(t)
 	f.setSecuritySettings(t, permissiveSettings)
 
-	var body serviceBody
-	body.TaskTemplate.ContainerSpec.CapabilityAdd = []string{"NET_ADMIN"}
-	body.TaskTemplate.ContainerSpec.Sysctls = map[string]any{"net.core.somaxconn": "128"}
-	body.TaskTemplate.ContainerSpec.Mounts = []struct {
-		Type string `json:"Type"`
-	}{{Type: "bind"}}
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				CapabilityAdd: []string{"NET_ADMIN"},
+				Sysctls:       map[string]string{"net.core.somaxconn": "128"},
+				Mounts:        []mount.Mount{{Type: mount.TypeBind}},
+			},
+		},
+	}
 
-	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, body, f.stdUser))
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	err = resp.Body.Close()
+	require.NoError(t, err)
+}
+
+func TestDecorateServiceCreationOperation_VolumeWithBindDriverOptionForbidden(t *testing.T) {
+	t.Parallel()
+
+	f := newServiceCreationFixtures(t)
+	f.setSecuritySettings(t, restrictiveSettings)
+
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				Mounts: []mount.Mount{{
+					Type: mount.TypeVolume,
+					VolumeOptions: &mount.VolumeOptions{
+						DriverConfig: &mount.Driver{
+							Options: map[string]string{"type": "bind", "device": "/etc"},
+						},
+					},
+				}},
+			},
+		},
+	}
+
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
+	require.ErrorIs(t, err, ErrBindMountsForbidden)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+	err = resp.Body.Close()
+	require.NoError(t, err)
+}
+
+func TestDecorateServiceCreationOperation_VolumeWithBindDriverOptionAllowed(t *testing.T) {
+	t.Parallel()
+
+	f := newServiceCreationFixtures(t)
+	f.setSecuritySettings(t, permissiveSettings)
+
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				Mounts: []mount.Mount{{
+					Type: mount.TypeVolume,
+					VolumeOptions: &mount.VolumeOptions{
+						DriverConfig: &mount.Driver{
+							Options: map[string]string{"type": "bind", "device": "/etc"},
+						},
+					},
+				}},
+			},
+		},
+	}
+
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.NotEqual(t, http.StatusForbidden, resp.StatusCode)
+
+	err = resp.Body.Close()
+	require.NoError(t, err)
+}
+
+func TestDecorateServiceCreationOperation_VolumeWithNonBindDriverOptionNotForbidden(t *testing.T) {
+	t.Parallel()
+
+	f := newServiceCreationFixtures(t)
+	f.setSecuritySettings(t, restrictiveSettings)
+
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				Mounts: []mount.Mount{{
+					Type: mount.TypeVolume,
+					VolumeOptions: &mount.VolumeOptions{
+						DriverConfig: &mount.Driver{
+							Options: map[string]string{"type": "tmpfs"},
+						},
+					},
+				}},
+			},
+		},
+	}
+
+	resp, err := f.newTransport().decorateServiceCreationOperation(f.newRequest(t, spec, f.stdUser))
+	require.NotErrorIs(t, err, ErrBindMountsForbidden)
+	require.NotNil(t, resp)
+	require.NotEqual(t, http.StatusForbidden, resp.StatusCode)
+
+	err = resp.Body.Close()
+	require.NoError(t, err)
+}
+
+func TestDecorateServiceUpdateOperation_VolumeWithBindDriverOptionForbidden(t *testing.T) {
+	t.Parallel()
+
+	f := newServiceCreationFixtures(t)
+	f.setSecuritySettings(t, restrictiveSettings)
+
+	spec := swarm.ServiceSpec{
+		TaskTemplate: swarm.TaskSpec{
+			ContainerSpec: &swarm.ContainerSpec{
+				Mounts: []mount.Mount{{
+					Type: mount.TypeVolume,
+					VolumeOptions: &mount.VolumeOptions{
+						DriverConfig: &mount.Driver{
+							Options: map[string]string{"type": "bind", "device": "/etc"},
+						},
+					},
+				}},
+			},
+		},
+	}
+
+	resp, err := f.newTransport().decorateServiceUpdateOperation(f.newRequest(t, spec, f.stdUser), "test-service-id")
+	require.ErrorIs(t, err, ErrBindMountsForbidden)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusForbidden, resp.StatusCode)
 
 	err = resp.Body.Close()
 	require.NoError(t, err)

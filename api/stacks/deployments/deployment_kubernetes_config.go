@@ -80,6 +80,13 @@ func (config *KubernetesStackDeploymentConfig) Deploy(ctx context.Context) error
 	return nil
 }
 
+func (config *KubernetesStackDeploymentConfig) Undeploy(ctx context.Context) error {
+	// Kubernetes is an orchestrator that handles partial failures internally,
+	// so there is no need to remove failed resources before redeploying.
+	// This method exists only to satisfy the deployment interface.
+	return nil
+}
+
 func (config *KubernetesStackDeploymentConfig) GetResponse() string {
 	return config.output
 }

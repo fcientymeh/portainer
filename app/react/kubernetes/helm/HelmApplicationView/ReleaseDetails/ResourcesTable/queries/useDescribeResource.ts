@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useEnvironmentId } from '@/react/hooks/useEnvironmentId';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 type DescribeAPIParams = {
   name: string;
@@ -56,7 +56,7 @@ export function useDescribeResource(
     () => getDescribeResource(environmentId, name, resourceType, namespace),
     {
       enabled: !!environmentId && !!name && !!resourceType,
-      ...withGlobalError('Enable to retrieve data for resource'),
+      ...withError('Enable to retrieve data for resource'),
     }
   );
 }

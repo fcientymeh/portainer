@@ -82,6 +82,13 @@ func (config *SwarmStackDeploymentConfig) Deploy(ctx context.Context) error {
 	return config.StackDeployer.DeploySwarmStack(ctx, config.stack, config.endpoint, config.registries, config.prune, config.pullImage)
 }
 
+func (config *SwarmStackDeploymentConfig) Undeploy(ctx context.Context) error {
+	// Swarm is an orchestrator that handles partial failures internally,
+	// so there is no need to remove failed resources before redeploying.
+	// This method exists only to satisfy the deployment interface.
+	return nil
+}
+
 func (config *SwarmStackDeploymentConfig) GetResponse() string {
 	return ""
 }

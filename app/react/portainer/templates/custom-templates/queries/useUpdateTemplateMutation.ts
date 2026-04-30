@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import {
   mutationOptions,
-  withGlobalError,
+  withError,
   withInvalidate,
 } from '@/react-tools/react-query';
 import { StackType } from '@/react/common/stacks/types';
@@ -37,7 +37,7 @@ export function useUpdateTemplateMutation() {
     },
     mutationOptions(
       withInvalidate(queryClient, [['custom-templates']]),
-      withGlobalError('Failed to update template')
+      withError('Failed to update template')
     )
   );
 }

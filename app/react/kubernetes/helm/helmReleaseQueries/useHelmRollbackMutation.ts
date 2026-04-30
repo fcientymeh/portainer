@@ -4,7 +4,7 @@ import { EnvironmentId } from '@/react/portainer/environments/types';
 import {
   queryClient,
   withInvalidate,
-  withGlobalError,
+  withError,
 } from '@/react-tools/react-query';
 import axios from '@/portainer/services/axios/axios';
 import { queryKeys as applicationsQueryKeys } from '@/react/kubernetes/applications/queries/query-keys';
@@ -54,7 +54,7 @@ export function useHelmRollbackMutation(environmentId: EnvironmentId) {
   return useMutation({
     mutationFn: ({ releaseName, params }: RollbackPayload) =>
       rollbackRelease({ releaseName, params, environmentId }),
-    ...withGlobalError('Unable to rollback Helm release'),
+    ...withError('Unable to rollback Helm release'),
     ...withInvalidate(queryClient, [
       queryKeys.releases(environmentId),
       applicationsQueryKeys.applications(environmentId),

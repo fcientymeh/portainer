@@ -2,7 +2,7 @@ import { useQueries } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { compact, flatMap } from 'lodash';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 
 import { queryKeys } from './query-keys';
@@ -50,7 +50,7 @@ export function useHelmRepoVersions(
           queryFn: () => getSearchHelmRepo({ repo, chart, useCache }),
           enabled: !!chart && !!repo,
           staleTime,
-          ...withGlobalError(`Unable to retrieve versions from ${repo}`),
+          ...withError(`Unable to retrieve versions from ${repo}`),
         })),
       [repoSources, chart, staleTime, useCache]
     ),

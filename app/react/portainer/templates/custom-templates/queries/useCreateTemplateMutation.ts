@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 import {
   mutationOptions,
-  withGlobalError,
+  withError,
   withInvalidate,
 } from '@/react-tools/react-query';
 import { StackType } from '@/react/common/stacks/types';
@@ -61,7 +61,7 @@ export function useCreateTemplateMutation() {
     },
     mutationOptions(
       withInvalidate(queryClient, [queryKeys.base()]),
-      withGlobalError('Failed to create template')
+      withError('Failed to create template')
     )
   );
 }

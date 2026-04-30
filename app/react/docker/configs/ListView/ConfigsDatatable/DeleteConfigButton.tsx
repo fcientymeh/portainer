@@ -2,7 +2,7 @@ import { useQueryClient, useMutation } from '@tanstack/react-query';
 
 import { useEnvironmentId } from '@/react/hooks/useEnvironmentId';
 import { promiseSequence } from '@/portainer/helpers/promise-utils';
-import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
+import { withError, withInvalidate } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import { notifySuccess } from '@/portainer/services/notifications';
 import { pluralize } from '@/portainer/helpers/strings';
@@ -54,7 +54,7 @@ function useDeleteConfigListMutation(environmentId: EnvironmentId) {
       promiseSequence(
         ids.map((configId) => () => deleteConfig({ environmentId, configId }))
       ),
-    ...withGlobalError('Unable to remove configs'),
+    ...withError('Unable to remove configs'),
     ...withInvalidate(queryClient, [queryKeys.base(environmentId)]),
   });
 }

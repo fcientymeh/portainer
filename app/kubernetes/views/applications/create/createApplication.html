@@ -103,7 +103,7 @@
                 ></application-summary-section>
               </div>
               <!-- kubernetes summary for external application -->
-              <div class="col-sm-12 form-section-title !mt-6" ng-if="ctrl.state.appType !== ctrl.KubernetesDeploymentTypes.GIT" ng-hide="ctrl.stack.IsComposeFormat"> Actions </div>
+              <div class="col-sm-12 form-section-title !mt-6" ng-hide="ctrl.stack.IsComposeFormat"> Actions </div>
               <!-- #region ACTIONS -->
               <div class="form-group" ng-hide="ctrl.stack.IsComposeFormat">
                 <div class="col-sm-12">
@@ -147,14 +147,6 @@
               <!-- #endregion -->
             </div>
             <div ng-if="!ctrl.isExternalApplication()">
-              <git-form-git-reference-card
-                ng-if="ctrl.state.appType == ctrl.KubernetesDeploymentTypes.GIT && ctrl.stack.GitConfig"
-                stack-id="ctrl.stack.Id"
-                stack-type="'kubernetes'"
-                git-config="ctrl.stack.GitConfig"
-                auto-update="ctrl.stack.AutoUpdate"
-                class="mb-4"
-              ></git-form-git-reference-card>
               <!-- #region NAMESPACE -->
               <namespace-selector
                 values="ctrl.formValues.ResourcePool.Namespace.Name"
@@ -174,15 +166,6 @@
                 input-class-name="'col-lg-10 col-sm-9'"
                 error="ctrl.state.stackNameError"
               ></kube-stack-name>
-              <!-- #endregion -->
-
-              <!-- #region Git repository -->
-              <kubernetes-redeploy-app-git-form
-                ng-if="ctrl.state.appType === ctrl.KubernetesDeploymentTypes.GIT"
-                stack="ctrl.stack"
-                namespace="ctrl.formValues.ResourcePool.Namespace.Name"
-                stack-name="ctrl.formValues.StackName"
-              ></kubernetes-redeploy-app-git-form>
               <!-- #endregion -->
 
               <!-- #region web editor -->
@@ -377,7 +360,7 @@
                 <!-- application summary end -->
               </div>
               <!-- #region ACTIONS -->
-              <div class="col-sm-12 form-section-title !mt-6" ng-if="ctrl.state.appType !== ctrl.KubernetesDeploymentTypes.GIT" ng-hide="ctrl.stack.IsComposeFormat"> Actions </div>
+              <div class="col-sm-12 form-section-title !mt-6" ng-hide="ctrl.stack.IsComposeFormat"> Actions </div>
               <div class="form-group" ng-hide="ctrl.stack.IsComposeFormat">
                 <div class="col-sm-12">
                   <button

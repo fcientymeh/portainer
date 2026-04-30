@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { EnvironmentId } from '../environments/types';
 import { RegistryId } from '../registries/types/registry';
@@ -20,7 +20,7 @@ export function useCreateWebhook() {
         queryKey: queryKeys.base(),
       });
     },
-    ...withGlobalError('Failed to create webhook'),
+    ...withError('Failed to create webhook'),
   });
 }
 

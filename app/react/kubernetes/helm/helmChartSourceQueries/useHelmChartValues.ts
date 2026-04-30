@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { queryKeys } from './query-keys';
 
@@ -30,7 +30,7 @@ export function useHelmChartValues(params: Params, isLatestVersion = false) {
     }),
     retry: 1,
     staleTime: 60 * 1000 * 20, // 60 minutes, because values are not expected to change often
-    ...withGlobalError('Unable to get Helm chart values'),
+    ...withError('Unable to get Helm chart values'),
   });
 }
 

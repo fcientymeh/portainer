@@ -10,6 +10,7 @@ import (
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/stacks/deployments"
+	"github.com/portainer/portainer/api/stacks/stackutils"
 
 	"github.com/rs/zerolog/log"
 )
@@ -41,10 +42,7 @@ func (b *StackBuilder) setGeneralInfo(_ *StackPayload, endpoint *portainer.Endpo
 	b.stack.EndpointID = endpoint.ID
 	now := time.Now().Unix()
 	b.stack.CreationDate = now
-	b.stack.Status = portainer.StackStatusDeploying
-	b.stack.DeploymentStatus = []portainer.StackDeploymentStatus{
-		{Status: portainer.StackStatusDeploying, Time: now},
-	}
+	stackutils.PrepareStackStatusForDeployment(b.stack)
 }
 
 func (b *StackBuilder) prepare(_ context.Context, _ *StackPayload) error { return nil }

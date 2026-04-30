@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import axios from '@/portainer/services/axios/axios';
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
+import { withError, withInvalidate } from '@/react-tools/react-query';
 
 import { queryKeys } from './queryKeys';
 
@@ -17,7 +17,7 @@ export function useToggleSystemNamespaceMutation(
     ...withInvalidate(queryClient, [
       queryKeys.namespace(environmentId, namespaceName),
     ]),
-    ...withGlobalError('Failed to update namespace'),
+    ...withError('Failed to update namespace'),
   });
 }
 

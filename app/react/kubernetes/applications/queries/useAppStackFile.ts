@@ -1,13 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import { getEdgeStackFile } from '@/react/edge/edge-stacks/queries/useEdgeStackFile';
 import { getStackFile } from '@/react/common/stacks/queries/useStackFile';
 
 import { queryKeys } from './query-keys';
 
-// Return the stack file content as a string for both edge and regular stacks.
-export function useAppStackFile(id?: number, kind?: string) {
+export function useAppStackFile(
+  {
+    id,
+    kind,
+  }: {
+    id: number | undefined;
+    kind?: 'edge' | 'compose' | 'kubernetes' | (string & NonNullable<unknown>);
+  },
+  { enabled }: { enabled?: boolean } = {}
+) {
   return useQuery(
     queryKeys.appStackFile(id, kind),
     async ({ signal }) => {
@@ -16,11 +24,9 @@ export function useAppStackFile(id?: number, kind?: string) {
       }
 
       if (kind === 'edge') {
-        // Fetch edge stack file
         return getEdgeStackFile(id);
       }
 
-      // Fetch regular stack file
       const stackFile = await getStackFile({
         stackId: id,
         options: { signal },
@@ -28,8 +34,8 @@ export function useAppStackFile(id?: number, kind?: string) {
       return stackFile?.StackFileContent;
     },
     {
-      enabled: !!id,
-      ...withGlobalError('Failed to load app stack file'),
+      enabled: !!id && enabled,
+      ...withError('Failed to load app stack file'),
     }
   );
 }

@@ -1,7 +1,7 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { Stack, StackId } from '../types';
 
@@ -16,7 +16,7 @@ export function useStack<T = Stack>(
     queryKey: queryKeys.stack(stackId),
     queryFn: () => getStack(stackId),
     enabled: !!stackId,
-    ...withGlobalError('Unable to retrieve stack'),
+    ...withError('Unable to retrieve stack'),
     ...queryOptions,
   });
 }

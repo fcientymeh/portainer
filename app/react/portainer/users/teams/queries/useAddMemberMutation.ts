@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { promiseSequence } from '@/portainer/helpers/promise-utils';
 import { UserId } from '@/portainer/users/types';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError, withInvalidate } from '@/react-tools/react-query';
+import { withError, withInvalidate } from '@/react-tools/react-query';
 
 import { TeamId, TeamRole } from '../types';
 
@@ -22,7 +22,7 @@ export function useAddMemberMutation(teamId: TeamId) {
         )
       ),
 
-    ...withGlobalError('Failure to add membership'),
+    ...withError('Failure to add membership'),
     ...withInvalidate(queryClient, [queryKeys.memberships(teamId)]),
   });
 }

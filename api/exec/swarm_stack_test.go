@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"context"
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
@@ -42,4 +43,44 @@ func TestPrepareDockerCommandAndArgs(t *testing.T) {
 
 	require.Equal(t, expectedCommand, command)
 	require.Equal(t, expectedArgs, args)
+}
+
+func TestRunCommandAndCaptureStdErr(t *testing.T) {
+	t.Parallel()
+
+	t.Run("should return nil on successful command", func(t *testing.T) {
+		err := runCommandAndCaptureStdErr(context.Background(), "echo", []string{"hello"}, nil, "")
+		require.NoError(t, err)
+	})
+
+	t.Run("should capture stderr on failure", func(t *testing.T) {
+		err := runCommandAndCaptureStdErr(context.Background(), "sh", []string{"-c", "echo 'stderr error' >&2; exit 1"}, nil, "")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "stderr error")
+	})
+
+	t.Run("should fall back to stdout when stderr is empty", func(t *testing.T) {
+		err := runCommandAndCaptureStdErr(context.Background(), "sh", []string{"-c", "echo 'stdout error'; exit 1"}, nil, "")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "stdout error")
+	})
+
+	t.Run("should fall back to exec error when both are empty", func(t *testing.T) {
+		err := runCommandAndCaptureStdErr(context.Background(), "sh", []string{"-c", "exit 1"}, nil, "")
+		require.Error(t, err)
+		assert.NotEmpty(t, err.Error())
+		assert.Contains(t, err.Error(), "exit status 1")
+	})
+
+	t.Run("should prefer stderr over stdout", func(t *testing.T) {
+		err := runCommandAndCaptureStdErr(context.Background(), "sh", []string{"-c", "echo 'stdout msg'; echo 'stderr msg' >&2; exit 1"}, nil, "")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "stderr msg")
+		assert.NotContains(t, err.Error(), "stdout msg")
+	})
+
+	t.Run("should return error for non-existent command", func(t *testing.T) {
+		err := runCommandAndCaptureStdErr(context.Background(), "nonexistent-cmd-12345", nil, nil, "")
+		require.Error(t, err)
+	})
 }

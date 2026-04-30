@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { updateContainer } from '../../queries/useUpdateContainer';
 import { queryKeys } from '../../queries/query-keys';
@@ -21,7 +21,7 @@ export function useUpdateRestartPolicyMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    ...withGlobalError('Unable to update restart policy'),
+    ...withError('Unable to update restart policy'),
     onSuccess(_, variables) {
       queryClient.invalidateQueries({
         queryKey: queryKeys.container(

@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { BackupS3Model } from '../types';
 
@@ -9,7 +9,7 @@ import { buildUrl } from './backupSettings.service';
 
 export function useExportS3BackupMutation() {
   return useMutation(exportS3Backup, {
-    ...withGlobalError('Unable to export backup to S3'),
+    ...withError('Unable to export backup to S3'),
   });
 }
 

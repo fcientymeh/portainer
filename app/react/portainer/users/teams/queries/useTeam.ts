@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 import { Team, TeamId } from '../types';
 
@@ -12,7 +12,7 @@ export function useTeam(id: TeamId, onError?: (error: unknown) => void) {
   return useQuery({
     queryKey: queryKeys.item(id),
     queryFn: () => getTeam(id),
-    ...withGlobalError('Unable to load team'),
+    ...withError('Unable to load team'),
     onError,
   });
 }

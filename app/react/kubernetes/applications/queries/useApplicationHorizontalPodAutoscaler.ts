@@ -4,7 +4,7 @@ import {
   HorizontalPodAutoscalerList,
 } from 'kubernetes-types/autoscaling/v1';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import axios from '@/portainer/services/axios/axios';
 
@@ -42,7 +42,7 @@ export function useApplicationHorizontalPodAutoscaler(
       return matchingHorizontalPodAutoscaler;
     },
     {
-      ...withGlobalError(
+      ...withError(
         `Unable to get horizontal pod autoscaler${
           app ? ` for ${app.metadata?.name}` : ''
         }`

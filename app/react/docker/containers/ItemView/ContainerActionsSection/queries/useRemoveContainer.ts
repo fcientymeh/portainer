@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@uirouter/react';
 
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 
 import { removeContainer } from '../../../containers.service';
@@ -39,6 +39,6 @@ export function useRemoveContainer() {
       });
       router.stateService.go('^');
     },
-    ...withGlobalError('Unable to remove container'),
+    ...withError('Unable to remove container'),
   });
 }

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { EnvironmentId } from '@/react/portainer/environments/types';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
 
 import { PortainerNamespace } from '../types';
@@ -29,7 +29,7 @@ export function useNamespacesQuery<T = PortainerNamespace[]>(
         options?.withUnhealthyEvents
       ),
     {
-      ...withGlobalError('Unable to get namespaces.'),
+      ...withError('Unable to get namespaces.'),
       refetchInterval() {
         return options?.autoRefreshRate ?? false;
       },

@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { EnvironmentId } from '@/react/portainer/environments/types';
 import { ContainerId } from '@/react/docker/containers/types';
 import { renameContainer } from '@/react/docker/containers/containers.service';
-import { withGlobalError } from '@/react-tools/react-query';
+import { withError } from '@/react-tools/react-query';
 
 export function useRenameContainer() {
   return useMutation({
@@ -19,6 +19,6 @@ export function useRenameContainer() {
       nodeName?: string;
     }) => renameContainer(environmentId, containerId, name, { nodeName }),
 
-    ...withGlobalError('Failed to rename container'),
+    ...withError('Failed to rename container'),
   });
 }

@@ -135,9 +135,11 @@ func (manager *SwarmStackManager) Remove(ctx context.Context, stack *portainer.S
 
 func runCommandAndCaptureStdErr(ctx context.Context, command string, args []string, env []string, workingDir string) error {
 	var stderr bytes.Buffer
+	var stdout bytes.Buffer
 
 	cmd := exec.CommandContext(ctx, command, args...)
 	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
 
 	if workingDir != "" {
 		cmd.Dir = workingDir
@@ -149,7 +151,15 @@ func runCommandAndCaptureStdErr(ctx context.Context, command string, args []stri
 	}
 
 	if err := cmd.Run(); err != nil {
-		return errors.New(stderr.String())
+		errMsg := strings.TrimSpace(stderr.String())
+		if errMsg == "" {
+			errMsg = strings.TrimSpace(stdout.String())
+		}
+		if errMsg == "" {
+			errMsg = err.Error()
+		}
+
+		return errors.New(errMsg)
 	}
 
 	return nil

@@ -47,6 +47,22 @@ func IsAgentEndpoint(endpoint *portainer.Endpoint) bool {
 		endpoint.Type == portainer.EdgeAgentOnKubernetesEnvironment
 }
 
+// EndpointPlatformType returns the type of the endpoint based on the environment and container engine
+func EndpointPlatformType(endpoint *portainer.Endpoint) portainer.PlatformType {
+	switch endpoint.Type {
+	case portainer.DockerEnvironment, portainer.AgentOnDockerEnvironment, portainer.EdgeAgentOnDockerEnvironment:
+		if endpoint.ContainerEngine == portainer.ContainerEnginePodman {
+			return portainer.PodmanPlatformType
+		}
+		return portainer.DockerPlatformType
+	case portainer.KubernetesLocalEnvironment, portainer.AgentOnKubernetesEnvironment, portainer.EdgeAgentOnKubernetesEnvironment:
+		return portainer.KubernetesPlatformType
+	case portainer.AzureEnvironment:
+		return portainer.AzurePlatformType
+	}
+	return portainer.UnknownPlatformType
+}
+
 // FilterByExcludeIDs receives an environment(endpoint) array and returns a filtered array using an excludeIds param
 func FilterByExcludeIDs(endpoints []portainer.Endpoint, excludeIds []portainer.EndpointID) []portainer.Endpoint {
 	if len(excludeIds) == 0 {
@@ -212,8 +228,12 @@ func UpdateEdgeEndpointHeartbeat(endpoint *portainer.Endpoint, settings *portain
 		return
 	}
 
+	endpoint.Heartbeat = GetHeartbeatStatus(endpoint, settings)
+}
+
+func GetHeartbeatStatus(endpoint *portainer.Endpoint, settings *portainer.Settings) bool {
 	checkInInterval := getEndpointCheckinInterval(endpoint, settings)
-	endpoint.Heartbeat = time.Now().Unix()-endpoint.LastCheckInDate <= int64(checkInInterval*2+20)
+	return time.Now().Unix()-endpoint.LastCheckInDate <= int64(checkInInterval*2+20)
 }
 
 func getEndpointCheckinInterval(endpoint *portainer.Endpoint, settings *portainer.Settings) int {

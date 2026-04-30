@@ -144,8 +144,16 @@ func redeployWhenChangedSecondStage(
 		return nil
 	}
 
+	if err := datastore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		stackutils.PrepareStackStatusForDeployment(stack)
+		return tx.Stack().Update(stack.ID, stack)
+	}); err != nil {
+		return errors.WithMessagef(err, "failed to set the deploying status for stack %v", stack.ID)
+	}
+
 	stack.CurrentDeploymentInfo = &portainer.StackDeploymentInfo{
 		RepositoryURL:   stack.GitConfig.URL,
+		ReferenceName:   stack.GitConfig.ReferenceName,
 		ConfigFilePath:  stack.GitConfig.ConfigFilePath,
 		AdditionalFiles: stack.AdditionalFiles,
 		ConfigHash:      stack.GitConfig.ConfigHash,
@@ -158,39 +166,46 @@ func redeployWhenChangedSecondStage(
 		return err
 	}
 
-	switch stack.Type {
-	case portainer.DockerComposeStack:
-		if stackutils.IsRelativePathStack(stack) {
-			err = deployer.DeployRemoteComposeStack(ctx, stack, endpoint, registries, true, true, false)
-		} else {
-			err = deployer.DeployComposeStack(ctx, stack, endpoint, registries, true, true, false)
-		}
+	redeployStack := func(stack *portainer.Stack) error {
+		var err error
+		switch stack.Type {
+		case portainer.DockerComposeStack:
+			if stackutils.IsRelativePathStack(stack) {
+				err = deployer.DeployRemoteComposeStack(ctx, stack, endpoint, registries, true, true, false)
+			} else {
+				err = deployer.DeployComposeStack(ctx, stack, endpoint, registries, true, true, false)
+			}
 
-		if err != nil {
-			return errors.WithMessagef(err, "failed to deploy a docker compose stack %v", stack.ID)
-		}
-	case portainer.DockerSwarmStack:
-		if stackutils.IsRelativePathStack(stack) {
-			err = deployer.DeployRemoteSwarmStack(ctx, stack, endpoint, registries, true, true)
-		} else {
-			err = deployer.DeploySwarmStack(ctx, stack, endpoint, registries, true, true)
-		}
-		if err != nil {
-			return errors.WithMessagef(err, "failed to deploy a docker compose stack %v", stack.ID)
-		}
-	case portainer.KubernetesStack:
-		log.Debug().Int("stack_id", int(stack.ID)).Msg("deploying a kube app")
+			if err != nil {
+				return errors.WithMessagef(err, "failed to deploy a docker compose stack %v", stack.ID)
+			}
+		case portainer.DockerSwarmStack:
+			if stackutils.IsRelativePathStack(stack) {
+				err = deployer.DeployRemoteSwarmStack(ctx, stack, endpoint, registries, true, true)
+			} else {
+				err = deployer.DeploySwarmStack(ctx, stack, endpoint, registries, true, true)
+			}
+			if err != nil {
+				return errors.WithMessagef(err, "failed to deploy a docker compose stack %v", stack.ID)
+			}
+		case portainer.KubernetesStack:
+			log.Debug().Int("stack_id", int(stack.ID)).Msg("deploying a kube app")
 
-		if err := deployer.DeployKubernetesStack(ctx, stack, endpoint, user); err != nil {
-			return errors.WithMessagef(err, "failed to deploy a kubernetes app stack %v", stack.ID)
+			if err := deployer.DeployKubernetesStack(ctx, stack, endpoint, user); err != nil {
+				return errors.WithMessagef(err, "failed to deploy a kubernetes app stack %v", stack.ID)
+			}
+		default:
+			return errors.Errorf("cannot update stack, type %v is unsupported", stack.Type)
 		}
-	default:
-		return errors.Errorf("cannot update stack, type %v is unsupported", stack.Type)
+		return nil
 	}
 
-	stack.Status = portainer.StackStatusActive
+	deployErr := redeployStack(stack)
 
-	if err := datastore.Stack().Update(stack.ID, stack); err != nil {
+	if err := datastore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		stackutils.UpdateStackStatusFromDeploymentResult(stack, deployErr)
+		return tx.Stack().Update(stack.ID, stack)
+	}); err != nil {
 		return errors.WithMessagef(err, "failed to update the stack %v", stack.ID)
 	}
 
