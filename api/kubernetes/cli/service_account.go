@@ -308,6 +308,25 @@ func (kcl *KubeClient) RemoveImagePullSecretFromServiceAccount(namespace, servic
 	return err
 }
 
+func (kcl *KubeClient) UpdateServiceAccountImagePullSecrets(namespace, name string, secretNames []string) error {
+	sa, err := kcl.cli.CoreV1().ServiceAccounts(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to get service account %q: %w", name, err)
+	}
+
+	refs := make([]corev1.LocalObjectReference, 0, len(secretNames))
+	for _, s := range secretNames {
+		refs = append(refs, corev1.LocalObjectReference{Name: s})
+	}
+	sa.ImagePullSecrets = refs
+
+	_, err = kcl.cli.CoreV1().ServiceAccounts(namespace).Update(context.TODO(), sa, metav1.UpdateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to update service account %q: %w", name, err)
+	}
+	return nil
+}
+
 func (kcl *KubeClient) ensureNamespaceAccessForServiceAccount(serviceAccountName, namespace string) error {
 	roleBindingName := namespaceClusterRoleBindingName(namespace, kcl.instanceID)
 

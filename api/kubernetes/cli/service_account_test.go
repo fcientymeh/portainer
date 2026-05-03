@@ -366,3 +366,57 @@ func TestGetServiceAccount_CreatesAndFetches(t *testing.T) {
 		assert.Equal(t, "staging", result.Namespace)
 	})
 }
+
+func TestUpdateServiceAccountImagePullSecrets(t *testing.T) {
+	t.Parallel()
+	newKCL := func(sa *v1.ServiceAccount) *KubeClient {
+		return &KubeClient{cli: kfake.NewSimpleClientset(sa), instanceID: "test"}
+	}
+
+	defaultSA := func(namespace string, refs ...string) *v1.ServiceAccount {
+		pullSecrets := make([]v1.LocalObjectReference, len(refs))
+		for i, r := range refs {
+			pullSecrets[i] = v1.LocalObjectReference{Name: r}
+		}
+		return &v1.ServiceAccount{
+			ObjectMeta:       metav1.ObjectMeta{Name: "default", Namespace: namespace},
+			ImagePullSecrets: pullSecrets,
+		}
+	}
+
+	t.Run("sets full list replacing existing", func(t *testing.T) {
+		kcl := newKCL(defaultSA("ns-a", "old-1", "old-2"))
+		require.NoError(t, kcl.UpdateServiceAccountImagePullSecrets("ns-a", "default", []string{"new-1"}))
+
+		sa, err := kcl.cli.CoreV1().ServiceAccounts("ns-a").Get(t.Context(), "default", metav1.GetOptions{})
+		require.NoError(t, err)
+		require.Len(t, sa.ImagePullSecrets, 1)
+		assert.Equal(t, "new-1", sa.ImagePullSecrets[0].Name)
+	})
+
+	t.Run("clears list when secretNames is empty", func(t *testing.T) {
+		kcl := newKCL(defaultSA("ns-a", "secret-1", "secret-2"))
+		require.NoError(t, kcl.UpdateServiceAccountImagePullSecrets("ns-a", "default", []string{}))
+
+		sa, err := kcl.cli.CoreV1().ServiceAccounts("ns-a").Get(t.Context(), "default", metav1.GetOptions{})
+		require.NoError(t, err)
+		assert.Empty(t, sa.ImagePullSecrets)
+	})
+
+	t.Run("returns error when SA does not exist", func(t *testing.T) {
+		kcl := &KubeClient{cli: kfake.NewSimpleClientset(), instanceID: "test"}
+		err := kcl.UpdateServiceAccountImagePullSecrets("ns-a", "does-not-exist", []string{"secret-1"})
+		require.Error(t, err)
+	})
+
+	t.Run("sets list on SA with no existing pull secrets", func(t *testing.T) {
+		kcl := newKCL(defaultSA("ns-a"))
+		require.NoError(t, kcl.UpdateServiceAccountImagePullSecrets("ns-a", "default", []string{"s1", "s2"}))
+
+		sa, err := kcl.cli.CoreV1().ServiceAccounts("ns-a").Get(t.Context(), "default", metav1.GetOptions{})
+		require.NoError(t, err)
+		require.Len(t, sa.ImagePullSecrets, 2)
+		assert.Equal(t, "s1", sa.ImagePullSecrets[0].Name)
+		assert.Equal(t, "s2", sa.ImagePullSecrets[1].Name)
+	})
+}

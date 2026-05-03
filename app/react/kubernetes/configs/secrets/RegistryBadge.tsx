@@ -13,7 +13,7 @@ type Props = {
 };
 
 export function RegistryBadge({ registryId, children, dataCy }: Props) {
-  const registryQuery = useRegistry(registryId);
+  const registryQuery = useRegistry(registryId, false);
   const { isPureAdmin } = useCurrentUser();
 
   if (registryQuery.isLoading) {

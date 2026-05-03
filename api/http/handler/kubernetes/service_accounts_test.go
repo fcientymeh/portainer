@@ -141,3 +141,80 @@ func TestDeleteKubernetesServiceAccounts_EmptyNamespace(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, string(bodyData), "should have error response body")
 }
+
+func TestUpdateKubernetesServiceAccountImagePullSecrets_ValidPayload(t *testing.T) {
+	t.Parallel()
+	handler, u, tk := newServiceAccountTestHandler(t)
+
+	payload := map[string][]string{"secretNames": {"secret-1", "secret-2"}}
+	body, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	req := newServiceAccountRequest(t, http.MethodPut, "/kubernetes/1/namespaces/default/service_accounts/my-sa/image_pull_secrets", body, u, tk)
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	assert.NotEqual(t, http.StatusBadRequest, rr.Code, "should not return bad request for valid payload")
+}
+
+func TestUpdateKubernetesServiceAccountImagePullSecrets_InvalidPayload(t *testing.T) {
+	t.Parallel()
+	handler, u, tk := newServiceAccountTestHandler(t)
+
+	req := newServiceAccountRequest(t, http.MethodPut, "/kubernetes/1/namespaces/default/service_accounts/my-sa/image_pull_secrets", []byte("not-json"), u, tk)
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code, "should return bad request for malformed JSON")
+}
+
+func TestUpdateKubernetesServiceAccountImagePullSecrets_EmptySecretNames(t *testing.T) {
+	t.Parallel()
+	handler, u, tk := newServiceAccountTestHandler(t)
+
+	payload := map[string][]string{"secretNames": {}}
+	body, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	req := newServiceAccountRequest(t, http.MethodPut, "/kubernetes/1/namespaces/default/service_accounts/my-sa/image_pull_secrets", body, u, tk)
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	assert.NotEqual(t, http.StatusBadRequest, rr.Code, "empty secretNames should be valid (clears all imagePullSecrets)")
+}
+
+func TestUpdateKubernetesServiceAccountImagePullSecrets_ReachesKubernetesLayer(t *testing.T) {
+	t.Parallel()
+	// Verifies that valid JSON passes all handler-level checks and reaches the
+	// Kubernetes layer. Without a live cluster the proxy client is unavailable,
+	// so we get 500 — not a 4xx client error.
+	handler, u, tk := newServiceAccountTestHandler(t)
+
+	payload := map[string][]string{"secretNames": {"secret-1", "secret-2"}}
+	body, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	req := newServiceAccountRequest(t, http.MethodPut, "/kubernetes/1/namespaces/default/service_accounts/my-sa/image_pull_secrets", body, u, tk)
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	assert.NotEqual(t, http.StatusBadRequest, rr.Code, "valid payload must not be rejected at the handler layer")
+	assert.Equal(t, http.StatusInternalServerError, rr.Code, "without a live cluster the proxy client is unavailable")
+}
+
+func TestUpdateKubernetesServiceAccountImagePullSecrets_WrongMethodReturns404(t *testing.T) {
+	t.Parallel()
+	handler, u, tk := newServiceAccountTestHandler(t)
+
+	req := newServiceAccountRequest(t, http.MethodGet, "/kubernetes/1/namespaces/default/service_accounts/my-sa/image_pull_secrets", nil, u, tk)
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	// Gorilla mux returns 404 (not 405) for method mismatches when no MethodNotAllowedHandler is set
+	assert.Equal(t, http.StatusNotFound, rr.Code, "unregistered method on this route returns 404")
+}

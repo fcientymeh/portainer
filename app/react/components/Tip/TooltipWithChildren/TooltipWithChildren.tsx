@@ -1,5 +1,5 @@
 import React, { MouseEvent } from 'react';
-import Tippy from '@tippyjs/react';
+import Tippy, { type TippyProps } from '@tippyjs/react';
 import clsx from 'clsx';
 import _ from 'lodash';
 
@@ -20,6 +20,7 @@ export interface Props {
   children: React.ReactElement;
   heading?: string;
   BEFeatureID?: FeatureId;
+  appendTo?: TippyProps['appendTo'];
 }
 
 export function TooltipWithChildren({
@@ -29,6 +30,7 @@ export function TooltipWithChildren({
   children,
   heading,
   BEFeatureID,
+  appendTo,
 }: Props) {
   const id = _.uniqueId('tooltip-');
 
@@ -38,7 +40,11 @@ export function TooltipWithChildren({
 
   const messageHTML = (
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-    <div className={styles.tooltipContainer} onClick={onClickHandler}>
+    <div
+      className={styles.tooltipContainer}
+      onClick={onClickHandler}
+      onMouseDown={onMouseDownHandler}
+    >
       {(heading || (BEFeatureID && limitedToBE)) && (
         <div className="mb-3 inline-flex w-full justify-between">
           <span>{heading}</span>
@@ -66,6 +72,7 @@ export function TooltipWithChildren({
       zIndex={1000}
       placement={position}
       maxWidth={400}
+      appendTo={appendTo}
       arrow
       allowHTML
       interactive
@@ -79,12 +86,9 @@ export function TooltipWithChildren({
 // Preventing click bubbling to the parent as it is affecting
 // mainly toggles when full row is clickable.
 function onClickHandler(e: MouseEvent) {
-  const target = e.target as HTMLInputElement;
-  if (target.tagName.toLowerCase() === 'a') {
-    const url = target.getAttribute('href');
-    if (url) {
-      window.open(url, '_blank');
-    }
-  }
-  e.preventDefault();
+  e.stopPropagation();
+}
+
+function onMouseDownHandler(e: MouseEvent) {
+  e.stopPropagation();
 }

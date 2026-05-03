@@ -183,6 +183,7 @@ func (d *stackDeployer) remoteStack(ctx context.Context, stack *portainer.Stack,
 	defer logs.CloseAndLogErr(cli)
 
 	unpackerImg := getUnpackerImage()
+	log.Debug().Str("unpacker_image", unpackerImg).Msg("Resolved unpacker image")
 
 	reader, err := cli.ImagePull(ctx, unpackerImg, image.PullOptions{})
 	if err != nil {

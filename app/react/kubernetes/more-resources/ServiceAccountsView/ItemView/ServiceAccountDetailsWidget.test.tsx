@@ -16,6 +16,7 @@ vi.mock('@/react/hooks/useEnvironmentId', () => ({
 }));
 
 vi.mock('@/react/hooks/useUser', () => ({
+  useAuthorizations: () => ({ authorized: false }),
   useCurrentUser: () => ({ isPureAdmin: true }),
 }));
 
@@ -23,9 +24,18 @@ vi.mock('@/react/kubernetes/configs/queries/useSecrets', () => ({
   useSecrets: vi.fn(() => ({ data: [] })),
 }));
 
-vi.mock('@/react/portainer/registries/queries/useRegistry', () => ({
-  useRegistry: vi.fn(() => ({ data: undefined })),
-}));
+vi.mock(
+  '@/react/portainer/environments/queries/useEnvironmentRegistries',
+  () => ({
+    useEnvironmentRegistries: vi.fn(() => ({
+      data: {
+        linkedDefaultSecretNames: [],
+        registryBySecretName: {},
+      },
+      isLoading: false,
+    })),
+  })
+);
 
 vi.mock('@@/Link', () => ({
   Link: ({ children }: { children: ReactNode }) => <span>{children}</span>,
@@ -75,7 +85,7 @@ describe('ServiceAccountDetailsWidget', () => {
     expect(screen.getByText('registry-creds')).toBeInTheDocument();
   });
 
-  it('shows "None" when there are no image pull secrets', () => {
+  it('shows the empty state when there are no image pull secrets', () => {
     vi.mocked(useServiceAccount).mockReturnValue({
       data: {
         name: 'my-sa',
@@ -89,7 +99,9 @@ describe('ServiceAccountDetailsWidget', () => {
     } as unknown as ReturnType<typeof useServiceAccount>);
 
     renderWidget();
-    expect(screen.getByText('None')).toBeInTheDocument();
+    expect(
+      screen.getByText(/No image pull secrets configured\./)
+    ).toBeInTheDocument();
   });
 
   it('truncates image pull secrets beyond the visible limit and shows overflow badge', () => {

@@ -138,17 +138,18 @@ describe('ImportExportButtons', () => {
         createMockImage({ id: 'sha256:abc123', tags: ['nginx:latest'] }),
       ];
 
+      // Use a manually-controlled promise so the test can resolve it before
+      // exiting — a setTimeout-based delay would leave a dangling async
+      // operation that fires during subsequent tests and pollutes their mocks.
+      let resolveExport!: (r: Response) => void;
       server.use(
-        http.get('/api/endpoints/:envId/docker/images/get', async () => {
-          await new Promise((resolve) => {
-            setTimeout(resolve, 100);
-          });
-          return new Response(new Blob(['image data']), {
-            headers: {
-              'content-disposition': 'attachment; filename=test.tar',
-            },
-          });
-        })
+        http.get(
+          '/api/endpoints/:envId/docker/images/get',
+          () =>
+            new Promise<Response>((resolve) => {
+              resolveExport = resolve;
+            })
+        )
       );
 
       const user = userEvent.setup();
@@ -164,9 +165,21 @@ describe('ImportExportButtons', () => {
       );
       await user.click(exportButton);
 
-      // Button should show loading state
       await waitFor(() => {
         expect(screen.getByText('Export in progress...')).toBeVisible();
+      });
+
+      // Resolve the in-flight request so the test exits cleanly with no
+      // pending async work that could bleed into the next test.
+      resolveExport(
+        new Response(new Blob(['image data']), {
+          headers: { 'content-disposition': 'attachment; filename=test.tar' },
+        })
+      );
+      await waitFor(() => {
+        expect(
+          screen.queryByText('Export in progress...')
+        ).not.toBeInTheDocument();
       });
     });
   });

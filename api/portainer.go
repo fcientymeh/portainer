@@ -1857,9 +1857,11 @@ type (
 
 		// ServiceAccount
 		GetServiceAccounts(namespace string) ([]models.K8sServiceAccount, error)
+		GetServiceAccount(namespace, name string) (models.K8sServiceAccount, error)
 		DeleteServiceAccounts(reqs models.K8sServiceAccountDeleteRequests) error
 		AddImagePullSecretToServiceAccount(namespace, serviceAccountName, secretName string) error
 		RemoveImagePullSecretFromServiceAccount(namespace, serviceAccountName, secretName string) error
+		UpdateServiceAccountImagePullSecrets(namespace, name string, secretNames []string) error
 		SetupUserServiceAccount(int, []int, bool) error
 		GetPortainerUserServiceAccount(tokendata *TokenData) (*corev1.ServiceAccount, error)
 		GetServiceAccountBearerToken(userID int) (string, error)

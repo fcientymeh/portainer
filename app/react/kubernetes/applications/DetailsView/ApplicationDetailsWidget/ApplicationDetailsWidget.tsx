@@ -47,7 +47,8 @@ export function ApplicationDetailsWidget() {
 
   const externalApp = !!app && isExternalApplication(app);
 
-  const isManagedStack = !externalApp && appStackKind !== 'edge';
+  const isManagedStack =
+    !!appStackId && !!appStackKind && !externalApp && appStackKind !== 'edge';
   const stackQuery = useStack(appStackId, { enabled: isManagedStack });
 
   const { data: appServices } = useApplicationServices(

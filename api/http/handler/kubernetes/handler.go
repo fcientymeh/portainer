@@ -125,6 +125,7 @@ func NewHandler(bouncer security.BouncerService, authorizationService *authoriza
 	namespaceRouter.Handle("/services", httperror.LoggerHandler(h.updateKubernetesService)).Methods(http.MethodPut)
 	namespaceRouter.Handle("/services", httperror.LoggerHandler(h.getKubernetesServicesByNamespace)).Methods(http.MethodGet)
 	namespaceRouter.Handle("/service_accounts/{name}", httperror.LoggerHandler(h.getKubernetesServiceAccount)).Methods(http.MethodGet)
+	namespaceRouter.Handle("/service_accounts/{name}/image_pull_secrets", httperror.LoggerHandler(h.updateKubernetesServiceAccountImagePullSecrets)).Methods(http.MethodPut)
 	namespaceRouter.Handle("/volumes", httperror.LoggerHandler(h.GetKubernetesVolumesInNamespace)).Methods(http.MethodGet)
 	namespaceRouter.Handle("/volumes/{volume}", httperror.LoggerHandler(h.getKubernetesVolume)).Methods(http.MethodGet)
 

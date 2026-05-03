@@ -90,12 +90,14 @@ type EdgeAlertState struct {
 //
 // Fields like MetricType, Threshold, ConditionOperator, and Duration live
 // on the server-side AlertingRule only (used by the alertexpr compiler to
-// build PromQL). The agent receives only the pre-compiled PromqlExpr.
+// build PromQL). The agent receives the pre-compiled PromqlExpr together
+// with rule metadata used for evaluation and reporting, including annotations.
 type EdgeAlertRule struct {
-	ID                 int    `json:"id"`
-	Name               string `json:"name"`
-	Enabled            bool   `json:"enabled"`
-	Severity           string `json:"severity"`
-	PromqlExpr         string `json:"promql_expr"`
-	ForDurationMinutes int    `json:"for_duration_minutes,omitempty"`
+	ID                 int               `json:"id"`
+	Name               string            `json:"name"`
+	Enabled            bool              `json:"enabled"`
+	Severity           string            `json:"severity"`
+	PromqlExpr         string            `json:"promql_expr"`
+	ForDurationMinutes int               `json:"for_duration_minutes,omitempty"`
+	Annotations        map[string]string `json:"annotations,omitempty"`
 }

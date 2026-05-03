@@ -8,6 +8,7 @@ import (
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
 	"github.com/rs/zerolog/log"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // @id GetKubernetesServiceAccounts
@@ -113,6 +114,58 @@ func (handler *Handler) deleteKubernetesServiceAccounts(w http.ResponseWriter, r
 	err = cli.DeleteServiceAccounts(payload)
 	if err != nil {
 		return httperror.InternalServerError("Unable to delete service accounts", err)
+	}
+
+	return response.Empty(w)
+}
+
+// @id UpdateKubernetesServiceAccountImagePullSecrets
+// @summary Update image pull secrets for a service account
+// @description Replace the imagePullSecrets list on a service account with the provided list.
+// @description **Access policy**: Authenticated user.
+// @tags kubernetes
+// @security ApiKeyAuth || jwt
+// @accept json
+// @param id path int true "Environment identifier"
+// @param namespace path string true "Namespace"
+// @param name path string true "Service account name"
+// @param payload body models.K8sServiceAccountImagePullSecretsUpdatePayload true "New imagePullSecrets list"
+// @success 204 "Success"
+// @failure 400 "Invalid request payload, such as missing required fields or fields not meeting validation criteria."
+// @failure 401 "Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions."
+// @failure 403 "Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions."
+// @failure 404 "Unable to find an environment with the specified identifier, namespace, or service account."
+// @failure 500 "Server error occurred while attempting to update image pull secrets for the service account."
+// @router /kubernetes/{id}/namespaces/{namespace}/service_accounts/{name}/image_pull_secrets [put]
+func (handler *Handler) updateKubernetesServiceAccountImagePullSecrets(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
+	namespace, err := request.RetrieveRouteVariableValue(r, "namespace")
+	if err != nil {
+		return httperror.BadRequest("Invalid namespace", err)
+	}
+
+	name, err := request.RetrieveRouteVariableValue(r, "name")
+	if err != nil {
+		return httperror.BadRequest("Invalid name", err)
+	}
+
+	var payload models.K8sServiceAccountImagePullSecretsUpdatePayload
+	if err := request.DecodeAndValidateJSONPayload(r, &payload); err != nil {
+		return httperror.BadRequest("Invalid request payload", err)
+	}
+
+	cli, handlerErr := handler.getProxyKubeClient(r)
+	if handlerErr != nil {
+		return handlerErr
+	}
+
+	if err := cli.UpdateServiceAccountImagePullSecrets(namespace, name, payload.SecretNames); err != nil {
+		if k8serrors.IsNotFound(err) {
+			log.Error().Err(err).Str("context", "UpdateKubernetesServiceAccountImagePullSecrets").Msg("Unable to find service account")
+			return httperror.NotFound("Unable to find service account", err)
+		}
+
+		log.Error().Err(err).Str("context", "UpdateKubernetesServiceAccountImagePullSecrets").Msg("Unable to update image pull secrets")
+		return httperror.InternalServerError("Unable to update image pull secrets", err)
 	}
 
 	return response.Empty(w)

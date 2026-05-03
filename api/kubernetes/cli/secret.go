@@ -118,8 +118,8 @@ func parseSecret(secret *corev1.Secret, withData bool) models.K8sSecret {
 }
 
 // SetSecretsIsUsed combines the secrets with the applications that use them.
-// the function fetches all the pods and replica sets in the cluster and checks if the secret is used by any of the pods.
-// if the secret is used by a pod, the application that uses the pod is added to the secret.
+// the function fetches all the pods and service accounts in the cluster and checks if the secret is used by any of them.
+// if the secret is used by a pod or service account, the secret is marked as used.
 // otherwise, the secret is returned as is.
 func (kcl *KubeClient) SetSecretsIsUsed(secrets *[]models.K8sSecret) error {
 	portainerApplicationResources, err := kcl.fetchAllApplicationsListResources("", metav1.ListOptions{})
@@ -127,8 +127,18 @@ func (kcl *KubeClient) SetSecretsIsUsed(secrets *[]models.K8sSecret) error {
 		return fmt.Errorf("an error occurred during the SetSecretsIsUsed operation, unable to fetch Portainer application resources. Error: %w", err)
 	}
 
+	serviceAccounts, err := kcl.GetServiceAccounts("")
+	if err != nil {
+		return fmt.Errorf("an error occurred during the SetSecretsIsUsed operation, unable to fetch service accounts. Error: %w", err)
+	}
+
 	for i := range *secrets {
 		secret := &(*secrets)[i]
+
+		if isSecretUsedByServiceAccount(*secret, serviceAccounts) {
+			secret.IsUsed = true
+			continue
+		}
 
 		for _, pod := range portainerApplicationResources.Pods {
 			if isPodUsingSecret(&pod, *secret) {
@@ -139,6 +149,22 @@ func (kcl *KubeClient) SetSecretsIsUsed(secrets *[]models.K8sSecret) error {
 	}
 
 	return nil
+}
+
+func isSecretUsedByServiceAccount(secret models.K8sSecret, serviceAccounts []models.K8sServiceAccount) bool {
+	for _, serviceAccount := range serviceAccounts {
+		if serviceAccount.Namespace != secret.Namespace {
+			continue
+		}
+
+		for _, imagePullSecret := range serviceAccount.ImagePullSecrets {
+			if imagePullSecret.Name == secret.Name {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 // CombineSecretWithApplications combines the secret with the applications that use it.

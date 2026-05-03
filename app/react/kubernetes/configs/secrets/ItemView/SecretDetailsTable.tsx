@@ -1,7 +1,5 @@
-import { useEnvironmentId } from '@/react/hooks/useEnvironmentId';
-import { useGetAllServiceAccountsQuery } from '@/react/kubernetes/more-resources/ServiceAccountsView/ServiceAccountsDatatable/queries/useGetAllServiceAccountsQuery';
+import { KubernetesSecretTypeOptions } from '@/kubernetes/models/configuration/models';
 
-import { Badge } from '@@/Badge';
 import { SystemBadge } from '@@/Badge/SystemBadge';
 import { DetailsRow } from '@@/DetailsTable/DetailsRow';
 import { DetailsTable } from '@@/DetailsTable/DetailsTable';
@@ -9,6 +7,8 @@ import { Link } from '@@/Link';
 import { Tooltip } from '@@/Tip/Tooltip';
 
 import { RegistryBadge } from '../RegistryBadge';
+
+import { LinkedServiceAccountsRow } from './LinkedServiceAccountsRow';
 
 type Props = {
   name: string;
@@ -31,6 +31,7 @@ export function SecretDetailsTable({
     registryId !== undefined && registryId !== ''
       ? parseInt(String(registryId), 10) || undefined
       : undefined;
+  const supportsImagePullSecrets = isImagePullSecretSecretType(secretTypeLabel);
 
   return (
     <DetailsTable
@@ -60,79 +61,26 @@ export function SecretDetailsTable({
           </RegistryBadge>
         </DetailsRow>
       )}
-      <LinkedServiceAccountsRow secretName={name} namespace={namespace} />
+      {supportsImagePullSecrets && (
+        <LinkedServiceAccountsRow
+          secretName={name}
+          namespace={namespace}
+          isSystem={isSystem}
+        />
+      )}
     </DetailsTable>
   );
 }
 
-const MAX_VISIBLE_SERVICE_ACCOUNTS = 5;
+const IMAGE_PULL_SECRET_TYPES = new Set(
+  [
+    KubernetesSecretTypeOptions.DOCKERCFG.name,
+    KubernetesSecretTypeOptions.DOCKERCFG.value,
+    KubernetesSecretTypeOptions.DOCKERCONFIGJSON.name,
+    KubernetesSecretTypeOptions.DOCKERCONFIGJSON.value,
+  ].map((type) => type.toLowerCase())
+);
 
-type LinkedServiceAccountsRowProps = {
-  secretName: string;
-  namespace: string;
-};
-
-function LinkedServiceAccountsRow({
-  secretName,
-  namespace,
-}: LinkedServiceAccountsRowProps) {
-  const environmentId = useEnvironmentId();
-  const { data: allServiceAccounts = [] } =
-    useGetAllServiceAccountsQuery(environmentId);
-
-  const linked = allServiceAccounts.filter(
-    (sa) =>
-      sa.namespace === namespace &&
-      sa.imagePullSecrets?.some((s) => s.name === secretName)
-  );
-
-  const visible = linked.slice(0, MAX_VISIBLE_SERVICE_ACCOUNTS);
-  const hidden = linked.slice(MAX_VISIBLE_SERVICE_ACCOUNTS);
-
-  return (
-    <DetailsRow
-      label={
-        <span className="flex items-center">
-          Linked service accounts
-          <Tooltip message="Service accounts that use this secret as an image pull secret." />
-        </span>
-      }
-    >
-      <div className="flex flex-wrap gap-2">
-        {visible.length > 0 ? (
-          <>
-            {visible.map((sa) => (
-              <Badge key={sa.uid} type="info" className="min-w-max">
-                <Link
-                  to="kubernetes.moreResources.serviceAccounts.serviceAccount"
-                  params={{ namespace: sa.namespace, name: sa.name }}
-                  data-cy={`linked-service-account-link-${sa.name}`}
-                  className="!text-inherit"
-                >
-                  {sa.name}
-                </Link>
-              </Badge>
-            ))}
-            {hidden.length > 0 && (
-              <Badge type="muted" className="min-w-max cursor-default">
-                + {hidden.length} more
-              </Badge>
-            )}
-          </>
-        ) : (
-          <span className="text-muted">
-            None - Link{' '}
-            <Link
-              to="kubernetes.moreResources.serviceAccounts"
-              data-cy="service-account-link"
-            >
-              service accounts
-            </Link>{' '}
-            to this secret by referencing it in the{' '}
-            <code>imagePullSecrets</code> field in the service account spec.
-          </span>
-        )}
-      </div>
-    </DetailsRow>
-  );
+function isImagePullSecretSecretType(secretTypeLabel: string) {
+  return IMAGE_PULL_SECRET_TYPES.has(secretTypeLabel.toLowerCase());
 }

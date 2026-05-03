@@ -26,6 +26,14 @@ type (
 	K8sServiceAccountDeleteRequests map[string][]string
 )
 
+type K8sServiceAccountImagePullSecretsUpdatePayload struct {
+	SecretNames []string `json:"secretNames"`
+}
+
+func (r *K8sServiceAccountImagePullSecretsUpdatePayload) Validate(_ *http.Request) error {
+	return nil
+}
+
 func (r K8sServiceAccountDeleteRequests) Validate(request *http.Request) error {
 	if len(r) == 0 {
 		return errors.New("missing deletion request list in payload")
