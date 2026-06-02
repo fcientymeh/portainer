@@ -240,10 +240,16 @@ func encryptCredentials(username, password, key string) (string, error) {
 }
 
 func endpointHasSnapshot(dataStore dataservices.DataStore, endpointID portainer.EndpointID) bool {
-	s, err := dataStore.Snapshot().Read(endpointID)
-	if err != nil {
-		return false
-	}
+	var hasSnapshot bool
+	_ = dataStore.ViewTx(func(tx dataservices.DataStoreTx) error {
+		s, err := tx.Snapshot().Read(endpointID)
+		if err != nil {
+			return err
+		}
 
-	return s.Docker != nil || s.Kubernetes != nil
+		hasSnapshot = s.Docker != nil || s.Kubernetes != nil
+		return nil
+	})
+
+	return hasSnapshot
 }

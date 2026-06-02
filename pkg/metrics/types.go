@@ -20,6 +20,7 @@ const (
 	ClusterEtcdHealthyMetric                   = "portainer_edge_agent_etcd_healthy"
 	ClusterEtcdHealthValidMetric               = "portainer_edge_agent_etcd_health_valid"
 	ClusterAPIServerTLSCertExpirySecondsMetric = "portainer_edge_agent_apiserver_tls_cert_expiry_seconds"
+	ClusterAPIServerHealthyMetric              = "portainer_edge_agent_apiserver_healthy"
 )
 
 // EdgeAlertBatch is the generic envelope pushed by edge agents.

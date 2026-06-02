@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/filesystem"
 	gittypes "github.com/portainer/portainer/api/git/types"
 	"github.com/portainer/portainer/api/git/update"
@@ -52,8 +53,16 @@ func (payload *kubernetesGitStackUpdatePayload) Validate(r *http.Request) error 
 	return nil
 }
 
-func (handler *Handler) updateKubernetesStack(r *http.Request, stack *portainer.Stack, endpoint *portainer.Endpoint, gate *deployGate) *httperror.HandlerError {
-	if stack.GitConfig != nil {
+func (handler *Handler) updateKubernetesStack(tx dataservices.DataStoreTx, r *http.Request, stack *portainer.Stack, endpoint *portainer.Endpoint, gate *deployGate) *httperror.HandlerError {
+	if stack.WorkflowID != 0 {
+		gitConfig, sourceID, err := loadGitConfigForStack(tx, stack.WorkflowID, stack.ID)
+		if err != nil {
+			return httperror.InternalServerError("Unable to load git config for stack", err)
+		}
+		if gitConfig == nil {
+			return httperror.InternalServerError("Stack has no git config in source", errors.New("source has no git config"))
+		}
+
 		// Stop the autoupdate job if there is any
 		if stack.AutoUpdate != nil {
 			deployments.StopAutoupdate(stack.ID, stack.AutoUpdate.JobID, handler.Scheduler)
@@ -65,32 +74,33 @@ func (handler *Handler) updateKubernetesStack(r *http.Request, stack *portainer.
 			return httperror.BadRequest("Invalid request payload", err)
 		}
 
-		stack.GitConfig.ReferenceName = payload.RepositoryReferenceName
-		stack.GitConfig.TLSSkipVerify = payload.TLSSkipVerify
-		stack.GitConfig.Authentication = nil
+		gitConfig.ReferenceName = payload.RepositoryReferenceName
+		gitConfig.TLSSkipVerify = payload.TLSSkipVerify
 		stack.AutoUpdate = payload.AutoUpdate
 
 		if payload.RepositoryAuthentication {
 			password := payload.RepositoryPassword
-			if password == "" && stack.GitConfig != nil && stack.GitConfig.Authentication != nil {
-				password = stack.GitConfig.Authentication.Password
+			if password == "" && gitConfig.Authentication != nil {
+				password = gitConfig.Authentication.Password
 			}
 
-			stack.GitConfig.Authentication = &gittypes.GitAuthentication{
+			gitConfig.Authentication = &gittypes.GitAuthentication{
 				Username: payload.RepositoryUsername,
 				Password: password,
 			}
 
 			if _, err := handler.GitService.LatestCommitID(
 				context.TODO(),
-				stack.GitConfig.URL,
-				stack.GitConfig.ReferenceName,
-				stack.GitConfig.Authentication.Username,
-				stack.GitConfig.Authentication.Password,
-				stack.GitConfig.TLSSkipVerify,
+				gitConfig.URL,
+				gitConfig.ReferenceName,
+				gitConfig.Authentication.Username,
+				gitConfig.Authentication.Password,
+				gitConfig.TLSSkipVerify,
 			); err != nil {
 				return httperror.InternalServerError("Unable to fetch git repository", err)
 			}
+		} else {
+			gitConfig.Authentication = nil
 		}
 
 		if payload.AutoUpdate != nil && payload.AutoUpdate.Interval != "" {
@@ -99,6 +109,10 @@ func (handler *Handler) updateKubernetesStack(r *http.Request, stack *portainer.
 				return e
 			}
 			stack.AutoUpdate.JobID = jobID
+		}
+
+		if err := saveStackGitConfig(tx, stack.WorkflowID, stack.ID, sourceID, gitConfig); err != nil {
+			return httperror.InternalServerError("Unable to update source git config", err)
 		}
 
 		return nil

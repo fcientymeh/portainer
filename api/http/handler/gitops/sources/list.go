@@ -7,22 +7,24 @@ import (
 	"strconv"
 	"strings"
 
-	gocache "github.com/patrickmn/go-cache"
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
+	gittypes "github.com/portainer/portainer/api/git/types"
 	ceWorkflows "github.com/portainer/portainer/api/gitops/workflows"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/http/utils/filters"
-	"github.com/portainer/portainer/api/set"
 	"github.com/portainer/portainer/api/slicesx"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
+
+	gocache "github.com/patrickmn/go-cache"
 )
 
 // @id GitOpsSourcesList
 // @summary List all GitOps sources
 // @description Returns a deduplicated list of git repositories used across all GitOps workflows.
-// @description **Access policy**: admin
+// @description **Access policy**: authenticated
 // @tags gitops
 // @security ApiKeyAuth
 // @security jwt
@@ -45,10 +47,6 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) *httperror.Handle
 	securityContext, err := security.RetrieveRestrictedRequestContext(r)
 	if err != nil {
 		return httperror.InternalServerError("Unable to retrieve info from request context", err)
-	}
-
-	if !securityContext.IsAdmin {
-		return httperror.Forbidden("Access denied", nil)
 	}
 
 	key := cacheKey(securityContext)
@@ -113,51 +111,51 @@ func cacheKey(sc *security.RestrictedRequestContext) string {
 }
 
 func (h *Handler) fetchSources(ctx context.Context, sc *security.RestrictedRequestContext) ([]Source, error) {
-	workflows, err := ceWorkflows.FetchWorkflows(ctx, h.dataStore, h.gitService, h.k8sFactory, sc, nil)
-	if err != nil {
+	var allSrcs []portainer.Source
+	var stats map[portainer.SourceID]ceWorkflows.SourceStats
+
+	if err := h.dataStore.ViewTx(func(tx dataservices.DataStoreTx) error {
+		var err error
+		allSrcs, stats, err = ceWorkflows.FetchSourceStats(tx, h.k8sFactory, sc)
+		return err
+	}); err != nil {
 		return nil, err
 	}
 
-	byURL := make(map[string][]ceWorkflows.Workflow)
-	for _, wf := range workflows {
-		if wf.GitConfig != nil {
-			byURL[wf.GitConfig.URL] = append(byURL[wf.GitConfig.URL], wf)
-		}
-	}
-
-	sources := make([]Source, 0, len(byURL))
-	for url, wfs := range byURL {
-		statuses := make([]ceWorkflows.Status, 0, len(wfs))
-		var sourceError string
-		var lastSync int64
-		endpointIDs := make(set.Set[portainer.EndpointID])
-		for _, wf := range wfs {
-			statuses = append(statuses, wf.Status.Source.Status)
-			if sourceError == "" && wf.Status.Source.Status == ceWorkflows.StatusError {
-				sourceError = wf.Status.Source.Error
-			}
-			if wf.LastSyncDate > lastSync {
-				lastSync = wf.LastSyncDate
-			}
-			if wf.Target.EndpointID != 0 {
-				endpointIDs.Add(wf.Target.EndpointID)
-			}
-			for _, id := range wf.Target.ResolvedEndpointIDs {
-				endpointIDs.Add(id)
-			}
+	result := make([]Source, 0, len(allSrcs))
+	for _, src := range allSrcs {
+		s, accessible := stats[src.ID]
+		if !accessible && !sc.IsAdmin {
+			continue
 		}
 
-		sources = append(sources, Source{
-			ID:           sourceID(url),
-			Name:         repoName(url),
-			Type:         "git",
+		var status ceWorkflows.Status
+		var sourceErr string
+		if src.GitConfig != nil {
+			phase, _ := ceWorkflows.ComputeGitPhasesForConfig(ctx, h.gitService, src.GitConfig)
+			status = phase.Status
+			sourceErr = phase.Error
+		} else {
+			status = ceWorkflows.StatusUnknown
+		}
+
+		url := ""
+		if src.GitConfig != nil {
+			url = gittypes.SanitizeURL(src.GitConfig.URL)
+		}
+
+		result = append(result, Source{
+			ID:           strconv.Itoa(int(src.ID)),
+			Name:         src.Name,
+			Type:         sourceTypeString(src.Type),
 			URL:          url,
-			Status:       worstCaseStatus(statuses),
-			Error:        sourceError,
-			UsedBy:       len(wfs),
-			Environments: len(endpointIDs),
-			LastSync:     lastSync,
+			Status:       status,
+			Error:        sourceErr,
+			UsedBy:       s.WorkflowCount,
+			Environments: len(s.EndpointIDs),
+			LastSync:     s.LastSync,
 		})
 	}
-	return sources, nil
+
+	return result, nil
 }

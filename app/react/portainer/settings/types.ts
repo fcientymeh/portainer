@@ -125,6 +125,7 @@ export interface Settings {
   AllowStackManagementForRegularUsers: boolean;
   AllowDeviceMappingForRegularUsers: boolean;
   AllowContainerCapabilitiesForRegularUsers: boolean;
+  ForceSecureCookies: boolean;
   GlobalDeploymentOptions?: GlobalDeploymentOptions;
   Edge: {
     PingInterval: number;

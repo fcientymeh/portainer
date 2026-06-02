@@ -15,7 +15,7 @@ type DirEntry struct {
 	Name        string
 	Content     string
 	IsFile      bool
-	Permissions os.FileMode
+	Permissions os.FileMode `swaggertype:"integer"`
 }
 
 // FilterDirForEntryFile filers the given dirEntries, returns entries of the entryFile and .env file

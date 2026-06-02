@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
+import { withError } from '@/react-tools/react-query';
 
 import { EnvironmentGroup } from '../types';
 
@@ -11,6 +12,7 @@ export function useEnvironmentGroups() {
   return useQuery({
     queryKey: queryKeys.base(),
     queryFn: () => getEnvironmentGroups(),
+    ...withError('Unable to retrieve environment groups'),
   });
 }
 
@@ -19,6 +21,6 @@ async function getEnvironmentGroups() {
     const { data } = await axios.get<Array<EnvironmentGroup>>(buildUrl());
     return data;
   } catch (e) {
-    throw parseAxiosError(e, 'Unable to get access tokens');
+    throw parseAxiosError(e, 'Unable to retrieve environment groups');
   }
 }

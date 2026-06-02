@@ -39,7 +39,7 @@ func NewHandler(bouncer security.BouncerService, dataStore dataservices.DataStor
 	workflowsHandler := workflows.NewHandler(dataStore, gitService, k8sFactory)
 	authenticatedRouter.PathPrefix("/gitops/workflows").Handler(workflowsHandler)
 
-	sourcesHandler := sources.NewHandler(dataStore, gitService, k8sFactory)
+	sourcesHandler := sources.NewHandler(bouncer, dataStore, gitService, k8sFactory)
 	authenticatedRouter.PathPrefix("/gitops/sources").Handler(sourcesHandler)
 
 	return h

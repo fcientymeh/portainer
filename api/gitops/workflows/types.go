@@ -79,15 +79,16 @@ type WorkflowStatusObject struct {
 }
 
 type Workflow struct {
-	ID           int                  `json:"id"`
-	Name         string               `json:"name"`
-	Type         Type                 `json:"type"`
-	Platform     DeploymentPlatform   `json:"platform"`
-	Status       WorkflowStatusObject `json:"status"`
-	GitConfig    *gittypes.RepoConfig `json:"gitConfig,omitempty"`
-	Target       Target               `json:"target"`
-	CreationDate int64                `json:"creationDate"`
-	LastSyncDate int64                `json:"lastSyncDate"`
+	ID           int                           `json:"id"`
+	Name         string                        `json:"name"`
+	Type         Type                          `json:"type"`
+	Platform     DeploymentPlatform            `json:"platform"`
+	Status       WorkflowStatusObject          `json:"status"`
+	GitConfig    *gittypes.RepoConfig          `json:"gitConfig,omitempty"`
+	AutoUpdate   *portainer.AutoUpdateSettings `json:"autoUpdate,omitempty"`
+	Target       Target                        `json:"target"`
+	CreationDate int64                         `json:"creationDate"`
+	LastSyncDate int64                         `json:"lastSyncDate"`
 }
 
 type StatusSummary struct {

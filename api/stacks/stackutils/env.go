@@ -13,7 +13,7 @@ import (
 )
 
 // BuildEnvMap builds the environment variable map for stack validation/loading.
-// Priority (lowest to highest): OS env → .env file → stack.Env
+// Priority (lowest to highest): OS env, .env file, stack.Env
 func BuildEnvMap(stack *portainer.Stack) map[string]string {
 	env := make(map[string]string, len(os.Environ()))
 	for _, e := range os.Environ() {

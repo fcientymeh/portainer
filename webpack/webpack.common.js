@@ -106,7 +106,7 @@ module.exports = {
       directory: path.join(__dirname, 'public'),
     },
     compress: true,
-    port: 8999,
+    port: process.env.PORT || 8999,
     proxy: [
       {
         context: ['/api'],
@@ -198,8 +198,6 @@ module.exports = {
   },
   resolve: {
     alias: {
-      '@@': path.resolve(projectRoot, 'app/react/components'),
-      '@': path.resolve(projectRoot, 'app'),
       'lodash-es': 'lodash',
       'yaml-schema': path.resolve(projectRoot, 'node_modules/codemirror-json-schema/dist/yaml'),
     },

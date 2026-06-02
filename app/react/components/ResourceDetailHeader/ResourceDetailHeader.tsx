@@ -1,14 +1,9 @@
 import { ReactNode } from 'react';
 import clsx from 'clsx';
 
-import { InlineLoader } from '@@/InlineLoader';
-import { Alert } from '@@/Alert';
 import { Widget } from '@@/Widget';
 
 interface Props {
-  isLoading: boolean;
-  errorMessage?: string;
-
   icon: ReactNode;
   iconBackgroundClassName?: string;
 
@@ -26,8 +21,6 @@ interface Props {
 }
 
 export function ResourceDetailHeader({
-  isLoading,
-  errorMessage,
   icon,
   iconBackgroundClassName = 'bg-group-accent-3 th-dark:bg-group-accent-10',
   subtitleLabel,
@@ -40,28 +33,6 @@ export function ResourceDetailHeader({
   containerClassName = 'flex items-center gap-4 p-6',
   widgetClassName = 'widget-body',
 }: Props) {
-  if (isLoading) {
-    return (
-      <Widget className={widgetClassName}>
-        <div className={containerClassName}>
-          <InlineLoader>Loading details...</InlineLoader>
-        </div>
-      </Widget>
-    );
-  }
-
-  if (errorMessage) {
-    return (
-      <Widget className={widgetClassName}>
-        <div className={containerClassName}>
-          <Alert color="error" title="Error">
-            {errorMessage}
-          </Alert>
-        </div>
-      </Widget>
-    );
-  }
-
   return (
     <Widget className={widgetClassName}>
       <div className={containerClassName}>

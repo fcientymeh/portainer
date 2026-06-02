@@ -195,10 +195,6 @@ export function createEdgeAgentEnvironment({
     EnvironmentCreationTypes.EdgeAgentEnvironment,
     {
       url: portainerUrl,
-      tls: {
-        skipVerify: true,
-        skipClientVerify: true,
-      },
       pollFrequency,
       edge,
       meta,

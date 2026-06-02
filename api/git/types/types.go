@@ -1,7 +1,11 @@
 package gittypes
 
 import (
+	"cmp"
 	"errors"
+	"net/url"
+	"path"
+	"strings"
 )
 
 var (
@@ -9,6 +13,10 @@ var (
 	ErrAuthenticationFailure  = errors.New("authentication failed, please ensure that the git credentials are correct")
 	ErrSymlinkDetected        = errors.New("repository contains a symlink, which is not allowed for security reasons")
 )
+
+type GitCredentialAuthType int
+
+type GitProvider int
 
 // RepoConfig represents a configuration for a repo
 type RepoConfig struct {
@@ -27,9 +35,67 @@ type RepoConfig struct {
 	TLSSkipVerify bool `example:"false"`
 }
 
+// RepoName extracts the repository name from a git URL for use as a display name.
+// e.g. "https://github.com/org/app-config.git" results in "app-config"
+func RepoName(rawURL string) string {
+	return strings.TrimSuffix(path.Base(rawURL), ".git")
+}
+
+// NormalizeURL returns a canonical form of rawURL for deduplication purposes:
+// scheme and host are lowercased, embedded credentials are removed, trailing
+// slashes and the .git suffix are stripped from the path. If the scheme is
+// absent it defaults to https.
+func NormalizeURL(rawURL string) (string, error) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return "", err
+	}
+
+	u.Scheme = strings.ToLower(cmp.Or(u.Scheme, "https"))
+	u.Host = strings.ToLower(u.Host)
+	u.User = nil
+	u.Path = strings.TrimSuffix(strings.TrimRight(u.Path, "/"), ".git")
+
+	return u.String(), nil
+}
+
+// SanitizeURL strips any userinfo (username/password) embedded in rawURL,
+// returning a URL safe to store or return to clients.
+func SanitizeURL(rawURL string) string {
+	u, err := url.Parse(rawURL)
+	if err != nil || u.User == nil {
+		return rawURL
+	}
+
+	u.User = nil
+
+	return u.String()
+}
+
+// SanitizeRepoConfig returns a copy of gc with the URL sanitized and password cleared,
+// safe to return to clients.
+func SanitizeRepoConfig(gc *RepoConfig) *RepoConfig {
+	if gc == nil {
+		return nil
+	}
+
+	result := *gc
+	result.URL = SanitizeURL(result.URL)
+
+	if result.Authentication != nil && result.Authentication.Password != "" {
+		auth := *result.Authentication
+		auth.Password = ""
+		result.Authentication = &auth
+	}
+
+	return &result
+}
+
 type GitAuthentication struct {
-	Username string
-	Password string
+	Username          string
+	Password          string
+	Provider          GitProvider           `json:",omitempty"`
+	AuthorizationType GitCredentialAuthType `json:",omitempty"`
 	// Git credentials identifier when the value is not 0
 	// When the value is 0, Username and Password are set without using saved credential
 	// This is introduced since 2.15.0

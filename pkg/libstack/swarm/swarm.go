@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/portainer/portainer/api/filesystem"
 	"github.com/portainer/portainer/pkg/libstack"
 
 	"github.com/containerd/errdefs"
@@ -646,6 +648,8 @@ func getConfigDetails(filePaths []string, workingDir string, env []string) (comp
 			return details, err
 		}
 
+		resolveEnvFilePaths(config, workingDir)
+
 		details.ConfigFiles = append(details.ConfigFiles, composetypes.ConfigFile{
 			Filename: fp,
 			Config:   config,
@@ -673,6 +677,35 @@ func getConfigDetails(filePaths []string, workingDir string, env []string) (comp
 	}
 
 	return details, nil
+}
+
+func resolveEnvFilePaths(rawConfig map[string]any, workingDir string) {
+	services, ok := rawConfig["services"].(map[string]any)
+	if !ok {
+		return
+	}
+	for _, svcAny := range services {
+		svc, ok := svcAny.(map[string]any)
+		if !ok {
+			continue
+		}
+		envFileAny, ok := svc["env_file"]
+		if !ok {
+			continue
+		}
+		switch ef := envFileAny.(type) {
+		case string:
+			if !filepath.IsAbs(ef) {
+				svc["env_file"] = filesystem.JoinPaths(workingDir, ef)
+			}
+		case []any:
+			for i, v := range ef {
+				if s, ok := v.(string); ok && !filepath.IsAbs(s) {
+					ef[i] = filesystem.JoinPaths(workingDir, s)
+				}
+			}
+		}
+	}
 }
 
 // WaitForStatus blocks until all services in the stack reach the requested status,

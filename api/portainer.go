@@ -585,6 +585,10 @@ type (
 		EncodedValues       string             `json:"EncodedValues"`
 		PreInstallDeletions []ResourceDeletion `json:"PreInstallDeletions,omitempty"`
 		PreInstallAdoptions []ResourceAdoption `json:"PreInstallAdoptions,omitempty"`
+		// NoWait disables waiting for pods to be ready after install.
+		// Set to true for externally sourced charts whose startup timing cannot be controlled,
+		// to avoid leaving the release stuck in pending-install.
+		NoWait bool `json:"NoWait,omitempty"`
 	}
 
 	// ResourceDeletion identifies an existing Kubernetes resource to delete before policy install
@@ -1147,6 +1151,10 @@ type (
 		AllowContainerCapabilitiesForRegularUsers bool `json:"AllowContainerCapabilitiesForRegularUsers,omitempty"`
 
 		IsDockerDesktopExtension bool `json:"IsDockerDesktopExtension,omitempty"`
+
+		// ForceSecureCookies forces the Secure attribute on auth cookies regardless of detected scheme.
+		// Enable when Portainer runs behind a TLS-terminating proxy.
+		ForceSecureCookies bool `json:"ForceSecureCookies" example:"false"`
 	}
 
 	// SnapshotJob represents a scheduled job that can create environment(endpoint) snapshots
@@ -1206,8 +1214,12 @@ type (
 		AutoUpdate *AutoUpdateSettings `json:"AutoUpdate"`
 		// The stack deployment option
 		Option *StackOption `json:"Option"`
-		// The git config of this stack
-		GitConfig *gittypes.RepoConfig
+		// GitConfig is the git repository configuration for git-backed stacks.
+		// Deprecated: loaded from Source via WorkflowID; kept for DB backwards-compatibility only.
+		// Non-migration code must not read or write this field; use Source records instead.
+		GitConfig *gittypes.RepoConfig `json:"GitConfig"`
+		// WorkflowID is the ID of the Workflow that owns the Source for this stack.
+		WorkflowID WorkflowID `json:"WorkflowID,omitempty"`
 		// CurrentDeploymentInfo records the git repository state at the time of the last actual deployment.
 		CurrentDeploymentInfo *StackDeploymentInfo `json:"CurrentDeploymentInfo,omitempty"`
 		// Whether the stack is from a app template
@@ -1235,6 +1247,23 @@ type (
 
 	// StackType represents the type of the stack (compose v2, stack deploy v3)
 	StackType int
+
+	// Source represents a GitOps source that can be referenced by stacks or deployments.
+	Source struct {
+		ID         SourceID             `json:"id" example:"1"`
+		Name       string               `json:"name" example:"my-source"`
+		LastSync   int64                `json:"lastSync,omitempty" example:"1587399600"`
+		Type       SourceType           `json:"type" example:"1"`
+		GitConfig  *gittypes.RepoConfig `json:"gitConfig,omitempty"`
+		Registry   *Registry            `json:"registry,omitempty"`
+		HelmConfig *HelmConfig          `json:"helmConfig,omitempty"`
+	}
+
+	// SourceID represents a source identifier
+	SourceID int
+
+	// SourceType represents the type of a source
+	SourceType int
 
 	// Status represents the application status
 	Status struct {
@@ -1515,6 +1544,30 @@ type (
 	// WebhookType represents the type of resource a webhook is related to
 	WebhookType int
 
+	// Artifact represents a GitOps artifact produced by a source
+	Artifact struct {
+		StackID        StackID     `json:"stackId,omitempty"`
+		EdgeStackID    EdgeStackID `json:"edgeStackId,omitempty"`
+		ReferenceName  string      `json:"referenceName,omitempty" example:"refs/heads/main"`
+		ConfigFilePath string      `json:"configFilePath,omitempty" example:"portainer.yaml"`
+		ConfigHash     string      `json:"configHash,omitempty" example:"abc123"`
+	}
+
+	// ArtifactSources is one entry in a Workflow's ordered artifact-to-sources mapping
+	ArtifactSources struct {
+		Artifact  Artifact   `json:"artifact"`
+		SourceIDs []SourceID `json:"sourceIds,omitempty"`
+	}
+
+	// Workflow represents a GitOps workflow
+	Workflow struct {
+		ID        WorkflowID        `json:"id" example:"1"`
+		Name      string            `json:"name,omitempty" example:"my-workflow"`
+		Artifacts []ArtifactSources `json:"artifacts,omitempty"`
+	}
+
+	WorkflowID int
+
 	Snapshot struct {
 		EndpointID EndpointID          `json:"EndpointId"`
 		Docker     *DockerSnapshot     `json:"Docker"`
@@ -1790,6 +1843,9 @@ type (
 
 		// Pod
 		CreateUserShellPod(ctx context.Context, serviceAccountName, shellPodImage string) (*KubernetesShellPod, error)
+		DeletePod(namespace, name string) error
+		RestartPod(namespace, name string) error
+		SupportsPodRestart() (bool, error)
 
 		// RBAC
 		IsRBACEnabled() (bool, error)
@@ -1839,6 +1895,24 @@ type (
 		GetVolumes(namespace string) ([]models.K8sVolumeInfo, error)
 		GetVolume(namespace, volumeName string) (*models.K8sVolumeInfo, error)
 		CombineVolumesWithApplications(volumes *[]models.K8sVolumeInfo) (*[]models.K8sVolumeInfo, error)
+
+		// StorageClass
+		GetStorageClasses() ([]models.K8sStorageClass, error)
+		GetStorageClass(name string) (*models.K8sStorageClass, error)
+		DeleteStorageClasses(names []string) error
+		SetDefaultStorageClass(name string) error
+
+		// PersistentVolume
+		GetPersistentVolumes() ([]models.K8sPersistentVolume, error)
+		GetPersistentVolume(name string) (*models.K8sPersistentVolume, error)
+		DeletePersistentVolumes(names []string) error
+		UpdatePersistentVolumeReclaimPolicy(name string, policy corev1.PersistentVolumeReclaimPolicy) error
+
+		// PersistentVolumeClaim
+		GetPersistentVolumeClaims(namespace string) ([]models.K8sPersistentVolumeClaim, error)
+		GetPersistentVolumeClaim(namespace, name string) (*models.K8sPersistentVolumeClaim, error)
+		DeletePersistentVolumeClaims(reqs models.K8sVolumeDeleteRequests) error
+		ResizePersistentVolumeClaim(namespace, name, newSize string) error
 	}
 
 	// KubernetesDeployer represents a service to deploy a manifest inside a Kubernetes environment(endpoint)
@@ -1901,7 +1975,7 @@ type (
 
 const (
 	// APIVersion is the version number of the Portainer API
-	APIVersion = "2.41.1"
+	APIVersion = "2.43.0"
 	// Support annotation for the API version ("STS" for Short-Term Support or "LTS" for Long-Term Support)
 	APIVersionSupport = "STS"
 	// Edition is what this edition of Portainer is called
@@ -2131,6 +2205,13 @@ const (
 	PortainerBE
 	// PortainerEE represents the business edition of Portainer
 	PortainerEE
+)
+
+const (
+	_ SourceType = iota
+	SourceTypeGit
+	SourceTypeRegistry
+	SourceTypeHelm
 )
 
 const (

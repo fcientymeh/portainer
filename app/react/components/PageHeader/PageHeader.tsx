@@ -12,13 +12,15 @@ import { HeaderContainer } from './HeaderContainer';
 import { HeaderTitle } from './HeaderTitle';
 import { PageTitle } from './PageTitle';
 
-interface Props {
+export type Breadcrumb = Crumb | string;
+
+export interface Props {
   id?: string;
   reload?: boolean;
   loading?: boolean;
   onReload?(): Promise<void> | void;
-  breadcrumbs?: (Crumb | string)[] | string;
-  title: string;
+  breadcrumbs?: Breadcrumb[] | string;
+  title?: string;
 }
 
 export function PageHeader({
@@ -39,22 +41,24 @@ export function PageHeader({
         <HeaderTitle />
       </HeaderContainer>
 
-      <PageTitle title={title}>
-        {reload && (
-          <Button
-            color="none"
-            size="large"
-            onClick={onClickedRefresh}
-            className="m-0 p-0 focus:text-inherit"
-            disabled={loading}
-            title="Refresh page"
-            data-cy="refresh-page-button"
-          >
-            <RefreshCw className="icon" />
-          </Button>
-        )}
-        {children}
-      </PageTitle>
+      {title && (
+        <PageTitle title={title}>
+          {reload && (
+            <Button
+              color="none"
+              size="large"
+              onClick={onClickedRefresh}
+              className="m-0 p-0 focus:text-inherit"
+              disabled={loading}
+              title="Refresh page"
+              data-cy="refresh-page-button"
+            >
+              <RefreshCw className="icon" />
+            </Button>
+          )}
+          {children}
+        </PageTitle>
+      )}
     </>
   );
 

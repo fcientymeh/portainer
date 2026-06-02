@@ -24,6 +24,7 @@ type (
 		Settings() SettingsService
 		Snapshot() SnapshotService
 		SSLSettings() SSLSettingsService
+		Source() SourceService
 		Stack() StackService
 		Tag() TagService
 		TeamMembership() TeamMembershipService
@@ -32,6 +33,7 @@ type (
 		User() UserService
 		Version() VersionService
 		Webhook() WebhookService
+		Workflow() WorkflowService
 		PendingActions() PendingActionsService
 	}
 
@@ -183,6 +185,11 @@ type (
 		BucketName() string
 	}
 
+	// SourceService represents a service for managing GitOps source data
+	SourceService interface {
+		BaseCRUD[portainer.Source, portainer.SourceID]
+	}
+
 	// StackService represents a service for managing stack data
 	StackService interface {
 		BaseCRUD[portainer.Stack, portainer.StackID]
@@ -244,5 +251,10 @@ type (
 		BaseCRUD[portainer.Webhook, portainer.WebhookID]
 		WebhookByResourceID(resourceID string) (*portainer.Webhook, error)
 		WebhookByToken(token string) (*portainer.Webhook, error)
+	}
+
+	// WorkflowService represents a service for managing GitOps workflow data
+	WorkflowService interface {
+		BaseCRUD[portainer.Workflow, portainer.WorkflowID]
 	}
 )

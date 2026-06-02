@@ -18,7 +18,6 @@ import {
   portainerAgentTargetHeader,
 } from '@/portainer/services/http-request.helper';
 import { dockerMaxAPIVersionInterceptor } from '@/portainer/services/dockerMaxApiVersionInterceptor';
-import { MAX_DOCKER_API_VERSION } from '@/portainer/services/dockerMaxApiVersion';
 
 export { parseAxiosError } from './utils/parseAxiosError';
 
@@ -50,7 +49,6 @@ function headerInterpreter(
 
 const axios = Axios.create({
   baseURL: 'api',
-  maxDockerAPIVersion: MAX_DOCKER_API_VERSION,
   paramsSerializer: {
     serialize: (params) => qs.stringify(params, { arrayFormat: 'brackets' }),
   },

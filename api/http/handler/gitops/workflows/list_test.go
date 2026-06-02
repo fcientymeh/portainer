@@ -23,10 +23,10 @@ func TestWorkflowsList_GitConfigFilter(t *testing.T) {
 	_, store := datastore.MustNewTestStore(t, false, true)
 
 	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		require.NoError(t, tx.Stack().Create(&portainer.Stack{
+		createGitStack(t, tx, &portainer.Stack{
 			ID: 1, Name: "gitops-stack",
 			GitConfig: gitConfig("https://github.com/example/repo"),
-		}))
+		})
 		require.NoError(t, tx.Stack().Create(&portainer.Stack{ID: 2, Name: "plain-stack"}))
 		require.NoError(t, tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole}))
 		return nil
@@ -50,12 +50,12 @@ func TestWorkflowsList_EndpointIDsFilter(t *testing.T) {
 
 	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		for i := 1; i <= 3; i++ {
-			require.NoError(t, tx.Stack().Create(&portainer.Stack{
+			createGitStack(t, tx, &portainer.Stack{
 				ID:         portainer.StackID(i),
 				Name:       fmt.Sprintf("env%d-stack", i),
 				EndpointID: portainer.EndpointID(i),
 				GitConfig:  gitConfig(fmt.Sprintf("https://github.com/x/%d", i)),
-			}))
+			})
 		}
 		require.NoError(t, tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole}))
 		return nil
@@ -78,11 +78,11 @@ func TestWorkflowsList_Pagination(t *testing.T) {
 
 	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		for i := 1; i <= 5; i++ {
-			require.NoError(t, tx.Stack().Create(&portainer.Stack{
+			createGitStack(t, tx, &portainer.Stack{
 				ID:        portainer.StackID(i),
 				Name:      fmt.Sprintf("stack-%d", i),
 				GitConfig: gitConfig("https://github.com/x/y"),
-			}))
+			})
 		}
 
 		require.NoError(t, tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole}))
@@ -107,7 +107,7 @@ func TestWorkflowsList_Search(t *testing.T) {
 			{ID: 1, Name: "alpha", GitConfig: gitConfig("https://github.com/org/alpha")},
 			{ID: 2, Name: "beta", GitConfig: gitConfig("https://github.com/org/beta")},
 		} {
-			require.NoError(t, tx.Stack().Create(s))
+			createGitStack(t, tx, s)
 		}
 
 		require.NoError(t, tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole}))
@@ -128,14 +128,14 @@ func TestWorkflowsList_SearchByURL(t *testing.T) {
 	_, store := datastore.MustNewTestStore(t, false, true)
 
 	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		require.NoError(t, tx.Stack().Create(&portainer.Stack{
+		createGitStack(t, tx, &portainer.Stack{
 			ID: 1, Name: "stack-org1",
 			GitConfig: gitConfig("https://github.com/org1/repo"),
-		}))
-		require.NoError(t, tx.Stack().Create(&portainer.Stack{
+		})
+		createGitStack(t, tx, &portainer.Stack{
 			ID: 2, Name: "stack-org2",
 			GitConfig: gitConfig("https://github.com/org2/repo"),
-		}))
+		})
 
 		require.NoError(t, tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole}))
 		return nil
@@ -156,11 +156,11 @@ func TestWorkflowsList_Sort(t *testing.T) {
 
 	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		for i, name := range []string{"gamma", "alpha", "beta"} {
-			require.NoError(t, tx.Stack().Create(&portainer.Stack{
+			createGitStack(t, tx, &portainer.Stack{
 				ID:        portainer.StackID(i + 1),
 				Name:      name,
 				GitConfig: gitConfig("https://github.com/x/" + name),
-			}))
+			})
 		}
 		require.NoError(t, tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole}))
 		return nil
@@ -188,10 +188,10 @@ func TestWorkflowsList_Cache(t *testing.T) {
 	_, store := datastore.MustNewTestStore(t, false, true)
 
 	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		require.NoError(t, tx.Stack().Create(&portainer.Stack{
+		createGitStack(t, tx, &portainer.Stack{
 			ID: 1, Name: "initial-stack",
 			GitConfig: gitConfig("https://github.com/x/initial"),
-		}))
+		})
 
 		require.NoError(t, tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole}))
 		return nil
@@ -208,10 +208,10 @@ func TestWorkflowsList_Cache(t *testing.T) {
 		require.Len(t, decodeWorkflows(t, rr), 1)
 
 		// Mutate the store while cache is still warm.
-		require.NoError(t, store.StackService.Create(&portainer.Stack{
+		createGitStack(t, store, &portainer.Stack{
 			ID: 2, Name: "new-stack",
 			GitConfig: gitConfig("https://github.com/x/new"),
-		}))
+		})
 
 		// Second request — same cache key, should return stale cached result.
 		rr = httptest.NewRecorder()
@@ -235,13 +235,11 @@ func TestWorkflowsList_CacheImmutableAfterSort(t *testing.T) {
 
 	for i, name := range []string{"alpha", "beta", "gamma"} {
 		require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-			require.NoError(t, tx.Stack().Create(
-				&portainer.Stack{
-					ID:        portainer.StackID(i + 1),
-					Name:      name,
-					GitConfig: gitConfig("https://github.com/x/" + name),
-				},
-			))
+			createGitStack(t, tx, &portainer.Stack{
+				ID:        portainer.StackID(i + 1),
+				Name:      name,
+				GitConfig: gitConfig("https://github.com/x/" + name),
+			})
 
 			require.NoError(t, tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole}))
 			return nil
@@ -278,14 +276,14 @@ func TestWorkflowsList_CacheSeparateKeys(t *testing.T) {
 	_, store := datastore.MustNewTestStore(t, false, true)
 
 	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		require.NoError(t, tx.Stack().Create(&portainer.Stack{
+		createGitStack(t, tx, &portainer.Stack{
 			ID: 1, Name: "env1-stack", EndpointID: 1,
 			GitConfig: gitConfig("https://github.com/x/1"),
-		}))
-		require.NoError(t, tx.Stack().Create(&portainer.Stack{
+		})
+		createGitStack(t, tx, &portainer.Stack{
 			ID: 2, Name: "env2-stack", EndpointID: 2,
 			GitConfig: gitConfig("https://github.com/x/2"),
-		}))
+		})
 		require.NoError(t, tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole}))
 		return nil
 	}))
@@ -310,15 +308,15 @@ func TestWorkflowsList_StatusFilter(t *testing.T) {
 	_, store := datastore.MustNewTestStore(t, false, true)
 
 	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		require.NoError(t, tx.Stack().Create(&portainer.Stack{
+		createGitStack(t, tx, &portainer.Stack{
 			ID: 1, Name: "healthy-stack",
 			GitConfig: gitConfig("https://github.com/x/1"),
-		}))
-		require.NoError(t, tx.Stack().Create(&portainer.Stack{
+		})
+		createGitStack(t, tx, &portainer.Stack{
 			ID: 2, Name: "error-stack",
 			GitConfig:        gitConfig("https://github.com/x/2"),
 			DeploymentStatus: []portainer.StackDeploymentStatus{{Status: portainer.StackStatusError}},
-		}))
+		})
 		require.NoError(t, tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole}))
 		return nil
 	}))
@@ -366,9 +364,9 @@ func TestWorkflowsList_RedactsCredentials(t *testing.T) {
 	cfg.Authentication = &gittypes.GitAuthentication{Username: "user", Password: "s3cr3t"}
 
 	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		require.NoError(t, tx.Stack().Create(&portainer.Stack{
+		createGitStack(t, tx, &portainer.Stack{
 			ID: 1, Name: "secure-stack", GitConfig: cfg,
-		}))
+		})
 		require.NoError(t, tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole}))
 		return nil
 	}))

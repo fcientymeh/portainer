@@ -6,6 +6,13 @@ import {
   EnvironmentGroupId,
 } from '../types';
 
+export interface EnvironmentGroupTypeInfo {
+  Docker: number;
+  Kubernetes: number;
+  Podman: number;
+  Mixed: boolean;
+}
+
 export interface EnvironmentGroup {
   // Environment(Endpoint) group Identifier
   Id: EnvironmentGroupId;
@@ -17,4 +24,6 @@ export interface EnvironmentGroup {
   TagIds: TagId[];
   UserAccessPolicies?: UserAccessPolicies;
   TeamAccessPolicies?: TeamAccessPolicies;
+  Total?: number;
+  TypeInfo?: EnvironmentGroupTypeInfo;
 }

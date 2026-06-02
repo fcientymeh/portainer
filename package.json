@@ -2,7 +2,7 @@
   "author": "Portainer.io",
   "name": "@portainer/ce",
   "homepage": "http://portainer.io",
-  "version": "2.41.1",
+  "version": "2.43.0",
   "repository": {
     "type": "git",
     "url": "git@github.com:portainer/portainer.git"
@@ -27,7 +27,9 @@
     "storybook": "storybook dev -p 6006",
     "storybook:build": "storybook build -o ./dist/storybook",
     "analyze-webpack": "webpack --config ./webpack/webpack.analyze.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate-api": "openapi-ts",
+    "postgenerate-api": "pnpm format"
   },
   "engines": {
     "node": "^22"
@@ -137,6 +139,7 @@
     "uuid": "^3.3.2",
     "yaml": "^1.10.2",
     "yup": "^0.32.11",
+    "zod": "4.3.6",
     "zustand": "^4.1.1"
   },
   "devDependencies": {
@@ -150,6 +153,7 @@
     "@eslint/compat": "^2.0.0",
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.2",
+    "@hey-api/openapi-ts": "0.97.3",
     "@simbathesailor/use-what-changed": "^2.0.0",
     "@storybook/addon-docs": "10.3.5",
     "@storybook/addon-links": "10.3.5",

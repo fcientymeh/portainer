@@ -24,6 +24,7 @@ type testDatastore struct {
 	helmUserRepository      dataservices.HelmUserRepositoryService
 	registry                dataservices.RegistryService
 	resourceControl         dataservices.ResourceControlService
+	source                  dataservices.SourceService
 	apiKeyRepositoryService dataservices.APIKeyRepository
 	role                    dataservices.RoleService
 	sslSettings             dataservices.SSLSettingsService
@@ -38,6 +39,7 @@ type testDatastore struct {
 	version                 dataservices.VersionService
 	webhook                 dataservices.WebhookService
 	pendingActionsService   dataservices.PendingActionsService
+	workflow                dataservices.WorkflowService
 	connection              portainer.Connection
 }
 
@@ -72,7 +74,8 @@ func (d *testDatastore) Registry() dataservices.RegistryService { return d.regis
 func (d *testDatastore) ResourceControl() dataservices.ResourceControlService {
 	return d.resourceControl
 }
-func (d *testDatastore) Role() dataservices.RoleService { return d.role }
+func (d *testDatastore) Source() dataservices.SourceService { return d.source }
+func (d *testDatastore) Role() dataservices.RoleService     { return d.role }
 func (d *testDatastore) APIKeyRepository() dataservices.APIKeyRepository {
 	return d.apiKeyRepositoryService
 }
@@ -87,6 +90,7 @@ func (d *testDatastore) TunnelServer() dataservices.TunnelServerService     { re
 func (d *testDatastore) User() dataservices.UserService                     { return d.user }
 func (d *testDatastore) Version() dataservices.VersionService               { return d.version }
 func (d *testDatastore) Webhook() dataservices.WebhookService               { return d.webhook }
+func (d *testDatastore) Workflow() dataservices.WorkflowService             { return d.workflow }
 
 func (d *testDatastore) PendingActions() dataservices.PendingActionsService {
 	return d.pendingActionsService

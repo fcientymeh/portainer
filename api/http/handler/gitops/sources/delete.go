@@ -1,0 +1,69 @@
+package sources
+
+import (
+	"errors"
+	"net/http"
+	"slices"
+
+	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
+	dserrors "github.com/portainer/portainer/api/dataservices/errors"
+	httperror "github.com/portainer/portainer/pkg/libhttp/error"
+	"github.com/portainer/portainer/pkg/libhttp/request"
+	"github.com/portainer/portainer/pkg/libhttp/response"
+)
+
+var ErrSourceInUse = errors.New("source is used by one or more workflows")
+
+// @id GitOpsSourcesDelete
+// @summary Delete a source
+// @description Deletes an existing GitOps source. Returns 409 if the source is referenced by any workflow.
+// @description **Access policy**: admin
+// @tags gitops
+// @security ApiKeyAuth
+// @security jwt
+// @param id path int true "Source identifier"
+// @success 204 "Source deleted"
+// @failure 400 "Invalid request"
+// @failure 403 "Access denied"
+// @failure 404 "Source not found"
+// @failure 409 "Source is in use by one or more workflows"
+// @failure 500 "Server error"
+// @router /gitops/sources/{id} [delete]
+func (h *Handler) sourceDelete(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
+	sourceID, err := request.RetrieveNumericRouteVariableValue(r, "id")
+	if err != nil {
+		return httperror.BadRequest("Invalid source identifier route variable", err)
+	}
+
+	if err := h.dataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		if exists, err := tx.Source().Exists(portainer.SourceID(sourceID)); err != nil {
+			return err
+		} else if !exists {
+			return dserrors.ErrObjectNotFound
+		}
+
+		workflows, err := tx.Workflow().ReadAll()
+		if err != nil {
+			return err
+		}
+
+		for _, wf := range workflows {
+			if slices.ContainsFunc(wf.Artifacts, func(as portainer.ArtifactSources) bool {
+				return slices.Contains(as.SourceIDs, portainer.SourceID(sourceID))
+			}) {
+				return ErrSourceInUse
+			}
+		}
+
+		return tx.Source().Delete(portainer.SourceID(sourceID))
+	}); h.dataStore.IsErrObjectNotFound(err) {
+		return httperror.NotFound("Unable to find a source with the specified identifier", err)
+	} else if errors.Is(err, ErrSourceInUse) {
+		return httperror.Conflict("Source is used by one or more workflows", err)
+	} else if err != nil {
+		return httperror.InternalServerError("Unable to delete source", err)
+	}
+
+	return response.Empty(w)
+}

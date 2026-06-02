@@ -38,5 +38,9 @@ export default defineConfig({
       return !/Can't perform a React state update on an unmounted component/.test(log);
     },
   },
-  plugins: [svgr({ include: /\?c$/ }), tsconfigPaths()],
+  plugins: [
+    svgr({ include: /\?c$/ }),
+    tsconfigPaths(),
+    tsconfigPaths({ projects: ['./tsconfig.generated.json'] }),
+  ],
 });

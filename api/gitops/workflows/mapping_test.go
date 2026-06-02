@@ -4,7 +4,10 @@ import (
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
+	gittypes "github.com/portainer/portainer/api/git/types"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStackLastSyncDate(t *testing.T) {
@@ -12,7 +15,7 @@ func TestStackLastSyncDate(t *testing.T) {
 
 	t.Run("no deployment status", func(t *testing.T) {
 		t.Parallel()
-		assert.Equal(t, int64(0), stackLastSyncDate(portainer.Stack{}))
+		assert.Equal(t, int64(0), StackLastSyncDate(portainer.Stack{}))
 	})
 
 	t.Run("no active entry", func(t *testing.T) {
@@ -20,7 +23,7 @@ func TestStackLastSyncDate(t *testing.T) {
 		s := portainer.Stack{DeploymentStatus: []portainer.StackDeploymentStatus{
 			{Status: portainer.StackStatusDeploying, Time: 100},
 		}}
-		assert.Equal(t, int64(0), stackLastSyncDate(s))
+		assert.Equal(t, int64(0), StackLastSyncDate(s))
 	})
 
 	t.Run("last entry is active", func(t *testing.T) {
@@ -29,7 +32,7 @@ func TestStackLastSyncDate(t *testing.T) {
 			{Status: portainer.StackStatusDeploying, Time: 50},
 			{Status: portainer.StackStatusActive, Time: 100},
 		}}
-		assert.Equal(t, int64(100), stackLastSyncDate(s))
+		assert.Equal(t, int64(100), StackLastSyncDate(s))
 	})
 
 	t.Run("active followed by non-active returns the active time", func(t *testing.T) {
@@ -38,7 +41,7 @@ func TestStackLastSyncDate(t *testing.T) {
 			{Status: portainer.StackStatusActive, Time: 100},
 			{Status: portainer.StackStatusDeploying, Time: 200},
 		}}
-		assert.Equal(t, int64(100), stackLastSyncDate(s))
+		assert.Equal(t, int64(100), StackLastSyncDate(s))
 	})
 }
 
@@ -146,4 +149,119 @@ func TestEdgeStackTargetStatuses(t *testing.T) {
 		assert.Equal(t, StatusHealthy, result[portainer.EdgeGroupID(10)])
 		assert.Equal(t, StatusError, result[portainer.EdgeGroupID(20)])
 	})
+}
+
+func TestMapEdgeStackToWorkflow_DockerPlatform(t *testing.T) {
+	t.Parallel()
+
+	es := portainer.EdgeStack{
+		ID:             1,
+		Name:           "docker-edge",
+		DeploymentType: portainer.EdgeStackDeploymentCompose,
+		EdgeGroups:     []portainer.EdgeGroupID{1},
+		CreationDate:   1587399600,
+	}
+	cfg := &gittypes.RepoConfig{URL: "https://github.com/x/repo"}
+
+	w := MapEdgeStackToWorkflow(es, cfg, nil, map[portainer.EdgeGroupID][]portainer.EndpointID{1: {10}}, WorkflowPhaseStatus{Status: StatusHealthy}, WorkflowPhaseStatus{Status: StatusHealthy})
+
+	require.Equal(t, int(es.ID), w.ID)
+	require.Equal(t, es.Name, w.Name)
+	require.Equal(t, TypeEdgeStack, w.Type)
+	require.Equal(t, DeploymentPlatformDockerStandalone, w.Platform)
+	require.Equal(t, es.CreationDate, w.CreationDate)
+	require.Equal(t, cfg, w.GitConfig)
+	require.Equal(t, []portainer.EdgeGroupID{1}, w.Target.EdgeGroupIDs)
+}
+
+func TestMapEdgeStackToWorkflow_KubernetesPlatform(t *testing.T) {
+	t.Parallel()
+
+	es := portainer.EdgeStack{
+		ID:             2,
+		Name:           "kube-edge",
+		DeploymentType: portainer.EdgeStackDeploymentKubernetes,
+		EdgeGroups:     []portainer.EdgeGroupID{1},
+	}
+
+	w := MapEdgeStackToWorkflow(es, nil, nil, map[portainer.EdgeGroupID][]portainer.EndpointID{}, WorkflowPhaseStatus{Status: StatusUnknown}, WorkflowPhaseStatus{Status: StatusUnknown})
+
+	require.Equal(t, DeploymentPlatformKubernetes, w.Platform)
+}
+
+func TestMapEdgeStackToWorkflow_GroupStatusesAndResolvedEndpoints(t *testing.T) {
+	t.Parallel()
+
+	statuses := []portainer.EdgeStackStatusForEnv{
+		{EndpointID: 10, Status: []portainer.EdgeStackDeploymentStatus{{Type: portainer.EdgeStackStatusRunning}}},
+		{EndpointID: 20, Status: []portainer.EdgeStackDeploymentStatus{{Type: portainer.EdgeStackStatusError, Error: "boom"}}},
+	}
+	groupEndpoints := map[portainer.EdgeGroupID][]portainer.EndpointID{
+		1: {10},
+		2: {20},
+	}
+	es := portainer.EdgeStack{
+		ID:         3,
+		Name:       "multi-group",
+		EdgeGroups: []portainer.EdgeGroupID{1, 2},
+	}
+
+	w := MapEdgeStackToWorkflow(es, nil, statuses, groupEndpoints, WorkflowPhaseStatus{Status: StatusUnknown}, WorkflowPhaseStatus{Status: StatusUnknown})
+
+	require.Equal(t, StatusHealthy, w.Target.GroupStatus[1])
+	require.Equal(t, StatusError, w.Target.GroupStatus[2])
+	require.Len(t, w.Target.ResolvedEndpointIDs, 2)
+}
+
+func TestPlatformFromStackType(t *testing.T) {
+	t.Parallel()
+
+	require.Equal(t, DeploymentPlatformKubernetes, platformFromStackType(portainer.KubernetesStack))
+	require.Equal(t, DeploymentPlatformDockerSwarm, platformFromStackType(portainer.DockerSwarmStack))
+	require.Equal(t, DeploymentPlatformDockerStandalone, platformFromStackType(portainer.DockerComposeStack))
+	require.Equal(t, DeploymentPlatformDockerStandalone, platformFromStackType(portainer.StackType(99)))
+}
+
+func TestResolveEdgeGroupEndpoints_Empty(t *testing.T) {
+	t.Parallel()
+
+	result := resolveEdgeGroupEndpoints(nil, map[portainer.EdgeGroupID][]portainer.EndpointID{})
+	require.Empty(t, result)
+}
+
+func TestResolveEdgeGroupEndpoints_DeduplicatesAcrossGroups(t *testing.T) {
+	t.Parallel()
+
+	groupEndpoints := map[portainer.EdgeGroupID][]portainer.EndpointID{
+		1: {10, 20},
+		2: {20, 30},
+	}
+
+	result := resolveEdgeGroupEndpoints([]portainer.EdgeGroupID{1, 2}, groupEndpoints)
+
+	require.Len(t, result, 3)
+}
+
+func TestIsEdgeStackHealthyStatus(t *testing.T) {
+	t.Parallel()
+
+	healthyTypes := []portainer.EdgeStackStatusType{
+		portainer.EdgeStackStatusRunning,
+		portainer.EdgeStackStatusRolledBack,
+		portainer.EdgeStackStatusCompleted,
+		portainer.EdgeStackStatusRemoved,
+		portainer.EdgeStackStatusRemoteUpdateSuccess,
+	}
+	for _, typ := range healthyTypes {
+		require.True(t, isEdgeStackHealthyStatus(typ))
+	}
+
+	unhealthyTypes := []portainer.EdgeStackStatusType{
+		portainer.EdgeStackStatusError,
+		portainer.EdgeStackStatusDeploying,
+		portainer.EdgeStackStatusPending,
+	}
+	for _, typ := range unhealthyTypes {
+		require.False(t, isEdgeStackHealthyStatus(typ))
+	}
 }

@@ -60,17 +60,17 @@ type endpointEdgeStatusInspectResponse struct {
 }
 
 // @id EndpointEdgeStatusInspect
-// @summary Get environment(endpoint) status
-// @description environment(endpoint) for edge agent to check status of environment(endpoint)
-// @description **Access policy**: restricted only to Edge environments(endpoints)
-// @tags endpoints
+// @summary Get environment status
+// @description Endpoint for edge agent to check status of environment
+// @description **Access policy**: Edge agent only — requires X-PortainerAgent-EdgeID header
+// @tags edge_agent
 // @security ApiKeyAuth
 // @security jwt
-// @param id path int true "Environment(Endpoint) identifier"
+// @param id path int true "Environment identifier"
 // @success 200 {object} endpointEdgeStatusInspectResponse "Success"
 // @failure 400 "Invalid request"
-// @failure 403 "Permission denied to access environment(endpoint)"
-// @failure 404 "Environment(Endpoint) not found"
+// @failure 403 "Permission denied to access environment"
+// @failure 404 "Environment not found"
 // @failure 500 "Server error"
 // @router /endpoints/{id}/edge/status [get]
 func (handler *Handler) endpointEdgeStatusInspect(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {

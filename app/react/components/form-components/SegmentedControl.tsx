@@ -8,6 +8,7 @@ import { Tabs } from '@@/primitives/Tabs/Tabs';
 export interface SegmentItem {
   id: string;
   label: ReactNode;
+  title?: string;
   disabled?: boolean;
 }
 
@@ -73,7 +74,7 @@ function SegmentedControlItem({
       disabled={item.disabled}
       className="m-0"
     >
-      <label>
+      <label title={item.title}>
         <input
           type="radio"
           name={groupName}
@@ -82,6 +83,7 @@ function SegmentedControlItem({
           disabled={item.disabled}
           onChange={() => onChange?.(item.id)}
           className="sr-only"
+          aria-label={item.title}
         />
         {item.label}
       </label>

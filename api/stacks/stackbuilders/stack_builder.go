@@ -74,6 +74,19 @@ func (b *StackBuilder) cleanUp() error {
 		return nil
 	}
 
+	if b.stack.WorkflowID != 0 {
+		if err := b.dataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+			err := tx.Workflow().Delete(b.stack.WorkflowID)
+			if tx.IsErrObjectNotFound(err) {
+				return nil
+			}
+
+			return err
+		}); err != nil {
+			log.Error().Err(err).Msg("unable to cleanup orphan workflow records after failed stack creation")
+		}
+	}
+
 	if err := b.fileService.RemoveDirectory(b.stack.ProjectPath); err != nil {
 		log.Error().Err(err).Msg("unable to cleanup stack creation")
 	}

@@ -88,6 +88,8 @@ func (store *Store) newMigratorParameters(version *models.Version, flags *portai
 		EdgeGroupService:        store.EdgeGroupService,
 		TunnelServerService:     store.TunnelServerService,
 		PendingActionsService:   store.PendingActionsService,
+		SourceService:           store.SourceService,
+		WorkflowService:         store.WorkflowService,
 	}
 }
 

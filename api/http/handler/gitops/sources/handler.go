@@ -7,6 +7,7 @@ import (
 	gocache "github.com/patrickmn/go-cache"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
+	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/kubernetes/cli"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 
@@ -27,7 +28,7 @@ type Handler struct {
 	k8sFactory *cli.ClientFactory
 }
 
-func NewHandler(dataStore dataservices.DataStore, gitService portainer.GitService, k8sFactory *cli.ClientFactory) *Handler {
+func NewHandler(bouncer security.BouncerService, dataStore dataservices.DataStore, gitService portainer.GitService, k8sFactory *cli.ClientFactory) *Handler {
 	h := &Handler{
 		Router:     mux.NewRouter(),
 		dataStore:  dataStore,
@@ -36,8 +37,16 @@ func NewHandler(dataStore dataservices.DataStore, gitService portainer.GitServic
 		k8sFactory: k8sFactory,
 	}
 
-	router := h.PathPrefix("/gitops/sources").Subrouter()
-	router.Handle("", httperror.LoggerHandler(h.list)).Methods(http.MethodGet)
-	router.Handle("/summary", httperror.LoggerHandler(h.summary)).Methods(http.MethodGet)
+	authenticatedRouter := h.PathPrefix("/gitops/sources").Subrouter()
+	authenticatedRouter.Use(bouncer.AuthenticatedAccess)
+	authenticatedRouter.Handle("", httperror.LoggerHandler(h.list)).Methods(http.MethodGet)
+	authenticatedRouter.Handle("/summary", httperror.LoggerHandler(h.summary)).Methods(http.MethodGet)
+
+	adminRouter := h.PathPrefix("/gitops/sources").Subrouter()
+	adminRouter.Use(bouncer.AdminAccess)
+	adminRouter.Handle("/git", httperror.LoggerHandler(h.gitSourceCreate)).Methods(http.MethodPost)
+	adminRouter.Handle("/{id}", httperror.LoggerHandler(h.getSource)).Methods(http.MethodGet)
+	adminRouter.Handle("/{id}", httperror.LoggerHandler(h.gitSourceUpdate)).Methods(http.MethodPut)
+	adminRouter.Handle("/{id}", httperror.LoggerHandler(h.sourceDelete)).Methods(http.MethodDelete)
 	return h
 }

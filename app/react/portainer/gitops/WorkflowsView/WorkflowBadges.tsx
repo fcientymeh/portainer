@@ -1,29 +1,36 @@
-import { Badge, BadgeType } from '@@/Badge';
+import { Badge } from '@@/Badge';
+import { StatusDot } from '@@/primitives/StatusDot';
 
 import { WorkflowStatus, WorkflowType } from './types';
 
+const BADGE_TYPE = {
+  healthy: 'success',
+  error: 'danger',
+  syncing: 'warn',
+  paused: 'muted',
+  unknown: 'muted',
+} as const;
+
+const STATUS_LABELS: Record<WorkflowStatus, string> = {
+  healthy: 'Healthy',
+  error: 'Error',
+  syncing: 'Syncing',
+  paused: 'Paused',
+  unknown: 'Unknown',
+};
+
 export function StatusBadge({ status }: { status: WorkflowStatus }) {
-  const BADGE_TYPE: Record<WorkflowStatus, BadgeType> = {
-    healthy: 'success',
-    error: 'danger',
-    syncing: 'warn',
-    paused: 'muted',
-    unknown: 'muted',
-  };
-  const LABELS: Record<WorkflowStatus, string> = {
-    healthy: 'Healthy',
-    error: 'Error',
-    syncing: 'Syncing',
-    paused: 'Paused',
-    unknown: 'Unknown',
-  };
-  return <Badge type={BADGE_TYPE[status]}>● {LABELS[status]}</Badge>;
+  return (
+    <Badge type={BADGE_TYPE[status]} shape="pill" size="md">
+      <StatusDot color={BADGE_TYPE[status]} size="xs" /> {STATUS_LABELS[status]}
+    </Badge>
+  );
 }
 
+const TYPE_LABELS: Record<WorkflowType, string> = {
+  stack: 'Stack',
+  edgeStack: 'Edge Stack',
+};
 export function TypeBadge({ type }: { type: WorkflowType }) {
-  const LABELS: Record<WorkflowType, string> = {
-    stack: 'Stack',
-    edgeStack: 'Edge Stack',
-  };
-  return <Badge type="muted">{LABELS[type]}</Badge>;
+  return <Badge type="muted">{TYPE_LABELS[type]}</Badge>;
 }

@@ -26,6 +26,7 @@ import (
 	"github.com/portainer/portainer/api/dataservices/schedule"
 	"github.com/portainer/portainer/api/dataservices/settings"
 	"github.com/portainer/portainer/api/dataservices/snapshot"
+	"github.com/portainer/portainer/api/dataservices/source"
 	"github.com/portainer/portainer/api/dataservices/ssl"
 	"github.com/portainer/portainer/api/dataservices/stack"
 	"github.com/portainer/portainer/api/dataservices/tag"
@@ -35,6 +36,7 @@ import (
 	"github.com/portainer/portainer/api/dataservices/user"
 	"github.com/portainer/portainer/api/dataservices/version"
 	"github.com/portainer/portainer/api/dataservices/webhook"
+	"github.com/portainer/portainer/api/dataservices/workflow"
 
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/encoding/json"
@@ -67,6 +69,7 @@ type Store struct {
 	ScheduleService           *schedule.Service
 	SettingsService           *settings.Service
 	SnapshotService           *snapshot.Service
+	SourceService             *source.Service
 	SSLSettingsService        *ssl.Service
 	StackService              *stack.Service
 	TagService                *tag.Service
@@ -76,6 +79,7 @@ type Store struct {
 	UserService               *user.Service
 	VersionService            *version.Service
 	WebhookService            *webhook.Service
+	WorkflowService           *workflow.Service
 	PendingActionsService     *pendingactions.Service
 }
 
@@ -179,6 +183,12 @@ func (store *Store) initServices() error {
 	}
 	store.SnapshotService = snapshotService
 
+	sourceService, err := source.NewService(store.connection)
+	if err != nil {
+		return err
+	}
+	store.SourceService = sourceService
+
 	sslSettingsService, err := ssl.NewService(store.connection)
 	if err != nil {
 		return err
@@ -238,6 +248,12 @@ func (store *Store) initServices() error {
 		return err
 	}
 	store.WebhookService = webhookService
+
+	workflowService, err := workflow.NewService(store.connection)
+	if err != nil {
+		return err
+	}
+	store.WorkflowService = workflowService
 
 	scheduleService, err := schedule.NewService(store.connection)
 	if err != nil {
@@ -332,6 +348,11 @@ func (store *Store) Snapshot() dataservices.SnapshotService {
 	return store.SnapshotService
 }
 
+// Source gives access to the Source data management layer
+func (store *Store) Source() dataservices.SourceService {
+	return store.SourceService
+}
+
 // SSLSettings gives access to the SSL Settings data management layer
 func (store *Store) SSLSettings() dataservices.SSLSettingsService {
 	return store.SSLSettingsService
@@ -377,6 +398,11 @@ func (store *Store) Webhook() dataservices.WebhookService {
 	return store.WebhookService
 }
 
+// Workflow gives access to the Workflow data management layer
+func (store *Store) Workflow() dataservices.WorkflowService {
+	return store.WorkflowService
+}
+
 type storeExport struct {
 	CustomTemplate     []portainer.CustomTemplate     `json:"customtemplates,omitempty"`
 	EdgeGroup          []portainer.EdgeGroup          `json:"edgegroups,omitempty"`
@@ -394,6 +420,7 @@ type storeExport struct {
 	Settings           portainer.Settings             `json:"settings,omitzero"`
 	Snapshot           []portainer.Snapshot           `json:"snapshots,omitempty"`
 	SSLSettings        portainer.SSLSettings          `json:"ssl,omitzero"`
+	Source             []portainer.Source             `json:"sources,omitempty"`
 	Stack              []portainer.Stack              `json:"stacks,omitempty"`
 	Tag                []portainer.Tag                `json:"tags,omitempty"`
 	TeamMembership     []portainer.TeamMembership     `json:"team_membership,omitempty"`
@@ -402,6 +429,7 @@ type storeExport struct {
 	User               []portainer.User               `json:"users,omitempty"`
 	Version            models.Version                 `json:"version,omitzero"`
 	Webhook            []portainer.Webhook            `json:"webhooks,omitempty"`
+	Workflow           []portainer.Workflow           `json:"workflows,omitempty"`
 	Metadata           map[string]any                 `json:"metadata,omitempty"`
 }
 
@@ -536,6 +564,14 @@ func (store *Store) Export(filename string) (err error) {
 		backup.SSLSettings = *settings
 	}
 
+	if s, err := store.Source().ReadAll(); err != nil {
+		if !store.IsErrObjectNotFound(err) {
+			log.Error().Err(err).Msg("exporting Sources")
+		}
+	} else {
+		backup.Source = s
+	}
+
 	if t, err := store.Stack().ReadAll(); err != nil {
 		if !store.IsErrObjectNotFound(err) {
 			log.Error().Err(err).Msg("exporting Stacks")
@@ -590,6 +626,14 @@ func (store *Store) Export(filename string) (err error) {
 		}
 	} else {
 		backup.Webhook = webhooks
+	}
+
+	if w, err := store.Workflow().ReadAll(); err != nil {
+		if !store.IsErrObjectNotFound(err) {
+			log.Error().Err(err).Msg("exporting Workflows")
+		}
+	} else {
+		backup.Workflow = w
 	}
 
 	if version, err := store.Version().Version(); err != nil {
@@ -707,6 +751,18 @@ func (store *Store) Import(filename string) (err error) {
 	for _, v := range backup.Snapshot {
 		if err := store.Snapshot().Update(v.EndpointID, &v); err != nil {
 			log.Warn().Err(err).Msg("failed to update the snapshot in the database")
+		}
+	}
+
+	for _, v := range backup.Source {
+		if err := store.Source().Update(v.ID, &v); err != nil {
+			log.Warn().Err(err).Msg("failed to update the source in the database")
+		}
+	}
+
+	for _, v := range backup.Workflow {
+		if err := store.Workflow().Update(v.ID, &v); err != nil {
+			log.Warn().Err(err).Msg("failed to update the workflow in the database")
 		}
 	}
 

@@ -220,23 +220,27 @@ func Test_getConfig(t *testing.T) {
 		return path
 	}
 
+	getStrPointer := func(s string) *string { return &s }
+
 	tests := []struct {
-		name        string
-		files       map[string]string
-		workingDir  string
-		env         []string
-		osEnv       map[string]string
-		expectedCfg *composetypes.Config
-		expectedErr string
+		name         string
+		composeFiles map[string]string
+		files        map[string]string
+		workingDir   string
+		env          []string
+		osEnv        map[string]string
+		expectedCfg  *composetypes.Config
+		expectedErr  string
 	}{
 		{
 			name: "valid compose file",
-			files: map[string]string{
+			composeFiles: map[string]string{
 				"valid.yml": `version: '3'
 services:
   web:
     image: nginx:latest`,
 			},
+			workingDir: dir,
 			expectedCfg: &composetypes.Config{
 				Filename: dir + "/valid.yml",
 				Version:  "3.13",
@@ -255,9 +259,10 @@ services:
 		},
 		{
 			name: "invalid YAML returns error",
-			files: map[string]string{
+			composeFiles: map[string]string{
 				"invalid.yml": `not: valid: yaml: content`,
 			},
+			workingDir:  dir,
 			expectedErr: "failed to load compose file: yaml: mapping values are not allowed in this context",
 		},
 		{
@@ -266,17 +271,18 @@ services:
 		},
 		{
 			name: "service missing image returns error",
-			files: map[string]string{
+			composeFiles: map[string]string{
 				"noimage.yml": `version: '3'
 services:
   web:
     command: echo hello`,
 			},
+			workingDir:  dir,
 			expectedErr: "invalid image reference for service web: no image specified",
 		},
 		{
 			name: "two compose files are merged",
-			files: map[string]string{
+			composeFiles: map[string]string{
 				"base.yml": `version: '3'
 services:
   web:
@@ -286,6 +292,7 @@ services:
   worker:
     image: alpine:latest`,
 			},
+			workingDir: dir,
 			expectedCfg: &composetypes.Config{
 				Filename: dir + "/base.yml",
 				Version:  "3.13",
@@ -309,13 +316,14 @@ services:
 		},
 		{
 			name: "env var in image resolved from options env",
-			files: map[string]string{
+			composeFiles: map[string]string{
 				"envvar.yml": `version: '3'
 services:
   web:
     image: nginx:${TAG}`,
 			},
-			env: []string{"TAG=1.25"},
+			workingDir: dir,
+			env:        []string{"TAG=1.25"},
 			expectedCfg: &composetypes.Config{
 				Filename: dir + "/envvar.yml",
 				Version:  "3.13",
@@ -334,12 +342,13 @@ services:
 		},
 		{
 			name: "PORTAINER_ prefixed env var from os.Environ is resolved",
-			files: map[string]string{
+			composeFiles: map[string]string{
 				"portainerenv.yml": `version: '3'
 services:
   web:
     image: nginx:${PORTAINER_TAG}`,
 			},
+			workingDir: dir,
 			osEnv: map[string]string{
 				libstack.PortainerEnvVarsPrefix + "TAG": "1.25",
 			},
@@ -359,15 +368,83 @@ services:
 				Configs:  map[string]composetypes.ConfigObjConfig{},
 			},
 		},
+		{
+			name: "env_file with relative path is resolved using workingDir",
+			composeFiles: map[string]string{
+				"docker-compose.yaml": `services:
+  configtest:
+    image: nginx:latest
+    env_file:
+      - stack.env`,
+			},
+			files: map[string]string{
+				"stack.env": "A=junk",
+			},
+			workingDir: dir,
+			expectedCfg: &composetypes.Config{
+				Filename: dir + "/docker-compose.yaml",
+				Version:  "3.13",
+				Services: composetypes.Services{
+					composetypes.ServiceConfig{
+						Name: "configtest",
+						Environment: composetypes.MappingWithEquals{
+							"A": getStrPointer("junk"),
+						},
+						Image:   "nginx:latest",
+						EnvFile: []string{dir + "/stack.env"},
+					},
+				},
+				Networks: map[string]composetypes.NetworkConfig{},
+				Volumes:  map[string]composetypes.VolumeConfig{},
+				Secrets:  map[string]composetypes.SecretConfig{},
+				Configs:  map[string]composetypes.ConfigObjConfig{},
+			},
+		},
+		{
+			name: "absolute path env_filed",
+			composeFiles: map[string]string{
+				"docker-compose.yaml": `services:
+  configtest:
+    image: nginx:latest
+    env_file:
+      - ` + dir + "/stack.env",
+			},
+			files: map[string]string{
+				"stack.env": "A=junk",
+			},
+			workingDir: dir,
+			expectedCfg: &composetypes.Config{
+				Filename: dir + "/docker-compose.yaml",
+				Version:  "3.13",
+				Services: composetypes.Services{
+					composetypes.ServiceConfig{
+						Name: "configtest",
+						Environment: composetypes.MappingWithEquals{
+							"A": getStrPointer("junk"),
+						},
+						Image:   "nginx:latest",
+						EnvFile: []string{dir + "/stack.env"},
+					},
+				},
+				Networks: map[string]composetypes.NetworkConfig{},
+				Volumes:  map[string]composetypes.VolumeConfig{},
+				Secrets:  map[string]composetypes.SecretConfig{},
+				Configs:  map[string]composetypes.ConfigObjConfig{},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			filePaths := make([]string, 0, len(tt.files))
-			for filename, content := range tt.files {
+			filePaths := make([]string, 0, len(tt.composeFiles))
+			for filename, content := range tt.composeFiles {
 				filePaths = append(filePaths, writeFile(filename, content))
 			}
 			slices.Sort(filePaths)
+
+			for filename, content := range tt.files {
+				writeFile(filename, content)
+			}
 
 			for k, v := range tt.osEnv {
 				t.Setenv(k, v)

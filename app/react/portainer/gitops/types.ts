@@ -52,7 +52,7 @@ export type DeployMethod = 'compose' | 'manifest' | 'helm';
 export interface GitFormModel extends GitAuthModel {
   RepositoryURL: string;
   RepositoryURLValid?: boolean;
-  ComposeFilePathInRepository: string;
+  ComposeFilePathInRepository?: string;
   RepositoryReferenceName?: string;
   AdditionalFiles?: string[];
 

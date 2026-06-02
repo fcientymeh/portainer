@@ -111,12 +111,12 @@ func TestDeriveEdgeStackTargetState(t *testing.T) {
 	}{
 		{"empty", nil, StatusUnknown},
 		{"all per-env status slices empty", []portainer.EdgeStackStatusForEnv{{EndpointID: 1}}, StatusUnknown},
-		{"running → healthy", []portainer.EdgeStackStatusForEnv{ep(1, portainer.EdgeStackStatusRunning)}, StatusHealthy},
-		{"deploying → syncing", []portainer.EdgeStackStatusForEnv{ep(1, portainer.EdgeStackStatusDeploying)}, StatusSyncing},
-		{"paused deploying → paused", []portainer.EdgeStackStatusForEnv{ep(1, portainer.EdgeStackStatusPausedDeploying)}, StatusPaused},
+		{"running: healthy", []portainer.EdgeStackStatusForEnv{ep(1, portainer.EdgeStackStatusRunning)}, StatusHealthy},
+		{"deploying: syncing", []portainer.EdgeStackStatusForEnv{ep(1, portainer.EdgeStackStatusDeploying)}, StatusSyncing},
+		{"paused deploying: paused", []portainer.EdgeStackStatusForEnv{ep(1, portainer.EdgeStackStatusPausedDeploying)}, StatusPaused},
 		{"error short-circuits", []portainer.EdgeStackStatusForEnv{ep(1, portainer.EdgeStackStatusError)}, StatusError},
 		{
-			"error + running → error (short-circuit, order matters)",
+			"error + running gives error (short-circuit, order matters)",
 			[]portainer.EdgeStackStatusForEnv{
 				ep(1, portainer.EdgeStackStatusError),
 				ep(2, portainer.EdgeStackStatusRunning),

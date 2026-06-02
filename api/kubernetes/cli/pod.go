@@ -26,6 +26,47 @@ func (kcl *KubeClient) GetPods(namespace string) ([]corev1.Pod, error) {
 	return pods.Items, nil
 }
 
+// DeletePod deletes a single pod. The owning controller (Deployment,
+// StatefulSet, DaemonSet, ...) is responsible for recreating it. For naked
+// pods the pod is removed permanently.
+func (kcl *KubeClient) DeletePod(namespace, name string) error {
+	return kcl.cli.CoreV1().Pods(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+}
+
+// RestartPod restarts all containers inside a pod in place using the
+// Kubernetes 1.35 alpha pod-restart subresource. The pod itself is preserved.
+// Requires the cluster to expose the corresponding subresource (and feature
+// gate). On clusters that don't, the API server typically returns 404 or 405
+// which is surfaced to the caller.
+func (kcl *KubeClient) RestartPod(namespace, name string) error {
+	return kcl.cli.CoreV1().RESTClient().Post().
+		Namespace(namespace).
+		Resource("pods").
+		Name(name).
+		SubResource("restart").
+		Do(context.TODO()).
+		Error()
+}
+
+// SupportsPodRestart reports whether the API server has registered the
+// `pods/restart` subresource (i.e. the corresponding feature gate is on and
+// the version is recent enough). This is the same signal kubectl uses for
+// subresource availability and is more accurate than a Kubernetes-version
+// comparison because it reflects the cluster's actual capability rather
+// than a version-name proxy.
+func (kcl *KubeClient) SupportsPodRestart() (bool, error) {
+	resources, err := kcl.cli.Discovery().ServerResourcesForGroupVersion("v1")
+	if err != nil {
+		return false, err
+	}
+	for _, r := range resources.APIResources {
+		if r.Name == "pods/restart" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // isReplicaSetOwner checks if the pod's owner reference is a ReplicaSet
 func isReplicaSetOwner(pod corev1.Pod) bool {
 	return len(pod.OwnerReferences) > 0 && pod.OwnerReferences[0].Kind == "ReplicaSet"

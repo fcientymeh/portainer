@@ -12,7 +12,7 @@ import (
 // @id GitOpsSourcesSummary
 // @summary Summarize GitOps source status counts
 // @description Returns a count of sources per status.
-// @description **Access policy**: admin
+// @description **Access policy**: authenticated
 // @tags gitops
 // @security ApiKeyAuth
 // @security jwt
@@ -25,10 +25,6 @@ func (h *Handler) summary(w http.ResponseWriter, r *http.Request) *httperror.Han
 	securityContext, err := security.RetrieveRestrictedRequestContext(r)
 	if err != nil {
 		return httperror.InternalServerError("Unable to retrieve info from request context", err)
-	}
-
-	if !securityContext.IsAdmin {
-		return httperror.Forbidden("Access denied", nil)
 	}
 
 	key := cacheKey(securityContext)

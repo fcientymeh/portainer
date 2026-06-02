@@ -25,6 +25,7 @@ type Color =
   | 'warninglight'
   | 'warning'
   | 'success'
+  | 'blue'
   | 'none';
 type Size = 'xsmall' | 'small' | 'medium' | 'large';
 

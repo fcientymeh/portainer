@@ -581,7 +581,7 @@ test('selecting a sort/filter updates URL via stateService.go', async () => {
     expect(mockStateServiceGo).toHaveBeenCalledWith(
       '.',
       expect.objectContaining({ groupBy: 'Health', groupFilter: 'Up' }),
-      { reload: false }
+      { reload: false, location: 'replace' }
     );
   });
 });

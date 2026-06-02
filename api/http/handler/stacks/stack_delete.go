@@ -10,6 +10,7 @@ import (
 
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/filesystem"
 	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/http/security"
@@ -138,7 +139,14 @@ func (handler *Handler) stackDelete(w http.ResponseWriter, r *http.Request) *htt
 		return httperror.InternalServerError(err.Error(), err)
 	}
 
-	if err := handler.DataStore.Stack().Delete(portainer.StackID(id)); err != nil {
+	if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		if stack.WorkflowID != 0 {
+			if err := tx.Workflow().Delete(stack.WorkflowID); err != nil {
+				return err
+			}
+		}
+		return tx.Stack().Delete(portainer.StackID(id))
+	}); err != nil {
 		return httperror.InternalServerError("Unable to remove the stack from the database", err)
 	}
 
@@ -356,9 +364,16 @@ func (handler *Handler) stackDeleteKubernetesByName(w http.ResponseWriter, r *ht
 			continue
 		}
 
-		if err := handler.DataStore.Stack().Delete(stack.ID); err != nil {
+		if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+			if stack.WorkflowID != 0 {
+				if err := tx.Workflow().Delete(stack.WorkflowID); err != nil {
+					return err
+				}
+			}
+			return tx.Stack().Delete(stack.ID)
+		}); err != nil {
 			errs = errors.Join(errs, err)
-			log.Err(err).Msgf("Unable to remove the stack `%d` from the database", stack.ID)
+			log.Err(err).Int("stack_id", int(stack.ID)).Msg("unable to remove the stack from the database")
 
 			continue
 		}

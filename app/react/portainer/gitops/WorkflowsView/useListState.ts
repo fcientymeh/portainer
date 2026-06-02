@@ -36,6 +36,7 @@ export function useListState() {
   return useTableStateFromUrl({
     localStorageKey: 'workflows',
     defaultSort: DEFAULT_SORT,
+    persistedExtraKeys: ['status', 'type', 'platform'],
     parseExtra: (params) => ({
       status: asEnum(params.status, WORKFLOW_STATUSES),
       type: asEnum(params.type, WORKFLOW_TYPES),

@@ -90,7 +90,7 @@ func (d *stackDeployer) DeployKubernetesStack(ctx context.Context, stack *portai
 		Owner:     user.Username,
 	}
 
-	if stack.GitConfig == nil {
+	if stack.WorkflowID == 0 {
 		appLabels.Kind = "content"
 	} else {
 		appLabels.Kind = "git"

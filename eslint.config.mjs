@@ -14,7 +14,7 @@ import globals from 'globals';
 import prettier from 'eslint-config-prettier';
 
 export default defineConfig([
-  globalIgnores(['**/node_modules/', '**/dist/', '**/test/', '.storybook/public/', 'coverage']),
+  globalIgnores(['**/node_modules/', '**/dist/', '**/test/', '.storybook/public/', 'coverage', 'app/react/portainer/generated-api/']),
 
   js.configs.recommended,
 
@@ -188,6 +188,7 @@ export default defineConfig([
         'error',
         {
           pathGroups: [
+            { pattern: '@api/**', group: 'internal', position: 'before' },
             { pattern: '@@/**', group: 'internal', position: 'after' },
             { pattern: '@/**', group: 'internal' },
           ],

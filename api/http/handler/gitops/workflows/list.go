@@ -128,16 +128,13 @@ func (h *Handler) getWorkflows(ctx context.Context, key string, sc *security.Res
 		return slices.Clone(cached.([]svc.Workflow)), nil
 	}
 
-	result, err := h.fetchWorkflows(ctx, sc, set.ToSet(endpointIDs))
+	result, err := svc.FetchWorkflows(ctx, h.dataStore, h.gitService, h.k8sFactory, sc, set.ToSet(endpointIDs))
 	if err != nil {
 		return nil, err
 	}
 	h.cache.Set(key, result, gocache.DefaultExpiration)
-	return slices.Clone(result), nil
-}
 
-func (h *Handler) fetchWorkflows(ctx context.Context, sc *security.RestrictedRequestContext, endpointIDSet set.Set[portainer.EndpointID]) ([]svc.Workflow, error) {
-	return svc.FetchWorkflows(ctx, h.dataStore, h.gitService, h.k8sFactory, sc, endpointIDSet)
+	return slices.Clone(result), nil
 }
 
 func cacheKey(sc *security.RestrictedRequestContext, endpointIDs []portainer.EndpointID) string {

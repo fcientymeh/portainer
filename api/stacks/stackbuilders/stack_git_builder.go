@@ -9,6 +9,7 @@ import (
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/filesystem"
 	gittypes "github.com/portainer/portainer/api/git/types"
+	"github.com/portainer/portainer/api/gitops/workflows"
 	"github.com/portainer/portainer/api/scheduler"
 	"github.com/portainer/portainer/api/stacks/deployments"
 	"github.com/portainer/portainer/api/stacks/stackutils"
@@ -66,7 +67,45 @@ func (b *GitMethodStackBuilder) prepare(ctx context.Context, payload *StackPaylo
 
 	// Update the latest commit id
 	repoConfig.ConfigHash = commitHash
-	b.stack.GitConfig = &repoConfig
+
+	var workflowID portainer.WorkflowID
+
+	if err := b.dataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		repoConfig.URL = gittypes.SanitizeURL(repoConfig.URL)
+
+		src, err := workflows.FindOrCreateGitSource(tx, &portainer.Source{
+			Name:      gittypes.RepoName(repoConfig.URL),
+			Type:      portainer.SourceTypeGit,
+			GitConfig: &repoConfig,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to find or create source: %w", err)
+		}
+
+		wf := &portainer.Workflow{
+			Name: b.stack.Name,
+			Artifacts: []portainer.ArtifactSources{{
+				Artifact: portainer.Artifact{
+					ReferenceName:  repoConfig.ReferenceName,
+					ConfigFilePath: repoConfig.ConfigFilePath,
+					ConfigHash:     repoConfig.ConfigHash,
+					StackID:        b.stack.ID,
+				},
+				SourceIDs: []portainer.SourceID{src.ID},
+			}},
+		}
+		if err := tx.Workflow().Create(wf); err != nil {
+			return fmt.Errorf("failed to create workflow: %w", err)
+		}
+
+		workflowID = wf.ID
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	b.stack.WorkflowID = workflowID
 
 	return nil
 }

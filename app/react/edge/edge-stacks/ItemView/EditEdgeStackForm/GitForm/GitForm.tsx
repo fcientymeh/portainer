@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Form, Formik, useFormikContext } from 'formik';
 import { useRouter } from '@uirouter/react';
 
@@ -67,6 +68,10 @@ export function GitForm({ stack }: { stack: EdgeStack }) {
   const { saveCredentials, isLoading: isSaveCredentialsLoading } =
     useSaveCredentialsIfRequired();
 
+  const [webhookId] = useState(
+    () => stack.AutoUpdate?.Webhook || createWebhookId()
+  );
+
   if (!stack.GitConfig) {
     return null;
   }
@@ -82,8 +87,6 @@ export function GitForm({ stack }: { stack: EdgeStack }) {
     relativePath: parseRelativePathResponse(stack),
     envVars: stack.EnvVars || [],
   };
-
-  const webhookId = stack.AutoUpdate?.Webhook || createWebhookId();
 
   return (
     <Formik initialValues={initialValues} onSubmit={handleSubmit}>

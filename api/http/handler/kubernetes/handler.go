@@ -94,6 +94,17 @@ func NewHandler(bouncer security.BouncerService, authorizationService *authoriza
 	endpointRouter.Handle("/namespaces/{namespace}", httperror.LoggerHandler(h.updateKubernetesNamespace)).Methods(http.MethodPut)
 	endpointRouter.Handle("/volumes", httperror.LoggerHandler(h.GetAllKubernetesVolumes)).Methods(http.MethodGet)
 	endpointRouter.Handle("/volumes/count", httperror.LoggerHandler(h.getAllKubernetesVolumesCount)).Methods(http.MethodGet)
+	endpointRouter.Handle("/persistent_volumes", httperror.LoggerHandler(h.getAllKubernetesPersistentVolumes)).Methods(http.MethodGet)
+	endpointRouter.Handle("/persistent_volumes/delete", httperror.LoggerHandler(h.deleteKubernetesPersistentVolumes)).Methods(http.MethodPost)
+	endpointRouter.Handle("/persistent_volumes/reclaim_policy", httperror.LoggerHandler(h.updateKubernetesPVReclaimPolicy)).Methods(http.MethodPut)
+	endpointRouter.Handle("/persistent_volumes/{name}", httperror.LoggerHandler(h.getKubernetesPersistentVolume)).Methods(http.MethodGet)
+	endpointRouter.Handle("/persistent_volume_claims", httperror.LoggerHandler(h.getAllKubernetesPersistentVolumeClaims)).Methods(http.MethodGet)
+	endpointRouter.Handle("/persistent_volume_claims/delete", httperror.LoggerHandler(h.deleteKubernetesPersistentVolumeClaims)).Methods(http.MethodPost)
+	endpointRouter.Handle("/persistent_volume_claims/resize", httperror.LoggerHandler(h.resizeKubernetesPersistentVolumeClaim)).Methods(http.MethodPut)
+	endpointRouter.Handle("/storage_classes", httperror.LoggerHandler(h.getAllKubernetesStorageClasses)).Methods(http.MethodGet)
+	endpointRouter.Handle("/storage_classes/delete", httperror.LoggerHandler(h.deleteKubernetesStorageClasses)).Methods(http.MethodPost)
+	endpointRouter.Handle("/storage_classes/{name}", httperror.LoggerHandler(h.getKubernetesStorageClass)).Methods(http.MethodGet)
+	endpointRouter.Handle("/storage_classes/{name}/default", httperror.LoggerHandler(h.setDefaultKubernetesStorageClass)).Methods(http.MethodPut)
 	endpointRouter.Handle("/service_accounts", httperror.LoggerHandler(h.getAllKubernetesServiceAccounts)).Methods(http.MethodGet)
 	endpointRouter.Handle("/service_accounts/delete", httperror.LoggerHandler(h.deleteKubernetesServiceAccounts)).Methods(http.MethodPost)
 	endpointRouter.Handle("/roles", httperror.LoggerHandler(h.getAllKubernetesRoles)).Methods(http.MethodGet)
@@ -106,6 +117,7 @@ func NewHandler(bouncer security.BouncerService, authorizationService *authoriza
 	endpointRouter.Handle("/cluster_role_bindings/delete", httperror.LoggerHandler(h.deleteClusterRoleBindings)).Methods(http.MethodPost)
 	endpointRouter.Handle("/describe", httperror.LoggerHandler(h.describeResource)).Methods(http.MethodGet)
 	endpointRouter.Handle("/nodes/{name}/drain", httperror.LoggerHandler(h.drainNode)).Methods(http.MethodPost)
+	endpointRouter.Handle("/version", httperror.LoggerHandler(h.getKubernetesVersion)).Methods(http.MethodGet)
 
 	// namespaces
 	// in the future this piece of code might be in another package (or a few different packages - namespaces/namespace?)
@@ -128,6 +140,10 @@ func NewHandler(bouncer security.BouncerService, authorizationService *authoriza
 	namespaceRouter.Handle("/service_accounts/{name}/image_pull_secrets", httperror.LoggerHandler(h.updateKubernetesServiceAccountImagePullSecrets)).Methods(http.MethodPut)
 	namespaceRouter.Handle("/volumes", httperror.LoggerHandler(h.GetKubernetesVolumesInNamespace)).Methods(http.MethodGet)
 	namespaceRouter.Handle("/volumes/{volume}", httperror.LoggerHandler(h.getKubernetesVolume)).Methods(http.MethodGet)
+	namespaceRouter.Handle("/persistent_volume_claims", httperror.LoggerHandler(h.getKubernetesPVCsInNamespace)).Methods(http.MethodGet)
+	namespaceRouter.Handle("/persistent_volume_claims/{name}", httperror.LoggerHandler(h.getKubernetesPersistentVolumeClaim)).Methods(http.MethodGet)
+	namespaceRouter.Handle("/pods/{name}", httperror.LoggerHandler(h.deleteKubernetesPod)).Methods(http.MethodDelete)
+	namespaceRouter.Handle("/pods/{name}/restart", httperror.LoggerHandler(h.restartKubernetesPod)).Methods(http.MethodPost)
 
 	// Deprecated
 	endpointRouter.Handle("/namespaces", middlewares.Deprecated(endpointRouter, deprecatedNamespaceParser)).Methods(http.MethodPut)

@@ -20,13 +20,14 @@ func MapStackToWorkflow(s portainer.Stack, gitConfig *gittypes.RepoConfig, sourc
 			Artifact: artifact,
 			Target:   deriveStackTargetState(s),
 		},
-		GitConfig: gitConfig,
+		GitConfig:  gitConfig,
+		AutoUpdate: s.AutoUpdate,
 		Target: Target{
 			EndpointID: s.EndpointID,
 			Namespace:  s.Namespace,
 		},
 		CreationDate: s.CreationDate,
-		LastSyncDate: stackLastSyncDate(s),
+		LastSyncDate: StackLastSyncDate(s),
 	}
 }
 
@@ -59,7 +60,7 @@ func MapEdgeStackToWorkflow(es portainer.EdgeStack, gitConfig *gittypes.RepoConf
 	}
 }
 
-func stackLastSyncDate(s portainer.Stack) int64 {
+func StackLastSyncDate(s portainer.Stack) int64 {
 	for i := len(s.DeploymentStatus) - 1; i >= 0; i-- {
 		if s.DeploymentStatus[i].Status == portainer.StackStatusActive {
 			return s.DeploymentStatus[i].Time
@@ -114,12 +115,23 @@ func isEdgeStackHealthyStatus(t portainer.EdgeStackStatusType) bool {
 	return false
 }
 
+// ArtifactsToSourceSet returns the set of all SourceIDs referenced by the given artifact-source mappings
+func ArtifactsToSourceSet(artifacts ...portainer.ArtifactSources) set.Set[portainer.SourceID] {
+	s := make(set.Set[portainer.SourceID])
+	for _, a := range artifacts {
+		for _, sid := range a.SourceIDs {
+			s.Add(sid)
+		}
+	}
+
+	return s
+}
+
 func resolveEdgeGroupEndpoints(groups []portainer.EdgeGroupID, groupEndpoints map[portainer.EdgeGroupID][]portainer.EndpointID) []portainer.EndpointID {
 	seen := set.Set[portainer.EndpointID]{}
 	for _, gid := range groups {
 		for _, epID := range groupEndpoints[gid] {
 			seen.Add(epID)
-
 		}
 	}
 	return seen.Keys()

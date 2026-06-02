@@ -109,9 +109,9 @@ export function GitForm({
       />
 
       <ComposePathField
-        value={value.ComposeFilePathInRepository}
+        value={value.ComposeFilePathInRepository || ''}
         onChange={(value) =>
-          handleChange({ ComposeFilePathInRepository: value })
+          handleChange({ ComposeFilePathInRepository: value || undefined })
         }
         isCompose={deployMethod === 'compose'}
         model={value}

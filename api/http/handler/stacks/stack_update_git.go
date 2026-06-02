@@ -89,8 +89,17 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 		return httperror.NotFound("Unable to find a stack with the specified identifier inside the database", err)
 	} else if err != nil {
 		return httperror.InternalServerError("Unable to find a stack with the specified identifier inside the database", err)
-	} else if stack.GitConfig == nil {
+	} else if stack.WorkflowID == 0 {
 		msg := "No Git config in the found stack"
+		return httperror.InternalServerError(msg, errors.New(msg))
+	}
+
+	gitConfig, sourceID, err := loadGitConfigForStack(handler.DataStore, stack.WorkflowID, stack.ID)
+	if err != nil {
+		return httperror.InternalServerError("Unable to load git config for stack", err)
+	}
+	if gitConfig == nil {
+		msg := "No Git config in the found stack source"
 		return httperror.InternalServerError(msg, errors.New(msg))
 	}
 
@@ -159,24 +168,24 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 		deployments.StopAutoupdate(stack.ID, stack.AutoUpdate.JobID, handler.Scheduler)
 	}
 
-	if stack.CurrentDeploymentInfo == nil && stack.GitConfig != nil {
+	if stack.CurrentDeploymentInfo == nil {
 		stack.CurrentDeploymentInfo = &portainer.StackDeploymentInfo{
-			RepositoryURL:   stack.GitConfig.URL,
-			ReferenceName:   stack.GitConfig.ReferenceName,
-			ConfigFilePath:  stack.GitConfig.ConfigFilePath,
+			RepositoryURL:   gitConfig.URL,
+			ReferenceName:   gitConfig.ReferenceName,
+			ConfigFilePath:  gitConfig.ConfigFilePath,
 			AdditionalFiles: stack.AdditionalFiles,
-			ConfigHash:      stack.GitConfig.ConfigHash,
+			ConfigHash:      gitConfig.ConfigHash,
 		}
 	}
 
-	//update retrieved stack data based on the payload
-	stack.GitConfig.ReferenceName = payload.RepositoryReferenceName
-	stack.GitConfig.TLSSkipVerify = payload.TLSSkipVerify
+	// Update gitConfig based on payload; the updated config is saved to Source (not stack.GitConfig).
+	gitConfig.ReferenceName = payload.RepositoryReferenceName
+	gitConfig.TLSSkipVerify = payload.TLSSkipVerify
 	if payload.RepositoryURL != "" {
-		stack.GitConfig.URL = payload.RepositoryURL
+		gitConfig.URL = payload.RepositoryURL
 	}
 	if payload.ConfigFilePath != "" {
-		stack.GitConfig.ConfigFilePath = payload.ConfigFilePath
+		gitConfig.ConfigFilePath = payload.ConfigFilePath
 	}
 	if payload.AdditionalFiles != nil {
 		stack.AdditionalFiles = payload.AdditionalFiles
@@ -198,27 +207,27 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 
 		// When the existing stack is using the custom username/password and the password is not updated,
 		// the stack should keep using the saved username/password
-		if password == "" && stack.GitConfig != nil && stack.GitConfig.Authentication != nil {
-			password = stack.GitConfig.Authentication.Password
+		if password == "" && gitConfig.Authentication != nil {
+			password = gitConfig.Authentication.Password
 		}
 
-		stack.GitConfig.Authentication = &gittypes.GitAuthentication{
+		gitConfig.Authentication = &gittypes.GitAuthentication{
 			Username: payload.RepositoryUsername,
 			Password: password,
 		}
 
 		if _, err := handler.GitService.LatestCommitID(
 			context.TODO(),
-			stack.GitConfig.URL,
-			stack.GitConfig.ReferenceName,
-			stack.GitConfig.Authentication.Username,
-			stack.GitConfig.Authentication.Password,
-			stack.GitConfig.TLSSkipVerify,
+			gitConfig.URL,
+			gitConfig.ReferenceName,
+			gitConfig.Authentication.Username,
+			gitConfig.Authentication.Password,
+			gitConfig.TLSSkipVerify,
 		); err != nil {
 			return httperror.InternalServerError("Unable to fetch git repository", err)
 		}
 	} else {
-		stack.GitConfig.Authentication = nil
+		gitConfig.Authentication = nil
 	}
 
 	if payload.AutoUpdate != nil && payload.AutoUpdate.Interval != "" {
@@ -229,16 +238,17 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 		}
 	}
 
-	// Save the updated stack to DB
+	// Save the updated stack and git config to DB.
 	if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		return tx.Stack().Update(stack.ID, stack)
+		if err := tx.Stack().Update(stack.ID, stack); err != nil {
+			return err
+		}
+		if err := saveStackGitConfig(tx, stack.WorkflowID, stack.ID, sourceID, gitConfig); err != nil {
+			return err
+		}
+		return fillStackGitConfig(tx, stack)
 	}); err != nil {
 		return httperror.InternalServerError("Unable to persist the stack changes inside the database", err)
-	}
-
-	if stack.GitConfig != nil && stack.GitConfig.Authentication != nil && stack.GitConfig.Authentication.Password != "" {
-		// sanitize password in the http response to minimise possible security leaks
-		stack.GitConfig.Authentication.Password = ""
 	}
 	if errorek == nil {
 		if r.Method != http.MethodGet {

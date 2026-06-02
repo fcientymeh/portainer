@@ -2,6 +2,7 @@ package boltdb
 
 import (
 	"errors"
+	"strconv"
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
@@ -23,10 +24,10 @@ func TestTxs(t *testing.T) {
 
 	err := conn.Open()
 	require.NoError(t, err)
-	defer func() {
+	t.Cleanup(func() {
 		err := conn.Close()
 		require.NoError(t, err)
-	}()
+	})
 
 	// Error propagation
 	err = conn.UpdateTx(func(tx portainer.Transaction) error {
@@ -102,4 +103,58 @@ func TestTxs(t *testing.T) {
 		return tx.CreateObjectWithId(testBucketName, testId, newObj)
 	})
 	require.Error(t, err)
+}
+
+func BenchmarkGetAll(b *testing.B) {
+	const endpointBucket = "endpoints"
+	const n = 10000
+
+	conn := DbConnection{Path: b.TempDir()}
+
+	err := conn.Open()
+	require.NoError(b, err)
+	b.Cleanup(func() {
+		err := conn.Close()
+		require.NoError(b, err)
+	})
+
+	err = conn.UpdateTx(func(tx portainer.Transaction) error {
+		if err := tx.SetServiceName(endpointBucket); err != nil {
+			return err
+		}
+
+		for i := 1; i <= n; i++ {
+			ep := portainer.Endpoint{
+				ID:              portainer.EndpointID(i),
+				Name:            "env-" + strconv.Itoa(i),
+				Type:            portainer.DockerEnvironment,
+				URL:             "tcp://192.168.1." + strconv.Itoa(i%254+1) + ":2375",
+				PublicURL:       "https://env-" + strconv.Itoa(i) + ".example.com",
+				GroupID:         portainer.EndpointGroupID(i%10 + 1),
+				TagIDs:          []portainer.TagID{portainer.TagID(i%5 + 1), portainer.TagID(i%3 + 1)},
+				LastCheckInDate: int64(i) * 1000,
+				EdgeID:          "edge-" + strconv.Itoa(i),
+			}
+
+			if err := tx.CreateObjectWithId(endpointBucket, i, &ep); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	require.NoError(b, err)
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for b.Loop() {
+		var collection []portainer.Endpoint
+
+		if err := conn.ViewTx(func(tx portainer.Transaction) error {
+			return tx.GetAll(endpointBucket, new(portainer.Endpoint), dataservices.AppendFn(&collection))
+		}); err != nil {
+			b.Fatal(err)
+		}
+	}
 }

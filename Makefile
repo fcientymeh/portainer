@@ -36,8 +36,8 @@ build-storybook: ## Build and serve the storybook files
 .PHONY: deps server-deps client-deps tidy
 deps: server-deps client-deps ## Download all client and server build dependancies
 
+## This is empty because the pipeline requires it but ce has no server deps
 server-deps: init-dist ## Download dependant server binaries
-	@./build/download_binaries.sh $(PLATFORM) $(ARCH)
 
 client-deps: ## Install client dependencies
 	pnpm install
@@ -121,6 +121,10 @@ docs-serve: docs-build ## Serve docs locally with Swagger UI on port 8080
 		-e SWAGGER_JSON=/foo/swagger.yaml \
 		-v $(PWD)/dist/docs:/foo \
 		swaggerapi/swagger-ui
+		
+.PHONY: generate-api
+generate-api: docs-validate ## Generate API client and types from OpenAPI spec
+	pnpm generate-api
 
 ##@ Helpers
 .PHONY: help

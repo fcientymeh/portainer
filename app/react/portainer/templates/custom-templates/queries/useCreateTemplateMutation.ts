@@ -223,7 +223,7 @@ interface CustomTemplateFromGitRepositoryPayload {
    */
   RepositoryGitCredentialID?: number;
   /** Path to the Stack file inside the Git repository. */
-  ComposeFilePathInRepository: string;
+  ComposeFilePathInRepository?: string;
   /** Definitions of variables in the stack file. */
   Variables: VariableDefinition[];
   /** Indicates whether to skip SSL verification when cloning the Git repository. */

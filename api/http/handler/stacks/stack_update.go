@@ -213,9 +213,8 @@ func (handler *Handler) updateStackInTx(tx dataservices.DataStoreTx, r *http.Req
 
 	deployGate.startDeploy()
 
-	if stack.GitConfig != nil && stack.GitConfig.Authentication != nil && stack.GitConfig.Authentication.Password != "" {
-		// Sanitize password in the http response to minimise possible security leaks
-		stack.GitConfig.Authentication.Password = ""
+	if err := fillStackGitConfig(tx, stack); err != nil {
+		return nil, httperror.InternalServerError("Unable to load git config for stack", err)
 	}
 	uzer, errorek := security.RetrieveTokenData(r)
 	if errorek == nil {
@@ -237,7 +236,7 @@ func (handler *Handler) updateAndDeployStack(tx dataservices.DataStoreTx, r *htt
 
 		return handler.updateComposeStack(tx, r, stack, endpoint, gate)
 	case portainer.KubernetesStack:
-		return handler.updateKubernetesStack(r, stack, endpoint, gate)
+		return handler.updateKubernetesStack(tx, r, stack, endpoint, gate)
 	}
 
 	return httperror.InternalServerError("Unsupported stack", errors.Errorf("unsupported stack type: %v", stack.Type))
@@ -249,7 +248,7 @@ func (handler *Handler) updateComposeStack(tx dataservices.DataStoreTx, r *http.
 		deployments.StopAutoupdate(stack.ID, stack.AutoUpdate.JobID, handler.Scheduler)
 		stack.AutoUpdate = nil
 	}
-	if stack.GitConfig != nil {
+	if stack.WorkflowID != 0 {
 		stack.FromAppTemplate = true
 	}
 
@@ -261,9 +260,12 @@ func (handler *Handler) updateComposeStack(tx dataservices.DataStoreTx, r *http.
 	payload.RepullImageAndRedeploy = payload.RepullImageAndRedeploy || payload.PullImage
 	stack.Env = payload.Env
 
-	if stack.GitConfig != nil {
-		// detach from git
-		stack.GitConfig = nil
+	if stack.WorkflowID != 0 {
+		oldWorkflowID := stack.WorkflowID
+		stack.WorkflowID = 0
+		if err := tx.Workflow().Delete(oldWorkflowID); err != nil {
+			return httperror.InternalServerError("Unable to remove git workflow records from database", err)
+		}
 	}
 
 	stackFolder := strconv.Itoa(int(stack.ID))
@@ -331,7 +333,7 @@ func (handler *Handler) updateSwarmStack(tx dataservices.DataStoreTx, r *http.Re
 		deployments.StopAutoupdate(stack.ID, stack.AutoUpdate.JobID, handler.Scheduler)
 		stack.AutoUpdate = nil
 	}
-	if stack.GitConfig != nil {
+	if stack.WorkflowID != 0 {
 		stack.FromAppTemplate = true
 	}
 
@@ -342,9 +344,12 @@ func (handler *Handler) updateSwarmStack(tx dataservices.DataStoreTx, r *http.Re
 	payload.RepullImageAndRedeploy = payload.RepullImageAndRedeploy || payload.PullImage
 	stack.Env = payload.Env
 
-	if stack.GitConfig != nil {
-		// detach from git
-		stack.GitConfig = nil
+	if stack.WorkflowID != 0 {
+		oldWorkflowID := stack.WorkflowID
+		stack.WorkflowID = 0
+		if err := tx.Workflow().Delete(oldWorkflowID); err != nil {
+			return httperror.InternalServerError("Unable to remove git workflow records from database", err)
+		}
 	}
 	// Get content of stack
 

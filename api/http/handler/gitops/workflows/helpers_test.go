@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
 	gittypes "github.com/portainer/portainer/api/git/types"
 	ce "github.com/portainer/portainer/api/gitops/workflows"
 	"github.com/portainer/portainer/api/http/security"
@@ -39,4 +40,29 @@ func decodeWorkflows(t *testing.T, rr *httptest.ResponseRecorder) []ce.Workflow 
 // gitConfig is a convenience constructor for test RepoConfigs.
 func gitConfig(url string) *gittypes.RepoConfig {
 	return &gittypes.RepoConfig{URL: url, ConfigFilePath: "docker-compose.yml"}
+}
+
+// createGitStack creates Source, Workflow, and Stack records with WorkflowID properly wired.
+func createGitStack(t *testing.T, tx dataservices.DataStoreTx, stack *portainer.Stack) {
+	t.Helper()
+
+	if stack.GitConfig != nil {
+		src := &portainer.Source{GitConfig: stack.GitConfig, Type: portainer.SourceTypeGit}
+		require.NoError(t, tx.Source().Create(src))
+
+		wf := &portainer.Workflow{Artifacts: []portainer.ArtifactSources{{
+			Artifact: portainer.Artifact{
+				StackID:        stack.ID,
+				ReferenceName:  stack.GitConfig.ReferenceName,
+				ConfigFilePath: stack.GitConfig.ConfigFilePath,
+				ConfigHash:     stack.GitConfig.ConfigHash,
+			},
+			SourceIDs: []portainer.SourceID{src.ID},
+		}}}
+		require.NoError(t, tx.Workflow().Create(wf))
+
+		stack.WorkflowID = wf.ID
+	}
+
+	require.NoError(t, tx.Stack().Create(stack))
 }
