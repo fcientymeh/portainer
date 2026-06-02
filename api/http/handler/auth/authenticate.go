@@ -138,14 +138,14 @@ func (handler *Handler) authenticate(rw http.ResponseWriter, r *http.Request) *h
 
 		///zaczynamy zabawe z opendistro
 
-		return handler.authenticateAipOpenDistro(rw, payload.Username, payload.Password)
+		return handler.authenticateAipOpenDistro(rw, r, payload.Username, payload.Password)
 		//////
 	}
 }
 
 ///////////////////////////////////////
 
-func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, user string, password string) *httperror.HandlerError {
+func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, r *http.Request, user string, password string) *httperror.HandlerError {
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	log.Info().Msgf("Opendistro auth procedure entry")
 	urls := os.Getenv("AIP_OPENDISTRO_URL")
@@ -188,18 +188,18 @@ func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, user st
 	}
 	if statusCode != 200 {
 		//log.Printf("Response failed with status code: %d \nReason: %s\n", res.StatusCode, body)
-		log.Printf("Unauthorized access! Invalid credentials - authenticate.go:191")
+		log.Printf("Unauthorized access! Invalid credentials")
 		return &httperror.HandlerError{http.StatusUnprocessableEntity, "Invalid credentials", httperrors.ErrUnauthorized}
 	}
 	if statusCode == 200 {
-		log.Printf("User authorization OK - authenticate.go:195")
+		log.Printf("User authorization OK")
 		//		fmt.Printf("%s", res.StatusCode)
 		//		fmt.Printf("%s", body)
 		var userData userOD
 		json.Unmarshal([]byte(bodyRes), &userData)
-		log.Printf("JSON response validation OK - authenticate.go:200")
-		log.Printf("Auth username: %s - authenticate.go:201", userData.Name)
-		log.Printf("Auth user roles: %s - authenticate.go:202", userData.BackendRoles)
+		log.Printf("JSON response validation OK")
+		log.Printf("Auth username: %s", userData.Name)
+		log.Printf("Auth user roles: %s", userData.BackendRoles)
 		var odRole = portainer.StandardUserRole //defaultowo
 		var readonlyRole int
 		readonlyRole = 0
@@ -220,12 +220,13 @@ func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, user st
 
 		//dobra, jesli usera nie ma , trzeba utworzyc, a jesli istnieje, to pobierzemy ID i zrobimy update
 		u, err := handler.DataStore.User().UserByUsername(user)
+		portainer_user := &portainer.User{
+			Username: user,
+			Role:     odRole,
+		}
 		if u == nil {
 			log.Info().Msgf("No user found in local database. Create/sync user %s", user)
-			portainer_user := &portainer.User{
-				Username: user,
-				Role:     odRole,
-			}
+
 			err = handler.DataStore.User().Create(portainer_user)
 			if err != nil {
 				log.Info().Msgf("Error during synchronizing user data")
@@ -246,7 +247,7 @@ func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, user st
 					return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist team memberships inside the database", err}
 				}
 			}
-			return handler.writeToken(w, portainer_user, false)
+			return handler.writeToken(w, r, portainer_user, false, false)
 		} else {
 			//update user, update role...
 			u.Role = odRole
@@ -285,7 +286,7 @@ func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, user st
 						}
 					}
 
-					return handler.writeToken(w, u, false)
+					return handler.writeToken(w, r, portainer_user, false, false)
 				} else {
 					// user ma nie byc w teamie readonly, sprawdzic, a jak byl to usunac
 					teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(u.ID)
@@ -304,10 +305,10 @@ func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, user st
 							break
 						}
 					}
-					return handler.writeToken(w, u, false)
+					return handler.writeToken(w, r, portainer_user, false, false)
 				}
 			}
-			return handler.writeToken(w, u, false)
+			return handler.writeToken(w, r, portainer_user, false, false)
 		}
 	} else {
 		return &httperror.HandlerError{http.StatusUnprocessableEntity, "System or application error. Contact with AISecLab support team", httperrors.ErrUnauthorized}
