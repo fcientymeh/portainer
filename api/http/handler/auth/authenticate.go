@@ -90,6 +90,7 @@ func (handler *Handler) authenticate(rw http.ResponseWriter, r *http.Request) *h
 
 	///  tutaj if, czy os env jest ustawiony i bazujemy na opendistro, jak nie, to jedziemy standardowo jak bylo
 	aipOpenDistroUrl := os.Getenv("AIP_OPENDISTRO_URL")
+	//aipOpenDistroUrl := "https://172.31.0.21:9200"
 	if aipOpenDistroUrl == "" {
 		if err != nil && (settings.AuthenticationMethod == portainer.AuthenticationInternal || settings.AuthenticationMethod == portainer.AuthenticationOAuth) {
 			//------------ AIP AISECLAB MOD START------------------------
@@ -115,7 +116,6 @@ func (handler *Handler) authenticate(rw http.ResponseWriter, r *http.Request) *h
 				}
 			}
 		}
-
 		// Clear any existing user caches
 		if user != nil {
 			handler.KubernetesClientFactory.ClearUserClientCache(strconv.Itoa(int(user.ID)))
@@ -137,18 +137,19 @@ func (handler *Handler) authenticate(rw http.ResponseWriter, r *http.Request) *h
 	} else {
 
 		///zaczynamy zabawe z opendistro
-
-		return handler.authenticateAipOpenDistro(rw, r, payload.Username, payload.Password)
+		log.Info().Msg("Authentication AIP Opensearch enabled")
+		return handler.authenticateAipOpenDistro(rw, r, user, payload.Username, payload.Password, aipOpenDistroUrl, settings.ForceSecureCookies)
 		//////
 	}
+
 }
 
 ///////////////////////////////////////
 
-func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, r *http.Request, user string, password string) *httperror.HandlerError {
+func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, r *http.Request, existing_user *portainer.User, user string, password string, aipOpenDistroUrl string, ForceSecureCookies bool) *httperror.HandlerError {
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	log.Info().Msgf("Opendistro auth procedure entry")
-	urls := os.Getenv("AIP_OPENDISTRO_URL")
+	urls := aipOpenDistroUrl
 	urls = strings.ReplaceAll(urls, " ", "")
 	url_suffix := "/_opendistro/_security/api/account"
 	splittedURLs := strings.Split(urls, ",")
@@ -161,23 +162,23 @@ func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, r *http
 		fullURL := url + url_suffix
 		req, err := http.NewRequest("GET", fullURL, nil)
 		if err != nil {
-			log.Info().Msgf("Error generating request to: %s", url)
+			log.Debug().Msgf("Error generating request to: %s", url)
 			odConnectError = true
 		} else {
-			log.Info().Msgf("Setting Basic Auth: %s, pass: *****", user)
+			log.Debug().Msgf("Setting Basic Auth: %s, pass: *****", user)
 			req.SetBasicAuth(user, password)
-			log.Info().Msgf("Do request")
+			log.Debug().Msgf("Do request")
 			client := http.Client{}
 			res, err := client.Do(req)
 			if err != nil {
-				log.Info().Msgf("Connection error to: %s", url)
+				log.Error().Msgf("Connection error to: %s", url)
 				odConnectError = true
 			} else {
-				log.Info().Msgf("Read body response")
+				log.Debug().Msgf("Read body response")
 				body, _ := io.ReadAll(res.Body)
 				bodyRes = body
 				res.Body.Close()
-				log.Info().Msgf("Getting return code")
+				log.Debug().Msgf("Getting return code")
 				statusCode = res.StatusCode
 				break
 			}
@@ -188,18 +189,18 @@ func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, r *http
 	}
 	if statusCode != 200 {
 		//log.Printf("Response failed with status code: %d \nReason: %s\n", res.StatusCode, body)
-		log.Printf("Unauthorized access! Invalid credentials")
+		log.Info().Msgf("Unauthorized access! Invalid credentials")
 		return &httperror.HandlerError{http.StatusUnprocessableEntity, "Invalid credentials", httperrors.ErrUnauthorized}
 	}
 	if statusCode == 200 {
-		log.Printf("User authorization OK")
+		log.Info().Msgf("User authorization OK")
 		//		fmt.Printf("%s", res.StatusCode)
 		//		fmt.Printf("%s", body)
 		var userData userOD
 		json.Unmarshal([]byte(bodyRes), &userData)
-		log.Printf("JSON response validation OK")
-		log.Printf("Auth username: %s", userData.Name)
-		log.Printf("Auth user roles: %s", userData.BackendRoles)
+		log.Info().Msgf("JSON response validation OK")
+		log.Info().Msgf("Auth username: %s", userData.Name)
+		log.Info().Msgf("Auth user roles: %s", userData.BackendRoles)
 		var odRole = portainer.StandardUserRole //defaultowo
 		var readonlyRole int
 		readonlyRole = 0
@@ -220,13 +221,14 @@ func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, r *http
 
 		//dobra, jesli usera nie ma , trzeba utworzyc, a jesli istnieje, to pobierzemy ID i zrobimy update
 		u, err := handler.DataStore.User().UserByUsername(user)
-		portainer_user := &portainer.User{
-			Username: user,
-			Role:     odRole,
-		}
-		if u == nil {
-			log.Info().Msgf("No user found in local database. Create/sync user %s", user)
 
+		if u == nil {
+			//nie ma zsynchronizowanego usera
+
+			log.Info().Msgf("No user found in local database. Create/sync user %s", user)
+			portainer_user := &portainer.User{
+				Username: user,
+				Role:     odRole}
 			err = handler.DataStore.User().Create(portainer_user)
 			if err != nil {
 				log.Info().Msgf("Error during synchronizing user data")
@@ -247,16 +249,19 @@ func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, r *http
 					return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist team memberships inside the database", err}
 				}
 			}
-			return handler.writeToken(w, r, portainer_user, false, false)
+			return handler.writeToken(w, r, portainer_user, false, ForceSecureCookies)
 		} else {
-			//update user, update role...
+			// w bazie jest user taki sam jak w opensearch, wiec tylko weryfikujemy i korygujemy ew. uprawnienia zgodnie z tym co w opensearch
+
+			log.Info().Msgf("Updating role %s", odRole)
 			u.Role = odRole
 			if u.ID == 1 {
 				// user admin is locked always to be admin
-				log.Info().Msgf("First admin account roles cannot be synchronized. Skipping")
+				log.Info().Msgf("First admin account roles cannot be synchronized. Skipping. Only logging")
 			} else {
 				err = handler.DataStore.User().Update(u.ID, u)
 				if err != nil {
+					log.Error().Msgf("Error updating role %s for user %s (user id: %s), odRole, u, u.ID")
 					return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist user changes inside the users database", err}
 				}
 				if readonlyRole == 1 {
@@ -286,7 +291,7 @@ func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, r *http
 						}
 					}
 
-					return handler.writeToken(w, r, portainer_user, false, false)
+					return handler.writeToken(w, r, existing_user, false, ForceSecureCookies)
 				} else {
 					// user ma nie byc w teamie readonly, sprawdzic, a jak byl to usunac
 					teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(u.ID)
@@ -305,10 +310,10 @@ func (handler *Handler) authenticateAipOpenDistro(w http.ResponseWriter, r *http
 							break
 						}
 					}
-					return handler.writeToken(w, r, portainer_user, false, false)
+					return handler.writeToken(w, r, existing_user, false, ForceSecureCookies)
 				}
 			}
-			return handler.writeToken(w, r, portainer_user, false, false)
+			return handler.writeToken(w, r, existing_user, false, ForceSecureCookies)
 		}
 	} else {
 		return &httperror.HandlerError{http.StatusUnprocessableEntity, "System or application error. Contact with AISecLab support team", httperrors.ErrUnauthorized}
