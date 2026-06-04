@@ -99,6 +99,6 @@ export const formTitles: Record<EnvironmentOptionValue, string> = {
   podman: 'Connect to your Podman environment',
   kubernetes: 'Connect to your Kubernetes environment',
   aci: 'Connect to your ACI environment',
-  kubesolo: 'Deploy a kubesolo edge environment',
+  kubesolo: 'Deploy a KubeSolo edge environment',
   k8sInstall: 'Create a Kubernetes cluster',
 };

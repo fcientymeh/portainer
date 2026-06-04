@@ -68,11 +68,13 @@ export function PersistentVolumeClaimsDatatable() {
         title="Volume claims"
         titleIcon={Database}
         disableSelect={!hasWriteAuth}
-        isRowSelectable={({ original: claim }) => claim.phase !== 'Bound'}
+        isRowSelectable={({ original: claim }) =>
+          !claim.owningApplications?.length
+        }
         renderTableActions={(selectedItems) => (
           <Authorized authorizations="K8sVolumesW">
             <DeleteButton
-              confirmMessage="Do you want to remove the selected volume(s)?"
+              confirmMessage="Do you want to remove the selected volume claim(s)?"
               onConfirmed={() => deleteClaimsMutation.mutate(selectedItems)}
               disabled={selectedItems.length === 0}
               isLoading={deleteClaimsMutation.isLoading}

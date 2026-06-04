@@ -7,7 +7,9 @@ import (
 
 	models "github.com/portainer/portainer/api/http/models/kubernetes"
 	"github.com/rs/zerolog/log"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -166,4 +168,88 @@ func parsePersistentVolumeClaimDetail(pvc *corev1.PersistentVolumeClaim) models.
 		Phase:                    pvc.Status.Phase,
 		Labels:                   pvc.Labels,
 	}
+}
+
+// CombineClaimsWithApplications enriches each PVC with the workloads that mount it.
+func (kcl *KubeClient) CombineClaimsWithApplications(pvcs []models.K8sPersistentVolumeClaim) ([]models.K8sPersistentVolumeClaim, error) {
+	pods, err := kcl.cli.CoreV1().Pods("").List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			return pvcs, nil
+		}
+		return nil, fmt.Errorf("failed to list pods: %w", err)
+	}
+
+	replicaSetItems := make([]appsv1.ReplicaSet, 0)
+	deploymentItems := make([]appsv1.Deployment, 0)
+	if containsReplicaSetOwnerReference(pods) {
+		replicaSets, err := kcl.cli.AppsV1().ReplicaSets("").List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to list replica sets: %w", err)
+		}
+		replicaSetItems = replicaSets.Items
+
+		deployments, err := kcl.cli.AppsV1().Deployments("").List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to list deployments: %w", err)
+		}
+		deploymentItems = deployments.Items
+	}
+
+	statefulSetItems := make([]appsv1.StatefulSet, 0)
+	if containsStatefulSetOwnerReference(pods) {
+		statefulSets, err := kcl.cli.AppsV1().StatefulSets("").List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to list stateful sets: %w", err)
+		}
+		statefulSetItems = statefulSets.Items
+	}
+
+	daemonSetItems := make([]appsv1.DaemonSet, 0)
+	if containsDaemonSetOwnerReference(pods) {
+		daemonSets, err := kcl.cli.AppsV1().DaemonSets("").List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to list daemon sets: %w", err)
+		}
+		daemonSetItems = daemonSets.Items
+	}
+
+	resources := PortainerApplicationResources{
+		ReplicaSets:  replicaSetItems,
+		Deployments:  deploymentItems,
+		StatefulSets: statefulSetItems,
+		DaemonSets:   daemonSetItems,
+	}
+
+	for i := range pvcs {
+		for _, pod := range pods.Items {
+			for _, podVolume := range pod.Spec.Volumes {
+				if podVolume.PersistentVolumeClaim == nil {
+					continue
+				}
+				if podVolume.PersistentVolumeClaim.ClaimName != pvcs[i].Name || pod.Namespace != pvcs[i].Namespace {
+					continue
+				}
+				application, err := kcl.ConvertPodToApplication(pod, resources, false)
+				if err != nil {
+					return nil, fmt.Errorf("failed to convert pod to application: %w", err)
+				}
+				if application == nil {
+					continue
+				}
+				alreadyAdded := false
+				for _, existing := range pvcs[i].OwningApplications {
+					if existing.Name == application.Name && existing.Namespace == application.Namespace {
+						alreadyAdded = true
+						break
+					}
+				}
+				if !alreadyAdded {
+					pvcs[i].OwningApplications = append(pvcs[i].OwningApplications, *application)
+				}
+			}
+		}
+	}
+
+	return pvcs, nil
 }

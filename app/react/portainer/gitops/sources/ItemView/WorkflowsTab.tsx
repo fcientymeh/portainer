@@ -33,7 +33,9 @@ export function WorkflowsTab({ workflows }: Props) {
 
       {workflows.length === 0 ? (
         <Card.Body>
-          <p className="text-muted text-sm">No workflows using this source.</p>
+          <p className="text-muted text-sm">
+            No workflows are using this source.
+          </p>
         </Card.Body>
       ) : (
         <WorkflowsList workflows={workflows} />

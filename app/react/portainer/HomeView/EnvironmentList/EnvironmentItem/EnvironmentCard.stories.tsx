@@ -163,10 +163,7 @@ function mockDockerSnapshot(): DockerSnapshot {
     DockerVersion: '24.0.7',
     GpuUseAll: false,
     GpuUseList: [],
-    SnapshotRaw: {
-      Containers: [],
-      SnapshotTime: '',
-    },
+    IsPodman: false,
   };
 }
 

@@ -40,6 +40,34 @@ export function createPersistentVolumeClaimsColumns(
     helper.accessor('namespace', {
       header: 'Namespace',
     }),
+    helper.accessor('owningApplications', {
+      header: 'Used by',
+      id: 'owningApplications',
+      cell: ({ getValue }) => {
+        const apps = getValue();
+        if (!apps?.length) {
+          return '-';
+        }
+        return (
+          <div className="flex flex-col gap-y-1">
+            {apps.map((app) => (
+              <Link
+                key={app.Uid ?? app.Name}
+                to="kubernetes.applications.application"
+                params={{
+                  name: app.Name,
+                  namespace: app.ResourcePool,
+                  'resource-type': app.ApplicationType,
+                }}
+                data-cy={`pvc-owning-app-${app.Name}`}
+              >
+                {app.Name}
+              </Link>
+            ))}
+          </div>
+        );
+      },
+    }),
     helper.accessor('phase', {
       header: 'Status',
       cell: ({ getValue }) => {

@@ -73,7 +73,7 @@ func (c *gitClient) LatestCommitID(ctx context.Context, repositoryUrl, reference
 		URLs: []string{repositoryUrl},
 	})
 
-	refs, err := remote.List(opt)
+	refs, err := remote.ListContext(ctx, opt)
 	if err != nil {
 		if err.Error() == "authentication required" {
 			return "", gittypes.ErrAuthenticationFailure

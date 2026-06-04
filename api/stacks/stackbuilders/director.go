@@ -51,7 +51,8 @@ func Build(ctx context.Context, dataStore dataservices.DataStore, builder stackB
 }
 
 func deploy(dataStore dataservices.DataStore, builder stackBuildProcess, stackID portainer.StackID, endpoint *portainer.Endpoint) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	backgroundCtx := context.Background()
+	ctx, cancel := context.WithTimeout(backgroundCtx, 15*time.Minute)
 	defer cancel()
 
 	deployErr := builder.deploy(ctx, endpoint)
@@ -83,7 +84,7 @@ func deploy(dataStore dataservices.DataStore, builder stackBuildProcess, stackID
 		return
 	}
 
-	if err := builder.postDeploy(ctx, stack); err != nil {
+	if err := builder.postDeploy(backgroundCtx, stack); err != nil {
 		log.Error().Err(err).
 			Int("stack_id", int(stackID)).
 			Str("context", "deploy").

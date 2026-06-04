@@ -1,51 +1,44 @@
 package sources
 
 import (
+	"context"
+
 	portainer "github.com/portainer/portainer/api"
 	gittypes "github.com/portainer/portainer/api/git/types"
 	ce "github.com/portainer/portainer/api/gitops/workflows"
-	"github.com/portainer/portainer/api/set"
 )
 
-func workflowsBySourceID(workflows []ce.Workflow) map[string][]ce.Workflow {
-	byID := make(map[string][]ce.Workflow)
-	for _, wf := range workflows {
-		if wf.GitConfig != nil {
-			id := sourceID(gitSourceKey(wf.GitConfig))
-			byID[id] = append(byID[id], wf)
-		}
+func (h *Handler) buildSource(ctx context.Context, src *portainer.Source, stats ce.SourceStats) Source {
+	var status ce.Status
+	var sourceErr string
+	if src.GitConfig != nil {
+		phase, _ := ce.ComputeGitPhasesForConfig(ctx, h.gitService, src.GitConfig)
+		status = phase.Status
+		sourceErr = phase.Error
+	} else {
+		status = ce.StatusUnknown
 	}
-	return byID
-}
 
-func buildSource(id, url string, wfs []ce.Workflow) Source {
-	statuses := make([]ce.Status, 0, len(wfs))
-	var sourceError string
-	var lastSync int64
-	endpointIDs := make(set.Set[portainer.EndpointID])
-	for _, wf := range wfs {
-		statuses = append(statuses, wf.Status.Source.Status)
-		if sourceError == "" && wf.Status.Source.Status == ce.StatusError {
-			sourceError = wf.Status.Source.Error
-		}
-		lastSync = max(lastSync, wf.LastSyncDate)
-		if wf.Target.EndpointID != 0 {
-			endpointIDs.Add(wf.Target.EndpointID)
-		}
-		for _, id := range wf.Target.ResolvedEndpointIDs {
-			endpointIDs.Add(id)
+	url := ""
+	var provider gittypes.GitProvider
+	if src.GitConfig != nil {
+		url = gittypes.SanitizeURL(src.GitConfig.URL)
+		if src.GitConfig.Authentication != nil {
+			provider = src.GitConfig.Authentication.Provider
 		}
 	}
+
 	return Source{
-		ID:           id,
-		Name:         repoName(url),
-		Type:         "git",
-		URL:          gittypes.SanitizeURL(url),
-		Status:       worstCaseStatus(statuses),
-		Error:        sourceError,
-		UsedBy:       len(wfs),
-		Environments: len(endpointIDs),
-		LastSync:     lastSync,
+		ID:           src.ID,
+		Name:         src.Name,
+		Type:         sourceTypeString(src.Type),
+		URL:          url,
+		Status:       status,
+		Error:        sourceErr,
+		Provider:     provider,
+		UsedBy:       stats.WorkflowCount,
+		Environments: len(stats.EndpointIDs),
+		LastSync:     stats.LastSync,
 	}
 }
 

@@ -45,13 +45,13 @@ export type WorkflowsWorkflow = {
   autoUpdate?: PortainerAutoUpdateSettings;
   creationDate?: number;
   gitConfig?: GittypesRepoConfig;
-  id?: number;
+  id: number;
   lastSyncDate?: number;
-  name?: string;
-  platform?: WorkflowsDeploymentPlatform;
-  status?: WorkflowsWorkflowStatusObject;
-  target?: WorkflowsTarget;
-  type?: WorkflowsType;
+  name: string;
+  platform: WorkflowsDeploymentPlatform;
+  status: WorkflowsWorkflowStatusObject;
+  target: WorkflowsTarget;
+  type: WorkflowsType;
 };
 
 export const WorkflowsType = {
@@ -847,6 +847,46 @@ export const V1TerminationMessagePolicy = {
 
 export type V1TerminationMessagePolicy =
   (typeof V1TerminationMessagePolicy)[keyof typeof V1TerminationMessagePolicy];
+
+export const V1TaintEffect = {
+  /**
+   * TaintEffectNoSchedule
+   */
+  TAINT_EFFECT_NO_SCHEDULE: 'NoSchedule',
+  /**
+   * TaintEffectPreferNoSchedule
+   */
+  TAINT_EFFECT_PREFER_NO_SCHEDULE: 'PreferNoSchedule',
+  /**
+   * TaintEffectNoExecute
+   */
+  TAINT_EFFECT_NO_EXECUTE: 'NoExecute',
+} as const;
+
+export type V1TaintEffect = (typeof V1TaintEffect)[keyof typeof V1TaintEffect];
+
+export type V1Taint = {
+  /**
+   * Required. The effect of the taint on pods
+   * that do not tolerate the taint.
+   * Valid effects are NoSchedule, PreferNoSchedule and NoExecute.
+   */
+  effect?: V1TaintEffect;
+  /**
+   * Required. The taint key to be applied to a node.
+   */
+  key?: string;
+  /**
+   * TimeAdded represents the time at which the taint was added.
+   * +optional
+   */
+  timeAdded?: string;
+  /**
+   * The taint value corresponding to the taint key.
+   * +optional
+   */
+  value?: string;
+};
 
 export type V1TcpSocketAction = {
   /**
@@ -2124,6 +2164,511 @@ export type V1ObjectFieldSelector = {
   fieldPath?: string;
 };
 
+export type V1NodeSystemInfo = {
+  /**
+   * The Architecture reported by the node
+   */
+  architecture?: string;
+  /**
+   * Boot ID reported by the node.
+   */
+  bootID?: string;
+  /**
+   * ContainerRuntime Version reported by the node through runtime remote API (e.g. containerd://1.4.2).
+   */
+  containerRuntimeVersion?: string;
+  /**
+   * Kernel Version reported by the node from 'uname -r' (e.g. 3.16.0-0.bpo.4-amd64).
+   */
+  kernelVersion?: string;
+  /**
+   * Deprecated: KubeProxy Version reported by the node.
+   */
+  kubeProxyVersion?: string;
+  /**
+   * Kubelet Version reported by the node.
+   */
+  kubeletVersion?: string;
+  /**
+   * MachineID reported by the node. For unique machine identification
+   * in the cluster this field is preferred. Learn more from man(5)
+   * machine-id: http://man7.org/linux/man-pages/man5/machine-id.5.html
+   */
+  machineID?: string;
+  /**
+   * The Operating System reported by the node
+   */
+  operatingSystem?: string;
+  /**
+   * OS Image reported by the node from /etc/os-release (e.g. Debian GNU/Linux 7 (wheezy)).
+   */
+  osImage?: string;
+  /**
+   * Swap Info reported by the node.
+   */
+  swap?: V1NodeSwapStatus;
+  /**
+   * SystemUUID reported by the node. For unique machine identification
+   * MachineID is preferred. This field is specific to Red Hat hosts
+   * https://access.redhat.com/documentation/en-us/red_hat_subscription_management/1/html/rhsm/uuid
+   */
+  systemUUID?: string;
+};
+
+export type V1NodeSwapStatus = {
+  /**
+   * Total amount of swap memory in bytes.
+   * +optional
+   */
+  capacity?: number;
+};
+
+export type V1NodeStatus = {
+  /**
+   * List of addresses reachable to the node.
+   * Queried from cloud provider, if available.
+   * More info: https://kubernetes.io/docs/reference/node/node-status/#addresses
+   * Note: This field is declared as mergeable, but the merge key is not sufficiently
+   * unique, which can cause data corruption when it is merged. Callers should instead
+   * use a full-replacement patch. See https://pr.k8s.io/79391 for an example.
+   * Consumers should assume that addresses can change during the
+   * lifetime of a Node. However, there are some exceptions where this may not
+   * be possible, such as Pods that inherit a Node's address in its own status or
+   * consumers of the downward API (status.hostIP).
+   * +optional
+   * +patchMergeKey=type
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=type
+   */
+  addresses?: Array<V1NodeAddress>;
+  /**
+   * Allocatable represents the resources of a node that are available for scheduling.
+   * Defaults to Capacity.
+   * +optional
+   */
+  allocatable?: V1ResourceList;
+  /**
+   * Capacity represents the total resources of a node.
+   * More info: https://kubernetes.io/docs/reference/node/node-status/#capacity
+   * +optional
+   */
+  capacity?: V1ResourceList;
+  /**
+   * Conditions is an array of current observed node conditions.
+   * More info: https://kubernetes.io/docs/reference/node/node-status/#condition
+   * +optional
+   * +patchMergeKey=type
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=type
+   */
+  conditions?: Array<V1NodeCondition>;
+  /**
+   * Status of the config assigned to the node via the dynamic Kubelet config feature.
+   * +optional
+   */
+  config?: V1NodeConfigStatus;
+  /**
+   * Endpoints of daemons running on the Node.
+   * +optional
+   */
+  daemonEndpoints?: V1NodeDaemonEndpoints;
+  /**
+   * DeclaredFeatures represents the features related to feature gates that are declared by the node.
+   * +featureGate=NodeDeclaredFeatures
+   * +optional
+   * +listType=atomic
+   */
+  declaredFeatures?: Array<string>;
+  /**
+   * Features describes the set of features implemented by the CRI implementation.
+   * +featureGate=SupplementalGroupsPolicy
+   * +optional
+   */
+  features?: V1NodeFeatures;
+  /**
+   * List of container images on this node
+   * +optional
+   * +listType=atomic
+   */
+  images?: Array<V1ContainerImage>;
+  /**
+   * Set of ids/uuids to uniquely identify the node.
+   * More info: https://kubernetes.io/docs/reference/node/node-status/#info
+   * +optional
+   */
+  nodeInfo?: V1NodeSystemInfo;
+  /**
+   * NodePhase is the recently observed lifecycle phase of the node.
+   * More info: https://kubernetes.io/docs/concepts/nodes/node/#phase
+   * The field is never populated, and now is deprecated.
+   * +optional
+   */
+  phase?: V1NodePhase;
+  /**
+   * The available runtime handlers.
+   * +featureGate=UserNamespacesSupport
+   * +optional
+   * +listType=atomic
+   */
+  runtimeHandlers?: Array<V1NodeRuntimeHandler>;
+  /**
+   * List of volumes that are attached to the node.
+   * +optional
+   * +listType=atomic
+   */
+  volumesAttached?: Array<V1AttachedVolume>;
+  /**
+   * List of attachable volumes in use (mounted) by the node.
+   * +optional
+   * +listType=atomic
+   */
+  volumesInUse?: Array<string>;
+};
+
+export type V1AttachedVolume = {
+  /**
+   * DevicePath represents the device path where the volume should be available
+   */
+  devicePath?: string;
+  /**
+   * Name of the attached volume
+   */
+  name?: string;
+};
+
+export type V1NodeRuntimeHandlerFeatures = {
+  /**
+   * RecursiveReadOnlyMounts is set to true if the runtime handler supports RecursiveReadOnlyMounts.
+   * +optional
+   */
+  recursiveReadOnlyMounts?: boolean;
+  /**
+   * UserNamespaces is set to true if the runtime handler supports UserNamespaces, including for volumes.
+   * +featureGate=UserNamespacesSupport
+   * +optional
+   */
+  userNamespaces?: boolean;
+};
+
+export type V1NodeRuntimeHandler = {
+  /**
+   * Supported features.
+   * +optional
+   */
+  features?: V1NodeRuntimeHandlerFeatures;
+  /**
+   * Runtime handler name.
+   * Empty for the default runtime handler.
+   * +optional
+   */
+  name?: string;
+};
+
+export const V1NodePhase = {
+  /**
+   * NodePending
+   */
+  NODE_PENDING: 'Pending',
+  /**
+   * NodeRunning
+   */
+  NODE_RUNNING: 'Running',
+  /**
+   * NodeTerminated
+   */
+  NODE_TERMINATED: 'Terminated',
+} as const;
+
+export type V1NodePhase = (typeof V1NodePhase)[keyof typeof V1NodePhase];
+
+export type V1ContainerImage = {
+  /**
+   * Names by which this image is known.
+   * e.g. ["kubernetes.example/hyperkube:v1.0.7", "cloud-vendor.registry.example/cloud-vendor/hyperkube:v1.0.7"]
+   * +optional
+   * +listType=atomic
+   */
+  names?: Array<string>;
+  /**
+   * The size of the image in bytes.
+   * +optional
+   */
+  sizeBytes?: number;
+};
+
+export type V1NodeFeatures = {
+  /**
+   * SupplementalGroupsPolicy is set to true if the runtime supports SupplementalGroupsPolicy and ContainerUser.
+   * +optional
+   */
+  supplementalGroupsPolicy?: boolean;
+};
+
+export type V1DaemonEndpoint = {
+  /**
+   * Port number of the given endpoint.
+   */
+  Port?: number;
+};
+
+export type V1NodeDaemonEndpoints = {
+  /**
+   * Endpoint on which Kubelet is listening.
+   * +optional
+   */
+  kubeletEndpoint?: V1DaemonEndpoint;
+};
+
+export type V1ConfigMapNodeConfigSource = {
+  /**
+   * KubeletConfigKey declares which key of the referenced ConfigMap corresponds to the KubeletConfiguration structure
+   * This field is required in all cases.
+   */
+  kubeletConfigKey?: string;
+  /**
+   * Name is the metadata.name of the referenced ConfigMap.
+   * This field is required in all cases.
+   */
+  name?: string;
+  /**
+   * Namespace is the metadata.namespace of the referenced ConfigMap.
+   * This field is required in all cases.
+   */
+  namespace?: string;
+  /**
+   * ResourceVersion is the metadata.ResourceVersion of the referenced ConfigMap.
+   * This field is forbidden in Node.Spec, and required in Node.Status.
+   * +optional
+   */
+  resourceVersion?: string;
+  /**
+   * UID is the metadata.UID of the referenced ConfigMap.
+   * This field is forbidden in Node.Spec, and required in Node.Status.
+   * +optional
+   */
+  uid?: string;
+};
+
+export type V1NodeConfigSource = {
+  /**
+   * ConfigMap is a reference to a Node's ConfigMap
+   */
+  configMap?: V1ConfigMapNodeConfigSource;
+};
+
+export type V1NodeConfigStatus = {
+  /**
+   * Active reports the checkpointed config the node is actively using.
+   * Active will represent either the current version of the Assigned config,
+   * or the current LastKnownGood config, depending on whether attempting to use the
+   * Assigned config results in an error.
+   * +optional
+   */
+  active?: V1NodeConfigSource;
+  /**
+   * Assigned reports the checkpointed config the node will try to use.
+   * When Node.Spec.ConfigSource is updated, the node checkpoints the associated
+   * config payload to local disk, along with a record indicating intended
+   * config. The node refers to this record to choose its config checkpoint, and
+   * reports this record in Assigned. Assigned only updates in the status after
+   * the record has been checkpointed to disk. When the Kubelet is restarted,
+   * it tries to make the Assigned config the Active config by loading and
+   * validating the checkpointed payload identified by Assigned.
+   * +optional
+   */
+  assigned?: V1NodeConfigSource;
+  /**
+   * Error describes any problems reconciling the Spec.ConfigSource to the Active config.
+   * Errors may occur, for example, attempting to checkpoint Spec.ConfigSource to the local Assigned
+   * record, attempting to checkpoint the payload associated with Spec.ConfigSource, attempting
+   * to load or validate the Assigned config, etc.
+   * Errors may occur at different points while syncing config. Earlier errors (e.g. download or
+   * checkpointing errors) will not result in a rollback to LastKnownGood, and may resolve across
+   * Kubelet retries. Later errors (e.g. loading or validating a checkpointed config) will result in
+   * a rollback to LastKnownGood. In the latter case, it is usually possible to resolve the error
+   * by fixing the config assigned in Spec.ConfigSource.
+   * You can find additional information for debugging by searching the error message in the Kubelet log.
+   * Error is a human-readable description of the error state; machines can check whether or not Error
+   * is empty, but should not rely on the stability of the Error text across Kubelet versions.
+   * +optional
+   */
+  error?: string;
+  /**
+   * LastKnownGood reports the checkpointed config the node will fall back to
+   * when it encounters an error attempting to use the Assigned config.
+   * The Assigned config becomes the LastKnownGood config when the node determines
+   * that the Assigned config is stable and correct.
+   * This is currently implemented as a 10-minute soak period starting when the local
+   * record of Assigned config is updated. If the Assigned config is Active at the end
+   * of this period, it becomes the LastKnownGood. Note that if Spec.ConfigSource is
+   * reset to nil (use local defaults), the LastKnownGood is also immediately reset to nil,
+   * because the local default config is always assumed good.
+   * You should not make assumptions about the node's method of determining config stability
+   * and correctness, as this may change or become configurable in the future.
+   * +optional
+   */
+  lastKnownGood?: V1NodeConfigSource;
+};
+
+export const V1NodeConditionType = {
+  /**
+   * NodeReady
+   */
+  NODE_READY: 'Ready',
+  /**
+   * NodeMemoryPressure
+   */
+  NODE_MEMORY_PRESSURE: 'MemoryPressure',
+  /**
+   * NodeDiskPressure
+   */
+  NODE_DISK_PRESSURE: 'DiskPressure',
+  /**
+   * NodePIDPressure
+   */
+  NODE_PID_PRESSURE: 'PIDPressure',
+  /**
+   * NodeNetworkUnavailable
+   */
+  NODE_NETWORK_UNAVAILABLE: 'NetworkUnavailable',
+} as const;
+
+export type V1NodeConditionType =
+  (typeof V1NodeConditionType)[keyof typeof V1NodeConditionType];
+
+export const K8sIoApiCoreV1ConditionStatus = {
+  /**
+   * ConditionTrue
+   */
+  CONDITION_TRUE: 'True',
+  /**
+   * ConditionFalse
+   */
+  CONDITION_FALSE: 'False',
+  /**
+   * ConditionUnknown
+   */
+  CONDITION_UNKNOWN: 'Unknown',
+} as const;
+
+export type K8sIoApiCoreV1ConditionStatus =
+  (typeof K8sIoApiCoreV1ConditionStatus)[keyof typeof K8sIoApiCoreV1ConditionStatus];
+
+export type V1NodeCondition = {
+  /**
+   * Last time we got an update on a given condition.
+   * +optional
+   */
+  lastHeartbeatTime?: string;
+  /**
+   * Last time the condition transit from one status to another.
+   * +optional
+   */
+  lastTransitionTime?: string;
+  /**
+   * Human readable message indicating details about last transition.
+   * +optional
+   */
+  message?: string;
+  /**
+   * (brief) reason for the condition's last transition.
+   * +optional
+   */
+  reason?: string;
+  /**
+   * Status of the condition, one of True, False, Unknown.
+   */
+  status?: K8sIoApiCoreV1ConditionStatus;
+  /**
+   * Type of node condition.
+   */
+  type?: V1NodeConditionType;
+};
+
+export const V1NodeAddressType = {
+  /**
+   * NodeHostName
+   */
+  NODE_HOST_NAME: 'Hostname',
+  /**
+   * NodeInternalIP
+   */
+  NODE_INTERNAL_IP: 'InternalIP',
+  /**
+   * NodeExternalIP
+   */
+  NODE_EXTERNAL_IP: 'ExternalIP',
+  /**
+   * NodeInternalDNS
+   */
+  NODE_INTERNAL_DNS: 'InternalDNS',
+  /**
+   * NodeExternalDNS
+   */
+  NODE_EXTERNAL_DNS: 'ExternalDNS',
+} as const;
+
+export type V1NodeAddressType =
+  (typeof V1NodeAddressType)[keyof typeof V1NodeAddressType];
+
+export type V1NodeAddress = {
+  /**
+   * The node address.
+   */
+  address?: string;
+  /**
+   * Node address type, one of Hostname, ExternalIP or InternalIP.
+   */
+  type?: V1NodeAddressType;
+};
+
+export type V1NodeSpec = {
+  /**
+   * Deprecated: Previously used to specify the source of the node's configuration for the DynamicKubeletConfig feature. This feature is removed.
+   * +optional
+   */
+  configSource?: V1NodeConfigSource;
+  /**
+   * Deprecated. Not all kubelets will set this field. Remove field after 1.13.
+   * see: https://issues.k8s.io/61966
+   * +optional
+   */
+  externalID?: string;
+  /**
+   * PodCIDR represents the pod IP range assigned to the node.
+   * +optional
+   */
+  podCIDR?: string;
+  /**
+   * podCIDRs represents the IP ranges assigned to the node for usage by Pods on that node. If this
+   * field is specified, the 0th entry must match the podCIDR field. It may contain at most 1 value for
+   * each of IPv4 and IPv6.
+   * +optional
+   * +patchStrategy=merge
+   * +listType=set
+   */
+  podCIDRs?: Array<string>;
+  /**
+   * ID of the node assigned by the cloud provider in the format: <ProviderName>://<ProviderSpecificNodeID>
+   * +optional
+   */
+  providerID?: string;
+  /**
+   * If specified, the node's taints.
+   * +optional
+   * +listType=atomic
+   */
+  taints?: Array<V1Taint>;
+  /**
+   * Unschedulable controls node schedulability of new pods. By default, node is schedulable.
+   * More info: https://kubernetes.io/docs/concepts/nodes/node/#manual-node-administration
+   * +optional
+   */
+  unschedulable?: boolean;
+};
+
 export type V1NamespaceStatus = {
   /**
    * Represents the latest available observations of a namespace's current state.
@@ -2181,24 +2726,6 @@ export const V1NamespaceConditionType = {
 
 export type V1NamespaceConditionType =
   (typeof V1NamespaceConditionType)[keyof typeof V1NamespaceConditionType];
-
-export const K8sIoApiCoreV1ConditionStatus = {
-  /**
-   * ConditionTrue
-   */
-  CONDITION_TRUE: 'True',
-  /**
-   * ConditionFalse
-   */
-  CONDITION_FALSE: 'False',
-  /**
-   * ConditionUnknown
-   */
-  CONDITION_UNKNOWN: 'Unknown',
-} as const;
-
-export type K8sIoApiCoreV1ConditionStatus =
-  (typeof K8sIoApiCoreV1ConditionStatus)[keyof typeof K8sIoApiCoreV1ConditionStatus];
 
 export type V1NamespaceCondition = {
   /**
@@ -3108,8 +3635,8 @@ export type PortainerTemplateRepository = {
 };
 
 export type PortainerPair = {
-  name?: string;
-  value?: string;
+  name: string;
+  value: string;
 };
 
 export type PortainerTemplateEnvSelect = {
@@ -3692,10 +4219,14 @@ export type SslSslUpdatePayload = {
   Key?: string;
 };
 
+export type SourcesGitAuthInfo = {
+  type?: number;
+  username?: string;
+};
+
 export type SourcesConnectionInfo = {
-  authentication?: boolean;
+  authentication?: SourcesGitAuthInfo;
   configFilePath?: string;
-  referenceName?: string;
   tlsSkipVerify?: boolean;
 };
 
@@ -3704,17 +4235,36 @@ export type SourcesAutoUpdateInfo = {
   mechanism?: string;
 };
 
+export const SourcesSourceType = {
+  /**
+   * SourceTypeGit
+   */
+  SOURCE_TYPE_GIT: 'git',
+  /**
+   * SourceTypeHelm
+   */
+  SOURCE_TYPE_HELM: 'helm',
+  /**
+   * SourceTypeOCI
+   */
+  SOURCE_TYPE_OCI: 'oci',
+} as const;
+
+export type SourcesSourceType =
+  (typeof SourcesSourceType)[keyof typeof SourcesSourceType];
+
 export type SourcesSourceDetail = {
   autoUpdate?: SourcesAutoUpdateInfo;
-  connection?: SourcesConnectionInfo;
+  connection: SourcesConnectionInfo;
   environments?: number;
   error?: string;
-  id?: string;
+  id: number;
   lastSync?: number;
-  name?: string;
-  status?: WorkflowsStatus;
-  type?: string;
-  url?: string;
+  name: string;
+  provider?: number;
+  status: WorkflowsStatus;
+  type: SourcesSourceType;
+  url: string;
   usedBy?: number;
   workflows?: Array<WorkflowsWorkflow>;
 };
@@ -3722,21 +4272,36 @@ export type SourcesSourceDetail = {
 export type SourcesSource = {
   environments?: number;
   error?: string;
-  id?: string;
+  id: number;
   lastSync?: number;
-  name?: string;
-  status?: WorkflowsStatus;
-  type?: string;
-  url?: string;
+  name: string;
+  provider?: number;
+  status: WorkflowsStatus;
+  type: SourcesSourceType;
+  url: string;
   usedBy?: number;
+};
+
+export type SourcesGitSourceUpdatePayload = {
+  authentication?: SourcesGitAuthenticationUpdatePayload;
+  name?: string;
+  referenceName?: string;
+  tlsSkipVerify?: boolean;
+  url?: string;
+};
+
+export type SourcesGitAuthenticationUpdatePayload = {
+  authorizationType?: 0 | 1;
+  password?: string;
+  provider?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  username?: string;
 };
 
 export type SourcesGitSourceCreatePayload = {
   authentication?: SourcesGitAuthenticationPayload;
-  clearAuthentication?: boolean;
   name?: string;
   tlsSkipVerify?: boolean;
-  url?: string;
+  url: string;
 };
 
 export type SourcesGitAuthenticationPayload = {
@@ -3744,6 +4309,11 @@ export type SourcesGitAuthenticationPayload = {
   password?: string;
   provider?: number;
   username?: string;
+};
+
+export type SourcesConnectionTestResult = {
+  error?: string;
+  success?: boolean;
 };
 
 export type SettingsSettingsUpdatePayload = {
@@ -3852,7 +4422,7 @@ export type PortainerTlsConfiguration = {
   /**
    * Use TLS
    */
-  TLS?: boolean;
+  TLS: boolean;
   /**
    * Path to the TLS CA certificate file
    */
@@ -3868,7 +4438,7 @@ export type PortainerTlsConfiguration = {
   /**
    * Skip the verification of the server TLS certificate
    */
-  TLSSkipVerify?: boolean;
+  TLSSkipVerify: boolean;
 };
 
 export type PortainerLdapSearchSettings = {
@@ -3997,6 +4567,10 @@ export type SettingsPublicSettingsResponse = {
    * The minimum required length for a password of any user when using internal auth mode
    */
   RequiredPasswordLength?: number;
+  /**
+   * Whether the setup wizard must send the X-Setup-Token header for admin init / restore
+   */
+  RequiresSetupToken?: boolean;
   /**
    * Whether team sync is enabled
    */
@@ -4516,7 +5090,7 @@ export type PortainerAccessPolicy = {
   /**
    * Role identifier. Reference the role that will be associated to this access policy
    */
-  RoleId?: number;
+  RoleId: number;
 };
 
 export type PortainerTeamAccessPolicies = {
@@ -4750,7 +5324,7 @@ export type PortainerUserThemeSettings = {
   /**
    * Color represents the color theme of the UI
    */
-  color?: 'dark' | 'light' | 'highcontrast' | 'auto';
+  color?: 'dark' | 'light' | 'highcontrast' | 'auto' | '';
 };
 
 export const PortainerUserRole = {
@@ -4791,37 +5365,17 @@ export type PortainerResourceAccessLevel =
 
 export type PortainerUser = {
   /**
-   * Deprecated in DBVersion == 25
-   */
-  EndpointAuthorizations?: PortainerEndpointAuthorizations;
-  /**
    * User Identifier
    */
-  Id?: number;
-  /**
-   * Deprecated in DBVersion == 25
-   */
-  PortainerAuthorizations?: PortainerAuthorizations;
+  Id: number;
   /**
    * User role (1 for administrator account and 2 for regular account)
    */
-  Role?: PortainerUserRole;
+  Role: PortainerUserRole;
   ThemeSettings?: PortainerUserThemeSettings;
   TokenIssueAt?: number;
   UseCache?: boolean;
-  /**
-   * Deprecated
-   */
-  UserTheme?: string;
-  Username?: string;
-};
-
-export type PortainerAuthorizations = {
-  [key: string]: boolean;
-};
-
-export type PortainerEndpointAuthorizations = {
-  [key: string]: PortainerAuthorizations;
+  Username: string;
 };
 
 export type PortainerTeamResourceAccess = {
@@ -5450,6 +6004,10 @@ export type PortainerRole = {
   Priority?: number;
 };
 
+export type PortainerAuthorizations = {
+  [key: string]: boolean;
+};
+
 export type PortainerPerformanceMetrics = {
   CPUUsage?: number;
   DiskUsage?: number;
@@ -5459,19 +6017,19 @@ export type PortainerPerformanceMetrics = {
 
 export type PortainerKubernetesStorageClassConfig = {
   AccessModes?: Array<string>;
-  AllowVolumeExpansion?: boolean;
-  Name?: string;
-  Provisioner?: string;
+  AllowVolumeExpansion: boolean;
+  Name: string;
+  Provisioner: string;
 };
 
 export type PortainerKubernetesSnapshot = {
   DiagnosticsData?: PortainerDiagnosticsData;
-  KubernetesVersion?: string;
-  NodeCount?: number;
+  KubernetesVersion: string;
+  NodeCount: number;
   PerformanceMetrics?: PortainerPerformanceMetrics;
-  Time?: number;
-  TotalCPU?: number;
-  TotalMemory?: number;
+  Time: number;
+  TotalCPU: number;
+  TotalMemory: number;
 };
 
 export type PortainerDiagnosticsData = {
@@ -5490,26 +6048,26 @@ export type PortainerDiagnosticsData = {
 export type PortainerKubernetesIngressClassConfig = {
   Blocked?: boolean;
   BlockedNamespaces?: Array<string>;
-  Name?: string;
-  Type?: string;
+  Name: string;
+  Type: string;
 };
 
 export type PortainerKubernetesFlags = {
-  IsServerIngressClassDetected?: boolean;
-  IsServerMetricsDetected?: boolean;
-  IsServerStorageDetected?: boolean;
+  IsServerIngressClassDetected: boolean;
+  IsServerMetricsDetected: boolean;
+  IsServerStorageDetected: boolean;
 };
 
 export type PortainerKubernetesData = {
-  Configuration?: PortainerKubernetesConfiguration;
-  Flags?: PortainerKubernetesFlags;
+  Configuration: PortainerKubernetesConfiguration;
+  Flags: PortainerKubernetesFlags;
   Snapshots?: Array<PortainerKubernetesSnapshot>;
 };
 
 export type PortainerKubernetesConfiguration = {
-  AllowNoneIngressClass?: boolean;
+  AllowNoneIngressClass: boolean;
   EnableResourceOverCommit?: boolean;
-  IngressAvailabilityPerNamespace?: boolean;
+  IngressAvailabilityPerNamespace: boolean;
   IngressClasses?: Array<PortainerKubernetesIngressClassConfig>;
   ResourceOverCommitPercentage?: number;
   RestrictDefaultNamespace?: boolean;
@@ -5546,19 +6104,23 @@ export type PortainerEnvironmentEdgeSettings = {
   /**
    * Whether the device has been started in edge async mode
    */
-  AsyncMode?: boolean;
+  AsyncMode: boolean;
   /**
    * The command list interval for edge agent - used in edge async mode [seconds]
    */
-  CommandInterval?: number;
+  CommandInterval: number;
   /**
    * The ping interval for edge agent - used in edge async mode [seconds]
    */
-  PingInterval?: number;
+  PingInterval: number;
   /**
    * The snapshot interval for edge agent - used in edge async mode [seconds]
    */
-  SnapshotInterval?: number;
+  SnapshotInterval: number;
+};
+
+export type PortainerEnvironmentAgentData = {
+  Version?: string;
 };
 
 export const PortainerEndpointType = {
@@ -5621,108 +6183,82 @@ export type PortainerEndpointSecuritySettings = {
   /**
    * Whether non-administrator should be able to use bind mounts when creating containers
    */
-  allowBindMountsForRegularUsers?: boolean;
+  allowBindMountsForRegularUsers: boolean;
   /**
    * Whether non-administrator should be able to use container capabilities
    */
-  allowContainerCapabilitiesForRegularUsers?: boolean;
+  allowContainerCapabilitiesForRegularUsers: boolean;
   /**
    * Whether non-administrator should be able to use device mapping
    */
-  allowDeviceMappingForRegularUsers?: boolean;
+  allowDeviceMappingForRegularUsers: boolean;
   /**
    * Whether non-administrator should be able to use the host pid
    */
-  allowHostNamespaceForRegularUsers?: boolean;
+  allowHostNamespaceForRegularUsers: boolean;
   /**
    * Whether non-administrator should be able to use privileged mode when creating containers
    */
-  allowPrivilegedModeForRegularUsers?: boolean;
+  allowPrivilegedModeForRegularUsers: boolean;
   /**
    * Whether non-administrator should be able to use security-opt settings
    */
-  allowSecurityOptForRegularUsers?: boolean;
+  allowSecurityOptForRegularUsers: boolean;
   /**
    * Whether non-administrator should be able to manage stacks
    */
-  allowStackManagementForRegularUsers?: boolean;
+  allowStackManagementForRegularUsers: boolean;
   /**
    * Whether non-administrator should be able to use sysctl settings
    */
-  allowSysctlSettingForRegularUsers?: boolean;
+  allowSysctlSettingForRegularUsers: boolean;
   /**
    * Whether non-administrator should be able to browse volumes
    */
-  allowVolumeBrowserForRegularUsers?: boolean;
+  allowVolumeBrowserForRegularUsers: boolean;
   /**
    * Whether host management features are enabled
    */
-  enableHostManagementFeatures?: boolean;
-};
-
-export type PortainerEndpointPostInitMigrations = {
-  MigrateGPUs?: boolean;
-  MigrateIngresses?: boolean;
-  MigrateRegistrySASecrets?: boolean;
+  enableHostManagementFeatures: boolean;
 };
 
 export type PortainerEndpointGroup = {
-  AuthorizedTeams?: Array<number>;
-  /**
-   * Deprecated in DBVersion == 18
-   */
-  AuthorizedUsers?: Array<number>;
   /**
    * Description associated to the environment(endpoint) group
    */
-  Description?: string;
+  Description: string;
   /**
    * Environment(Endpoint) group Identifier
    */
-  Id?: number;
-  /**
-   * Deprecated fields
-   */
-  Labels?: Array<PortainerPair>;
+  Id: number;
   /**
    * Environment(Endpoint) group name
    */
-  Name?: string;
+  Name: string;
   /**
    * List of tags associated to this environment(endpoint) group
    */
   TagIds?: Array<number>;
-  /**
-   * Deprecated in DBVersion == 22
-   */
-  Tags?: Array<string>;
   TeamAccessPolicies?: PortainerTeamAccessPolicies;
   UserAccessPolicies?: PortainerUserAccessPolicies;
 };
 
 export type PortainerEndpoint = {
-  Agent?: {
-    Version?: string;
-  };
-  AuthorizedTeams?: Array<number>;
-  /**
-   * Deprecated in DBVersion == 18
-   */
-  AuthorizedUsers?: Array<number>;
+  Agent: PortainerEnvironmentAgentData;
   AzureCredentials?: PortainerAzureCredentials;
   /**
    * Maximum version of docker-compose
    */
-  ComposeSyntaxMaxVersion?: string;
+  ComposeSyntaxMaxVersion: string;
   /**
-   * ContainerEngine represents the container engine type. This can be 'docker' or 'podman' when interacting directly with these environmentes, otherwise '' for kubernetes environments.
+   * ContainerEngine represents the container engine type. This can be 'docker' or 'podman' when interacting directly with these environments, otherwise '' for kubernetes environments.
    */
-  ContainerEngine?: string;
-  Edge?: PortainerEnvironmentEdgeSettings;
+  ContainerEngine: string;
+  Edge: PortainerEnvironmentEdgeSettings;
   /**
    * The check in interval for edge agent (in seconds)
    */
-  EdgeCheckinInterval?: number;
+  EdgeCheckinInterval: number;
   /**
    * The identifier of the edge agent associated with this environment(endpoint)
    */
@@ -5730,13 +6266,13 @@ export type PortainerEndpoint = {
   /**
    * The key which is used to map the agent to Portainer
    */
-  EdgeKey?: string;
+  EdgeKey: string;
   EnableGPUManagement?: boolean;
   Gpus?: Array<PortainerPair>;
   /**
    * Environment(Endpoint) group identifier
    */
-  GroupId?: number;
+  GroupId: number;
   /**
    * Heartbeat indicates the heartbeat status of an edge environment
    */
@@ -5744,35 +6280,27 @@ export type PortainerEndpoint = {
   /**
    * Environment(Endpoint) Identifier
    */
-  Id?: number;
-  /**
-   * Deprecated v2.18
-   */
-  IsEdgeDevice?: boolean;
+  Id: number;
   /**
    * Associated Kubernetes data
    */
-  Kubernetes?: PortainerKubernetesData;
+  Kubernetes: PortainerKubernetesData;
   /**
    * LastCheckInDate mark last check-in date on checkin
    */
-  LastCheckInDate?: number;
+  LastCheckInDate: number;
   /**
    * Environment(Endpoint) name
    */
-  Name?: string;
-  /**
-   * Whether we need to run any "post init migrations".
-   */
-  PostInitMigrations?: PortainerEndpointPostInitMigrations;
+  Name: string;
   /**
    * URL or IP address where exposed containers will be reachable
    */
-  PublicURL?: string;
+  PublicURL: string;
   /**
    * Environment(Endpoint) specific security settings
    */
-  SecuritySettings?: PortainerEndpointSecuritySettings;
+  SecuritySettings: PortainerEndpointSecuritySettings;
   /**
    * List of snapshots
    */
@@ -5780,24 +6308,12 @@ export type PortainerEndpoint = {
   /**
    * The status of the environment(endpoint) (1 - up, 2 - down)
    */
-  Status?: PortainerEndpointStatus;
-  /**
-   * Deprecated fields
-   * Deprecated in DBVersion == 4
-   */
-  TLS?: boolean;
-  TLSCACert?: string;
-  TLSCert?: string;
-  TLSConfig?: PortainerTlsConfiguration;
-  TLSKey?: string;
+  Status: PortainerEndpointStatus;
+  TLSConfig: PortainerTlsConfiguration;
   /**
    * List of tag identifiers to which this environment(endpoint) is associated
    */
   TagIds?: Array<number>;
-  /**
-   * Deprecated in DBVersion == 22
-   */
-  Tags?: Array<string>;
   /**
    * List of team identifiers authorized to connect to this environment(endpoint)
    */
@@ -5805,11 +6321,11 @@ export type PortainerEndpoint = {
   /**
    * Environment(Endpoint) environment(endpoint) type. 1 for a Docker environment(endpoint), 2 for an agent on Docker environment(endpoint) or 3 for an Azure environment(endpoint).
    */
-  Type?: PortainerEndpointType;
+  Type: PortainerEndpointType;
   /**
    * URL or IP address of the Docker host associated to this environment(endpoint)
    */
-  URL?: string;
+  URL: string;
   /**
    * List of user identifiers authorized to connect to this environment(endpoint)
    */
@@ -5825,42 +6341,42 @@ export type PortainerDockerSnapshotRaw = {
 };
 
 export type PortainerDockerSnapshot = {
-  ContainerCount?: number;
+  ContainerCount: number;
   DiagnosticsData?: PortainerDiagnosticsData;
   DockerSnapshotRaw?: PortainerDockerSnapshotRaw;
-  DockerVersion?: string;
-  GpuUseAll?: boolean;
+  DockerVersion: string;
+  GpuUseAll: boolean;
   GpuUseList?: Array<string>;
-  HealthyContainerCount?: number;
-  ImageCount?: number;
-  IsPodman?: boolean;
-  NodeCount?: number;
+  HealthyContainerCount: number;
+  ImageCount: number;
+  IsPodman: boolean;
+  NodeCount: number;
   PerformanceMetrics?: PortainerPerformanceMetrics;
-  RunningContainerCount?: number;
-  ServiceCount?: number;
-  StackCount?: number;
-  StoppedContainerCount?: number;
-  Swarm?: boolean;
-  Time?: number;
-  TotalCPU?: number;
-  TotalMemory?: number;
-  UnhealthyContainerCount?: number;
-  VolumeCount?: number;
+  RunningContainerCount: number;
+  ServiceCount: number;
+  StackCount: number;
+  StoppedContainerCount: number;
+  Swarm: boolean;
+  Time: number;
+  TotalCPU: number;
+  TotalMemory: number;
+  UnhealthyContainerCount: number;
+  VolumeCount: number;
 };
 
 export type PortainerAzureCredentials = {
   /**
    * Azure application ID
    */
-  ApplicationID?: string;
+  ApplicationID: string;
   /**
    * Azure authentication key
    */
-  AuthenticationKey?: string;
+  AuthenticationKey: string;
   /**
    * Azure tenant ID
    */
-  TenantID?: string;
+  TenantID: string;
 };
 
 export const PortainerEdgeStackStatusType = {
@@ -6277,6 +6793,46 @@ export type KubernetesMetadata = {
   labels?: {
     [key: string]: string;
   };
+};
+
+export type KubernetesKubernetesNodeResponse = {
+  /**
+   * APIVersion defines the versioned schema of this representation of an object.
+   * Servers should convert recognized schemas to the latest internal value, and
+   * may reject unrecognized values.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+   * +optional
+   */
+  apiVersion?: string;
+  /**
+   * Kind is a string value representing the REST resource this object represents.
+   * Servers may infer this from the endpoint the client submits requests to.
+   * Cannot be updated.
+   * In CamelCase.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
+   */
+  kind?: string;
+  /**
+   * Standard object's metadata.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+   * +optional
+   */
+  metadata?: V1ObjectMeta;
+  /**
+   * Spec defines the behavior of a node.
+   * https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+   * +optional
+   */
+  spec?: V1NodeSpec;
+  /**
+   * Most recently observed status of the node.
+   * Populated by the system.
+   * Read-only.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+   * +optional
+   */
+  status?: V1NodeStatus;
 };
 
 export type KubernetesK8sVolumeInfo = {
@@ -6997,49 +7553,6 @@ export type EndpointgroupsEndpointGroupUpdatePayload = {
   UserAccessPolicies?: PortainerUserAccessPolicies;
 };
 
-export type EndpointgroupsEndpointGroupTypeInfo = {
-  Docker?: number;
-  Kubernetes?: number;
-  Mixed?: boolean;
-  Podman?: number;
-};
-
-export type EndpointgroupsEndpointGroupResponse = {
-  AuthorizedTeams?: Array<number>;
-  /**
-   * Deprecated in DBVersion == 18
-   */
-  AuthorizedUsers?: Array<number>;
-  /**
-   * Description associated to the environment(endpoint) group
-   */
-  Description?: string;
-  /**
-   * Environment(Endpoint) group Identifier
-   */
-  Id?: number;
-  /**
-   * Deprecated fields
-   */
-  Labels?: Array<PortainerPair>;
-  /**
-   * Environment(Endpoint) group name
-   */
-  Name?: string;
-  /**
-   * List of tags associated to this environment(endpoint) group
-   */
-  TagIds?: Array<number>;
-  /**
-   * Deprecated in DBVersion == 22
-   */
-  Tags?: Array<string>;
-  TeamAccessPolicies?: PortainerTeamAccessPolicies;
-  Total?: number;
-  TypeInfo?: EndpointgroupsEndpointGroupTypeInfo;
-  UserAccessPolicies?: PortainerUserAccessPolicies;
-};
-
 export type EndpointgroupsEndpointGroupCreatePayload = {
   /**
    * List of environment(endpoint) identifiers that will be part of this group
@@ -7057,6 +7570,36 @@ export type EndpointgroupsEndpointGroupCreatePayload = {
    * List of tag identifiers to which this environment(endpoint) group is associated
    */
   TagIDs?: Array<number>;
+};
+
+export type EndpointgroupsEndpointGroupTypeInfo = {
+  Docker: number;
+  Kubernetes: number;
+  Mixed: boolean;
+  Podman: number;
+};
+
+export type EndpointgroupsEndpointGroupResponse = {
+  /**
+   * Description associated to the environment(endpoint) group
+   */
+  Description: string;
+  /**
+   * Environment(Endpoint) group Identifier
+   */
+  Id: number;
+  /**
+   * Environment(Endpoint) group name
+   */
+  Name: string;
+  /**
+   * List of tags associated to this environment(endpoint) group
+   */
+  TagIds?: Array<number>;
+  TeamAccessPolicies?: PortainerTeamAccessPolicies;
+  Total?: number;
+  TypeInfo?: EndpointgroupsEndpointGroupTypeInfo;
+  UserAccessPolicies?: PortainerUserAccessPolicies;
 };
 
 export type EdgestacksUpdateStatusPayload = {
@@ -7504,8 +8047,6 @@ export type KubernetesK8sServiceInfo2 = KubernetesK8sServiceInfo;
 export type KubernetesK8sIngressInfo2 = KubernetesK8sIngressInfo;
 
 export type KubernetesK8sNamespaceDetails2 = KubernetesK8sNamespaceDetails;
-
-export type SourcesGitSourceCreatePayload2 = SourcesGitSourceCreatePayload;
 
 export type EndpointsEndpointDeleteBatchPayload2 =
   EndpointsEndpointDeleteBatchPayload;
@@ -9358,7 +9899,7 @@ export type EndpointListData = {
     /**
      * Order sorted results by desc/asc
      */
-    order?: number;
+    order?: string;
     /**
      * Search query
      */
@@ -9374,7 +9915,19 @@ export type EndpointListData = {
     /**
      * List environments(endpoints) of this type
      */
-    types?: Array<number>;
+    types?: Array<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>;
+    /**
+     * Filter environments by platform type
+     */
+    platformTypes?: Array<0 | 1 | 2 | 3 | 4>;
+    /**
+     * If true, return only environments with an outdated agent
+     */
+    outdated?: boolean;
+    /**
+     * Exclude environments of these groups
+     */
+    excludeGroupIds?: Array<number>;
     /**
      * search environments(endpoints) with these tags (depends on tagsPartialMatch)
      */
@@ -9391,14 +9944,6 @@ export type EndpointListData = {
      * will exclude these environments(endpoints)
      */
     excludeIds?: Array<number>;
-    /**
-     * will exclude environments(endpoints) belonging to these endpoint groups
-     */
-    excludeGroupIds?: Array<number>;
-    /**
-     * If true, will return environment(endpoint) that were provisioned
-     */
-    provisioned?: boolean;
     /**
      * will return only environments with on of these agent versions
      */
@@ -9424,9 +9969,13 @@ export type EndpointListData = {
      */
     name?: string;
     /**
+     * will return the environments of the specified edge stack
+     */
+    edgeStackId?: number;
+    /**
      * only applied when edgeStackId exists. Filter the returned environments based on their deployment status in the stack (not the environment status!)
      */
-    edgeStackStatus?: string;
+    edgeStackStatus?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
     /**
      * List environments(endpoints) of these edge groups
      */
@@ -9465,7 +10014,7 @@ export type EndpointCreateData = {
     /**
      * Environment(Endpoint) type. Value must be one of: 1 (Local Docker environment), 2 (Agent environment), 3 (Azure environment), 4 (Edge agent environment) or 5 (Local Kubernetes Environment)
      */
-    EndpointCreationType: number;
+    EndpointCreationType: 0 | 1 | 2 | 3 | 4 | 5;
     /**
      * Container engine used by the environment(endpoint). Value must be one of: 'docker' or 'podman'
      */
@@ -9519,9 +10068,9 @@ export type EndpointCreateData = {
      */
     AzureAuthenticationKey?: string;
     /**
-     * List of tag identifiers to which this environment(endpoint) is associated
+     * JSON-parsable array of tag identifiers to which this environment(endpoint) is associated
      */
-    TagIds?: Array<number>;
+    TagIds?: string;
     /**
      * The check in interval for edge agent (in seconds)
      */
@@ -9529,7 +10078,7 @@ export type EndpointCreateData = {
     /**
      * URL or IP address that will be used to establish a reverse tunnel
      */
-    EdgeTunnelServerAddress: string;
+    EdgeTunnelServerAddress?: string;
     /**
      * List of GPUs - json stringified array of {name, value} structs
      */
@@ -10704,7 +11253,7 @@ export type GitOpsSourcesUpdateGitData = {
   /**
    * Git source details
    */
-  body: SourcesGitSourceCreatePayload2;
+  body: SourcesGitSourceUpdatePayload;
   path: {
     /**
      * Source identifier
@@ -10748,11 +11297,55 @@ export type GitOpsSourcesUpdateGitResponses = {
 export type GitOpsSourcesUpdateGitResponse =
   GitOpsSourcesUpdateGitResponses[keyof GitOpsSourcesUpdateGitResponses];
 
+export type GitOpsSourcesTestGitData = {
+  /**
+   * Optional connection overrides; omitted fields fall back to stored values
+   */
+  body?: SourcesGitSourceUpdatePayload;
+  path: {
+    /**
+     * Source identifier
+     */
+    id: number;
+  };
+  query?: never;
+  url: '/gitops/sources/{id}/test';
+};
+
+export type GitOpsSourcesTestGitErrors = {
+  /**
+   * Invalid request payload
+   */
+  400: unknown;
+  /**
+   * Access denied
+   */
+  403: unknown;
+  /**
+   * Source not found
+   */
+  404: unknown;
+  /**
+   * Server error
+   */
+  500: unknown;
+};
+
+export type GitOpsSourcesTestGitResponses = {
+  /**
+   * Connection test result
+   */
+  200: SourcesConnectionTestResult;
+};
+
+export type GitOpsSourcesTestGitResponse =
+  GitOpsSourcesTestGitResponses[keyof GitOpsSourcesTestGitResponses];
+
 export type GitOpsSourcesCreateGitData = {
   /**
    * Git source details
    */
-  body: SourcesGitSourceCreatePayload2;
+  body: SourcesGitSourceCreatePayload;
   path?: never;
   query?: never;
   url: '/gitops/sources/git';
@@ -13470,6 +14063,43 @@ export type GetKubernetesNamespacesCountResponses = {
 export type GetKubernetesNamespacesCountResponse =
   GetKubernetesNamespacesCountResponses[keyof GetKubernetesNamespacesCountResponses];
 
+export type GetKubernetesNodesData = {
+  body?: never;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/nodes';
+};
+
+export type GetKubernetesNodesErrors = {
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource.
+   */
+  403: unknown;
+  /**
+   * Server error occurred while attempting to retrieve the list of nodes.
+   */
+  500: unknown;
+};
+
+export type GetKubernetesNodesResponses = {
+  /**
+   * Success
+   */
+  200: Array<KubernetesKubernetesNodeResponse>;
+};
+
+export type GetKubernetesNodesResponse =
+  GetKubernetesNodesResponses[keyof GetKubernetesNodesResponses];
+
 export type DrainNodeData = {
   body?: never;
   path: {
@@ -15195,6 +15825,12 @@ export type RestoreData = {
    * Restore request payload
    */
   body: BackupRestorePayload;
+  headers?: {
+    /**
+     * Setup token (required when instance is uninitialized and --no-setup-token is not set)
+     */
+    'X-Setup-Token'?: string;
+  };
   path?: never;
   query?: never;
   url: '/restore';
@@ -15205,6 +15841,10 @@ export type RestoreErrors = {
    * Invalid request
    */
   400: unknown;
+  /**
+   * Access denied - invalid or missing setup token
+   */
+  403: unknown;
   /**
    * Server error
    */
@@ -17732,6 +18372,12 @@ export type UserAdminInitData = {
    * User details
    */
   body: UsersAdminInitPayload;
+  headers?: {
+    /**
+     * Setup token (required when instance is uninitialized and --no-setup-token is not set)
+     */
+    'X-Setup-Token'?: string;
+  };
   path?: never;
   query?: never;
   url: '/users/admin/init';
@@ -17742,6 +18388,10 @@ export type UserAdminInitErrors = {
    * Invalid request
    */
   400: unknown;
+  /**
+   * Access denied - invalid or missing setup token
+   */
+  403: unknown;
   /**
    * Admin user already initialized
    */

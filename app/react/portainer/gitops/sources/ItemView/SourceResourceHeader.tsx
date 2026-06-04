@@ -1,14 +1,22 @@
 import { GitBranch, GitCommitIcon, ClockIcon } from 'lucide-react';
 import moment from 'moment';
+import { useRouter } from '@uirouter/react';
+
+import { notifySuccess } from '@/portainer/services/notifications';
 
 import { Icon } from '@@/Icon';
 import { ResourceDetailHeader } from '@@/ResourceDetailHeader/ResourceDetailHeader';
 import { HeaderStats } from '@@/ResourceDetailHeader/HeaderStats';
 import { ResourceStatBlock } from '@@/ResourceDetailHeader/ResourceStatBlock';
+import { DeleteButton } from '@@/buttons/DeleteButton';
+import { ActionBarShell } from '@@/ResourceDetailHeader/ActionBarShell';
 
 import { StatusBadge } from '../../WorkflowsView/WorkflowBadges';
 import { SOURCE_TYPES } from '../types';
 import { SourceDetail } from '../queries/useSource';
+import { useDeleteSourceMutation } from '../queries/useDeleteSourceMutation';
+
+import { TestConnectionButton } from './TestConnectionButton';
 
 interface Props {
   source: SourceDetail;
@@ -54,6 +62,49 @@ export function SourceResourceHeader({ source }: Props) {
           </ResourceStatBlock>
         </HeaderStats>
       }
+      actionBar={
+        <ActionBarShell>
+          <TestConnectionButton
+            sourceId={source.id}
+            data-cy="source-test-connection-btn"
+          />
+
+          <div className="ml-auto">
+            <SourceDeleteButton
+              sourceId={source.id}
+              hasWorkflows={source.usedBy > 0}
+            />
+          </div>
+        </ActionBarShell>
+      }
+    />
+  );
+}
+
+function SourceDeleteButton({
+  sourceId,
+  hasWorkflows,
+}: {
+  sourceId: SourceDetail['id'];
+  hasWorkflows: boolean;
+}) {
+  const mutation = useDeleteSourceMutation();
+  const router = useRouter();
+
+  return (
+    <DeleteButton
+      confirmMessage="Are you sure you want to delete this Source?"
+      data-cy="delete-btn"
+      disabled={hasWorkflows}
+      onConfirmed={() =>
+        mutation.mutate(sourceId, {
+          onSuccess() {
+            notifySuccess('Success', 'Source deleted');
+            router.stateService.go('^');
+          },
+        })
+      }
+      isLoading={mutation.isLoading}
     />
   );
 }

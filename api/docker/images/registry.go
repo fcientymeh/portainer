@@ -24,14 +24,17 @@ func NewRegistryClient(dataStore dataservices.DataStore) *RegistryClient {
 }
 
 func (c *RegistryClient) RegistryAuth(image Image) (string, string, error) {
-	registries, err := c.dataStore.Registry().ReadAll()
+	registry, err := cachedRegistry(image.Opts.Name)
 	if err != nil {
-		return "", "", err
-	}
+		registries, err := c.dataStore.Registry().ReadAll()
+		if err != nil {
+			return "", "", err
+		}
 
-	registry, err := findBestMatchRegistry(image.Opts.Name, registries)
-	if err != nil {
-		return "", "", err
+		registry, err = findBestMatchRegistry(image.Opts.Name, registries)
+		if err != nil {
+			return "", "", err
+		}
 	}
 
 	if !registry.Authentication {
@@ -54,14 +57,17 @@ func (c *RegistryClient) CertainRegistryAuth(registry *portainer.Registry) (stri
 }
 
 func (c *RegistryClient) EncodedRegistryAuth(image Image) (string, error) {
-	registries, err := c.dataStore.Registry().ReadAll()
+	registry, err := cachedRegistry(image.Opts.Name)
 	if err != nil {
-		return "", err
-	}
+		registries, err := c.dataStore.Registry().ReadAll()
+		if err != nil {
+			return "", err
+		}
 
-	registry, err := findBestMatchRegistry(image.Opts.Name, registries)
-	if err != nil {
-		return "", err
+		registry, err = findBestMatchRegistry(image.Opts.Name, registries)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	if !registry.Authentication {
@@ -121,7 +127,7 @@ func findBestMatchRegistry(repository string, registries []portainer.Registry) (
 		return nil, errors.New("no registries matched")
 	}
 
-	registriesCache.Set(repository, match, 0)
+	registriesCache.Set(repository, *match, 0)
 
 	return match, nil
 }

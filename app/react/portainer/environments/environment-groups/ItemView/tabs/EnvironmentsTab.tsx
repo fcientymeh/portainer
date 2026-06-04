@@ -44,19 +44,21 @@ export function EnvironmentsTab({
 
   return (
     <>
-      <Widget>
-        <Widget.Body loading={groupQuery.isLoading}>
-          {groupQuery.data && (
-            <GroupForm
-              initialValues={initialValues}
-              onSubmit={handleSubmit}
-              submitLabel="Update"
-              submitLoadingLabel="Updating..."
-              groupId={groupId}
-            />
-          )}
-        </Widget.Body>
-      </Widget>
+      <div className="mx-4">
+        <Widget>
+          <Widget.Body loading={groupQuery.isLoading}>
+            {groupQuery.data && (
+              <GroupForm
+                initialValues={initialValues}
+                onSubmit={handleSubmit}
+                submitLabel="Update"
+                submitLoadingLabel="Updating..."
+                groupId={groupId}
+              />
+            )}
+          </Widget.Body>
+        </Widget>
+      </div>
 
       <div className="pb-20">
         <AssociatedEnvironmentsSelector

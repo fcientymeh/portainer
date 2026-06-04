@@ -149,6 +149,8 @@ When adding a new route to an existing handler use the following as a template (
 
 explanation about each line can be found (here)[https://github.com/swaggo/swag#api-operation]
 
+After changing these annotations, regenerate the TypeScript API client and types — see [Generating API types](./README.md#generating-api-types).
+
 ## Licensing
 
 See the [LICENSE](https://github.com/portainer/portainer/blob/develop/LICENSE) file for our project's licensing. We will ask you to confirm the licensing of your contribution.

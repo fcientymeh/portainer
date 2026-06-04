@@ -13,6 +13,7 @@ export function convertToVolumeViewModels(
     return {
       Applications: owningApplications.map((app) => ({
         Name: app.Name,
+        ResourcePool: app.ResourcePool,
         Namespace: app.Namespace,
         Kind: app.Kind,
       })),

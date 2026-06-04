@@ -48,25 +48,6 @@ func (kcl *KubeClient) RestartPod(namespace, name string) error {
 		Error()
 }
 
-// SupportsPodRestart reports whether the API server has registered the
-// `pods/restart` subresource (i.e. the corresponding feature gate is on and
-// the version is recent enough). This is the same signal kubectl uses for
-// subresource availability and is more accurate than a Kubernetes-version
-// comparison because it reflects the cluster's actual capability rather
-// than a version-name proxy.
-func (kcl *KubeClient) SupportsPodRestart() (bool, error) {
-	resources, err := kcl.cli.Discovery().ServerResourcesForGroupVersion("v1")
-	if err != nil {
-		return false, err
-	}
-	for _, r := range resources.APIResources {
-		if r.Name == "pods/restart" {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
 // isReplicaSetOwner checks if the pod's owner reference is a ReplicaSet
 func isReplicaSetOwner(pod corev1.Pod) bool {
 	return len(pod.OwnerReferences) > 0 && pod.OwnerReferences[0].Kind == "ReplicaSet"

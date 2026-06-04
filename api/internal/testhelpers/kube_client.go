@@ -1,6 +1,8 @@
 package testhelpers
 
 import (
+	"context"
+
 	portainer "github.com/portainer/portainer/api"
 	models "github.com/portainer/portainer/api/http/models/kubernetes"
 )
@@ -19,6 +21,6 @@ func (kcl *testKubeClient) GetEvents(namespace string, resourceId string) ([]mod
 }
 
 // Pod
-func (kcl *testKubeClient) DeletePod(namespace, name string) error  { return nil }
-func (kcl *testKubeClient) RestartPod(namespace, name string) error { return nil }
-func (kcl *testKubeClient) SupportsPodRestart() (bool, error)       { return false, nil }
+func (kcl *testKubeClient) DeletePod(namespace, name string) error             { return nil }
+func (kcl *testKubeClient) RestartPod(namespace, name string) error            { return nil }
+func (kcl *testKubeClient) SupportsPodRestart(_ context.Context) (bool, error) { return false, nil }

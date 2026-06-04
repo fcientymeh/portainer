@@ -28,7 +28,7 @@ type RepoConfig struct {
 	// NOTE: For stacks, this mirrors Stack.EntryPoint and the two are kept in sync by stackUpdateGit.
 	ConfigFilePath string `example:"docker-compose.yml"`
 	// Git credentials
-	Authentication *GitAuthentication
+	Authentication *GitAuthentication `json:",omitempty"`
 	// Repository hash
 	ConfigHash string `example:"bc4c183d756879ea4d173315338110b31004b8e0"`
 	// TLSSkipVerify skips SSL verification when cloning the Git repository

@@ -361,9 +361,12 @@ import type {
   GetKubernetesNamespacesData,
   GetKubernetesNamespacesErrors,
   GetKubernetesNamespacesResponses,
+  GetKubernetesNodesData,
+  GetKubernetesNodesErrors,
   GetKubernetesNodesLimitsData,
   GetKubernetesNodesLimitsErrors,
   GetKubernetesNodesLimitsResponses,
+  GetKubernetesNodesResponses,
   GetKubernetesPersistentVolumeClaimData,
   GetKubernetesPersistentVolumeClaimErrors,
   GetKubernetesPersistentVolumeClaimResponses,
@@ -448,6 +451,9 @@ import type {
   GitOpsSourcesSummaryData,
   GitOpsSourcesSummaryErrors,
   GitOpsSourcesSummaryResponses,
+  GitOpsSourcesTestGitData,
+  GitOpsSourcesTestGitErrors,
+  GitOpsSourcesTestGitResponses,
   GitOpsSourcesUpdateGitData,
   GitOpsSourcesUpdateGitErrors,
   GitOpsSourcesUpdateGitResponses,
@@ -1040,6 +1046,8 @@ import {
   zGetKubernetesNamespacesResponse,
   zGetKubernetesNodesLimitsPath,
   zGetKubernetesNodesLimitsResponse,
+  zGetKubernetesNodesPath,
+  zGetKubernetesNodesResponse,
   zGetKubernetesPersistentVolumeClaimPath,
   zGetKubernetesPersistentVolumeClaimResponse,
   zGetKubernetesPersistentVolumeClaimsInNamespacePath,
@@ -1094,6 +1102,9 @@ import {
   zGitOpsSourcesListQuery,
   zGitOpsSourcesListResponse,
   zGitOpsSourcesSummaryResponse,
+  zGitOpsSourcesTestGitBody,
+  zGitOpsSourcesTestGitPath,
+  zGitOpsSourcesTestGitResponse,
   zGitOpsSourcesUpdateGitBody,
   zGitOpsSourcesUpdateGitPath,
   zGitOpsSourcesUpdateGitResponse,
@@ -1178,6 +1189,7 @@ import {
   zRestartKubernetesPodPath,
   zRestartKubernetesPodResponse,
   zRestoreBody,
+  zRestoreHeaders,
   zRoleListResponse,
   zSetDefaultKubernetesStorageClassPath,
   zSetDefaultKubernetesStorageClassResponse,
@@ -1315,6 +1327,7 @@ import {
   zUploadTlsResponse,
   zUserAdminCheckResponse,
   zUserAdminInitBody,
+  zUserAdminInitHeaders,
   zUserAdminInitResponse,
   zUserCreateBody,
   zUserCreateResponse,
@@ -2985,10 +2998,11 @@ export const endpointList = <ThrowOnError extends boolean = true>(
         groupIds: { array: { explode: false } },
         status: { array: { explode: false } },
         types: { array: { explode: false } },
+        platformTypes: { array: { explode: false } },
+        excludeGroupIds: { array: { explode: false } },
         tagIds: { array: { explode: false } },
         endpointIds: { array: { explode: false } },
         excludeIds: { array: { explode: false } },
-        excludeGroupIds: { array: { explode: false } },
         agentVersions: { array: { explode: false } },
         edgeGroupIds: { array: { explode: false } },
         excludeEdgeGroupIds: { array: { explode: false } },
@@ -3955,6 +3969,43 @@ export const gitOpsSourcesUpdateGit = <ThrowOnError extends boolean = true>(
       { name: 'Authorization', type: 'apiKey' },
     ],
     url: '/gitops/sources/{id}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * Test a Git source connection
+ *
+ * Tests connectivity for a GitOps source, applying optional overrides to the stored configuration.
+ * **Access policy**: admin
+ */
+export const gitOpsSourcesTestGit = <ThrowOnError extends boolean = true>(
+  options: Options<GitOpsSourcesTestGitData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    GitOpsSourcesTestGitResponses,
+    GitOpsSourcesTestGitErrors,
+    ThrowOnError
+  >({
+    requestValidator: async (data) =>
+      await z
+        .object({
+          body: zGitOpsSourcesTestGitBody.optional(),
+          path: zGitOpsSourcesTestGitPath,
+          query: z.never().optional(),
+        })
+        .parseAsync(data),
+    responseType: 'json',
+    responseValidator: async (data) =>
+      await zGitOpsSourcesTestGitResponse.parseAsync(data),
+    security: [
+      { name: 'X-API-KEY', type: 'apiKey' },
+      { name: 'Authorization', type: 'apiKey' },
+    ],
+    url: '/gitops/sources/{id}/test',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -5971,6 +6022,39 @@ export const getKubernetesNamespacesCount = <
   });
 
 /**
+ * Get Kubernetes cluster nodes
+ *
+ * Returns the list of Kubernetes nodes for the selected environment.
+ * **Access policy**: Authenticated user.
+ */
+export const getKubernetesNodes = <ThrowOnError extends boolean = true>(
+  options: Options<GetKubernetesNodesData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    GetKubernetesNodesResponses,
+    GetKubernetesNodesErrors,
+    ThrowOnError
+  >({
+    requestValidator: async (data) =>
+      await z
+        .object({
+          body: z.never().optional(),
+          path: zGetKubernetesNodesPath,
+          query: z.never().optional(),
+        })
+        .parseAsync(data),
+    responseType: 'json',
+    responseValidator: async (data) =>
+      await zGetKubernetesNodesResponse.parseAsync(data),
+    security: [
+      { name: 'X-API-KEY', type: 'apiKey' },
+      { name: 'Authorization', type: 'apiKey' },
+    ],
+    url: '/kubernetes/{id}/nodes',
+    ...options,
+  });
+
+/**
  * Drain a Kubernetes node
  *
  * Drain a Kubernetes node by safely evicting all pods from the node, preparing it for maintenance or removal
@@ -7442,7 +7526,7 @@ export const resourceControlUpdate = <ThrowOnError extends boolean = true>(
  * Triggers a system restore using provided backup file
  *
  * Triggers a system restore using provided backup file
- * **Access policy**: public
+ * **Access policy**: public (requires the X-Setup-Token header on an uninitialized instance unless --no-setup-token is set)
  */
 export const restore = <ThrowOnError extends boolean = true>(
   options: Options<RestoreData, ThrowOnError>
@@ -7456,6 +7540,7 @@ export const restore = <ThrowOnError extends boolean = true>(
       await z
         .object({
           body: zRestoreBody,
+          headers: zRestoreHeaders.optional(),
           path: z.never().optional(),
           query: z.never().optional(),
         })
@@ -9729,7 +9814,7 @@ export const userAdminCheck = <ThrowOnError extends boolean = true>(
  * Initialize administrator account
  *
  * Initialize the 'admin' user account.
- * **Access policy**: public
+ * **Access policy**: public (requires the X-Setup-Token header on an uninitialized instance unless --no-setup-token is set)
  */
 export const userAdminInit = <ThrowOnError extends boolean = true>(
   options: Options<UserAdminInitData, ThrowOnError>
@@ -9743,6 +9828,7 @@ export const userAdminInit = <ThrowOnError extends boolean = true>(
       await z
         .object({
           body: zUserAdminInitBody,
+          headers: zUserAdminInitHeaders.optional(),
           path: z.never().optional(),
           query: z.never().optional(),
         })

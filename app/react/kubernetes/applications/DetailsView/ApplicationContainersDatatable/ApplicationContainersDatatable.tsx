@@ -17,7 +17,6 @@ import { NestedDatatable } from '@@/datatables/NestedDatatable';
 
 import { useApplication } from '../../queries/useApplication';
 import { useApplicationPods } from '../../queries/useApplicationPods';
-import { useRestartPodMutation } from '../../queries/useRestartPodMutation';
 import { useDeletePodMutation } from '../../queries/useDeletePodMutation';
 
 import { ContainerRowData, PodRowData } from './types';
@@ -59,11 +58,6 @@ export function ApplicationContainersDatatable() {
     }
   );
   const versionQuery = useKubernetesVersion(environmentId);
-  const restartPodMutation = useRestartPodMutation(
-    environmentId,
-    namespace,
-    name
-  );
   const deletePodMutation = useDeletePodMutation(
     environmentId,
     namespace,
@@ -77,25 +71,9 @@ export function ApplicationContainersDatatable() {
   const podColumns = useMemo(
     () =>
       getPodColumns({
-        supportsPodRestart: !!versionQuery.data?.supportsPodRestart,
-        isRestarting: restartPodMutation.isLoading,
+        supportsRestartStrategy: !!versionQuery.data?.supportsPodRestart,
         isDeleting: deletePodMutation.isLoading,
         isLoading: versionQuery.isLoading,
-        onRestart: (podName) => {
-          restartPodMutation.mutate(
-            { podName },
-            {
-              onSuccess: () =>
-                notifySuccess('Success', `Pod '${podName}' restarted`),
-              onError: (error) =>
-                notifyError(
-                  'Failure',
-                  error as Error,
-                  `Unable to restart pod '${podName}'`
-                ),
-            }
-          );
-        },
         onDelete: (podName) => {
           deletePodMutation.mutate(
             { podName },
@@ -112,7 +90,7 @@ export function ApplicationContainersDatatable() {
           );
         },
       }),
-    [versionQuery, restartPodMutation, deletePodMutation]
+    [versionQuery, deletePodMutation]
   );
 
   return (

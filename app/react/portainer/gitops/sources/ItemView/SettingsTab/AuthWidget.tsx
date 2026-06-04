@@ -3,10 +3,12 @@ import { LockIcon } from 'lucide-react';
 import { Card } from '@@/primitives/Card';
 import { Badge } from '@@/Badge';
 
+import { SourceDetail } from '../../queries/useSource';
+
 import { DetailField } from './DetailField';
 
 interface Props {
-  auth?: boolean;
+  auth?: SourceDetail['connection']['authentication'];
 }
 
 export function AuthWidget({ auth }: Props) {
@@ -26,12 +28,12 @@ export function AuthWidget({ auth }: Props) {
                   Basic
                 </Badge>
               </DetailField>
-              <DetailField label="Credentials">
+              <DetailField label="Username">
                 <span
                   className="font-mono text-sm"
                   data-cy="source-auth-credentials"
                 >
-                  ********
+                  {auth.username}
                 </span>
               </DetailField>
             </>

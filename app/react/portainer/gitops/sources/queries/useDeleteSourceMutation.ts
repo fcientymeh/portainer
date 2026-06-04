@@ -1,12 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import axios from '@/portainer/services/axios/axios';
+import { gitOpsSourcesDelete } from '@api/sdk.gen';
+
 import { withError } from '@/react-tools/react-query';
+
+import { Source } from '../types';
 
 import { sourceQueryKeys } from './query-keys';
 
-async function deleteSource(id: string): Promise<void> {
-  await axios.delete(`/gitops/sources/${id}`);
+async function deleteSource(id: Source['id']): Promise<void> {
+  await gitOpsSourcesDelete({ path: { id } });
 }
 
 export function useDeleteSourceMutation() {

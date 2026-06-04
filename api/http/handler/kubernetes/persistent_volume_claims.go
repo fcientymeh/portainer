@@ -44,6 +44,11 @@ func (handler *Handler) getAllKubernetesPersistentVolumeClaims(w http.ResponseWr
 		return httperror.InternalServerError("failed to retrieve persistent volume claims", err)
 	}
 
+	pvcs, err = cli.CombineClaimsWithApplications(pvcs)
+	if err != nil {
+		log.Warn().Err(err).Str("context", "GetAllKubernetesPersistentVolumeClaims").Msg("Failed to enrich PVCs with owning applications")
+	}
+
 	return response.JSON(w, pvcs)
 }
 
@@ -81,6 +86,11 @@ func (handler *Handler) getKubernetesPVCsInNamespace(w http.ResponseWriter, r *h
 
 		log.Error().Err(err).Str("context", "GetKubernetesPVCsInNamespace").Str("namespace", namespace).Msg("Failed to retrieve persistent volume claims")
 		return httperror.InternalServerError("failed to retrieve persistent volume claims", err)
+	}
+
+	pvcs, err = cli.CombineClaimsWithApplications(pvcs)
+	if err != nil {
+		log.Warn().Err(err).Str("context", "GetKubernetesPVCsInNamespace").Str("namespace", namespace).Msg("Failed to enrich PVCs with owning applications")
 	}
 
 	return response.JSON(w, pvcs)

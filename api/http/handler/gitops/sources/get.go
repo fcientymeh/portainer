@@ -2,23 +2,25 @@ package sources
 
 import (
 	"net/http"
-	"strconv"
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	gittypes "github.com/portainer/portainer/api/git/types"
-	ce "github.com/portainer/portainer/api/gitops/workflows"
-	"github.com/portainer/portainer/api/http/security"
+	"github.com/portainer/portainer/api/gitops/workflows"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
 )
 
+type gitAuthInfo struct {
+	Type     gittypes.GitCredentialAuthType `json:"type"`
+	Username string                         `json:"username"`
+}
+
 type connectionInfo struct {
-	ReferenceName  string `json:"referenceName"`
-	ConfigFilePath string `json:"configFilePath"`
-	TLSSkipVerify  bool   `json:"tlsSkipVerify"`
-	Authentication bool   `json:"authentication,omitempty"`
+	ConfigFilePath string       `json:"configFilePath"`
+	TLSSkipVerify  bool         `json:"tlsSkipVerify"`
+	Authentication *gitAuthInfo `json:"authentication,omitempty"`
 }
 
 type autoUpdateInfo struct {
@@ -29,9 +31,9 @@ type autoUpdateInfo struct {
 // SourceDetail extends Source with connection settings and linked workflows.
 type SourceDetail struct {
 	Source
-	Connection *connectionInfo `json:"connection,omitempty"`
-	AutoUpdate *autoUpdateInfo `json:"autoUpdate,omitempty"`
-	Workflows  []ce.Workflow   `json:"workflows"`
+	Connection connectionInfo       `json:"connection" validate:"required"`
+	AutoUpdate *autoUpdateInfo      `json:"autoUpdate,omitempty"`
+	Workflows  []workflows.Workflow `json:"workflows"`
 }
 
 // @id GitOpsSourceGet
@@ -55,64 +57,65 @@ func (h *Handler) getSource(w http.ResponseWriter, r *http.Request) *httperror.H
 		return httperror.BadRequest("Invalid source identifier route variable", err)
 	}
 
-	securityContext, err := security.RetrieveRestrictedRequestContext(r)
-	if err != nil {
-		return httperror.InternalServerError("Unable to retrieve info from request context", err)
-	}
+	sourceID := portainer.SourceID(srcID)
 
-	var src *portainer.Source
-	var workflows []ce.Workflow
+	var source *portainer.Source
+	var sourceWfs []workflows.Workflow
+	var stats workflows.SourceStats
 
-	if err := h.dataStore.ViewTx(func(tx dataservices.DataStoreTx) error {
+	err = h.dataStore.ViewTx(func(tx dataservices.DataStoreTx) error {
 		var err error
-		src, err = tx.Source().Read(portainer.SourceID(srcID))
+		source, err = tx.Source().Read(sourceID)
 		if err != nil {
 			return err
 		}
-		workflows, err = ce.FetchWorkflows(r.Context(), tx, h.gitService, h.k8sFactory, securityContext, nil)
+
+		sourceWfs, stats, err = FetchSourceWorkflows(tx, source)
 		return err
-	}); h.dataStore.IsErrObjectNotFound(err) {
-		return httperror.NotFound("Unable to find a source with the specified identifier", err)
+	})
+
+	if h.dataStore.IsErrObjectNotFound(err) {
+		return httperror.NotFound("Source not found", err)
 	} else if err != nil {
 		return httperror.InternalServerError("Unable to retrieve source", err)
 	}
 
-	byID := workflowsBySourceID(workflows)
-
-	var wfs []ce.Workflow
-	if src.GitConfig != nil {
-		wfs = byID[sourceID(gitSourceKey(src.GitConfig))]
-	}
-
-	var autoUpdate *portainer.AutoUpdateSettings
-	if len(wfs) > 0 {
-		autoUpdate = wfs[0].AutoUpdate
-	}
-
-	id := strconv.Itoa(int(src.ID))
-	url := ""
-	if src.GitConfig != nil {
-		url = src.GitConfig.URL
-	}
-
-	detail := SourceDetail{
-		Source:     buildSource(id, url, wfs),
-		Connection: buildConnectionInfo(src.GitConfig),
-		AutoUpdate: buildAutoUpdateInfo(autoUpdate),
-		Workflows:  redactWorkflowCredentials(wfs),
-	}
+	detail := BuildSourceDetail(h.buildSource(r.Context(), source, stats), source.GitConfig, sourceWfs)
 	return response.JSON(w, detail)
 }
 
-func buildConnectionInfo(cfg *gittypes.RepoConfig) *connectionInfo {
-	if cfg == nil {
-		return nil
+func BuildSourceDetail(baseSource Source, cfg *gittypes.RepoConfig, sourceWfs []workflows.Workflow) SourceDetail {
+	var autoUpdate *autoUpdateInfo
+	if len(sourceWfs) > 0 {
+		autoUpdate = buildAutoUpdateInfo(sourceWfs[0].AutoUpdate)
 	}
-	return &connectionInfo{
-		ReferenceName:  cfg.ReferenceName,
+
+	return SourceDetail{
+		Source:     baseSource,
+		Connection: buildConnectionInfo(cfg),
+		AutoUpdate: autoUpdate,
+		Workflows:  redactWorkflowCredentials(sourceWfs),
+	}
+}
+
+func buildConnectionInfo(cfg *gittypes.RepoConfig) connectionInfo {
+	if cfg == nil {
+		return connectionInfo{}
+	}
+	return connectionInfo{
 		ConfigFilePath: cfg.ConfigFilePath,
 		TLSSkipVerify:  cfg.TLSSkipVerify,
-		Authentication: cfg.Authentication != nil,
+		Authentication: buildGitAuthInfo(cfg.Authentication),
+	}
+}
+
+func buildGitAuthInfo(auth *gittypes.GitAuthentication) *gitAuthInfo {
+	if auth == nil {
+		return nil
+	}
+	return &gitAuthInfo{
+		Type:     auth.AuthorizationType,
+		Username: auth.Username,
 	}
 }
 

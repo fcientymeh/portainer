@@ -33,11 +33,7 @@
   ],
   "endpoints": [
     {
-      "Agent": {
-        "Version": ""
-      },
-      "AuthorizedTeams": null,
-      "AuthorizedUsers": null,
+      "Agent": {},
       "AzureCredentials": {
         "ApplicationID": "",
         "AuthenticationKey": "",
@@ -53,7 +49,6 @@
       },
       "EdgeCheckinInterval": 0,
       "EdgeKey": "",
-      "Gpus": [],
       "GroupId": 1,
       "Heartbeat": false,
       "Id": 1,
@@ -62,10 +57,8 @@
           "AllowNoneIngressClass": false,
           "EnableResourceOverCommit": false,
           "IngressAvailabilityPerNamespace": true,
-          "IngressClasses": null,
           "ResourceOverCommitPercentage": 0,
           "RestrictDefaultNamespace": false,
-          "StorageClasses": null,
           "UseLoadBalancer": false,
           "UseServerMetrics": false
         },
@@ -73,8 +66,7 @@
           "IsServerIngressClassDetected": false,
           "IsServerMetricsDetected": false,
           "IsServerStorageDetected": false
-        },
-        "Snapshots": []
+        }
       },
       "LastCheckInDate": 0,
       "Name": "local",
@@ -96,18 +88,13 @@
         "allowVolumeBrowserForRegularUsers": false,
         "enableHostManagementFeatures": false
       },
-      "Snapshots": [],
       "Status": 1,
       "TLSConfig": {
         "TLS": false,
         "TLSSkipVerify": false
       },
-      "TagIds": [],
-      "Tags": null,
-      "TeamAccessPolicies": {},
       "Type": 1,
-      "URL": "unix:///var/run/docker.sock",
-      "UserAccessPolicies": {}
+      "URL": "unix:///var/run/docker.sock"
     }
   ],
   "extension": null,
@@ -669,8 +656,6 @@
         "ContainerCount": 0,
         "DiagnosticsData": {},
         "DockerSnapshotRaw": {
-          "Containers": null,
-          "Images": null,
           "Info": {
             "Architecture": "",
             "CDISpecDirs": null,
@@ -746,7 +731,6 @@
             "SystemTime": "",
             "Warnings": null
           },
-          "Networks": null,
           "Version": {
             "ApiVersion": "",
             "Arch": "",
@@ -765,12 +749,10 @@
         },
         "DockerVersion": "20.10.13",
         "GpuUseAll": false,
-        "GpuUseList": null,
         "HealthyContainerCount": 0,
         "ImageCount": 9,
         "IsPodman": false,
         "NodeCount": 0,
-        "PerformanceMetrics": null,
         "RunningContainerCount": 5,
         "ServiceCount": 0,
         "StackCount": 2,

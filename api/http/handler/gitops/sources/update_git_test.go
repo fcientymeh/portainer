@@ -30,9 +30,9 @@ func TestGitSourceUpdate_Success(t *testing.T) {
 
 	h := newTestHandler(t, store)
 
-	body, err := json.Marshal(GitSourceCreatePayload{
-		URL:  "https://github.com/org/new.git",
-		Name: "new-name",
+	body, err := json.Marshal(GitSourceUpdatePayload{
+		URL:  new("https://github.com/org/new.git"),
+		Name: new("new-name"),
 	})
 	require.NoError(t, err)
 
@@ -47,38 +47,6 @@ func TestGitSourceUpdate_Success(t *testing.T) {
 	require.Equal(t, "new-name", src.Name)
 	require.NotNil(t, src.GitConfig)
 	require.Equal(t, "https://github.com/org/new.git", src.GitConfig.URL)
-}
-
-func TestGitSourceUpdate_DerivesNameFromURL(t *testing.T) {
-	t.Parallel()
-	_, store := datastore.MustNewTestStore(t, false, true)
-
-	var srcID portainer.SourceID
-	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		src := &portainer.Source{Name: "old-name", Type: portainer.SourceTypeGit}
-		err := tx.Source().Create(src)
-		require.NoError(t, err)
-		srcID = src.ID
-
-		return tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole})
-	}))
-
-	h := newTestHandler(t, store)
-
-	body, err := json.Marshal(GitSourceCreatePayload{
-		URL: "https://github.com/org/my-project.git",
-	})
-	require.NoError(t, err)
-
-	rr := httptest.NewRecorder()
-	h.ServeHTTP(rr, buildUpdateReq(t, 1, int(srcID), body))
-
-	require.Equal(t, http.StatusOK, rr.Code)
-
-	var src portainer.Source
-	err = json.NewDecoder(rr.Body).Decode(&src)
-	require.NoError(t, err)
-	require.Equal(t, "my-project", src.Name)
 }
 
 func TestGitSourceUpdate_PreservesAuthWhenNotProvided(t *testing.T) {
@@ -107,9 +75,9 @@ func TestGitSourceUpdate_PreservesAuthWhenNotProvided(t *testing.T) {
 
 	h := newTestHandler(t, store)
 
-	body, err := json.Marshal(GitSourceCreatePayload{
-		URL:  "https://github.com/org/repo.git",
-		Name: "renamed",
+	body, err := json.Marshal(GitSourceUpdatePayload{
+		URL:  new("https://github.com/org/repo.git"),
+		Name: new("renamed"),
 	})
 	require.NoError(t, err)
 
@@ -156,9 +124,9 @@ func TestGitSourceUpdate_ClearsAuthWhenRequested(t *testing.T) {
 
 	h := newTestHandler(t, store)
 
-	body, err := json.Marshal(GitSourceCreatePayload{
-		URL:            "https://github.com/org/repo.git",
-		Authentication: &GitAuthenticationPayload{},
+	body, err := json.Marshal(GitSourceUpdatePayload{
+		URL:            new("https://github.com/org/repo.git"),
+		Authentication: &GitAuthenticationUpdatePayload{},
 	})
 	require.NoError(t, err)
 
@@ -203,11 +171,11 @@ func TestGitSourceUpdate_ReplacesAuthWhenProvided(t *testing.T) {
 
 	h := newTestHandler(t, store)
 
-	body, err := json.Marshal(GitSourceCreatePayload{
-		URL: "https://github.com/org/repo.git",
-		Authentication: &GitAuthenticationPayload{
-			Username: "bob",
-			Password: "new-secret",
+	body, err := json.Marshal(GitSourceUpdatePayload{
+		URL: new("https://github.com/org/repo.git"),
+		Authentication: &GitAuthenticationUpdatePayload{
+			Username: new("bob"),
+			Password: new("new-secret"),
 		},
 	})
 	require.NoError(t, err)
@@ -239,7 +207,7 @@ func TestGitSourceUpdate_NotFound(t *testing.T) {
 
 	h := newTestHandler(t, store)
 
-	body, err := json.Marshal(GitSourceCreatePayload{URL: "https://github.com/org/repo.git"})
+	body, err := json.Marshal(GitSourceUpdatePayload{URL: new("https://github.com/org/repo.git")})
 	require.NoError(t, err)
 
 	rr := httptest.NewRecorder()
@@ -274,8 +242,8 @@ func TestGitSourceUpdate_ConflictOnDuplicateURL(t *testing.T) {
 
 	h := newTestHandler(t, store)
 
-	body, err := json.Marshal(GitSourceCreatePayload{
-		URL: "https://github.com/org/existing.git",
+	body, err := json.Marshal(GitSourceUpdatePayload{
+		URL: new("https://github.com/org/existing.git"),
 	})
 	require.NoError(t, err)
 
@@ -301,7 +269,7 @@ func TestGitSourceUpdate_NotGitSource(t *testing.T) {
 
 	h := newTestHandler(t, store)
 
-	body, err := json.Marshal(GitSourceCreatePayload{URL: "https://github.com/org/repo.git"})
+	body, err := json.Marshal(GitSourceUpdatePayload{URL: new("https://github.com/org/repo.git")})
 	require.NoError(t, err)
 
 	rr := httptest.NewRecorder()
@@ -342,7 +310,7 @@ func TestGitSourceUpdate_NonNumericID(t *testing.T) {
 
 	h := newTestHandler(t, store)
 
-	body, err := json.Marshal(GitSourceCreatePayload{URL: "https://github.com/org/repo.git"})
+	body, err := json.Marshal(GitSourceUpdatePayload{URL: new("https://github.com/org/repo.git")})
 	require.NoError(t, err)
 
 	req := buildUpdateReqWithRawID(t, 1, "not-a-number", body)

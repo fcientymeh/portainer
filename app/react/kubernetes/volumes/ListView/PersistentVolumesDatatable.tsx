@@ -15,12 +15,12 @@ import { DeleteButton } from '@@/buttons/DeleteButton';
 import { Modal } from '@@/modals';
 
 import { systemResourcesSettings } from '../../datatables/SystemResourcesSettings';
+import { isPersistentVolumeUsed } from '../utils';
 import {
   DefaultDatatableSettings,
   TableSettings,
 } from '../../datatables/DefaultDatatableSettings';
 import { SystemResourceDescription } from '../../datatables/SystemResourceDescription';
-import { isPersistentVolumeUsed } from '../utils';
 
 import { createPersistentVolumesColumns } from './persistentVolumesColumns';
 import { PersistentVolume } from './types';

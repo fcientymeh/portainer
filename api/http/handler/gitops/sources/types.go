@@ -1,11 +1,7 @@
 package sources
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"path"
-	"strings"
 
 	portainer "github.com/portainer/portainer/api"
 	gittypes "github.com/portainer/portainer/api/git/types"
@@ -14,15 +10,16 @@ import (
 
 // Source represents a unique git repository used as a GitOps source across one or more workflows.
 type Source struct {
-	ID           string           `json:"id"`
-	Name         string           `json:"name"`
-	Type         string           `json:"type"`
-	URL          string           `json:"url"`
-	Status       workflows.Status `json:"status"`
-	Error        string           `json:"error,omitempty"`
-	UsedBy       int              `json:"usedBy"`
-	Environments int              `json:"environments"`
-	LastSync     int64            `json:"lastSync"`
+	ID           portainer.SourceID   `json:"id" validate:"required"`
+	Name         string               `json:"name" validate:"required"`
+	Type         SourceType           `json:"type" validate:"required"`
+	URL          string               `json:"url" validate:"required"`
+	Status       workflows.Status     `json:"status" validate:"required"`
+	Error        string               `json:"error,omitempty"`
+	Provider     gittypes.GitProvider `json:"provider,omitempty"`
+	UsedBy       int                  `json:"usedBy"`
+	Environments int                  `json:"environments"`
+	LastSync     int64                `json:"lastSync"`
 }
 
 type SourceType string
@@ -33,67 +30,24 @@ const (
 	SourceTypeOCI  SourceType = "oci"
 )
 
-func parseSourceType(s string) (string, error) {
+func parseSourceType(s string) (SourceType, error) {
 	switch SourceType(s) {
 	case SourceTypeGit, SourceTypeHelm, SourceTypeOCI:
-		return s, nil
+		return SourceType(s), nil
 	default:
 		return "", fmt.Errorf("invalid source type %q: must be git, helm, or oci", s)
 	}
 }
 
-func sourceTypeString(t portainer.SourceType) string {
+func sourceTypeString(t portainer.SourceType) SourceType {
 	switch t {
 	case portainer.SourceTypeGit:
-		return string(SourceTypeGit)
+		return SourceTypeGit
 	case portainer.SourceTypeHelm:
-		return string(SourceTypeHelm)
+		return SourceTypeHelm
 	case portainer.SourceTypeRegistry:
-		return string(SourceTypeOCI)
+		return SourceTypeOCI
 	default:
-		return string(SourceTypeGit)
+		return SourceTypeGit
 	}
-}
-
-type sourceGroupKey struct {
-	URL      string
-	Username string
-	Password string
-}
-
-func gitSourceKey(cfg *gittypes.RepoConfig) sourceGroupKey {
-	key := sourceGroupKey{URL: cfg.URL}
-	if cfg.Authentication != nil {
-		key.Username = cfg.Authentication.Username
-		key.Password = cfg.Authentication.Password
-	}
-
-	return key
-}
-
-func sourceID(key sourceGroupKey) string {
-	h := sha256.Sum256([]byte(key.URL + "\x00" + key.Username + "\x00" + key.Password))
-	return hex.EncodeToString(h[:8])
-}
-
-func repoName(rawURL string) string {
-	return strings.TrimSuffix(path.Base(rawURL), ".git")
-}
-
-func worstCaseStatus(statuses []workflows.Status) workflows.Status {
-	priority := map[workflows.Status]int{
-		workflows.StatusError:   4,
-		workflows.StatusSyncing: 3,
-		workflows.StatusPaused:  2,
-		workflows.StatusHealthy: 1,
-		workflows.StatusUnknown: 0,
-	}
-	worst := workflows.StatusUnknown
-	for _, s := range statuses {
-		if priority[s] > priority[worst] {
-			worst = s
-		}
-	}
-
-	return worst
 }

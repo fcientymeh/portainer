@@ -251,3 +251,27 @@ func gitAuthMatches(a, b *gittypes.GitAuthentication) bool {
 
 	return a.Username == b.Username && a.Password == b.Password && a.GitCredentialID == b.GitCredentialID
 }
+
+// ValidateUniqueSourceURL validates there are no other sources with the same URL
+func ValidateUniqueSourceURL(tx gitSourceStore, url string, sourceID portainer.SourceID) (bool, error) {
+	normalizedURL, err := gittypes.NormalizeURL(gittypes.SanitizeURL(url))
+	if err != nil {
+		return false, err
+	}
+
+	existing, err := tx.Source().ReadAll(func(s portainer.Source) bool {
+		if s.ID == sourceID || s.Type != portainer.SourceTypeGit || s.GitConfig == nil {
+			return false
+		}
+
+		normalized, err := gittypes.NormalizeURL(gittypes.SanitizeURL(s.GitConfig.URL))
+
+		return err == nil && normalized == normalizedURL
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	return len(existing) == 0, nil
+}

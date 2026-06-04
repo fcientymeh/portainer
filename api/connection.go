@@ -46,7 +46,7 @@ type Connection interface {
 
 	IsEncryptedStore() bool
 	NeedsEncryptionMigration() (bool, error)
-	SetEncrypted(encrypted bool)
+	SetEncrypted(encrypted bool) error
 
 	BackupMetadata() (map[string]any, error)
 	RestoreMetadata(s map[string]any) error

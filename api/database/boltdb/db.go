@@ -1,6 +1,8 @@
 package boltdb
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -40,6 +42,8 @@ type DbConnection struct {
 	isEncrypted     bool
 	Compact         bool
 
+	gcm cipher.AEAD
+
 	*bolt.DB
 }
 
@@ -75,8 +79,28 @@ func (connection *DbConnection) GetDatabaseFileSize() (int64, error) {
 	return file.Size(), nil
 }
 
-func (connection *DbConnection) SetEncrypted(flag bool) {
+func (connection *DbConnection) SetEncrypted(flag bool) error {
 	connection.isEncrypted = flag
+
+	if !flag || connection.EncryptionKey == nil {
+		connection.gcm = nil
+
+		return nil
+	}
+
+	block, err := aes.NewCipher(connection.EncryptionKey)
+	if err != nil {
+		return fmt.Errorf("creating AES cipher for database encryption: %w", err)
+	}
+
+	gcm, err := cipher.NewGCMWithRandomNonce(block)
+	if err != nil {
+		return fmt.Errorf("creating GCM cipher for database encryption: %w", err)
+	}
+
+	connection.gcm = gcm
+
+	return nil
 }
 
 // Return true if the database is encrypted
@@ -100,7 +124,9 @@ func (connection *DbConnection) NeedsEncryptionMigration() (bool, error) {
 
 	// If we have a loaded encryption key, always set encrypted
 	if connection.EncryptionKey != nil {
-		connection.SetEncrypted(true)
+		if err := connection.SetEncrypted(true); err != nil {
+			return false, err
+		}
 	}
 
 	// Check for portainer.db

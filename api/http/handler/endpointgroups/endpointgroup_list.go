@@ -13,14 +13,14 @@ import (
 	"github.com/portainer/portainer/pkg/libhttp/response"
 )
 
-func computeGroupSizeInfo(endpointGroups []portainer.EndpointGroup, endpoints []portainer.Endpoint) (map[portainer.EndpointGroupID]int, map[portainer.EndpointGroupID]endpointGroupTypeInfo) {
+func computeGroupSizeInfo(endpointGroups []portainer.EndpointGroup, endpoints []portainer.Endpoint) (map[portainer.EndpointGroupID]int, map[portainer.EndpointGroupID]EndpointGroupTypeInfo) {
 	groupSet := set.Set[portainer.EndpointGroupID]{}
 	for i := range endpointGroups {
 		groupSet[endpointGroups[i].ID] = true
 	}
 
 	countMap := make(map[portainer.EndpointGroupID]int)
-	typeInfoMap := make(map[portainer.EndpointGroupID]endpointGroupTypeInfo)
+	typeInfoMap := make(map[portainer.EndpointGroupID]EndpointGroupTypeInfo)
 
 	for _, endpoint := range endpoints {
 		if _, ok := groupSet[endpoint.GroupID]; !ok {
@@ -57,17 +57,17 @@ func computeGroupSizeInfo(endpointGroups []portainer.EndpointGroup, endpoints []
 	return countMap, typeInfoMap
 }
 
-type endpointGroupTypeInfo struct {
-	Docker     int  `json:"Docker"`
-	Kubernetes int  `json:"Kubernetes"`
-	Podman     int  `json:"Podman"`
-	Mixed      bool `json:"Mixed"`
+type EndpointGroupTypeInfo struct {
+	Docker     int  `json:"Docker" validate:"required"`
+	Kubernetes int  `json:"Kubernetes" validate:"required"`
+	Podman     int  `json:"Podman" validate:"required"`
+	Mixed      bool `json:"Mixed" validate:"required"`
 }
 
-type endpointGroupResponse struct {
+type EndpointGroupResponse struct {
 	portainer.EndpointGroup
 	Total    int                   `json:"Total,omitzero"`
-	TypeInfo endpointGroupTypeInfo `json:"TypeInfo,omitzero"`
+	TypeInfo EndpointGroupTypeInfo `json:"TypeInfo,omitzero"`
 }
 
 // @id EndpointGroupList
@@ -81,7 +81,7 @@ type endpointGroupResponse struct {
 // @security jwt
 // @produce json
 // @param size query boolean false "If true, each environment(endpoint) group will include the number of environments(endpoints) associated to it and breakdown by type"
-// @success 200 {array} endpointGroupResponse "Environment(Endpoint) group"
+// @success 200 {array} EndpointGroupResponse "Environment(Endpoint) group"
 // @failure 500 "Server error"
 // @router /endpoint_groups [get]
 func (handler *Handler) endpointGroupList(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
@@ -129,16 +129,16 @@ func (handler *Handler) endpointGroupList(w http.ResponseWriter, r *http.Request
 	}
 
 	var endpointGroupCountMap map[portainer.EndpointGroupID]int
-	var endpointGroupTypeInfoMap map[portainer.EndpointGroupID]endpointGroupTypeInfo
+	var endpointGroupTypeInfoMap map[portainer.EndpointGroupID]EndpointGroupTypeInfo
 	if includeSize {
 		endpointGroupCountMap, endpointGroupTypeInfoMap = computeGroupSizeInfo(endpointGroups, endpoints)
 	}
 
-	endpointGroupsResponse := make([]endpointGroupResponse, len(endpointGroups))
+	endpointGroupsResponse := make([]EndpointGroupResponse, len(endpointGroups))
 	for i := range endpointGroups {
 		groupID := endpointGroups[i].ID
 
-		endpointGroupsResponse[i] = endpointGroupResponse{
+		endpointGroupsResponse[i] = EndpointGroupResponse{
 			EndpointGroup: endpointGroups[i],
 		}
 

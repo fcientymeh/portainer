@@ -1,11 +1,14 @@
-import { useMemo } from 'react';
-import { GitCommit, Settings } from 'lucide-react';
-import { useCurrentStateAndParams } from '@uirouter/react';
+import { useMemo, useState } from 'react';
+import { GitCommit, PenBoxIcon, Settings } from 'lucide-react';
+
+import { useIdParam } from '@/react/hooks/useIdParam';
 
 import { PageHeader } from '@@/PageHeader';
 import { Tab, WidgetTabs, useCurrentTabIndex } from '@@/Widget/WidgetTabs';
 import { ResourceDetailHeaderSkeleton } from '@@/ResourceDetailHeader/ResourceDetailHeaderSkeleton';
 import { Alert } from '@@/Alert';
+import { Badge } from '@@/Badge';
+import { Button } from '@@/buttons';
 
 import { SourceDetail, useSource } from '../queries/useSource';
 
@@ -20,8 +23,7 @@ const breadcrumbs = [
 ];
 
 export function ItemView() {
-  const { params } = useCurrentStateAndParams();
-  const sourceId: string = params.sourceId;
+  const sourceId = useIdParam('sourceId');
 
   const sourceQuery = useSource(sourceId);
   const source = sourceQuery.data;
@@ -57,12 +59,20 @@ export function ItemView() {
 }
 
 function PageContent({ source }: { source: SourceDetail }) {
+  const [isEditingSettings, setIsEditingSettings] = useState(false);
+
   const tabs: Array<Tab> = useMemo(
     () => [
       {
         name: 'Settings',
         icon: Settings,
-        widget: <SettingsTab source={source} />,
+        widget: (
+          <SettingsTab
+            source={source}
+            isEditing={isEditingSettings}
+            onEditingChange={setIsEditingSettings}
+          />
+        ),
         selectedTabParam: 'settings',
       },
       {
@@ -77,7 +87,7 @@ function PageContent({ source }: { source: SourceDetail }) {
         selectedTabParam: 'workflows',
       },
     ],
-    [source]
+    [isEditingSettings, source]
   );
 
   const currentTabIndex = useCurrentTabIndex(tabs);
@@ -90,13 +100,30 @@ function PageContent({ source }: { source: SourceDetail }) {
         ]}
         reload
       />
-      <div className="mx-4 mb-4 space-y-4">
+      <div className="mx-4 space-y-4 pb-4">
         <SourceResourceHeader source={source} />
-        <WidgetTabs
-          tabs={tabs}
-          currentTabIndex={currentTabIndex}
-          useContainer={false}
-        />
+        <div className="flex items-center gap-2">
+          <WidgetTabs
+            tabs={tabs}
+            currentTabIndex={currentTabIndex}
+            useContainer={false}
+          />
+          <div className="ml-auto">
+            {currentTabIndex === 0 &&
+              (isEditingSettings ? (
+                <Badge type="info">Editing</Badge>
+              ) : (
+                <Button
+                  icon={PenBoxIcon}
+                  color="light"
+                  data-cy="edit-settings-button"
+                  onClick={() => setIsEditingSettings(true)}
+                >
+                  Edit
+                </Button>
+              ))}
+          </div>
+        </div>
         {tabs[currentTabIndex].widget}
       </div>
     </>

@@ -1,11 +1,11 @@
-import { AlertTriangle, ShieldAlertIcon } from 'lucide-react';
+import { ShieldAlertIcon } from 'lucide-react';
 import { capitalize } from 'lodash';
 import moment from 'moment';
 
-import { Icon } from '@@/Icon';
 import { Card } from '@@/primitives/Card';
 import { StatusDot } from '@@/primitives/StatusDot';
 import { Badge } from '@@/Badge';
+import { Alert } from '@@/Alert';
 
 import { SourceDetail } from '../../queries/useSource';
 
@@ -46,12 +46,7 @@ export function SyncStatusWidget({ source }: Props) {
             <span data-cy="source-last-sync">{lastSyncLabel}</span>
           </DetailField>
         </div>
-        {source.error && (
-          <div className="flex items-start gap-2 text-sm text-error-8">
-            <Icon icon={AlertTriangle} size="sm" className="mt-0.5 shrink-0" />
-            <span data-cy="source-error">{source.error}</span>
-          </div>
-        )}
+        {source.error && <Alert color="error">{source.error}</Alert>}
       </Card.Body>
     </Card.Container>
   );

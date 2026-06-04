@@ -72,12 +72,16 @@ func newEndpoint(endpointType portainer.EndpointType, id portainer.EndpointID, n
 		TLSConfig: portainer.TLSConfiguration{
 			TLS: false,
 		},
-		UserAccessPolicies: portainer.UserAccessPolicies{},
-		TeamAccessPolicies: portainer.TeamAccessPolicies{},
-		TagIDs:             []portainer.TagID{},
-		Status:             portainer.EndpointStatusUp,
-		Snapshots:          []portainer.DockerSnapshot{},
-		Kubernetes:         portainer.KubernetesDefault(),
+		TagIDs:    nil,
+		Status:    portainer.EndpointStatusUp,
+		Snapshots: nil,
+		Kubernetes: portainer.KubernetesData{
+			Configuration: portainer.KubernetesConfiguration{
+				UseLoadBalancer:          false,
+				UseServerMetrics:         false,
+				EnableResourceOverCommit: true,
+			},
+		},
 	}
 
 	if TLS {

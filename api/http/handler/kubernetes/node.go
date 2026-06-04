@@ -8,7 +8,56 @@ import (
 	"github.com/portainer/portainer/pkg/libhttp/response"
 	"github.com/portainer/portainer/pkg/libkubectl"
 	"github.com/rs/zerolog/log"
+	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 )
+
+// KubernetesNodeResponse is the documented response model for cluster node endpoints.
+type KubernetesNodeResponse corev1.Node
+
+// @id GetKubernetesNodes
+// @summary Get Kubernetes cluster nodes
+// @description Returns the list of Kubernetes nodes for the selected environment.
+// @description **Access policy**: Authenticated user.
+// @tags kubernetes
+// @security ApiKeyAuth || jwt
+// @produce json
+// @param id path int true "Environment(Endpoint) identifier"
+// @success 200 {array} KubernetesNodeResponse "Success"
+// @failure 401 "Unauthorized access - the user is not authenticated or does not have the necessary permissions."
+// @failure 403 "Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource."
+// @failure 500 "Server error occurred while attempting to retrieve the list of nodes."
+// @router /kubernetes/{id}/nodes [get]
+func (handler *Handler) getKubernetesNodes(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
+	cli, httpErr := handler.getProxyKubeClient(r)
+	if httpErr != nil {
+		log.Error().
+			Err(httpErr).
+			Int("status_code", httpErr.StatusCode).
+			Str("message", httpErr.Message).
+			Str("context", "getKubernetesNodes").
+			Msg("Unable to prepare kube client")
+		return httpErr
+	}
+
+	nodes, err := cli.GetClusterNodes()
+	if err != nil {
+		if k8serrors.IsUnauthorized(err) {
+			log.Error().Err(err).Str("context", "getKubernetesNodes").Msg("Unable to retrieve nodes")
+			return httperror.Unauthorized("Unable to retrieve nodes", err)
+		}
+
+		if k8serrors.IsForbidden(err) {
+			log.Error().Err(err).Str("context", "getKubernetesNodes").Msg("Unable to retrieve nodes")
+			return httperror.Forbidden("Unable to retrieve nodes", err)
+		}
+
+		log.Error().Err(err).Str("context", "getKubernetesNodes").Msg("Unable to retrieve nodes")
+		return httperror.InternalServerError("Unable to retrieve nodes", err)
+	}
+
+	return response.JSON(w, nodes)
+}
 
 // @id drainNode
 // @summary Drain a Kubernetes node

@@ -14,24 +14,13 @@ interface Props {
 
 export function ConnectionDetailsWidget({ source }: Props) {
   const typeConfig = source.type ? SOURCE_TYPES[source.type] : undefined;
-  const branch =
-    source.connection?.referenceName?.replace(/^refs\/heads\//, '') || '-';
 
   return (
     <Card.Container>
       <Card.Header
         icon={LinkIcon}
         title="Connection Details"
-        subtitle="Repository URL, branch, and sync settings for this source"
-        // actions={
-        //   <Button
-        //     icon={PenBoxIcon}
-        //     data-cy="edit-connection-button"
-        //     color="secondary"
-        //   >
-        //     Edit
-        //   </Button>
-        // }
+        subtitle="Source name, URL, and connection settings"
       />
       <Card.Body className="grid grid-cols-1 gap-4">
         <div className="grid grid-cols-2 gap-4">
@@ -54,9 +43,6 @@ export function ConnectionDetailsWidget({ source }: Props) {
           >
             {source.url ?? '-'}
           </code>
-        </DetailField>
-        <DetailField label="Branch">
-          <span data-cy="source-branch">{branch}</span>
         </DetailField>
       </Card.Body>
     </Card.Container>

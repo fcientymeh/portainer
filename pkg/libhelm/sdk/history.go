@@ -79,5 +79,6 @@ func convertHistory(r sdkrelease.Releaser) (*release.Release, error) {
 				AppVersion: v1Release.Chart.Metadata.AppVersion,
 			},
 		},
+		ChartReference: extractChartReferenceAnnotations(v1Release.Chart.Metadata.Annotations),
 	}, nil
 }

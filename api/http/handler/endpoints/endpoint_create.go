@@ -197,7 +197,7 @@ func (payload *endpointCreatePayload) Validate(r *http.Request) error {
 // @accept multipart/form-data
 // @produce json
 // @param Name formData string true "Name that will be used to identify this environment(endpoint) (example: my-environment)"
-// @param EndpointCreationType formData integer true "Environment(Endpoint) type. Value must be one of: 1 (Local Docker environment), 2 (Agent environment), 3 (Azure environment), 4 (Edge agent environment) or 5 (Local Kubernetes Environment)" Enum(1,2,3,4,5)
+// @param EndpointCreationType formData endpointCreationEnum true "Environment(Endpoint) type. Value must be one of: 1 (Local Docker environment), 2 (Agent environment), 3 (Azure environment), 4 (Edge agent environment) or 5 (Local Kubernetes Environment)" Enum(1,2,3,4,5)
 // @param ContainerEngine formData string false "Container engine used by the environment(endpoint). Value must be one of: 'docker' or 'podman'"
 // @param URL formData string false "URL or IP address of a Docker host (example: docker.mydomain.tld:2375). Defaults to local if not specified (Linux: /var/run/docker.sock, Windows: //./pipe/docker_engine). Cannot be empty if EndpointCreationType is set to 4 (Edge agent environment)"
 // @param PublicURL formData string false "URL or IP address where exposed containers will be reachable. Defaults to URL if not specified (example: docker.mydomain.tld:2375)"
@@ -211,9 +211,9 @@ func (payload *endpointCreatePayload) Validate(r *http.Request) error {
 // @param AzureApplicationID formData string false "Azure application ID. Required if environment(endpoint) type is set to 3"
 // @param AzureTenantID formData string false "Azure tenant ID. Required if environment(endpoint) type is set to 3"
 // @param AzureAuthenticationKey formData string false "Azure authentication key. Required if environment(endpoint) type is set to 3"
-// @param TagIds formData []int false "List of tag identifiers to which this environment(endpoint) is associated"
+// @param TagIds formData string false "JSON-parsable array of tag identifiers to which this environment(endpoint) is associated"
 // @param EdgeCheckinInterval formData int false "The check in interval for edge agent (in seconds)"
-// @param EdgeTunnelServerAddress formData string true "URL or IP address that will be used to establish a reverse tunnel"
+// @param EdgeTunnelServerAddress formData string false "URL or IP address that will be used to establish a reverse tunnel"
 // @param Gpus formData string false "List of GPUs - json stringified array of {name, value} structs"
 // @success 200 {object} portainer.Endpoint "Success"
 // @failure 400 "Invalid request"

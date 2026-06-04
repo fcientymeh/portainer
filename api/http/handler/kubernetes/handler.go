@@ -116,6 +116,7 @@ func NewHandler(bouncer security.BouncerService, authorizationService *authoriza
 	endpointRouter.Handle("/cluster_role_bindings", httperror.LoggerHandler(h.getAllKubernetesClusterRoleBindings)).Methods(http.MethodGet)
 	endpointRouter.Handle("/cluster_role_bindings/delete", httperror.LoggerHandler(h.deleteClusterRoleBindings)).Methods(http.MethodPost)
 	endpointRouter.Handle("/describe", httperror.LoggerHandler(h.describeResource)).Methods(http.MethodGet)
+	endpointRouter.Handle("/nodes", httperror.LoggerHandler(h.getKubernetesNodes)).Methods(http.MethodGet)
 	endpointRouter.Handle("/nodes/{name}/drain", httperror.LoggerHandler(h.drainNode)).Methods(http.MethodPost)
 	endpointRouter.Handle("/version", httperror.LoggerHandler(h.getKubernetesVersion)).Methods(http.MethodGet)
 

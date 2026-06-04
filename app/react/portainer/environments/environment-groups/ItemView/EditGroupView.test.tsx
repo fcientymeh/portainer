@@ -13,6 +13,10 @@ import {
   EnvironmentType,
   EnvironmentStatus,
 } from '@/react/portainer/environments/types';
+import {
+  createMockEnvironment,
+  createMockEnvironmentGroup,
+} from '@/react-tools/test-mocks';
 
 import { EnvironmentGroup } from '../types';
 
@@ -53,35 +57,35 @@ vi.mock('@@/modals/confirm', () => {
   };
 });
 
-const mockGroup: EnvironmentGroup = {
+const mockGroup = createMockEnvironmentGroup({
   Id: 2,
   Name: 'Test Group',
   Description: 'Test description',
   TagIds: [1],
-};
+});
 
-const mockEnvironment: Partial<Environment> = {
+const mockEnvironment = createMockEnvironment({
   Id: 1,
   Name: 'Test Environment',
   Type: EnvironmentType.Docker,
   Status: EnvironmentStatus.Up,
   GroupId: 2,
   TagIds: [],
-};
+});
 
 function buildMockEnvironment(
   id: number,
   name: string,
   groupId: number = 1
 ): Partial<Environment> {
-  return {
+  return createMockEnvironment({
     Id: id,
     Name: name,
     Type: EnvironmentType.Docker,
     Status: EnvironmentStatus.Up,
     GroupId: groupId,
     TagIds: [],
-  };
+  });
 }
 
 function renderEditGroupView({

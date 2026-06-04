@@ -10,7 +10,7 @@ import { UserViewModel } from '@/portainer/models/user';
 import { server, http } from '@/setup-tests/server';
 import { mockLocalizeDate } from '@/setup-tests/mock-localizeDate';
 
-import { confirm, confirmDelete } from '@@/modals/confirm';
+import { confirmDelete } from '@@/modals/confirm';
 
 import { ApplicationContainersDatatable } from './ApplicationContainersDatatable';
 
@@ -48,13 +48,7 @@ vi.mock('@@/Link', () => ({
 }));
 
 vi.mock('@@/modals/confirm', () => ({
-  confirm: vi.fn(),
   confirmDelete: vi.fn(),
-  buildConfirmButton: vi.fn((label: string) => ({
-    label,
-    color: 'primary',
-    className: '',
-  })),
 }));
 
 const mockDeployment = {
@@ -153,7 +147,6 @@ describe('ApplicationContainersDatatable', () => {
         'resource-type': 'Deployment',
       },
     });
-    vi.mocked(confirm).mockResolvedValue(true);
     vi.mocked(confirmDelete).mockResolvedValue(true);
 
     server.use(
@@ -372,55 +365,6 @@ describe('ApplicationContainersDatatable', () => {
     ).toBeVisible();
   });
 
-  it('calls the restart API after the user confirms the restart dialog', async () => {
-    let restartRequested = false;
-    server.use(
-      http.post(
-        '/api/kubernetes/1/namespaces/test-namespace/pods/test-pod-1/restart',
-        () => {
-          restartRequested = true;
-          return HttpResponse.json({});
-        }
-      )
-    );
-
-    const user = userEvent.setup();
-    renderComponent();
-
-    await screen.findByText('test-pod-1');
-    await user.click(screen.getByTestId('application-pod-restart-test-pod-1'));
-
-    await waitFor(() => {
-      expect(restartRequested).toBe(true);
-    });
-  });
-
-  it('does not call the restart API when the user cancels the dialog', async () => {
-    vi.mocked(confirm).mockResolvedValue(false);
-
-    let restartRequested = false;
-    server.use(
-      http.post(
-        '/api/kubernetes/1/namespaces/test-namespace/pods/test-pod-1/restart',
-        () => {
-          restartRequested = true;
-          return HttpResponse.json({});
-        }
-      )
-    );
-
-    const user = userEvent.setup();
-    renderComponent();
-
-    await screen.findByText('test-pod-1');
-    await user.click(screen.getByTestId('application-pod-restart-test-pod-1'));
-
-    await waitFor(() => {
-      expect(confirm).toHaveBeenCalled();
-    });
-    expect(restartRequested).toBe(false);
-  });
-
   it('calls the delete API after the user confirms deletion', async () => {
     let deleteRequested = false;
     server.use(
@@ -444,7 +388,7 @@ describe('ApplicationContainersDatatable', () => {
     });
   });
 
-  it('disables the restart button when the cluster does not support pod restart', async () => {
+  it('always shows the delete button regardless of restart strategy support', async () => {
     server.use(
       http.get('/api/kubernetes/1/version', () =>
         HttpResponse.json({
@@ -458,9 +402,8 @@ describe('ApplicationContainersDatatable', () => {
 
     await screen.findByText('test-pod-1');
 
-    const restartButton = screen.getByTestId(
-      'application-pod-restart-test-pod-1'
-    );
-    expect(restartButton).toBeDisabled();
+    expect(
+      screen.getByTestId('application-pod-delete-test-pod-1')
+    ).toBeInTheDocument();
   });
 });

@@ -61,7 +61,7 @@ func (handler *Handler) getKubernetesVersion(w http.ResponseWriter, r *http.Requ
 	// A discovery failure shouldn't fail the whole request — the cluster
 	// version is still useful to the caller. We log it and treat the
 	// capability as unsupported (safe default that hides the action).
-	supportsPodRestart, err := cli.SupportsPodRestart()
+	supportsPodRestart, err := cli.SupportsPodRestart(r.Context())
 	if err != nil {
 		log.Warn().Err(err).Str("context", "GetKubernetesVersion").Msg("Unable to probe pod-restart subresource via API discovery; assuming unsupported")
 		supportsPodRestart = false

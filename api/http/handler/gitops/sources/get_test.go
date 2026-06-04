@@ -41,7 +41,6 @@ func TestGetSource_ReturnsDetail(t *testing.T) {
 	}
 
 	var srcID portainer.SourceID
-
 	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		stack := &portainer.Stack{ID: 1, Name: "my-stack"}
 		srcID = createGitWorkflow(t, tx, stack, cfg)
@@ -54,11 +53,9 @@ func TestGetSource_ReturnsDetail(t *testing.T) {
 	h.ServeHTTP(rr, buildGetReq(t, 1, strconv.Itoa(int(srcID))))
 
 	detail := decodeSourceDetail(t, rr)
-	assert.Equal(t, strconv.Itoa(int(srcID)), detail.ID)
+	assert.Equal(t, srcID, detail.ID)
 	assert.Equal(t, "repo", detail.Name)
 	assert.Equal(t, 1, detail.UsedBy)
-	require.NotNil(t, detail.Connection)
-	assert.Equal(t, "refs/heads/main", detail.Connection.ReferenceName)
 	assert.Equal(t, "docker-compose.yml", detail.Connection.ConfigFilePath)
 	assert.True(t, detail.Connection.TLSSkipVerify)
 	require.Len(t, detail.Workflows, 1)
@@ -75,7 +72,6 @@ func TestGetSource_RedactsCredentials(t *testing.T) {
 	}
 
 	var srcID portainer.SourceID
-
 	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		stack := &portainer.Stack{ID: 1, Name: "secure-stack"}
 		srcID = createGitWorkflow(t, tx, stack, cfg)
@@ -102,7 +98,6 @@ func TestGetSource_AutoUpdate(t *testing.T) {
 	cfg := gitCfg("https://github.com/org/polled")
 
 	var srcID portainer.SourceID
-
 	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		stack := &portainer.Stack{
 			ID:         1,

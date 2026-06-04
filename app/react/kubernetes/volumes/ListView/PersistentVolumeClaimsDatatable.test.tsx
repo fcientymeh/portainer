@@ -90,6 +90,28 @@ const mockPVCs: PersistentVolumeClaim[] = [
   },
 ];
 
+const pvcWithWorkload: PersistentVolumeClaim = {
+  id: 'pvc-3',
+  name: 'used-pvc',
+  namespace: 'default',
+  storage: 1073741824,
+  storageRequest: '1Gi',
+  creationDate: '2024-01-03T00:00:00Z',
+  accessModes: ['ReadWriteOnce'],
+  humanReadableAccessModes: ['ReadWriteOnce'],
+  volumeName: 'pv-3',
+  storageClass: 'standard',
+  allowVolumeExpansion: false,
+  phase: 'Bound',
+  owningApplications: [
+    {
+      Name: 'my-deployment',
+      ResourcePool: 'default',
+      ApplicationType: 'Deployment',
+    },
+  ],
+};
+
 const mockNamespaces = [
   { Name: 'default', IsSystem: false },
   { Name: 'kube-system', IsSystem: true },
@@ -186,6 +208,90 @@ describe('PersistentVolumeClaimsDatatable', () => {
     await screen.findByText('test-pvc-1');
 
     expect(screen.queryByTestId('resize-form')).not.toBeInTheDocument();
+  });
+
+  describe('Used by column', () => {
+    it('shows the owning application name for PVCs with a workload', async () => {
+      vi.mocked(usePersistentVolumeClaims).mockImplementation(
+        (_envId, options) => {
+          const data = [pvcWithWorkload];
+          return {
+            data: options?.select ? options.select(data) : data,
+            isLoading: false,
+          } as ReturnType<typeof usePersistentVolumeClaims>;
+        }
+      );
+
+      renderComponent();
+
+      expect(await screen.findByText('my-deployment')).toBeVisible();
+    });
+
+    it('shows a dash for PVCs with no owning applications', async () => {
+      vi.mocked(usePersistentVolumeClaims).mockImplementation(
+        (_envId, options) => {
+          const data = [mockPVCs[0]];
+          return {
+            data: options?.select ? options.select(data) : data,
+            isLoading: false,
+          } as ReturnType<typeof usePersistentVolumeClaims>;
+        }
+      );
+
+      renderComponent();
+
+      await screen.findByText('test-pvc-1');
+      expect(screen.getByText('-')).toBeVisible();
+    });
+  });
+
+  describe('row selectability', () => {
+    it('disables the row checkbox for PVCs with owning applications', async () => {
+      vi.mocked(usePersistentVolumeClaims).mockImplementation(
+        (_envId, options) => {
+          const data = [mockPVCs[0], pvcWithWorkload];
+          return {
+            data: options?.select ? options.select(data) : data,
+            isLoading: false,
+          } as ReturnType<typeof usePersistentVolumeClaims>;
+        }
+      );
+
+      const { container } = renderComponent();
+
+      await screen.findByText('used-pvc');
+
+      // skip header checkbox (index 0); row checkboxes follow in render order
+      const rowCheckboxes = Array.from(
+        container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')
+      ).slice(1);
+
+      const [freeCheckbox, usedCheckbox] = rowCheckboxes;
+      expect(freeCheckbox).not.toBeDisabled();
+      expect(usedCheckbox).toBeDisabled();
+    });
+
+    it('allows selection of a Bound PVC that has no owning applications', async () => {
+      vi.mocked(usePersistentVolumeClaims).mockImplementation(
+        (_envId, options) => {
+          const data = [mockPVCs[0]]; // Bound, no owningApplications
+          return {
+            data: options?.select ? options.select(data) : data,
+            isLoading: false,
+          } as ReturnType<typeof usePersistentVolumeClaims>;
+        }
+      );
+
+      const { container } = renderComponent();
+
+      await screen.findByText('test-pvc-1');
+
+      const rowCheckboxes = Array.from(
+        container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')
+      ).slice(1);
+
+      expect(rowCheckboxes[0]).not.toBeDisabled();
+    });
   });
 
   it('hides system namespace PVCs by default', async () => {

@@ -47,7 +47,7 @@ export function useCreateGroupMutation() {
     createGroup,
     mutationOptions(
       withError('Failed to create group'),
-      withInvalidate(queryClient, [queryKeys.base(), queryKeys.base(true)])
+      withInvalidate(queryClient, [queryKeys.base(), queryKeys.list(true)])
     )
   );
 }

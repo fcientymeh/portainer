@@ -9,7 +9,7 @@ import {
 } from '@@/SortableList/SortableList';
 import { useSortableListState } from '@@/SortableList/sortable-list.store';
 
-import { useEnvironmentGroups } from '../../queries/useEnvironmentGroups';
+import { useGroups } from '../../queries/useGroups';
 import { EnvironmentGroup } from '../../types';
 import { isUngoverned } from '../../utils/getPlatformLabel';
 
@@ -18,7 +18,7 @@ import { EnvironmentGroupRow } from './EnvironmentGroupRow';
 const SORT_OPTIONS: SortOption[] = [{ key: 'Name', label: 'Name' }];
 
 export function EnvironmentGroupsTable() {
-  const groupsQuery = useEnvironmentGroups();
+  const groupsQuery = useGroups();
   const tagsQuery = useTags();
   const tableState = useSortableListState('environment_groups', 'Name');
 

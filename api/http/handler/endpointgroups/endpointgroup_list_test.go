@@ -30,7 +30,7 @@ func TestHandler_endpointGroupList(t *testing.T) {
 		handler.ServeHTTP(w, req)
 
 		require.Equal(t, http.StatusOK, w.Code)
-		res := make([]endpointGroupResponse, 0)
+		res := make([]EndpointGroupResponse, 0)
 		require.NoError(t, json.NewDecoder(w.Body).Decode(&res))
 		require.Len(t, res, len(groups)+1, "should contain an additional default group")
 		for _, group := range res {
@@ -53,7 +53,7 @@ func TestHandler_endpointGroupList(t *testing.T) {
 		handler.ServeHTTP(w, req)
 
 		require.Equal(t, http.StatusOK, w.Code)
-		res := make([]endpointGroupResponse, 0)
+		res := make([]EndpointGroupResponse, 0)
 		require.NoError(t, json.NewDecoder(w.Body).Decode(&res))
 		for _, group := range res {
 			assert.Zero(t, group.Total)
@@ -79,10 +79,10 @@ func TestHandler_endpointGroupList(t *testing.T) {
 		handler.ServeHTTP(w, req)
 
 		require.Equal(t, http.StatusOK, w.Code)
-		res := make([]endpointGroupResponse, 0)
+		res := make([]EndpointGroupResponse, 0)
 		require.NoError(t, json.NewDecoder(w.Body).Decode(&res))
 
-		var group1 *endpointGroupResponse
+		var group1 *EndpointGroupResponse
 		for i := range res {
 			if res[i].ID == groups[0].ID {
 				group1 = &res[i]
@@ -124,10 +124,10 @@ func TestHandler_endpointGroupList(t *testing.T) {
 		handler.ServeHTTP(w, req)
 
 		require.Equal(t, http.StatusOK, w.Code)
-		res := make([]endpointGroupResponse, 0)
+		res := make([]EndpointGroupResponse, 0)
 		require.NoError(t, json.NewDecoder(w.Body).Decode(&res))
 
-		var group2 *endpointGroupResponse
+		var group2 *EndpointGroupResponse
 		for i := range res {
 			if res[i].ID == groups[1].ID {
 				group2 = &res[i]
@@ -170,10 +170,10 @@ func TestHandler_endpointGroupList(t *testing.T) {
 		handler.ServeHTTP(w, req)
 
 		require.Equal(t, http.StatusOK, w.Code)
-		res := make([]endpointGroupResponse, 0)
+		res := make([]EndpointGroupResponse, 0)
 		require.NoError(t, json.NewDecoder(w.Body).Decode(&res))
 
-		var group1 *endpointGroupResponse
+		var group1 *EndpointGroupResponse
 		for i := range res {
 			if res[i].ID == groups[0].ID {
 				group1 = &res[i]

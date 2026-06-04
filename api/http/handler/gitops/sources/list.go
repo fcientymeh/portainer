@@ -9,7 +9,6 @@ import (
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
-	gittypes "github.com/portainer/portainer/api/git/types"
 	ceWorkflows "github.com/portainer/portainer/api/gitops/workflows"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/http/utils/filters"
@@ -79,7 +78,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) *httperror.Handle
 		SortBindings: []filters.SortBinding[Source]{
 			{Key: "name", Fn: func(a, b Source) int { return strings.Compare(a.Name, b.Name) }},
 			{Key: "status", Fn: func(a, b Source) int { return strings.Compare(string(a.Status), string(b.Status)) }},
-			{Key: "type", Fn: func(a, b Source) int { return strings.Compare(a.Type, b.Type) }},
+			{Key: "type", Fn: func(a, b Source) int { return strings.Compare(string(a.Type), string(b.Type)) }},
 		},
 	})
 
@@ -129,32 +128,7 @@ func (h *Handler) fetchSources(ctx context.Context, sc *security.RestrictedReque
 			continue
 		}
 
-		var status ceWorkflows.Status
-		var sourceErr string
-		if src.GitConfig != nil {
-			phase, _ := ceWorkflows.ComputeGitPhasesForConfig(ctx, h.gitService, src.GitConfig)
-			status = phase.Status
-			sourceErr = phase.Error
-		} else {
-			status = ceWorkflows.StatusUnknown
-		}
-
-		url := ""
-		if src.GitConfig != nil {
-			url = gittypes.SanitizeURL(src.GitConfig.URL)
-		}
-
-		result = append(result, Source{
-			ID:           strconv.Itoa(int(src.ID)),
-			Name:         src.Name,
-			Type:         sourceTypeString(src.Type),
-			URL:          url,
-			Status:       status,
-			Error:        sourceErr,
-			UsedBy:       s.WorkflowCount,
-			Environments: len(s.EndpointIDs),
-			LastSync:     s.LastSync,
-		})
+		result = append(result, h.buildSource(ctx, &src, s))
 	}
 
 	return result, nil

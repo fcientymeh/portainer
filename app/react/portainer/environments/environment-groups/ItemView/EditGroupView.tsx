@@ -84,8 +84,8 @@ export function EditGroupView() {
           currentTabIndex={currentTabIndex}
           useContainer={false}
         />
-        {tabs[currentTabIndex].widget}
       </div>
+      {tabs[currentTabIndex].widget}
     </>
   );
 }

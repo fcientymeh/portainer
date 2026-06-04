@@ -50,19 +50,17 @@ describe('ClusterResourceReservation', () => {
 
     // Setup default mock responses
     server.use(
-      http.get('/api/endpoints/3/kubernetes/api/v1/nodes', () =>
-        HttpResponse.json({
-          items: [
-            {
-              status: {
-                allocatable: {
-                  cpu: '4',
-                  memory: '8Gi',
-                },
+      http.get('/api/kubernetes/3/nodes', () =>
+        HttpResponse.json([
+          {
+            status: {
+              allocatable: {
+                cpu: '4',
+                memory: '8Gi',
               },
             },
-          ],
-        })
+          },
+        ])
       ),
       http.get('/api/kubernetes/3/metrics/nodes', () =>
         HttpResponse.json({

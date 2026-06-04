@@ -1,17 +1,15 @@
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 
+import { EndpointsEndpointUpdatePayload } from '@api/types.gen';
+
 import { withError, withInvalidate } from '@/react-tools/react-query';
 import {
   EnvironmentId,
-  EnvironmentStatusMessage,
   Environment,
+  EnvironmentStatusMessage,
   KubernetesSettings,
-  DeploymentOptions,
-  EndpointChangeWindow,
-  EnvironmentGroupId,
 } from '@/react/portainer/environments/types';
 import axios, { parseAxiosError } from '@/portainer/services/axios/axios';
-import { TagId } from '@/portainer/tags/types';
 
 import { buildUrl } from '../environment.service/utils';
 
@@ -26,31 +24,17 @@ export function useUpdateEnvironmentMutation() {
   });
 }
 
-export interface UpdateEnvironmentPayload extends Partial<Environment> {
-  TLSCACert?: File;
-  TLSCert?: File;
-  TLSKey?: File;
-
-  Name: string;
-  PublicURL: string;
-  GroupID: EnvironmentGroupId;
-  TagIds: TagId[];
-
-  EdgeCheckinInterval: number;
-
-  TLS: boolean;
-  TLSSkipVerify: boolean;
-  TLSSkipClientVerify: boolean;
-  AzureApplicationID?: string;
-  AzureTenantID?: string;
-  AzureAuthenticationKey?: string;
-
-  IsSetStatusMessage: boolean;
-  StatusMessage: EnvironmentStatusMessage;
+export type UpdateEnvironmentPayload = Omit<
+  EndpointsEndpointUpdatePayload,
+  'Kubernetes'
+> & {
   Kubernetes?: KubernetesSettings;
-  DeploymentOptions?: DeploymentOptions | null;
-  ChangeWindow?: EndpointChangeWindow;
-}
+  TLSCACert: File | undefined;
+  TLSCert: File | undefined;
+  TLSKey: File | undefined;
+  IsSetStatusMessage?: boolean;
+  StatusMessage?: EnvironmentStatusMessage;
+};
 
 export async function updateEnvironment({
   id,

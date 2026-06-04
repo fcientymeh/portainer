@@ -19,9 +19,6 @@ interface Props {
 
   isLoading?: boolean;
   errorMessage?: string;
-
-  containerClassName?: string;
-  widgetClassName?: string;
 }
 
 export function ResourceDetailHeader({
@@ -36,11 +33,9 @@ export function ResourceDetailHeader({
   actionBar,
   isLoading,
   errorMessage,
-  containerClassName = 'flex items-center gap-4 p-6',
-  widgetClassName = 'widget-body',
 }: Props) {
   return (
-    <Widget className={widgetClassName}>
+    <Widget>
       <Widget.Body loading={isLoading}>
         {errorMessage && (
           <Alert color="error" title="Error">
@@ -48,7 +43,7 @@ export function ResourceDetailHeader({
           </Alert>
         )}
         {!errorMessage && (
-          <div className={containerClassName}>
+          <div className="flex items-center gap-4">
             <HeaderIcon
               icon={icon}
               iconBackgroundClassName={iconBackgroundClassName}
