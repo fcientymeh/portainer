@@ -91,8 +91,10 @@ func (h *Handler) gitSourceUpdate(w http.ResponseWriter, r *http.Request) *httpe
 		src.Name = updated.Name
 		src.GitConfig = updated.GitConfig
 
-		if payload.Authentication == nil && !payload.ClearAuthentication {
+		if payload.Authentication == nil {
 			src.GitConfig.Authentication = existingAuth
+		} else if *payload.Authentication == (GitAuthenticationPayload{}) {
+			src.GitConfig.Authentication = nil
 		}
 
 		return tx.Source().Update(src.ID, src)

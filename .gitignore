@@ -4,6 +4,7 @@ dist
 portainer-checksum.txt
 api/cmd/portainer/portainer*
 storybook-static
+debug-storybook.log
 .tmp
 **/.vscode/settings.json
 **/.vscode/tasks.json

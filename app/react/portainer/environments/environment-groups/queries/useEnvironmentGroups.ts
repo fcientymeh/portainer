@@ -10,7 +10,7 @@ import { buildUrl } from './build-url';
 
 export function useEnvironmentGroups() {
   return useQuery({
-    queryKey: queryKeys.base(),
+    queryKey: queryKeys.base(true),
     queryFn: () => getEnvironmentGroups(),
     ...withError('Unable to retrieve environment groups'),
   });
@@ -18,7 +18,9 @@ export function useEnvironmentGroups() {
 
 async function getEnvironmentGroups() {
   try {
-    const { data } = await axios.get<Array<EnvironmentGroup>>(buildUrl());
+    const { data } = await axios.get<Array<EnvironmentGroup>>(buildUrl(), {
+      params: { size: true },
+    });
     return data;
   } catch (e) {
     throw parseAxiosError(e, 'Unable to retrieve environment groups');

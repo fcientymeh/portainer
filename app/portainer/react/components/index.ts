@@ -126,6 +126,7 @@ export const ngModule = angular
       'onReload',
       'reload',
       'id',
+      'showTitle',
     ])
   )
   .component(

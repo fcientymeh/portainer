@@ -93,14 +93,15 @@ func Test_RefreshableStacks(t *testing.T) {
 
 	staticStack := portainer.Stack{ID: 1}
 	stackWithWebhook := portainer.Stack{ID: 2, AutoUpdate: &portainer.AutoUpdateSettings{Webhook: "webhook"}}
-	refreshableStack := portainer.Stack{ID: 3, AutoUpdate: &portainer.AutoUpdateSettings{Interval: "1m"}}
+	intervalNoWorkflow := portainer.Stack{ID: 3, AutoUpdate: &portainer.AutoUpdateSettings{Interval: "1m"}}
+	refreshableStack := portainer.Stack{ID: 4, WorkflowID: 1, AutoUpdate: &portainer.AutoUpdateSettings{Interval: "1m"}}
 
-	for _, stack := range []*portainer.Stack{&staticStack, &stackWithWebhook, &refreshableStack} {
+	for _, stack := range []*portainer.Stack{&staticStack, &stackWithWebhook, &intervalNoWorkflow, &refreshableStack} {
 		err := store.Stack().Create(stack)
 		require.NoError(t, err)
 	}
 
 	stacks, err := store.Stack().RefreshableStacks()
 	require.NoError(t, err)
-	assert.ElementsMatch(t, []portainer.Stack{refreshableStack}, stacks)
+	require.ElementsMatch(t, []portainer.Stack{refreshableStack}, stacks)
 }

@@ -30,19 +30,17 @@ export function CreateGroupView() {
         ]}
       />
 
-      <div className="row pb-20">
-        <div className="col-sm-12">
-          <Widget>
-            <Widget.Body>
-              <GroupForm
-                initialValues={initialValues}
-                onSubmit={handleSubmit}
-                submitLabel="Create"
-                submitLoadingLabel="Creating..."
-              />
-            </Widget.Body>
-          </Widget>
-        </div>
+      <div className="mx-4 pb-20">
+        <Widget>
+          <Widget.Body>
+            <GroupForm
+              initialValues={initialValues}
+              onSubmit={handleSubmit}
+              submitLabel="Create"
+              submitLoadingLabel="Creating..."
+            />
+          </Widget.Body>
+        </Widget>
       </div>
     </>
   );

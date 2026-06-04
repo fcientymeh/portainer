@@ -10,6 +10,7 @@ import (
 
 	gocache "github.com/patrickmn/go-cache"
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
 	svc "github.com/portainer/portainer/api/gitops/workflows"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/http/utils/filters"
@@ -128,7 +129,12 @@ func (h *Handler) getWorkflows(ctx context.Context, key string, sc *security.Res
 		return slices.Clone(cached.([]svc.Workflow)), nil
 	}
 
-	result, err := svc.FetchWorkflows(ctx, h.dataStore, h.gitService, h.k8sFactory, sc, set.ToSet(endpointIDs))
+	var result []svc.Workflow
+	err := h.dataStore.ViewTx(func(tx dataservices.DataStoreTx) error {
+		var err error
+		result, err = svc.FetchWorkflows(ctx, tx, h.gitService, h.k8sFactory, sc, set.ToSet(endpointIDs))
+		return err
+	})
 	if err != nil {
 		return nil, err
 	}

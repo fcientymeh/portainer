@@ -61,20 +61,20 @@ func (h *Handler) getSource(w http.ResponseWriter, r *http.Request) *httperror.H
 	}
 
 	var src *portainer.Source
+	var workflows []ce.Workflow
 
 	if err := h.dataStore.ViewTx(func(tx dataservices.DataStoreTx) error {
 		var err error
 		src, err = tx.Source().Read(portainer.SourceID(srcID))
+		if err != nil {
+			return err
+		}
+		workflows, err = ce.FetchWorkflows(r.Context(), tx, h.gitService, h.k8sFactory, securityContext, nil)
 		return err
 	}); h.dataStore.IsErrObjectNotFound(err) {
 		return httperror.NotFound("Unable to find a source with the specified identifier", err)
 	} else if err != nil {
 		return httperror.InternalServerError("Unable to retrieve source", err)
-	}
-
-	workflows, err := ce.FetchWorkflows(r.Context(), h.dataStore, h.gitService, h.k8sFactory, securityContext, nil)
-	if err != nil {
-		return httperror.InternalServerError("Unable to retrieve workflows", err)
 	}
 
 	byID := workflowsBySourceID(workflows)

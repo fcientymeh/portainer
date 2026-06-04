@@ -23,11 +23,10 @@ type GitAuthenticationPayload struct {
 
 // GitSourceCreatePayload holds the parameters for creating a git-backed source
 type GitSourceCreatePayload struct {
-	Name                string                    `json:"name"`
-	URL                 string                    `json:"url"`
-	TLSSkipVerify       bool                      `json:"tlsSkipVerify"`
-	Authentication      *GitAuthenticationPayload `json:"authentication"`
-	ClearAuthentication bool                      `json:"clearAuthentication"`
+	Name           string                    `json:"name"`
+	URL            string                    `json:"url"`
+	TLSSkipVerify  bool                      `json:"tlsSkipVerify"`
+	Authentication *GitAuthenticationPayload `json:"authentication"`
 }
 
 // Validate implements the portainer.Validatable interface

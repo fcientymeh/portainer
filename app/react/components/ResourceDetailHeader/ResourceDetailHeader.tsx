@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import clsx from 'clsx';
 
 import { Widget } from '@@/Widget';
+import { Alert } from '@@/Alert';
 
 interface Props {
   icon: ReactNode;
@@ -15,6 +16,9 @@ interface Props {
 
   rightInfo?: ReactNode;
   actionBar?: ReactNode;
+
+  isLoading?: boolean;
+  errorMessage?: string;
 
   containerClassName?: string;
   widgetClassName?: string;
@@ -30,27 +34,38 @@ export function ResourceDetailHeader({
   description,
   rightInfo,
   actionBar,
+  isLoading,
+  errorMessage,
   containerClassName = 'flex items-center gap-4 p-6',
   widgetClassName = 'widget-body',
 }: Props) {
   return (
     <Widget className={widgetClassName}>
-      <div className={containerClassName}>
-        <HeaderIcon
-          icon={icon}
-          iconBackgroundClassName={iconBackgroundClassName}
-        />
-        <HeaderInfo
-          subtitleLabel={subtitleLabel}
-          subtitleClassName={subtitleClassName}
-          title={title}
-          badge={badge}
-          description={description}
-        />
-        {rightInfo}
-      </div>
+      <Widget.Body loading={isLoading}>
+        {errorMessage && (
+          <Alert color="error" title="Error">
+            {errorMessage}
+          </Alert>
+        )}
+        {!errorMessage && (
+          <div className={containerClassName}>
+            <HeaderIcon
+              icon={icon}
+              iconBackgroundClassName={iconBackgroundClassName}
+            />
+            <HeaderInfo
+              subtitleLabel={subtitleLabel}
+              subtitleClassName={subtitleClassName}
+              title={title}
+              badge={badge}
+              description={description}
+            />
+            {rightInfo}
+          </div>
+        )}
+      </Widget.Body>
 
-      {actionBar}
+      {!isLoading && !errorMessage && actionBar}
     </Widget>
   );
 }

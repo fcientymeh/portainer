@@ -13,6 +13,50 @@ import (
 	"github.com/portainer/portainer/pkg/libhttp/response"
 )
 
+func computeGroupSizeInfo(endpointGroups []portainer.EndpointGroup, endpoints []portainer.Endpoint) (map[portainer.EndpointGroupID]int, map[portainer.EndpointGroupID]endpointGroupTypeInfo) {
+	groupSet := set.Set[portainer.EndpointGroupID]{}
+	for i := range endpointGroups {
+		groupSet[endpointGroups[i].ID] = true
+	}
+
+	countMap := make(map[portainer.EndpointGroupID]int)
+	typeInfoMap := make(map[portainer.EndpointGroupID]endpointGroupTypeInfo)
+
+	for _, endpoint := range endpoints {
+		if _, ok := groupSet[endpoint.GroupID]; !ok {
+			continue
+		}
+		countMap[endpoint.GroupID]++
+
+		typeInfo := typeInfoMap[endpoint.GroupID]
+		if endpointutils.IsKubernetesEndpoint(&endpoint) {
+			typeInfo.Kubernetes++
+		} else if endpoint.ContainerEngine == portainer.ContainerEnginePodman {
+			typeInfo.Podman++
+		} else {
+			typeInfo.Docker++
+		}
+		typeInfoMap[endpoint.GroupID] = typeInfo
+	}
+
+	for groupID, typeInfo := range typeInfoMap {
+		var bits int
+		if typeInfo.Docker > 0 {
+			bits |= 1
+		}
+		if typeInfo.Kubernetes > 0 {
+			bits |= 2
+		}
+		if typeInfo.Podman > 0 {
+			bits |= 4
+		}
+		typeInfo.Mixed = bits&(bits-1) != 0
+		typeInfoMap[groupID] = typeInfo
+	}
+
+	return countMap, typeInfoMap
+}
+
 type endpointGroupTypeInfo struct {
 	Docker     int  `json:"Docker"`
 	Kubernetes int  `json:"Kubernetes"`
@@ -83,50 +127,11 @@ func (handler *Handler) endpointGroupList(w http.ResponseWriter, r *http.Request
 	if len(endpointGroups) == 0 {
 		return response.JSON(w, []portainer.EndpointGroup{})
 	}
-	endpointGroupSet := set.Set[portainer.EndpointGroupID]{}
-	if includeSize {
-		for i := range endpointGroups {
-			endpointGroupSet[endpointGroups[i].ID] = true
-		}
-	}
 
 	var endpointGroupCountMap map[portainer.EndpointGroupID]int
 	var endpointGroupTypeInfoMap map[portainer.EndpointGroupID]endpointGroupTypeInfo
 	if includeSize {
-		endpointGroupCountMap = make(map[portainer.EndpointGroupID]int)
-		endpointGroupTypeInfoMap = make(map[portainer.EndpointGroupID]endpointGroupTypeInfo)
-		for _, endpoint := range endpoints {
-			if _, ok := endpointGroupSet[endpoint.GroupID]; !ok {
-				continue
-			}
-			endpointGroupCountMap[endpoint.GroupID]++
-
-			typeInfo := endpointGroupTypeInfoMap[endpoint.GroupID]
-
-			if endpointutils.IsKubernetesEndpoint(&endpoint) {
-				typeInfo.Kubernetes++
-			} else if endpoint.ContainerEngine == "podman" {
-				typeInfo.Podman++
-			} else {
-				typeInfo.Docker++
-			}
-			endpointGroupTypeInfoMap[endpoint.GroupID] = typeInfo
-		}
-
-		for groupID, typeInfo := range endpointGroupTypeInfoMap {
-			var bits int
-			if typeInfo.Docker > 0 {
-				bits |= 1
-			}
-			if typeInfo.Kubernetes > 0 {
-				bits |= 2
-			}
-			if typeInfo.Podman > 0 {
-				bits |= 4
-			}
-			typeInfo.Mixed = bits&(bits-1) != 0
-			endpointGroupTypeInfoMap[groupID] = typeInfo
-		}
+		endpointGroupCountMap, endpointGroupTypeInfoMap = computeGroupSizeInfo(endpointGroups, endpoints)
 	}
 
 	endpointGroupsResponse := make([]endpointGroupResponse, len(endpointGroups))

@@ -108,8 +108,12 @@ func TestFetchWorkflows_ReturnsOnlyGitopsStacks(t *testing.T) {
 		return tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole})
 	}))
 
-	items, err := FetchWorkflows(t.Context(), store, nil, nil, adminContext(), nil)
-	require.NoError(t, err)
+	var items []Workflow
+	require.NoError(t, store.ViewTx(func(tx dataservices.DataStoreTx) error {
+		var err error
+		items, err = FetchWorkflows(t.Context(), tx, nil, nil, adminContext(), nil)
+		return err
+	}))
 	require.Len(t, items, 1)
 	require.Equal(t, "gitops-stack", items[0].Name)
 }
@@ -131,8 +135,12 @@ func TestFetchWorkflows_FiltersByEndpointID(t *testing.T) {
 		return tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole})
 	}))
 
-	items, err := FetchWorkflows(t.Context(), store, nil, nil, adminContext(), set.ToSet([]portainer.EndpointID{1, 2}))
-	require.NoError(t, err)
+	var items []Workflow
+	require.NoError(t, store.ViewTx(func(tx dataservices.DataStoreTx) error {
+		var err error
+		items, err = FetchWorkflows(t.Context(), tx, nil, nil, adminContext(), set.ToSet([]portainer.EndpointID{1, 2}))
+		return err
+	}))
 	require.Len(t, items, 2)
 
 	names := []string{items[0].Name, items[1].Name}
@@ -151,8 +159,12 @@ func TestFetchWorkflows_EmptyWhenNoGitopsStacks(t *testing.T) {
 		return tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole})
 	}))
 
-	items, err := FetchWorkflows(t.Context(), store, nil, nil, adminContext(), nil)
-	require.NoError(t, err)
+	var items []Workflow
+	require.NoError(t, store.ViewTx(func(tx dataservices.DataStoreTx) error {
+		var err error
+		items, err = FetchWorkflows(t.Context(), tx, nil, nil, adminContext(), nil)
+		return err
+	}))
 	require.Empty(t, items)
 }
 
@@ -173,8 +185,12 @@ func TestFetchWorkflows_NilEndpointSetReturnsAll(t *testing.T) {
 		return tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole})
 	}))
 
-	items, err := FetchWorkflows(t.Context(), store, nil, nil, adminContext(), nil)
-	require.NoError(t, err)
+	var items []Workflow
+	require.NoError(t, store.ViewTx(func(tx dataservices.DataStoreTx) error {
+		var err error
+		items, err = FetchWorkflows(t.Context(), tx, nil, nil, adminContext(), nil)
+		return err
+	}))
 	require.Len(t, items, 3)
 }
 

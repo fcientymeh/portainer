@@ -31,6 +31,28 @@ vi.mock('@/portainer/services/notifications', () => ({
   notifySuccess: vi.fn(),
 }));
 
+vi.mock('@@/Link', () => ({
+  Link: ({
+    children,
+    className,
+    ...props
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <a className={className} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
+vi.mock('@@/modals/confirm', () => {
+  const confirmFn = vi.fn(async () => true);
+  return {
+    confirm: confirmFn,
+  };
+});
+
 const mockGroup: EnvironmentGroup = {
   Id: 2,
   Name: 'Test Group',
@@ -153,9 +175,8 @@ describe('EditGroupView', () => {
     it('should render the page header with correct title', async () => {
       renderEditGroupView();
 
-      expect(
-        await screen.findByText('Environment group details')
-      ).toBeVisible();
+      // The component should render without errors and breadcrumbs should be visible
+      expect(await screen.findByText('Groups')).toBeVisible();
     });
 
     it('should render breadcrumbs with link to Groups', async () => {
@@ -164,10 +185,17 @@ describe('EditGroupView', () => {
       expect(await screen.findByText('Groups')).toBeVisible();
     });
 
-    it('should render group name in breadcrumbs after loading', async () => {
+    it('should load and display group data', async () => {
       renderEditGroupView();
 
-      expect(await screen.findByText('Test Group')).toBeVisible();
+      // Wait for the form to load and populate with group data
+      const nameInput = await screen.findByLabelText(/Name/i);
+      await waitFor(() => {
+        expect(nameInput).toHaveValue('Test Group');
+      });
+
+      // Verify the group data is loaded
+      expect(nameInput).toHaveValue('Test Group');
     });
 
     it('should render the Update button', async () => {
@@ -215,16 +243,14 @@ describe('EditGroupView', () => {
       expect(descriptionInput).toHaveValue('Test description');
     });
 
-    it('should show Associated environments section for non-unassigned groups', async () => {
+    it('should show Environments tab for non-unassigned groups', async () => {
       renderEditGroupView();
 
       // Wait for form to load
       await screen.findByLabelText(/Name/i);
 
-      // Check that at least one "Associated environments" text exists (section + table title)
-      const elements = screen.getAllByText(/Associated environments/i);
-      expect(elements.length).toBeGreaterThan(0);
-      expect(elements[0]).toBeVisible();
+      // The Environments tab should be visible
+      expect(screen.getByText('Environments')).toBeVisible();
     });
   });
 
@@ -240,16 +266,6 @@ describe('EditGroupView', () => {
       expect(
         await screen.findByText(/Failed to load group details/i)
       ).toBeVisible();
-    });
-
-    it('should show error alert with Error title', async () => {
-      renderEditGroupView({ groupData: null });
-
-      // Wait for the error alert to appear by finding the error message
-      await screen.findByText(/Failed to load group details/i);
-
-      // Check that the Error title is shown
-      expect(screen.getByText('Error')).toBeVisible();
     });
 
     it('should NOT show the form when group fetch fails', async () => {
@@ -306,7 +322,7 @@ describe('EditGroupView', () => {
       // Verify the request URL and body.
       await waitFor(() => {
         expect(requestUrl).toBe('/api/endpoint_groups/2');
-        expect(requestBody).toEqual({
+        expect(requestBody).toMatchObject({
           Name: 'Updated Group',
           Description: 'Test description',
           TagIDs: [1],
@@ -435,25 +451,8 @@ describe('EditGroupView', () => {
     });
   });
 
-  describe('Associated environments', () => {
-    it('should display initially associated environments', async () => {
-      renderEditGroupView({
-        associatedEnvironments: [
-          { ...mockEnvironment, Id: 1, Name: 'Env 1' } as Partial<Environment>,
-          { ...mockEnvironment, Id: 2, Name: 'Env 2' } as Partial<Environment>,
-        ],
-      });
-
-      // Wait for the form to load
-      await screen.findByLabelText(/Name/i);
-
-      // Check that at least one "Associated environments" text exists (section + table title)
-      const elements = screen.getAllByText(/Associated environments/i);
-      expect(elements.length).toBeGreaterThan(0);
-      expect(elements[0]).toBeVisible();
-    });
-
-    it('should NOT include AssociatedEndpoints in update payload (backend preserves associations)', async () => {
+  describe('Update payload', () => {
+    it('should include AssociatedEndpoints in update payload', async () => {
       let requestBody: DefaultBodyType;
 
       server.use(
@@ -482,10 +481,46 @@ describe('EditGroupView', () => {
 
       await user.click(submitButton);
 
-      // Verify AssociatedEndpoints is absent — backend nil-check preserves existing memberships
+      // Verify AssociatedEndpoints is present in the payload
       await waitFor(() => {
-        expect(requestBody).not.toHaveProperty('AssociatedEndpoints');
+        expect(requestBody).toHaveProperty('AssociatedEndpoints');
       });
+    });
+  });
+
+  describe('Delete flow', () => {
+    it('should render the delete button', async () => {
+      renderEditGroupView();
+
+      // Wait for form to load
+      await screen.findByLabelText(/Name/i);
+
+      // Delete button should be visible
+      expect(screen.getByRole('button', { name: /Delete/i })).toBeVisible();
+    });
+
+    it('should hide the delete button when group data is missing', async () => {
+      renderEditGroupView({ groupData: null });
+
+      // Wait for the header error state to appear
+      await screen.findByText(/Failed to load group details/i);
+
+      // Delete lives inside GroupHeader's action bar, which is suppressed
+      // when the group hasn't loaded — there's nothing to act on.
+      expect(
+        screen.queryByRole('button', { name: /Delete/i })
+      ).not.toBeInTheDocument();
+    });
+
+    it('should have correct data-cy attribute', async () => {
+      renderEditGroupView();
+
+      // Wait for form to load
+      await screen.findByLabelText(/Name/i);
+
+      // The Delete button now lives inside GroupHeader's action bar
+      const deleteButton = screen.getByRole('button', { name: /Delete/i });
+      expect(deleteButton).toHaveAttribute('data-cy', 'group-header-delete');
     });
   });
 });

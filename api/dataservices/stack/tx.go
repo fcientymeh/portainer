@@ -106,7 +106,7 @@ func (service ServiceTx) RefreshableStacks() ([]portainer.Stack, error) {
 		BucketName,
 		&portainer.Stack{},
 		dataservices.FilterFn(&stacks, func(e portainer.Stack) bool {
-			return e.AutoUpdate != nil && e.AutoUpdate.Interval != ""
+			return e.WorkflowID != 0 && e.AutoUpdate != nil && e.AutoUpdate.Interval != ""
 		}),
 	)
 }

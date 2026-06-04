@@ -155,7 +155,7 @@ func TestHandler_endpointGroupList(t *testing.T) {
 			ID:              5,
 			GroupID:         groups[0].ID,
 			Type:            portainer.DockerEnvironment,
-			ContainerEngine: "podman",
+			ContainerEngine: portainer.ContainerEnginePodman,
 		}
 		require.NoError(t, store.Endpoint().Create(podmanEndpoint))
 		t.Cleanup(func() { _ = store.Endpoint().DeleteEndpoint(podmanEndpoint.ID) })

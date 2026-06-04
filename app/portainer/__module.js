@@ -252,6 +252,9 @@ angular
           id: {
             type: 'int',
           },
+          tab: {
+            dynamic: true,
+          },
         },
       };
 

@@ -46,60 +46,57 @@ export function AssociatedEnvironmentsTable({
   const columns = useMemo(() => buildColumns(), []);
 
   return (
-    // avoid padding issues with the widget
-    <div className="-mx-[15px]">
-      <Datatable<EnvironmentTableData>
-        disableSelect={readOnly}
-        isLoading={isLoading}
-        title={title}
-        columns={columns}
-        settingsManager={tableState}
-        dataset={environments}
-        getRowId={(row) => String(row.Id)}
-        renderRow={(row) => (
-          <TableRow<EnvironmentTableData>
-            cells={row.getVisibleCells()}
-            onClick={() => row.toggleSelected()}
-            className={clsx({ active: row.getIsSelected() })}
-            aria-selected={row.getIsSelected()}
-          />
-        )}
-        extendTableOptions={withControlledSelected(setSelectedIds, selectedIds)}
-        renderTableActions={(selectedItems) =>
-          readOnly ? null : (
-            <>
-              {confirmRemove ? (
-                <DeleteButton
-                  disabled={selectedItems.length === 0}
-                  isLoading={isRemoving}
-                  confirmMessage="Are you sure you want to remove the selected environment(s) from this group?"
-                  onConfirmed={() => handleRemove(selectedItems)}
-                  data-cy="remove-environments-button"
-                  type="button"
-                />
-              ) : (
-                <DeleteButton
-                  disabled={selectedItems.length === 0}
-                  onClick={() => {
-                    handleRemove(selectedItems);
-                  }}
-                  data-cy="remove-environments-button"
-                  type="button"
-                />
-              )}
-              <Button
-                icon={Plus}
-                onClick={onOpenAddDrawer}
-                data-cy="add-environments-button"
-              >
-                Add
-              </Button>
-            </>
-          )
-        }
-        data-cy={dataCy || 'environment-table'}
-      />
-    </div>
+    <Datatable<EnvironmentTableData>
+      disableSelect={readOnly}
+      isLoading={isLoading}
+      title={title}
+      columns={columns}
+      settingsManager={tableState}
+      dataset={environments}
+      getRowId={(row) => String(row.Id)}
+      renderRow={(row) => (
+        <TableRow<EnvironmentTableData>
+          cells={row.getVisibleCells()}
+          onClick={() => row.toggleSelected()}
+          className={clsx({ active: row.getIsSelected() })}
+          aria-selected={row.getIsSelected()}
+        />
+      )}
+      extendTableOptions={withControlledSelected(setSelectedIds, selectedIds)}
+      renderTableActions={(selectedItems) =>
+        readOnly ? null : (
+          <>
+            {confirmRemove ? (
+              <DeleteButton
+                disabled={selectedItems.length === 0}
+                isLoading={isRemoving}
+                confirmMessage="Are you sure you want to remove the selected environment(s) from this group?"
+                onConfirmed={() => handleRemove(selectedItems)}
+                data-cy="remove-environments-button"
+                type="button"
+              />
+            ) : (
+              <DeleteButton
+                disabled={selectedItems.length === 0}
+                onClick={() => {
+                  handleRemove(selectedItems);
+                }}
+                data-cy="remove-environments-button"
+                type="button"
+              />
+            )}
+            <Button
+              icon={Plus}
+              onClick={onOpenAddDrawer}
+              data-cy="add-environments-button"
+            >
+              Add
+            </Button>
+          </>
+        )
+      }
+      data-cy={dataCy || 'environment-table'}
+    />
   );
 
   function handleRemove(selectedItems: EnvironmentTableData[]) {

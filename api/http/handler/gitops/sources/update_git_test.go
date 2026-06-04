@@ -157,8 +157,8 @@ func TestGitSourceUpdate_ClearsAuthWhenRequested(t *testing.T) {
 	h := newTestHandler(t, store)
 
 	body, err := json.Marshal(GitSourceCreatePayload{
-		URL:                 "https://github.com/org/repo.git",
-		ClearAuthentication: true,
+		URL:            "https://github.com/org/repo.git",
+		Authentication: &GitAuthenticationPayload{},
 	})
 	require.NoError(t, err)
 
@@ -175,6 +175,58 @@ func TestGitSourceUpdate_ClearsAuthWhenRequested(t *testing.T) {
 	}))
 	require.NotNil(t, stored.GitConfig)
 	require.Nil(t, stored.GitConfig.Authentication)
+}
+
+func TestGitSourceUpdate_ReplacesAuthWhenProvided(t *testing.T) {
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
+
+	var srcID portainer.SourceID
+	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		src := &portainer.Source{
+			Name: "auth-source",
+			Type: portainer.SourceTypeGit,
+			GitConfig: &gittypes.RepoConfig{
+				URL: "https://github.com/org/repo.git",
+				Authentication: &gittypes.GitAuthentication{
+					Username: "alice",
+					Password: "secret",
+				},
+			},
+		}
+		err := tx.Source().Create(src)
+		require.NoError(t, err)
+		srcID = src.ID
+
+		return tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole})
+	}))
+
+	h := newTestHandler(t, store)
+
+	body, err := json.Marshal(GitSourceCreatePayload{
+		URL: "https://github.com/org/repo.git",
+		Authentication: &GitAuthenticationPayload{
+			Username: "bob",
+			Password: "new-secret",
+		},
+	})
+	require.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, buildUpdateReq(t, 1, int(srcID), body))
+
+	require.Equal(t, http.StatusOK, rr.Code)
+
+	var stored *portainer.Source
+	require.NoError(t, store.ViewTx(func(tx dataservices.DataStoreTx) error {
+		var err error
+		stored, err = tx.Source().Read(srcID)
+		return err
+	}))
+	require.NotNil(t, stored.GitConfig)
+	require.NotNil(t, stored.GitConfig.Authentication)
+	require.Equal(t, "bob", stored.GitConfig.Authentication.Username)
+	require.Equal(t, "new-secret", stored.GitConfig.Authentication.Password)
 }
 
 func TestGitSourceUpdate_NotFound(t *testing.T) {
