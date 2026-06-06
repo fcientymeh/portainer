@@ -152,6 +152,7 @@ type (
 		ResourceControl *ResourceControl `json:"ResourceControl"`
 		Variables       []CustomTemplateVariableDefinition
 		GitConfig       *gittypes.RepoConfig `json:"GitConfig"`
+		ArtifactSources *ArtifactSources     `json:"ArtifactSources,omitempty"`
 		// IsComposeFormat indicates if the Kubernetes template is created from a Docker Compose file
 		IsComposeFormat bool `example:"false"`
 		// EdgeTemplate indicates if this template purpose for Edge Stack
@@ -560,8 +561,9 @@ type (
 	}
 
 	PolicyChartSummary struct {
-		ChartName   string `json:"ChartName"`
-		Fingerprint string `json:"Fingerprint"`
+		ChartName   string   `json:"ChartName"`
+		Fingerprint string   `json:"Fingerprint"`
+		PolicyID    PolicyID `json:"PolicyID,omitempty"` // 0 when server hasn't populated the field
 	}
 
 	PolicyChartStatus struct {
@@ -583,17 +585,19 @@ type (
 	}
 
 	PolicyChartBundle struct {
-		PolicyChartSummary  `mapstructure:",squash"`
-		EncodedTgz          string             `json:"EncodedTgz"`
-		Namespace           string             `json:"Namespace"`
-		ReleaseName         string             `json:"ReleaseName,omitempty"`
+		PolicyChartSummary `mapstructure:",squash"`
+		EncodedTgz         string `json:"EncodedTgz"`
+		Namespace          string `json:"Namespace"`
+		ReleaseName        string `json:"ReleaseName,omitempty"`
+		// Base64 YAML kubectl-applied by the agent before Helm install when set (e.g. Gatekeeper gatekeeper-system namespace + PSA labels).
 		PreReleaseManifest  string             `json:"PreReleaseManifest,omitempty"`
 		EncodedValues       string             `json:"EncodedValues"`
 		PreInstallDeletions []ResourceDeletion `json:"PreInstallDeletions,omitempty"`
 		PreInstallAdoptions []ResourceAdoption `json:"PreInstallAdoptions,omitempty"`
+		// WaitForCRDs lists CRD names that must be registered in API discovery after
+		// this chart installs before the agent proceeds to the next chart.
+		WaitForCRDs []string `json:"WaitForCRDs,omitempty"`
 		// NoWait disables waiting for pods to be ready after install.
-		// Set to true for externally sourced charts whose startup timing cannot be controlled,
-		// to avoid leaving the release stuck in pending-install.
 		NoWait bool `json:"NoWait,omitempty"`
 	}
 
@@ -622,6 +626,45 @@ type (
 	RestoreSettingsBundle map[PolicyType]RestoreSettings
 
 	PolicyID int
+
+	// PolicyDesiredState is the per-policy desired state sent from server to agent
+	// in PollStatusResponse.PolicyStates (per-policy payload format).
+	PolicyDesiredState struct {
+		PolicyID    PolicyID `json:"policyID"`
+		Type        string   `json:"type"`        // e.g. "helm-k8s"
+		Fingerprint string   `json:"fingerprint"` // install-affecting only; restore manifest excluded
+		Config      []byte   `json:"config"`      // handler-specific config blob (e.g. HelmPolicyConfig JSON)
+	}
+
+	// PolicyStatesAsyncPayload is the value of an async "policyStates" command.
+	// States carries per-policy desired state; ChartBundles carries helm chart tarballs
+	// for policies that need installing (emitted only on mutation, never idle polls).
+	PolicyStatesAsyncPayload struct {
+		States        []PolicyDesiredState  `json:"states"`
+		ChartBundles  []PolicyChartBundle   `json:"chartBundles,omitempty"`
+		RestoreBundle RestoreSettingsBundle `json:"restoreBundle,omitempty"`
+	}
+
+	// PolicyActualState is the per-policy actual state reported by the agent
+	// via PUT /endpoints/{id}/edge/policies/statuses.
+	PolicyActualState struct {
+		PolicyID    PolicyID `json:"policyID"`
+		Type        string   `json:"type"`
+		Fingerprint string   `json:"fingerprint"`
+		Status      string   `json:"status"` // applying|applied|failed|removing
+		Message     string   `json:"message,omitempty"`
+	}
+
+	// HelmPolicyConfig is the Config payload for "helm-k8s" PolicyDesiredState entries.
+	// Bundles are not included in the poll response Config — they travel separately
+	// (sync: on-demand GetCharts; async: PolicyStatesCommandPayload.ChartBundles).
+	// RestoreSettings is helm-internal metadata and is intentionally NOT part of the
+	// fingerprint — see Fingerprint contract in reconcile-refactor-plan.md.
+	HelmPolicyConfig struct {
+		Charts          []PolicyChartSummary `json:"charts"`
+		Bundles         []PolicyChartBundle  `json:"bundles,omitempty"`
+		RestoreSettings *RestoreSettings     `json:"restoreSettings,omitempty"`
+	}
 
 	// PolicyType represents the type of policy
 	PolicyType string

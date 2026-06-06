@@ -82,8 +82,8 @@ func (handler *Handler) customTemplateFile(w http.ResponseWriter, r *http.Reques
 	}
 
 	entryPath := customTemplate.EntryPoint
-	if customTemplate.GitConfig != nil {
-		entryPath = customTemplate.GitConfig.ConfigFilePath
+	if customTemplate.ArtifactSources != nil {
+		entryPath = customTemplate.ArtifactSources.Artifact.ConfigFilePath
 	}
 	fileContent, err := handler.FileService.GetFileContent(customTemplate.ProjectPath, entryPath)
 	if err != nil {

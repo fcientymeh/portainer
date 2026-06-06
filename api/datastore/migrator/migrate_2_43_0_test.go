@@ -5,6 +5,7 @@ import (
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/database/boltdb"
+	"github.com/portainer/portainer/api/dataservices/customtemplate"
 	"github.com/portainer/portainer/api/dataservices/source"
 	"github.com/portainer/portainer/api/dataservices/stack"
 	"github.com/portainer/portainer/api/dataservices/workflow"
@@ -220,4 +221,242 @@ func TestMigrateGitConfigToSources_2_43_0_Idempotent(t *testing.T) {
 	workflows, err := workflowSvc.ReadAll()
 	require.NoError(t, err)
 	require.Len(t, workflows, 1)
+}
+
+func TestMigrateCustomTemplateGitConfigToSources_2_43_0_GitTemplateMigrated(t *testing.T) {
+	t.Parallel()
+
+	conn := &boltdb.DbConnection{Path: t.TempDir()}
+	err := conn.Open()
+	require.NoError(t, err)
+	defer logs.CloseAndLogErr(conn)
+
+	stackSvc, err := stack.NewService(conn)
+	require.NoError(t, err)
+	sourceSvc, err := source.NewService(conn)
+	require.NoError(t, err)
+	customTemplateSvc, err := customtemplate.NewService(conn)
+	require.NoError(t, err)
+
+	m := NewMigrator(&MigratorParameters{
+		StackService:          stackSvc,
+		SourceService:         sourceSvc,
+		CustomTemplateService: customTemplateSvc,
+	})
+
+	tmpl := &portainer.CustomTemplate{
+		ID: 1,
+		GitConfig: &gittypes.RepoConfig{
+			URL:            "https://github.com/example/repo",
+			ReferenceName:  "refs/heads/main",
+			ConfigFilePath: "docker-compose.yml",
+			ConfigHash:     "abc123",
+		},
+	}
+	err = conn.CreateObjectWithId(customtemplate.BucketName, int(tmpl.ID), tmpl)
+	require.NoError(t, err)
+
+	err = m.migrateCustomTemplateGitConfigToSources_2_43_0()
+	require.NoError(t, err)
+
+	migrated, err := customTemplateSvc.Read(tmpl.ID)
+	require.NoError(t, err)
+	require.NotNil(t, migrated.ArtifactSources)
+	require.Nil(t, migrated.GitConfig)
+	require.Len(t, migrated.ArtifactSources.SourceIDs, 1)
+	require.Equal(t, "refs/heads/main", migrated.ArtifactSources.Artifact.ReferenceName)
+	require.Equal(t, "docker-compose.yml", migrated.ArtifactSources.Artifact.ConfigFilePath)
+	require.Equal(t, "abc123", migrated.ArtifactSources.Artifact.ConfigHash)
+
+	src, err := sourceSvc.Read(migrated.ArtifactSources.SourceIDs[0])
+	require.NoError(t, err)
+	require.Equal(t, portainer.SourceTypeGit, src.Type)
+	require.Equal(t, "https://github.com/example/repo", src.GitConfig.URL)
+}
+
+func TestMigrateCustomTemplateGitConfigToSources_2_43_0_NonGitTemplateUntouched(t *testing.T) {
+	t.Parallel()
+
+	conn := &boltdb.DbConnection{Path: t.TempDir()}
+	err := conn.Open()
+	require.NoError(t, err)
+	defer logs.CloseAndLogErr(conn)
+
+	stackSvc, err := stack.NewService(conn)
+	require.NoError(t, err)
+	sourceSvc, err := source.NewService(conn)
+	require.NoError(t, err)
+	customTemplateSvc, err := customtemplate.NewService(conn)
+	require.NoError(t, err)
+
+	m := NewMigrator(&MigratorParameters{
+		StackService:          stackSvc,
+		SourceService:         sourceSvc,
+		CustomTemplateService: customTemplateSvc,
+	})
+
+	tmpl := &portainer.CustomTemplate{ID: 1, Title: "plain-template"}
+	err = conn.CreateObjectWithId(customtemplate.BucketName, int(tmpl.ID), tmpl)
+	require.NoError(t, err)
+
+	err = m.migrateCustomTemplateGitConfigToSources_2_43_0()
+	require.NoError(t, err)
+
+	result, err := customTemplateSvc.Read(tmpl.ID)
+	require.NoError(t, err)
+	require.Nil(t, result.ArtifactSources)
+	require.Nil(t, result.GitConfig)
+
+	sources, err := sourceSvc.ReadAll()
+	require.NoError(t, err)
+	require.Empty(t, sources)
+}
+
+func TestMigrateCustomTemplateGitConfigToSources_2_43_0_AlreadyMigratedSkipped(t *testing.T) {
+	t.Parallel()
+
+	conn := &boltdb.DbConnection{Path: t.TempDir()}
+	err := conn.Open()
+	require.NoError(t, err)
+	defer logs.CloseAndLogErr(conn)
+
+	stackSvc, err := stack.NewService(conn)
+	require.NoError(t, err)
+	sourceSvc, err := source.NewService(conn)
+	require.NoError(t, err)
+	customTemplateSvc, err := customtemplate.NewService(conn)
+	require.NoError(t, err)
+
+	m := NewMigrator(&MigratorParameters{
+		StackService:          stackSvc,
+		SourceService:         sourceSvc,
+		CustomTemplateService: customTemplateSvc,
+	})
+
+	// Template already has ArtifactSources set (already migrated)
+	srcID := portainer.SourceID(99)
+	tmpl := &portainer.CustomTemplate{
+		ID: 1,
+		GitConfig: &gittypes.RepoConfig{
+			URL: "https://github.com/example/repo",
+		},
+		ArtifactSources: &portainer.ArtifactSources{
+			SourceIDs: []portainer.SourceID{srcID},
+		},
+	}
+	err = conn.CreateObjectWithId(customtemplate.BucketName, int(tmpl.ID), tmpl)
+	require.NoError(t, err)
+
+	err = m.migrateCustomTemplateGitConfigToSources_2_43_0()
+	require.NoError(t, err)
+
+	sources, err := sourceSvc.ReadAll()
+	require.NoError(t, err)
+	require.Empty(t, sources, "no new sources should be created for already-migrated templates")
+}
+
+func TestMigrateCustomTemplateGitConfigToSources_2_43_0_DuplicateSourcesDeduped(t *testing.T) {
+	t.Parallel()
+
+	conn := &boltdb.DbConnection{Path: t.TempDir()}
+	err := conn.Open()
+	require.NoError(t, err)
+	defer logs.CloseAndLogErr(conn)
+
+	stackSvc, err := stack.NewService(conn)
+	require.NoError(t, err)
+	sourceSvc, err := source.NewService(conn)
+	require.NoError(t, err)
+	customTemplateSvc, err := customtemplate.NewService(conn)
+	require.NoError(t, err)
+
+	m := NewMigrator(&MigratorParameters{
+		StackService:          stackSvc,
+		SourceService:         sourceSvc,
+		CustomTemplateService: customTemplateSvc,
+	})
+
+	sharedURL := "https://github.com/example/shared-repo"
+
+	tmpl1 := &portainer.CustomTemplate{
+		ID:    1,
+		Title: "template-a",
+		GitConfig: &gittypes.RepoConfig{
+			URL:           sharedURL,
+			ReferenceName: "refs/heads/main",
+		},
+	}
+	tmpl2 := &portainer.CustomTemplate{
+		ID:    2,
+		Title: "template-b",
+		GitConfig: &gittypes.RepoConfig{
+			URL:           sharedURL,
+			ReferenceName: "refs/heads/develop",
+		},
+	}
+	err = conn.CreateObjectWithId(customtemplate.BucketName, int(tmpl1.ID), tmpl1)
+	require.NoError(t, err)
+	err = conn.CreateObjectWithId(customtemplate.BucketName, int(tmpl2.ID), tmpl2)
+	require.NoError(t, err)
+
+	err = m.migrateCustomTemplateGitConfigToSources_2_43_0()
+	require.NoError(t, err)
+
+	sources, err := sourceSvc.ReadAll()
+	require.NoError(t, err)
+	require.Len(t, sources, 1, "two templates with the same URL must share one Source")
+
+	sharedSrcID := sources[0].ID
+
+	migrated1, err := customTemplateSvc.Read(tmpl1.ID)
+	require.NoError(t, err)
+	require.NotNil(t, migrated1.ArtifactSources)
+	require.Equal(t, sharedSrcID, migrated1.ArtifactSources.SourceIDs[0])
+
+	migrated2, err := customTemplateSvc.Read(tmpl2.ID)
+	require.NoError(t, err)
+	require.NotNil(t, migrated2.ArtifactSources)
+	require.Equal(t, sharedSrcID, migrated2.ArtifactSources.SourceIDs[0])
+}
+
+func TestMigrateCustomTemplateGitConfigToSources_2_43_0_Idempotent(t *testing.T) {
+	t.Parallel()
+
+	conn := &boltdb.DbConnection{Path: t.TempDir()}
+	err := conn.Open()
+	require.NoError(t, err)
+	defer logs.CloseAndLogErr(conn)
+
+	stackSvc, err := stack.NewService(conn)
+	require.NoError(t, err)
+	sourceSvc, err := source.NewService(conn)
+	require.NoError(t, err)
+	customTemplateSvc, err := customtemplate.NewService(conn)
+	require.NoError(t, err)
+
+	m := NewMigrator(&MigratorParameters{
+		StackService:          stackSvc,
+		SourceService:         sourceSvc,
+		CustomTemplateService: customTemplateSvc,
+	})
+
+	tmpl := &portainer.CustomTemplate{
+		ID: 1,
+		GitConfig: &gittypes.RepoConfig{
+			URL: "https://github.com/example/repo",
+		},
+	}
+	err = conn.CreateObjectWithId(customtemplate.BucketName, int(tmpl.ID), tmpl)
+	require.NoError(t, err)
+
+	err = m.migrateCustomTemplateGitConfigToSources_2_43_0()
+	require.NoError(t, err)
+
+	// Second run must not create duplicate Source records
+	err = m.migrateCustomTemplateGitConfigToSources_2_43_0()
+	require.NoError(t, err)
+
+	sources, err := sourceSvc.ReadAll()
+	require.NoError(t, err)
+	require.Len(t, sources, 1)
 }

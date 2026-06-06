@@ -180,3 +180,86 @@ func (m *Migrator) migrateGitConfigToSources_2_43_0() error {
 
 	return nil
 }
+
+func (m *Migrator) migrateCustomTemplateGitConfigToSources_2_43_0() error {
+	log.Info().Msg("migrating git-backed custom templates to Source records")
+
+	templates, err := m.customTemplateService.ReadAll()
+	if err != nil {
+		return err
+	}
+
+	existingSources, err := m.sourceService.ReadAll()
+	if err != nil {
+		return err
+	}
+
+	sourcesByKey := make(map[sourceDedupeKey]portainer.SourceID, len(existingSources))
+	for _, src := range existingSources {
+		if src.GitConfig != nil {
+			sourcesByKey[gitSourceKey(src.GitConfig)] = src.ID
+		}
+	}
+
+	for i := range templates {
+		t := &templates[i]
+		if t.GitConfig == nil || t.ArtifactSources != nil {
+			continue
+		}
+
+		cfg := &gittypes.RepoConfig{
+			URL:            gittypes.SanitizeURL(t.GitConfig.URL),
+			Authentication: t.GitConfig.Authentication,
+			TLSSkipVerify:  t.GitConfig.TLSSkipVerify,
+		}
+
+		if cfg.Authentication != nil && cfg.Authentication.GitCredentialID != 0 {
+			log.Warn().
+				Int("git_credential_id", cfg.Authentication.GitCredentialID).
+				Msg("custom template has a GitCredentialID reference which is not supported in CE; credential reference will be dropped during migration")
+
+			cfg.Authentication.GitCredentialID = 0
+		}
+
+		key := gitSourceKey(cfg)
+
+		var newSrcID portainer.SourceID
+
+		if err := m.stackService.Connection.UpdateTx(func(tx portainer.Transaction) error {
+			srcID, exists := sourcesByKey[key]
+
+			if !exists {
+				src := &portainer.Source{
+					Name:      gittypes.RepoName(cfg.URL),
+					Type:      portainer.SourceTypeGit,
+					GitConfig: cfg,
+				}
+				if err := m.sourceService.Tx(tx).Create(src); err != nil {
+					return fmt.Errorf("failed to create source for custom template %d: %w", t.ID, err)
+				}
+				srcID = src.ID
+				newSrcID = src.ID
+			}
+
+			t.ArtifactSources = &portainer.ArtifactSources{
+				Artifact: portainer.Artifact{
+					ReferenceName:  t.GitConfig.ReferenceName,
+					ConfigFilePath: t.GitConfig.ConfigFilePath,
+					ConfigHash:     t.GitConfig.ConfigHash,
+				},
+				SourceIDs: []portainer.SourceID{srcID},
+			}
+			t.GitConfig = nil
+
+			return m.customTemplateService.Tx(tx).Update(t.ID, t)
+		}); err != nil {
+			return fmt.Errorf("failed to migrate custom template %d: %w", t.ID, err)
+		}
+
+		if newSrcID != 0 {
+			sourcesByKey[key] = newSrcID
+		}
+	}
+
+	return nil
+}

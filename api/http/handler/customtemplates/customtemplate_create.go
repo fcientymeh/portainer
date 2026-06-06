@@ -5,13 +5,14 @@ import (
 	"errors"
 	"net/http"
 	"os"
-	"regexp"
 	"strconv"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/filesystem"
 	gittypes "github.com/portainer/portainer/api/git/types"
 	httperrors "github.com/portainer/portainer/api/http/errors"
+	"github.com/portainer/portainer/api/gitops/workflows"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/authorization"
 	"github.com/portainer/portainer/api/stacks/stackutils"
@@ -59,28 +60,37 @@ func (handler *Handler) customTemplateCreate(w http.ResponseWriter, r *http.Requ
 
 	customTemplate.CreatedByUserID = tokenData.ID
 
-	customTemplates, err := handler.DataStore.CustomTemplate().ReadAll()
+	err = handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		return createCustomTemplateTx(tx, customTemplate, tokenData.ID)
+	})
+
+	return response.TxResponse(w, customTemplate, err)
+}
+
+func createCustomTemplateTx(tx dataservices.DataStoreTx, customTemplate *portainer.CustomTemplate, userID portainer.UserID) error {
+	existingTemplates, err := tx.CustomTemplate().ReadAll()
 	if err != nil {
 		return httperror.InternalServerError("Unable to retrieve custom templates from the database", err)
 	}
 
-	for _, existingTemplate := range customTemplates {
-		if existingTemplate.Title == customTemplate.Title {
+	for _, existing := range existingTemplates {
+		if existing.Title == customTemplate.Title {
 			return httperror.InternalServerError("Template name must be unique", errors.New("Template name must be unique"))
 		}
 	}
 
-	if err := handler.DataStore.CustomTemplate().Create(customTemplate); err != nil {
+	if err := tx.CustomTemplate().Create(customTemplate); err != nil {
 		return httperror.InternalServerError("Unable to create custom template", err)
 	}
 
-	resourceControl := authorization.NewPrivateResourceControl(strconv.Itoa(int(customTemplate.ID)), portainer.CustomTemplateResourceControl, tokenData.ID)
+	resourceControl := authorization.NewPrivateResourceControl(strconv.Itoa(int(customTemplate.ID)), portainer.CustomTemplateResourceControl, userID)
 
-	if err := handler.DataStore.ResourceControl().Create(resourceControl); err != nil {
+	if err := tx.ResourceControl().Create(resourceControl); err != nil {
 		return httperror.InternalServerError("Unable to persist resource control inside the database", err)
 	}
 
 	customTemplate.ResourceControl = resourceControl
+	populateGitConfig(tx, customTemplate)
 
 	//------------ AIP AISECLAB MOD START------------------------
 	//
@@ -92,7 +102,8 @@ func (handler *Handler) customTemplateCreate(w http.ResponseWriter, r *http.Requ
 	//
 	//------------ AIP AISECLAB MOD END------------------------
 
-	return response.JSON(w, customTemplate)
+	// return response.JSON(w, customTemplate)
+	return nil
 }
 
 func (handler *Handler) createCustomTemplate(method string, r *http.Request) (*portainer.CustomTemplate, error) {
@@ -150,19 +161,11 @@ func (payload *customTemplateFromFileContentPayload) Validate(r *http.Request) e
 	if payload.Type != portainer.KubernetesStack && payload.Type != portainer.DockerSwarmStack && payload.Type != portainer.DockerComposeStack {
 		return errors.New("Invalid custom template type")
 	}
-	if !isValidNote(payload.Note) {
+	if !IsValidNote(payload.Note) {
 		return errors.New("Invalid note. <img> tag is not supported")
 	}
 
-	return validateVariablesDefinitions(payload.Variables)
-}
-
-func isValidNote(note string) bool {
-	if len(note) == 0 {
-		return true
-	}
-	match, _ := regexp.MatchString("<img", note)
-	return !match
+	return ValidateVariablesDefinitions(payload.Variables)
 }
 
 // @id CustomTemplateCreateString
@@ -274,11 +277,11 @@ func (payload *customTemplateFromGitRepositoryPayload) Validate(r *http.Request)
 	if payload.Type != portainer.DockerSwarmStack && payload.Type != portainer.DockerComposeStack && payload.Type != portainer.KubernetesStack {
 		return errors.New("Invalid custom template type")
 	}
-	if !isValidNote(payload.Note) {
+	if !IsValidNote(payload.Note) {
 		return errors.New("Invalid note. <img> tag is not supported")
 	}
 
-	return validateVariablesDefinitions(payload.Variables)
+	return ValidateVariablesDefinitions(payload.Variables)
 }
 
 // @id CustomTemplateCreateRepository
@@ -340,9 +343,27 @@ func (handler *Handler) createCustomTemplateFromGitRepository(r *http.Request) (
 		return nil, err
 	}
 
-	gitConfig.ConfigHash = commitHash
-	customTemplate.GitConfig = gitConfig
+	src, err := workflows.FindOrCreateGitSource(handler.DataStore, &portainer.Source{
+		Name: gittypes.RepoName(gitConfig.URL),
+		Type: portainer.SourceTypeGit,
+		GitConfig: &gittypes.RepoConfig{
+			URL:            gitConfig.URL,
+			Authentication: gitConfig.Authentication,
+			TLSSkipVerify:  gitConfig.TLSSkipVerify,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
 
+	customTemplate.ArtifactSources = &portainer.ArtifactSources{
+		Artifact: portainer.Artifact{
+			ReferenceName:  gitConfig.ReferenceName,
+			ConfigFilePath: gitConfig.ConfigFilePath,
+			ConfigHash:     commitHash,
+		},
+		SourceIDs: []portainer.SourceID{src.ID},
+	}
 	isValidProject := true
 	defer func() {
 		if !isValidProject {
@@ -418,7 +439,7 @@ func (payload *customTemplateFromFileUploadPayload) Validate(r *http.Request) er
 	payload.Logo = logo
 
 	note, _ := request.RetrieveMultiPartFormValue(r, "Note", true)
-	if !isValidNote(note) {
+	if !IsValidNote(note) {
 		return errors.New("Invalid note. <img> tag is not supported")
 	}
 	payload.Note = note
@@ -450,7 +471,7 @@ func (payload *customTemplateFromFileUploadPayload) Validate(r *http.Request) er
 		if err := json.Unmarshal([]byte(varsString), &payload.Variables); err != nil {
 			return errors.New("Invalid variables. Ensure that the variables are valid JSON")
 		}
-		if err := validateVariablesDefinitions(payload.Variables); err != nil {
+		if err := ValidateVariablesDefinitions(payload.Variables); err != nil {
 			return err
 		}
 	}
