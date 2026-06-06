@@ -11,8 +11,8 @@ import (
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/filesystem"
 	gittypes "github.com/portainer/portainer/api/git/types"
-	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/gitops/workflows"
+	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/authorization"
 	"github.com/portainer/portainer/api/stacks/stackutils"
@@ -63,7 +63,17 @@ func (handler *Handler) customTemplateCreate(w http.ResponseWriter, r *http.Requ
 	err = handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		return createCustomTemplateTx(tx, customTemplate, tokenData.ID)
 	})
+	//------------ AIP AISECLAB MOD START------------------------
+	//
+	if errorek == nil {
+		if r.Method != http.MethodGet {
+			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE CUSTOM TEMPLATE %s]     [%s]", uzer.Username, customTemplate.Title, r)
+		}
+	}
+	//
+	//------------ AIP AISECLAB MOD END------------------------
 
+	// return response.JSON(w, customTemplate)
 	return response.TxResponse(w, customTemplate, err)
 }
 
@@ -92,17 +102,6 @@ func createCustomTemplateTx(tx dataservices.DataStoreTx, customTemplate *portain
 	customTemplate.ResourceControl = resourceControl
 	populateGitConfig(tx, customTemplate)
 
-	//------------ AIP AISECLAB MOD START------------------------
-	//
-	if errorek == nil {
-		if r.Method != http.MethodGet {
-			log.Info().Msgf("[AIP AUDIT] [%s] [CREATE CUSTOM TEMPLATE %s]     [%s]", uzer.Username, customTemplate.Title, r)
-		}
-	}
-	//
-	//------------ AIP AISECLAB MOD END------------------------
-
-	// return response.JSON(w, customTemplate)
 	return nil
 }
 
