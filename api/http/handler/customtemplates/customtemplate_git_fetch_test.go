@@ -176,7 +176,7 @@ func Test_customTemplateGitFetch(t *testing.T) {
 	src := &portainer.Source{
 		ID:   1,
 		Type: portainer.SourceTypeGit,
-		GitConfig: &gittypes.RepoConfig{
+		Git: &gittypes.RepoConfig{
 			URL: "https://github.com/example/repo",
 		},
 	}
@@ -189,9 +189,8 @@ func Test_customTemplateGitFetch(t *testing.T) {
 		ID:          1,
 		Title:       "custom-template-1",
 		ProjectPath: filesystem.JoinPaths(dir, "fixtures/custom_template_1"),
-		ArtifactSources: &portainer.ArtifactSources{
-			Artifact:  portainer.Artifact{ConfigFilePath: configFilePath},
-			SourceIDs: []portainer.SourceID{src.ID},
+		Artifact: &portainer.Artifact{
+			Files: []portainer.ArtifactFile{{Path: configFilePath, SourceID: src.ID}},
 		},
 	}
 	err = store.CustomTemplateService.Create(template1)
@@ -296,7 +295,7 @@ func Test_customTemplateGitFetch(t *testing.T) {
 	})
 }
 
-func TestCustomTemplateGitFetch_NilArtifactSourcesReturnsBadRequest(t *testing.T) {
+func TestCustomTemplateGitFetch_NilArtifactReturnsBadRequest(t *testing.T) {
 	t.Parallel()
 
 	_, store := datastore.MustNewTestStore(t, false, true)
@@ -322,8 +321,8 @@ func TestCustomTemplateGitFetch_EmptySourceIDsReturnsBadRequest(t *testing.T) {
 	template := &portainer.CustomTemplate{
 		ID:    1,
 		Title: "empty-source-ids",
-		ArtifactSources: &portainer.ArtifactSources{
-			SourceIDs: []portainer.SourceID{},
+		Artifact: &portainer.Artifact{
+			Files: []portainer.ArtifactFile{},
 		},
 	}
 	err := store.CustomTemplateService.Create(template)
@@ -350,8 +349,8 @@ func TestCustomTemplateGitFetch_SourceWithNilGitConfigReturnsInternalError(t *te
 	template := &portainer.CustomTemplate{
 		ID:    1,
 		Title: "nil-git-config",
-		ArtifactSources: &portainer.ArtifactSources{
-			SourceIDs: []portainer.SourceID{src.ID},
+		Artifact: &portainer.Artifact{
+			Files: []portainer.ArtifactFile{{SourceID: src.ID}},
 		},
 	}
 	err = store.CustomTemplateService.Create(template)

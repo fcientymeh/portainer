@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPopulateGitConfig_NilArtifactSourcesIsNoOp(t *testing.T) {
+func TestPopulateGitConfig_NilArtifactIsNoOp(t *testing.T) {
 	t.Parallel()
 
 	_, store := datastore.MustNewTestStore(t, false, true)
@@ -34,8 +34,8 @@ func TestPopulateGitConfig_EmptySourceIDsIsNoOp(t *testing.T) {
 
 	template := &portainer.CustomTemplate{
 		ID: 1,
-		ArtifactSources: &portainer.ArtifactSources{
-			SourceIDs: []portainer.SourceID{},
+		Artifact: &portainer.Artifact{
+			Files: []portainer.ArtifactFile{},
 		},
 	}
 
@@ -66,8 +66,8 @@ func TestPopulateGitConfig_SourceWithNilGitConfigIsNoOp(t *testing.T) {
 
 	template := &portainer.CustomTemplate{
 		ID: 1,
-		ArtifactSources: &portainer.ArtifactSources{
-			SourceIDs: []portainer.SourceID{srcID},
+		Artifact: &portainer.Artifact{
+			Files: []portainer.ArtifactFile{{SourceID: srcID}},
 		},
 	}
 
@@ -89,7 +89,7 @@ func TestPopulateGitConfig_PopulatesFromSourceAndArtifact(t *testing.T) {
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		src := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			GitConfig: &gittypes.RepoConfig{
+			Git: &gittypes.RepoConfig{
 				URL:           "https://github.com/example/repo",
 				TLSSkipVerify: true,
 			},
@@ -104,13 +104,13 @@ func TestPopulateGitConfig_PopulatesFromSourceAndArtifact(t *testing.T) {
 
 	template := &portainer.CustomTemplate{
 		ID: 1,
-		ArtifactSources: &portainer.ArtifactSources{
-			Artifact: portainer.Artifact{
-				ReferenceName:  "refs/heads/main",
-				ConfigFilePath: "docker-compose.yml",
-				ConfigHash:     "abc123",
-			},
-			SourceIDs: []portainer.SourceID{srcID},
+		Artifact: &portainer.Artifact{
+			Files: []portainer.ArtifactFile{{
+				Ref:      "refs/heads/main",
+				Path:     "docker-compose.yml",
+				Hash:     "abc123",
+				SourceID: srcID,
+			}},
 		},
 	}
 
@@ -137,7 +137,7 @@ func TestPopulateGitConfig_StripsPassword(t *testing.T) {
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		src := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			GitConfig: &gittypes.RepoConfig{
+			Git: &gittypes.RepoConfig{
 				URL: "https://github.com/example/repo",
 				Authentication: &gittypes.GitAuthentication{
 					Username: "user",
@@ -155,8 +155,8 @@ func TestPopulateGitConfig_StripsPassword(t *testing.T) {
 
 	template := &portainer.CustomTemplate{
 		ID: 1,
-		ArtifactSources: &portainer.ArtifactSources{
-			SourceIDs: []portainer.SourceID{srcID},
+		Artifact: &portainer.Artifact{
+			Files: []portainer.ArtifactFile{{SourceID: srcID}},
 		},
 	}
 

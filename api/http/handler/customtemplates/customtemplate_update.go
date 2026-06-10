@@ -244,7 +244,7 @@ func (handler *Handler) customTemplateUpdate(w http.ResponseWriter, r *http.Requ
 		src, err := workflows.FindOrCreateGitSource(handler.DataStore, &portainer.Source{
 			Name: gittypes.RepoName(gitConfig.URL),
 			Type: portainer.SourceTypeGit,
-			GitConfig: &gittypes.RepoConfig{
+			Git: &gittypes.RepoConfig{
 				URL:            gitConfig.URL,
 				Authentication: gitConfig.Authentication,
 				TLSSkipVerify:  gitConfig.TLSSkipVerify,
@@ -254,13 +254,13 @@ func (handler *Handler) customTemplateUpdate(w http.ResponseWriter, r *http.Requ
 			return httperror.InternalServerError("Unable to find or create git source", err)
 		}
 
-		customTemplate.ArtifactSources = &portainer.ArtifactSources{
-			Artifact: portainer.Artifact{
-				ReferenceName:  gitConfig.ReferenceName,
-				ConfigFilePath: gitConfig.ConfigFilePath,
-				ConfigHash:     commitHash,
-			},
-			SourceIDs: []portainer.SourceID{src.ID},
+		customTemplate.Artifact = &portainer.Artifact{
+			Files: []portainer.ArtifactFile{{
+				SourceID: src.ID,
+				Path:     gitConfig.ConfigFilePath,
+				Ref:      gitConfig.ReferenceName,
+				Hash:     commitHash,
+			}},
 		}
 
 	} else {
@@ -271,7 +271,7 @@ func (handler *Handler) customTemplateUpdate(w http.ResponseWriter, r *http.Requ
 		}
 
 		customTemplate.ProjectPath = projectPath
-		customTemplate.ArtifactSources = nil
+		customTemplate.Artifact = nil
 	}
 
 	if err := handler.DataStore.CustomTemplate().Update(customTemplate.ID, customTemplate); err != nil {

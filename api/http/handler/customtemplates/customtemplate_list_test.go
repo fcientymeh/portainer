@@ -23,7 +23,7 @@ func TestCustomTemplateList_PopulatesGitConfigFromSource(t *testing.T) {
 	require.NoError(t, ds.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		src := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			GitConfig: &gittypes.RepoConfig{
+			Git: &gittypes.RepoConfig{
 				URL:           "https://github.com/example/repo",
 				TLSSkipVerify: true,
 			},
@@ -33,13 +33,13 @@ func TestCustomTemplateList_PopulatesGitConfigFromSource(t *testing.T) {
 		srcID = src.ID
 		require.NoError(t, tx.CustomTemplate().Create(&portainer.CustomTemplate{
 			ID: 1,
-			ArtifactSources: &portainer.ArtifactSources{
-				Artifact: portainer.Artifact{
-					ReferenceName:  "refs/heads/main",
-					ConfigFilePath: "docker-compose.yml",
-					ConfigHash:     "abc123",
-				},
-				SourceIDs: []portainer.SourceID{srcID},
+			Artifact: &portainer.Artifact{
+				Files: []portainer.ArtifactFile{{
+					Ref:      "refs/heads/main",
+					Path:     "docker-compose.yml",
+					Hash:     "abc123",
+					SourceID: srcID,
+				}},
 			},
 		}))
 		require.NoError(t, tx.CustomTemplate().Create(&portainer.CustomTemplate{ID: 2, EntryPoint: "docker-compose.yml"}))
@@ -89,7 +89,7 @@ func TestCustomTemplateList_StripsPasswordFromGitConfig(t *testing.T) {
 	require.NoError(t, ds.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		src := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			GitConfig: &gittypes.RepoConfig{
+			Git: &gittypes.RepoConfig{
 				URL: "https://github.com/example/repo",
 				Authentication: &gittypes.GitAuthentication{
 					Username: "user",
@@ -102,8 +102,8 @@ func TestCustomTemplateList_StripsPasswordFromGitConfig(t *testing.T) {
 		srcID = src.ID
 		require.NoError(t, tx.CustomTemplate().Create(&portainer.CustomTemplate{
 			ID: 1,
-			ArtifactSources: &portainer.ArtifactSources{
-				SourceIDs: []portainer.SourceID{srcID},
+			Artifact: &portainer.Artifact{
+				Files: []portainer.ArtifactFile{{SourceID: srcID}},
 			},
 		}))
 

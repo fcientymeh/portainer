@@ -111,8 +111,8 @@ func TestCustomTemplateFile_GitTemplate(t *testing.T) {
 
 	require.NoError(t, ds.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		src := &portainer.Source{
-			Type:      portainer.SourceTypeGit,
-			GitConfig: &gittypes.RepoConfig{URL: "https://github.com/example/repo"},
+			Type: portainer.SourceTypeGit,
+			Git:  &gittypes.RepoConfig{URL: "https://github.com/example/repo"},
 		}
 		err := tx.Source().Create(src)
 		require.NoError(t, err)
@@ -124,9 +124,8 @@ func TestCustomTemplateFile_GitTemplate(t *testing.T) {
 			ID:          10,
 			EntryPoint:  "should-not-be-used.yml",
 			ProjectPath: path,
-			ArtifactSources: &portainer.ArtifactSources{
-				Artifact:  portainer.Artifact{ConfigFilePath: configFilePath},
-				SourceIDs: []portainer.SourceID{src.ID},
+			Artifact: &portainer.Artifact{
+				Files: []portainer.ArtifactFile{{Path: configFilePath, SourceID: src.ID}},
 			},
 		})
 	}))

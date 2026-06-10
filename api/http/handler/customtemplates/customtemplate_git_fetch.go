@@ -43,26 +43,28 @@ func (handler *Handler) customTemplateGitFetch(w http.ResponseWriter, r *http.Re
 		return httperror.InternalServerError("Unable to find a custom template with the specified identifier inside the database", err)
 	}
 
-	if customTemplate.ArtifactSources == nil || len(customTemplate.ArtifactSources.SourceIDs) == 0 {
+	if customTemplate.Artifact == nil || len(customTemplate.Artifact.Files) == 0 {
 		return httperror.BadRequest("Git configuration does not exist in this custom template", nil)
 	}
 
-	src, err := handler.DataStore.Source().Read(customTemplate.ArtifactSources.SourceIDs[0])
+	file := customTemplate.Artifact.Files[0]
+
+	src, err := handler.DataStore.Source().Read(file.SourceID)
 	if err != nil {
 		return httperror.InternalServerError("Unable to retrieve git source for custom template", err)
 	}
 
-	if src.GitConfig == nil {
+	if src.Git == nil {
 		return httperror.InternalServerError("Source has no git configuration", nil)
 	}
 
 	gitConfig := &gittypes.RepoConfig{
-		URL:            src.GitConfig.URL,
-		Authentication: src.GitConfig.Authentication,
-		TLSSkipVerify:  src.GitConfig.TLSSkipVerify,
-		ReferenceName:  customTemplate.ArtifactSources.Artifact.ReferenceName,
-		ConfigFilePath: customTemplate.ArtifactSources.Artifact.ConfigFilePath,
-		ConfigHash:     customTemplate.ArtifactSources.Artifact.ConfigHash,
+		URL:            src.Git.URL,
+		Authentication: src.Git.Authentication,
+		TLSSkipVerify:  src.Git.TLSSkipVerify,
+		ReferenceName:  file.Ref,
+		ConfigFilePath: file.Path,
+		ConfigHash:     file.Hash,
 	}
 
 	// If multiple users are trying to fetch the same custom template simultaneously, a lock needs to be added
@@ -100,8 +102,8 @@ func (handler *Handler) customTemplateGitFetch(w http.ResponseWriter, r *http.Re
 		return httperror.InternalServerError("Failed to download git repository", err)
 	}
 
-	if customTemplate.ArtifactSources.Artifact.ConfigHash != commitHash {
-		customTemplate.ArtifactSources.Artifact.ConfigHash = commitHash
+	if customTemplate.Artifact.Files[0].Hash != commitHash {
+		customTemplate.Artifact.Files[0].Hash = commitHash
 
 		if err := handler.DataStore.CustomTemplate().Update(customTemplate.ID, customTemplate); err != nil {
 			return httperror.InternalServerError("Unable to persist custom template changes inside the database", err)

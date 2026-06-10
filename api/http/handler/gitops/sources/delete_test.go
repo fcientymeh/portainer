@@ -62,7 +62,7 @@ func TestSourceDelete_InUse(t *testing.T) {
 		require.NoError(t, err)
 		srcID = src.ID
 
-		wf := &portainer.Workflow{Artifacts: []portainer.ArtifactSources{{SourceIDs: []portainer.SourceID{src.ID}}}}
+		wf := &portainer.Workflow{Artifacts: []portainer.Artifact{{Files: []portainer.ArtifactFile{{SourceID: src.ID}}}}}
 		err = tx.Workflow().Create(wf)
 		require.NoError(t, err)
 
@@ -106,8 +106,8 @@ func TestSourceDelete_InUseByCustomTemplate(t *testing.T) {
 
 		ct := &portainer.CustomTemplate{
 			ID: 1,
-			ArtifactSources: &portainer.ArtifactSources{
-				SourceIDs: []portainer.SourceID{src.ID},
+			Artifact: &portainer.Artifact{
+				Files: []portainer.ArtifactFile{{SourceID: src.ID}},
 			},
 		}
 		err = tx.CustomTemplate().Create(ct)

@@ -111,6 +111,8 @@ type (
 		KubectlShellImageSet      bool
 		PullLimitCheckDisabled    *bool
 		TrustedOrigins            *string
+		SSRFMode                  *string
+		SSRFAllowedHosts          *[]string
 		NoSetupToken              *bool
 		SetupToken                *string
 	}
@@ -152,7 +154,7 @@ type (
 		ResourceControl *ResourceControl `json:"ResourceControl"`
 		Variables       []CustomTemplateVariableDefinition
 		GitConfig       *gittypes.RepoConfig `json:"GitConfig"`
-		ArtifactSources *ArtifactSources     `json:"ArtifactSources,omitempty"`
+		Artifact        *Artifact            `json:"artifact,omitempty"`
 		// IsComposeFormat indicates if the Kubernetes template is created from a Docker Compose file
 		IsComposeFormat bool `example:"false"`
 		// EdgeTemplate indicates if this template purpose for Edge Stack
@@ -1299,13 +1301,13 @@ type (
 
 	// Source represents a GitOps source that can be referenced by stacks or deployments.
 	Source struct {
-		ID         SourceID             `json:"id" example:"1"`
-		Name       string               `json:"name" example:"my-source"`
-		LastSync   int64                `json:"lastSync,omitempty" example:"1587399600"`
-		Type       SourceType           `json:"type" example:"1"`
-		GitConfig  *gittypes.RepoConfig `json:"gitConfig,omitempty"`
-		Registry   *Registry            `json:"registry,omitempty"`
-		HelmConfig *HelmConfig          `json:"helmConfig,omitempty"`
+		ID       SourceID             `json:"id" example:"1"`
+		Name     string               `json:"name" example:"my-source"`
+		LastSync int64                `json:"lastSync,omitempty" example:"1587399600"`
+		Type     SourceType           `json:"type" example:"1"`
+		Git      *gittypes.RepoConfig `json:"git,omitempty"`
+		Registry *Registry            `json:"registry,omitempty"`
+		Helm     *HelmConfig          `json:"helm,omitempty"`
 	}
 
 	// SourceID represents a source identifier
@@ -1593,26 +1595,29 @@ type (
 	// WebhookType represents the type of resource a webhook is related to
 	WebhookType int
 
-	// Artifact represents a GitOps artifact produced by a source
+	// Artifact is one entry in a Workflow's artifact list, pairing target IDs with source files
 	Artifact struct {
-		StackID        StackID     `json:"stackId,omitempty"`
-		EdgeStackID    EdgeStackID `json:"edgeStackId,omitempty"`
-		ReferenceName  string      `json:"referenceName,omitempty" example:"refs/heads/main"`
-		ConfigFilePath string      `json:"configFilePath,omitempty" example:"portainer.yaml"`
-		ConfigHash     string      `json:"configHash,omitempty" example:"abc123"`
+		StackID     StackID           `json:"stackId,omitempty"`
+		EdgeStackID EdgeStackID       `json:"edgeStackId,omitempty"`
+		Files       []ArtifactFile    `json:"files,omitempty"`
+		EnvIDs      []EndpointID      `json:"envIds,omitempty"`
+		EnvGroups   []EndpointGroupID `json:"envGroups,omitempty"`
+		EdgeGroups  []EdgeGroupID     `json:"edgeGroups,omitempty"`
 	}
 
-	// ArtifactSources is one entry in a Workflow's ordered artifact-to-sources mapping
-	ArtifactSources struct {
-		Artifact  Artifact   `json:"artifact"`
-		SourceIDs []SourceID `json:"sourceIds,omitempty"`
+	// ArtifactFile represents one file within an artifact, tied to a specific source and location within it
+	ArtifactFile struct {
+		SourceID SourceID `json:"sourceId"`
+		Path     string   `json:"path,omitempty" example:"portainer.yaml"`
+		Ref      string   `json:"ref,omitempty" example:"refs/heads/main"`
+		Hash     string   `json:"hash,omitempty" example:"abc123"`
 	}
 
 	// Workflow represents a GitOps workflow
 	Workflow struct {
-		ID        WorkflowID        `json:"id" example:"1"`
-		Name      string            `json:"name,omitempty" example:"my-workflow"`
-		Artifacts []ArtifactSources `json:"artifacts,omitempty"`
+		ID        WorkflowID `json:"id" example:"1"`
+		Name      string     `json:"name,omitempty" example:"my-workflow"`
+		Artifacts []Artifact `json:"artifacts,omitempty"`
 	}
 
 	WorkflowID int

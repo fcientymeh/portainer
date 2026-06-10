@@ -59,13 +59,13 @@ func TestMigrateGitConfigToSources_2_43_0_GitStackMigrated(t *testing.T) {
 	wf, err := workflowSvc.Read(migrated.WorkflowID)
 	require.NoError(t, err)
 	require.Len(t, wf.Artifacts, 1)
-	require.Len(t, wf.Artifacts[0].SourceIDs, 1)
+	require.Len(t, wf.Artifacts[0].Files, 1)
 
-	src, err := sourceSvc.Read(wf.Artifacts[0].SourceIDs[0])
+	src, err := sourceSvc.Read(wf.Artifacts[0].Files[0].SourceID)
 	require.NoError(t, err)
 	require.Equal(t, portainer.SourceTypeGit, src.Type)
-	require.Equal(t, gitStack.GitConfig.URL, src.GitConfig.URL)
-	require.Equal(t, gitStack.GitConfig.ReferenceName, src.GitConfig.ReferenceName)
+	require.Equal(t, gitStack.GitConfig.URL, src.Git.URL)
+	require.Equal(t, gitStack.GitConfig.ReferenceName, src.Git.ReferenceName)
 }
 
 func TestMigrateGitConfigToSources_2_43_0_NonGitStackUntouched(t *testing.T) {
@@ -171,8 +171,8 @@ func TestMigrateGitConfigToSources_2_43_0_DuplicateSourcesDeduped(t *testing.T) 
 	sharedSourceID := sources[0].ID
 	for _, wf := range workflows {
 		require.Len(t, wf.Artifacts, 1)
-		require.Len(t, wf.Artifacts[0].SourceIDs, 1)
-		require.Equal(t, sharedSourceID, wf.Artifacts[0].SourceIDs[0])
+		require.Len(t, wf.Artifacts[0].Files, 1)
+		require.Equal(t, sharedSourceID, wf.Artifacts[0].Files[0].SourceID)
 	}
 }
 
@@ -261,17 +261,17 @@ func TestMigrateCustomTemplateGitConfigToSources_2_43_0_GitTemplateMigrated(t *t
 
 	migrated, err := customTemplateSvc.Read(tmpl.ID)
 	require.NoError(t, err)
-	require.NotNil(t, migrated.ArtifactSources)
+	require.NotNil(t, migrated.Artifact)
 	require.Nil(t, migrated.GitConfig)
-	require.Len(t, migrated.ArtifactSources.SourceIDs, 1)
-	require.Equal(t, "refs/heads/main", migrated.ArtifactSources.Artifact.ReferenceName)
-	require.Equal(t, "docker-compose.yml", migrated.ArtifactSources.Artifact.ConfigFilePath)
-	require.Equal(t, "abc123", migrated.ArtifactSources.Artifact.ConfigHash)
+	require.Len(t, migrated.Artifact.Files, 1)
+	require.Equal(t, "refs/heads/main", migrated.Artifact.Files[0].Ref)
+	require.Equal(t, "docker-compose.yml", migrated.Artifact.Files[0].Path)
+	require.Equal(t, "abc123", migrated.Artifact.Files[0].Hash)
 
-	src, err := sourceSvc.Read(migrated.ArtifactSources.SourceIDs[0])
+	src, err := sourceSvc.Read(migrated.Artifact.Files[0].SourceID)
 	require.NoError(t, err)
 	require.Equal(t, portainer.SourceTypeGit, src.Type)
-	require.Equal(t, "https://github.com/example/repo", src.GitConfig.URL)
+	require.Equal(t, "https://github.com/example/repo", src.Git.URL)
 }
 
 func TestMigrateCustomTemplateGitConfigToSources_2_43_0_NonGitTemplateUntouched(t *testing.T) {
@@ -304,7 +304,7 @@ func TestMigrateCustomTemplateGitConfigToSources_2_43_0_NonGitTemplateUntouched(
 
 	result, err := customTemplateSvc.Read(tmpl.ID)
 	require.NoError(t, err)
-	require.Nil(t, result.ArtifactSources)
+	require.Nil(t, result.Artifact)
 	require.Nil(t, result.GitConfig)
 
 	sources, err := sourceSvc.ReadAll()
@@ -333,15 +333,15 @@ func TestMigrateCustomTemplateGitConfigToSources_2_43_0_AlreadyMigratedSkipped(t
 		CustomTemplateService: customTemplateSvc,
 	})
 
-	// Template already has ArtifactSources set (already migrated)
+	// Template already has Artifact set (already migrated)
 	srcID := portainer.SourceID(99)
 	tmpl := &portainer.CustomTemplate{
 		ID: 1,
 		GitConfig: &gittypes.RepoConfig{
 			URL: "https://github.com/example/repo",
 		},
-		ArtifactSources: &portainer.ArtifactSources{
-			SourceIDs: []portainer.SourceID{srcID},
+		Artifact: &portainer.Artifact{
+			Files: []portainer.ArtifactFile{{SourceID: srcID}},
 		},
 	}
 	err = conn.CreateObjectWithId(customtemplate.BucketName, int(tmpl.ID), tmpl)
@@ -410,13 +410,13 @@ func TestMigrateCustomTemplateGitConfigToSources_2_43_0_DuplicateSourcesDeduped(
 
 	migrated1, err := customTemplateSvc.Read(tmpl1.ID)
 	require.NoError(t, err)
-	require.NotNil(t, migrated1.ArtifactSources)
-	require.Equal(t, sharedSrcID, migrated1.ArtifactSources.SourceIDs[0])
+	require.NotNil(t, migrated1.Artifact)
+	require.Equal(t, sharedSrcID, migrated1.Artifact.Files[0].SourceID)
 
 	migrated2, err := customTemplateSvc.Read(tmpl2.ID)
 	require.NoError(t, err)
-	require.NotNil(t, migrated2.ArtifactSources)
-	require.Equal(t, sharedSrcID, migrated2.ArtifactSources.SourceIDs[0])
+	require.NotNil(t, migrated2.Artifact)
+	require.Equal(t, sharedSrcID, migrated2.Artifact.Files[0].SourceID)
 }
 
 func TestMigrateCustomTemplateGitConfigToSources_2_43_0_Idempotent(t *testing.T) {

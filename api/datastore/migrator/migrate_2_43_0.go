@@ -112,8 +112,8 @@ func (m *Migrator) migrateGitConfigToSources_2_43_0() error {
 
 	sourcesByKey := make(map[sourceDedupeKey]portainer.SourceID, len(existingSources))
 	for _, src := range existingSources {
-		if src.GitConfig != nil {
-			sourcesByKey[gitSourceKey(src.GitConfig)] = src.ID
+		if src.Git != nil {
+			sourcesByKey[gitSourceKey(src.Git)] = src.ID
 		}
 	}
 
@@ -133,9 +133,9 @@ func (m *Migrator) migrateGitConfigToSources_2_43_0() error {
 
 			if !exists {
 				src := &portainer.Source{
-					Name:      gittypes.RepoName(cfg.URL),
-					Type:      portainer.SourceTypeGit,
-					GitConfig: cfg,
+					Name: gittypes.RepoName(cfg.URL),
+					Type: portainer.SourceTypeGit,
+					Git:  cfg,
 				}
 				if err := m.sourceService.Tx(tx).Create(src); err != nil {
 					return fmt.Errorf("failed to create source for stack %d: %w", ls.ID, err)
@@ -151,14 +151,14 @@ func (m *Migrator) migrateGitConfigToSources_2_43_0() error {
 
 			wf := &portainer.Workflow{
 				Name: liveStack.Name,
-				Artifacts: []portainer.ArtifactSources{{
-					Artifact: portainer.Artifact{
-						ReferenceName:  cfg.ReferenceName,
-						ConfigFilePath: cfg.ConfigFilePath,
-						ConfigHash:     cfg.ConfigHash,
-						StackID:        portainer.StackID(ls.ID),
-					},
-					SourceIDs: []portainer.SourceID{srcID},
+				Artifacts: []portainer.Artifact{{
+					StackID: portainer.StackID(ls.ID),
+					Files: []portainer.ArtifactFile{{
+						SourceID: srcID,
+						Path:     cfg.ConfigFilePath,
+						Ref:      cfg.ReferenceName,
+						Hash:     cfg.ConfigHash,
+					}},
 				}},
 			}
 			if err := m.workflowService.Tx(tx).Create(wf); err != nil {
@@ -196,14 +196,14 @@ func (m *Migrator) migrateCustomTemplateGitConfigToSources_2_43_0() error {
 
 	sourcesByKey := make(map[sourceDedupeKey]portainer.SourceID, len(existingSources))
 	for _, src := range existingSources {
-		if src.GitConfig != nil {
-			sourcesByKey[gitSourceKey(src.GitConfig)] = src.ID
+		if src.Git != nil {
+			sourcesByKey[gitSourceKey(src.Git)] = src.ID
 		}
 	}
 
 	for i := range templates {
 		t := &templates[i]
-		if t.GitConfig == nil || t.ArtifactSources != nil {
+		if t.GitConfig == nil || t.Artifact != nil {
 			continue
 		}
 
@@ -230,9 +230,9 @@ func (m *Migrator) migrateCustomTemplateGitConfigToSources_2_43_0() error {
 
 			if !exists {
 				src := &portainer.Source{
-					Name:      gittypes.RepoName(cfg.URL),
-					Type:      portainer.SourceTypeGit,
-					GitConfig: cfg,
+					Name: gittypes.RepoName(cfg.URL),
+					Type: portainer.SourceTypeGit,
+					Git:  cfg,
 				}
 				if err := m.sourceService.Tx(tx).Create(src); err != nil {
 					return fmt.Errorf("failed to create source for custom template %d: %w", t.ID, err)
@@ -241,13 +241,13 @@ func (m *Migrator) migrateCustomTemplateGitConfigToSources_2_43_0() error {
 				newSrcID = src.ID
 			}
 
-			t.ArtifactSources = &portainer.ArtifactSources{
-				Artifact: portainer.Artifact{
-					ReferenceName:  t.GitConfig.ReferenceName,
-					ConfigFilePath: t.GitConfig.ConfigFilePath,
-					ConfigHash:     t.GitConfig.ConfigHash,
-				},
-				SourceIDs: []portainer.SourceID{srcID},
+			t.Artifact = &portainer.Artifact{
+				Files: []portainer.ArtifactFile{{
+					SourceID: srcID,
+					Path:     t.GitConfig.ConfigFilePath,
+					Ref:      t.GitConfig.ReferenceName,
+					Hash:     t.GitConfig.ConfigHash,
+				}},
 			}
 			t.GitConfig = nil
 

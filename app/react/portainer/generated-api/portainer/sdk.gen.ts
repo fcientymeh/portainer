@@ -1008,6 +1008,7 @@ import {
   zGetApplicationsResourcesQuery,
   zGetApplicationsResourcesResponse,
   zGetEndpointGroupsByIdPath,
+  zGetEndpointGroupsByIdQuery,
   zGetEndpointGroupsByIdResponse,
   zGetKubernetesConfigMapPath,
   zGetKubernetesConfigMapResponse,
@@ -2861,7 +2862,7 @@ export const getEndpointGroupsById = <ThrowOnError extends boolean = true>(
         .object({
           body: z.never().optional(),
           path: zGetEndpointGroupsByIdPath,
-          query: z.never().optional(),
+          query: zGetEndpointGroupsByIdQuery.optional(),
         })
         .parseAsync(data),
     responseType: 'json',
@@ -3877,7 +3878,7 @@ export const gitOpsSourcesList = <ThrowOnError extends boolean = true>(
 /**
  * Delete a source
  *
- * Deletes an existing GitOps source. Returns 409 if the source is referenced by any workflow.
+ * Deletes an existing GitOps source. Returns 409 if the source is referenced by any workflow or custom template.
  * **Access policy**: admin
  */
 export const gitOpsSourcesDelete = <ThrowOnError extends boolean = true>(
@@ -8099,9 +8100,9 @@ export const stackStart = <ThrowOnError extends boolean = true>(
   });
 
 /**
- * Stops a stopped Stack
+ * Stop a running Stack
  *
- * Stops a stopped Stack.
+ * Stop a running Stack.
  * **Access policy**: authenticated
  */
 export const stackStop = <ThrowOnError extends boolean = true>(

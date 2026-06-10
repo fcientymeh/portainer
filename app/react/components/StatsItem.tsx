@@ -49,7 +49,9 @@ export function NodeStats({ value }: StatsProps) {
 export function CPUStats({ value }: StatsProps) {
   return (
     <StatsItem icon={Cpu} title="CPUS">
-      <span className="text-left font-bold leading-none">{value}</span>
+      <span className="min-w-[2ch] text-right font-bold tabular-nums leading-none">
+        {value}
+      </span>
       <span className="align-baseline text-xs leading-none">cores</span>
     </StatsItem>
   );
@@ -82,14 +84,12 @@ export function ContainerStats({
           <span className="text-base font-bold leading-none">{running}</span>
           <span> / {actualTotal}</span>
         </div>
-        {actualTotal > 0 && (
-          <progress
-            className="h-[4px] w-auto rounded bg-gray-4 th-dark:bg-white/10"
-            value={running}
-            max={actualTotal}
-            aria-label={`${running} of ${actualTotal} containers running`}
-          />
-        )}
+        <progress
+          className="h-[4px] w-auto rounded bg-gray-4 th-dark:bg-white/10"
+          value={running}
+          max={Math.max(actualTotal, 1)}
+          aria-label={`${running} of ${actualTotal} containers running`}
+        />
       </div>
     </StatsItem>
   );

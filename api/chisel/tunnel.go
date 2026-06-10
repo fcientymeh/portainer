@@ -82,17 +82,24 @@ func (s *Service) Open(endpoint *portainer.Endpoint) error {
 	return nil
 }
 
-// close removes the tunnel from the map so the agent will close it
+// close removes the tunnel from the map so the agent will close it.
+// The lock is released before cleaning up the chisel user and proxy to avoid
+// blocking Config/Open callers while DeleteUser interacts with chisel internals.
 func (s *Service) close(endpointID portainer.EndpointID) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	tun, ok := s.activeTunnels[endpointID]
 	if !ok {
+		s.mu.Unlock()
 		return
 	}
 
-	if len(tun.Credentials) > 0 && s.chiselServer != nil {
+	delete(s.activeTunnels, endpointID)
+	cache.Del(endpointID)
+
+	s.mu.Unlock()
+
+	if s.chiselServer != nil {
 		user, _, _ := strings.Cut(tun.Credentials, ":")
 		s.chiselServer.DeleteUser(user)
 	}
@@ -100,10 +107,6 @@ func (s *Service) close(endpointID portainer.EndpointID) {
 	if s.ProxyManager != nil {
 		s.ProxyManager.DeleteEndpointProxy(endpointID)
 	}
-
-	delete(s.activeTunnels, endpointID)
-
-	cache.Del(endpointID)
 }
 
 // Config returns the tunnel details needed for the agent to connect

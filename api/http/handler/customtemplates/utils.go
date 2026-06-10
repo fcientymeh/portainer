@@ -9,19 +9,21 @@ import (
 )
 
 func populateGitConfig(tx dataservices.DataStoreTx, template *portainer.CustomTemplate) {
-	if template.ArtifactSources == nil || len(template.ArtifactSources.SourceIDs) == 0 {
+	if template.Artifact == nil || len(template.Artifact.Files) == 0 {
 		return
 	}
 
-	src, err := tx.Source().Read(template.ArtifactSources.SourceIDs[0])
-	if err != nil || src.GitConfig == nil {
+	file := template.Artifact.Files[0]
+
+	src, err := tx.Source().Read(file.SourceID)
+	if err != nil || src.Git == nil {
 		return
 	}
 
-	cfg := *src.GitConfig
-	cfg.ReferenceName = template.ArtifactSources.Artifact.ReferenceName
-	cfg.ConfigFilePath = template.ArtifactSources.Artifact.ConfigFilePath
-	cfg.ConfigHash = template.ArtifactSources.Artifact.ConfigHash
+	cfg := *src.Git
+	cfg.ReferenceName = file.Ref
+	cfg.ConfigFilePath = file.Path
+	cfg.ConfigHash = file.Hash
 
 	if cfg.Authentication != nil {
 		sanitized := *cfg.Authentication

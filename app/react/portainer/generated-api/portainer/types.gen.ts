@@ -263,18 +263,6 @@ export type V1ListMeta = {
   selfLink?: string;
 };
 
-export type V1Duration = {
-  'time.Duration'?:
-    | -9223372036854776000
-    | 9223372036854776000
-    | 1
-    | 1000
-    | 1000000
-    | 1000000000
-    | 60000000000
-    | 3600000000000;
-};
-
 export type V1OwnerReference = {
   /**
    * API version of the referent.
@@ -615,7 +603,7 @@ export type V1Beta1PodMetrics = {
    * collected from the interval [Timestamp-Window, Timestamp].
    */
   timestamp?: string;
-  window?: V1Duration;
+  window?: string;
 };
 
 export type V1Beta1NodeMetricsList = {
@@ -680,7 +668,7 @@ export type V1Beta1NodeMetrics = {
    * The memory usage is the memory working set.
    */
   usage?: V1ResourceList;
-  window?: V1Duration;
+  window?: string;
 };
 
 export type V1WindowsSecurityContextOptions = {
@@ -6626,6 +6614,7 @@ export type PortainerCustomTemplatePlatform =
   (typeof PortainerCustomTemplatePlatform)[keyof typeof PortainerCustomTemplatePlatform];
 
 export type PortainerCustomTemplate = {
+  ArtifactSources?: PortainerArtifactSources;
   /**
    * User identifier who created this template
    */
@@ -6681,6 +6670,19 @@ export type PortainerCustomTemplate = {
    */
   Type?: 1 | 2 | 3;
   Variables?: Array<PortainerCustomTemplateVariableDefinition>;
+};
+
+export type PortainerArtifact = {
+  configFilePath?: string;
+  configHash?: string;
+  edgeStackId?: number;
+  referenceName?: string;
+  stackId?: number;
+};
+
+export type PortainerArtifactSources = {
+  artifact?: PortainerArtifact;
+  sourceIds?: Array<number>;
 };
 
 export type MotdMotd = {
@@ -9721,7 +9723,12 @@ export type GetEndpointGroupsByIdData = {
      */
     id: number;
   };
-  query?: never;
+  query?: {
+    /**
+     * If true, include the number of environments and breakdown by type
+     */
+    size?: boolean;
+  };
   url: '/endpoint_groups/{id}';
 };
 
@@ -9744,7 +9751,7 @@ export type GetEndpointGroupsByIdResponses = {
   /**
    * Success
    */
-  200: PortainerEndpointGroup;
+  200: EndpointgroupsEndpointGroupResponse;
 };
 
 export type GetEndpointGroupsByIdResponse =
@@ -11189,7 +11196,7 @@ export type GitOpsSourcesDeleteErrors = {
    */
   404: unknown;
   /**
-   * Source is in use by one or more workflows
+   * Source is in use by one or more workflows or custom templates
    */
   409: unknown;
   /**

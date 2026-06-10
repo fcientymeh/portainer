@@ -49,15 +49,19 @@ func (h *Handler) sourceDelete(w http.ResponseWriter, r *http.Request) *httperro
 		}
 
 		for _, wf := range workflows {
-			if slices.ContainsFunc(wf.Artifacts, func(as portainer.ArtifactSources) bool {
-				return slices.Contains(as.SourceIDs, portainer.SourceID(sourceID))
+			if slices.ContainsFunc(wf.Artifacts, func(as portainer.Artifact) bool {
+				return slices.ContainsFunc(as.Files, func(f portainer.ArtifactFile) bool {
+					return f.SourceID == portainer.SourceID(sourceID)
+				})
 			}) {
 				return ErrSourceInUse
 			}
 		}
 
 		templates, err := tx.CustomTemplate().ReadAll(func(t portainer.CustomTemplate) bool {
-			return t.ArtifactSources != nil && slices.Contains(t.ArtifactSources.SourceIDs, portainer.SourceID(sourceID))
+			return t.Artifact != nil && slices.ContainsFunc(t.Artifact.Files, func(f portainer.ArtifactFile) bool {
+				return f.SourceID == portainer.SourceID(sourceID)
+			})
 		})
 		if err != nil {
 			return err

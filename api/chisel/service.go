@@ -306,6 +306,10 @@ func (service *Service) snapshotAndLog(endpointID portainer.EndpointID, tunnelPo
 			Err(err).
 			Msg("unable to snapshot Edge environment")
 
+		if service.dataStore.IsErrObjectNotFound(err) {
+			service.close(endpointID)
+		}
+
 		return false
 	}
 

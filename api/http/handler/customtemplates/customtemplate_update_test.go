@@ -393,7 +393,7 @@ func TestCustomTemplateUpdate_Validation_AuthWithoutCredentials(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, herr.StatusCode)
 }
 
-func TestCustomTemplateUpdate_ClearsArtifactSources(t *testing.T) {
+func TestCustomTemplateUpdate_ClearsArtifact(t *testing.T) {
 	t.Parallel()
 
 	handler, ds, _ := newTestHandler(t)
@@ -406,8 +406,8 @@ func TestCustomTemplateUpdate_ClearsArtifactSources(t *testing.T) {
 			Type:            portainer.DockerComposeStack,
 			Platform:        portainer.CustomTemplatePlatformLinux,
 			CreatedByUserID: 1,
-			ArtifactSources: &portainer.ArtifactSources{
-				SourceIDs: []portainer.SourceID{},
+			Artifact: &portainer.Artifact{
+				Files: []portainer.ArtifactFile{},
 			},
 		})
 	}))
@@ -429,12 +429,12 @@ func TestCustomTemplateUpdate_ClearsArtifactSources(t *testing.T) {
 
 	var tmpl portainer.CustomTemplate
 	require.NoError(t, json.NewDecoder(rr.Body).Decode(&tmpl))
-	require.Nil(t, tmpl.ArtifactSources)
+	require.Nil(t, tmpl.Artifact)
 
 	err := ds.ViewTx(func(tx dataservices.DataStoreTx) error {
 		stored, err := tx.CustomTemplate().Read(1)
 		require.NoError(t, err)
-		require.Nil(t, stored.ArtifactSources)
+		require.Nil(t, stored.Artifact)
 
 		return nil
 	})
@@ -480,19 +480,19 @@ func TestCustomTemplateUpdate_GitRepository_Success(t *testing.T) {
 
 	var tmpl portainer.CustomTemplate
 	require.NoError(t, json.NewDecoder(rr.Body).Decode(&tmpl))
-	require.NotNil(t, tmpl.ArtifactSources)
-	require.Len(t, tmpl.ArtifactSources.SourceIDs, 1)
-	require.Equal(t, "deadbeef123", tmpl.ArtifactSources.Artifact.ConfigHash)
+	require.NotNil(t, tmpl.Artifact)
+	require.Len(t, tmpl.Artifact.Files, 1)
+	require.Equal(t, "deadbeef123", tmpl.Artifact.Files[0].Hash)
 
 	err := ds.ViewTx(func(tx dataservices.DataStoreTx) error {
 		stored, err := tx.CustomTemplate().Read(1)
 		require.NoError(t, err)
-		require.NotNil(t, stored.ArtifactSources)
+		require.NotNil(t, stored.Artifact)
 
-		src, err := tx.Source().Read(stored.ArtifactSources.SourceIDs[0])
+		src, err := tx.Source().Read(stored.Artifact.Files[0].SourceID)
 		require.NoError(t, err)
 		require.Equal(t, portainer.SourceTypeGit, src.Type)
-		require.Equal(t, "https://github.com/example/repo", src.GitConfig.URL)
+		require.Equal(t, "https://github.com/example/repo", src.Git.URL)
 
 		return nil
 	})

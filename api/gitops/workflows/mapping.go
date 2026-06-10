@@ -117,18 +117,6 @@ func isEdgeStackHealthyStatus(t portainer.EdgeStackStatusType) bool {
 	return false
 }
 
-// ArtifactsToSourceSet returns the set of all SourceIDs referenced by the given artifact-source mappings
-func ArtifactsToSourceSet(artifacts ...portainer.ArtifactSources) set.Set[portainer.SourceID] {
-	s := make(set.Set[portainer.SourceID])
-	for _, a := range artifacts {
-		for _, sid := range a.SourceIDs {
-			s.Add(sid)
-		}
-	}
-
-	return s
-}
-
 func resolveEdgeGroupEndpoints(groups []portainer.EdgeGroupID, groupEndpoints map[portainer.EdgeGroupID][]portainer.EndpointID) []portainer.EndpointID {
 	seen := set.Set[portainer.EndpointID]{}
 	for _, gid := range groups {
