@@ -2640,6 +2640,7 @@ const (
 	SetupDocker        PolicyType = "setup-docker"
 	RegistryDocker     PolicyType = "registry-docker"
 	ChangeConfirmation PolicyType = "change-confirmation"
+	CleanupDocker      PolicyType = "cleanup-docker"
 )
 
 type HelmInstallStatus string

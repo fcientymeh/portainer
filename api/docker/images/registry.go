@@ -26,7 +26,12 @@ func NewRegistryClient(dataStore dataservices.DataStore) *RegistryClient {
 func (c *RegistryClient) RegistryAuth(image Image) (string, string, error) {
 	registry, err := cachedRegistry(image.Opts.Name)
 	if err != nil {
-		registries, err := c.dataStore.Registry().ReadAll()
+		var registries []portainer.Registry
+		err = c.dataStore.ViewTx(func(tx dataservices.DataStoreTx) error {
+			var err error
+			registries, err = tx.Registry().ReadAll()
+			return err
+		})
 		if err != nil {
 			return "", "", err
 		}
@@ -59,7 +64,12 @@ func (c *RegistryClient) CertainRegistryAuth(registry *portainer.Registry) (stri
 func (c *RegistryClient) EncodedRegistryAuth(image Image) (string, error) {
 	registry, err := cachedRegistry(image.Opts.Name)
 	if err != nil {
-		registries, err := c.dataStore.Registry().ReadAll()
+		var registries []portainer.Registry
+		err = c.dataStore.ViewTx(func(tx dataservices.DataStoreTx) error {
+			var err error
+			registries, err = tx.Registry().ReadAll()
+			return err
+		})
 		if err != nil {
 			return "", err
 		}

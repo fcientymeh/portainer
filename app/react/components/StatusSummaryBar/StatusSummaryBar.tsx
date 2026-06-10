@@ -1,3 +1,5 @@
+import clsx from 'clsx';
+
 import { FilterBarButton, Color } from './FilterBarButton';
 import { FilterBarActiveIndicator } from './FilterBarActiveIndicator';
 
@@ -38,7 +40,13 @@ export function StatusSummaryBar<TValue extends string = string>({
 
   return (
     <div
-      className="relative flex items-stretch overflow-x-auto overflow-y-hidden rounded-lg border border-solid border-[var(--border-widget)] bg-[var(--bg-widget-color)]"
+      className={clsx(
+        'relative flex flex-wrap items-stretch',
+        'border border-solid',
+        'border-gray-5 th-highcontrast:border-white th-dark:border-gray-8',
+        'overflow-y-hidden rounded-lg',
+        'bg-white th-highcontrast:bg-transparent th-dark:bg-graphite-800'
+      )}
       data-cy={dataCy}
       role="radiogroup"
       aria-label={ariaLabel}
