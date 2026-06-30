@@ -204,9 +204,6 @@ func (handler *Handler) customTemplateUpdate(w http.ResponseWriter, r *http.Requ
 	}
 	//------------------------
 
-	if payload.RepositoryURL != "" {
-		if !validate.IsURL(payload.RepositoryURL) {
-			return httperror.BadRequest("Invalid repository URL. Must correspond to a valid URL format", err)
 	userContext := source.NewUserContext(securityContext.User, securityContext.UserMemberships)
 
 	if payload.SourceID != 0 || payload.RepositoryURL != "" {
@@ -291,10 +288,6 @@ func (handler *Handler) customTemplateUpdate(w http.ResponseWriter, r *http.Requ
 
 		customTemplate.ProjectPath = projectPath
 		customTemplate.Artifact = nil
-	}
-
-	if err := handler.DataStore.CustomTemplate().Update(customTemplate.ID, customTemplate); err != nil {
-		return httperror.InternalServerError("Unable to persist custom template changes inside the database", err)
 	}
 	//------------ AIP AISECLAB MOD START------------------------
 	//
