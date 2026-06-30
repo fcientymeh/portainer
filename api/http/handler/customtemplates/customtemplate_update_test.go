@@ -9,6 +9,7 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/filesystem"
+	gittypes "github.com/portainer/portainer/api/git/types"
 	"github.com/portainer/portainer/api/http/security"
 
 	"github.com/gorilla/mux"
@@ -25,6 +26,14 @@ func updateTemplateRequest(t *testing.T, templateID string, payload any, ctx *se
 	r := httptest.NewRequest(http.MethodPut, "/custom_templates/"+templateID, bytes.NewReader(body))
 	r.Header.Set("Content-Type", "application/json")
 	r = mux.SetURLVars(r, map[string]string{"id": templateID})
+
+	if ctx.User == nil {
+		role := portainer.StandardUserRole
+		if ctx.IsAdmin {
+			role = portainer.AdministratorRole
+		}
+		ctx.User = &portainer.User{ID: ctx.UserID, Role: role}
+	}
 
 	return r.WithContext(security.StoreRestrictedRequestContext(r, ctx))
 }
@@ -160,43 +169,6 @@ func TestCustomTemplateUpdate_Success_FileContent(t *testing.T) {
 		return nil
 	})
 	require.NoError(t, err)
-}
-
-func TestCustomTemplateUpdate_OwnerCanUpdate(t *testing.T) {
-	t.Parallel()
-
-	handler, ds, _ := newTestHandler(t)
-
-	require.NoError(t, ds.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		return tx.CustomTemplate().Create(&portainer.CustomTemplate{
-			ID:              1,
-			Title:           "User Template",
-			EntryPoint:      filesystem.ComposeFileDefaultName,
-			Type:            portainer.DockerComposeStack,
-			Platform:        portainer.CustomTemplatePlatformLinux,
-			CreatedByUserID: 2,
-		})
-	}))
-
-	payload := customTemplateUpdatePayload{
-		Title:       "User Template Updated",
-		Description: "Updated by owner",
-		FileContent: "version: '3'",
-		Type:        portainer.DockerComposeStack,
-		Platform:    portainer.CustomTemplatePlatformLinux,
-	}
-
-	// User 2 is the creator, not an admin
-	r := updateTemplateRequest(t, "1", payload, &security.RestrictedRequestContext{UserID: 2})
-	rr := httptest.NewRecorder()
-
-	herr := handler.customTemplateUpdate(rr, r)
-	require.Nil(t, herr)
-	require.Equal(t, http.StatusOK, rr.Code)
-
-	var tmpl portainer.CustomTemplate
-	require.NoError(t, json.NewDecoder(rr.Body).Decode(&tmpl))
-	require.Equal(t, "User Template Updated", tmpl.Title)
 }
 
 func TestCustomTemplateUpdate_SameTitleAllowed(t *testing.T) {
@@ -441,6 +413,183 @@ func TestCustomTemplateUpdate_ClearsArtifact(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestCustomTemplateUpdate_CreatorDeniedWhenAdminOnly(t *testing.T) {
+	t.Parallel()
+
+	handler, store, _ := newTestHandler(t)
+
+	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		err := tx.CustomTemplate().Create(&portainer.CustomTemplate{
+			ID:              1,
+			Title:           "User Template",
+			EntryPoint:      filesystem.ComposeFileDefaultName,
+			Type:            portainer.DockerComposeStack,
+			Platform:        portainer.CustomTemplatePlatformLinux,
+			CreatedByUserID: 2,
+		})
+		require.NoError(t, err)
+
+		err = tx.ResourceControl().Create(&portainer.ResourceControl{
+			ID:                 1,
+			ResourceID:         "1",
+			Type:               portainer.CustomTemplateResourceControl,
+			AdministratorsOnly: true,
+		})
+		require.NoError(t, err)
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	payload := customTemplateUpdatePayload{
+		Title:       "User Template Updated",
+		Description: "Attempted update by creator after adminonly change",
+		FileContent: "version: '3'",
+		Type:        portainer.DockerComposeStack,
+		Platform:    portainer.CustomTemplatePlatformLinux,
+	}
+
+	r := updateTemplateRequest(t, "1", payload, &security.RestrictedRequestContext{UserID: 2})
+	rr := httptest.NewRecorder()
+
+	herr := handler.customTemplateUpdate(rr, r)
+	require.NotNil(t, herr)
+	require.Equal(t, http.StatusForbidden, herr.StatusCode)
+}
+
+func TestCustomTemplateUpdate_WithSourceID_Success(t *testing.T) {
+	t.Parallel()
+
+	handler, ds, _ := newTestHandler(t)
+	handler.GitService = &gitServiceCreatingFile{}
+
+	projectDir := t.TempDir()
+
+	var srcID portainer.SourceID
+	require.NoError(t, ds.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		require.NoError(t, tx.CustomTemplate().Create(&portainer.CustomTemplate{
+			ID:              1,
+			Title:           "Source Template",
+			EntryPoint:      filesystem.ComposeFileDefaultName,
+			Type:            portainer.DockerComposeStack,
+			Platform:        portainer.CustomTemplatePlatformLinux,
+			CreatedByUserID: 1,
+			ProjectPath:     projectDir,
+		}))
+
+		src := &portainer.Source{
+			Name: "example/repo",
+			Type: portainer.SourceTypeGit,
+			Git: &gittypes.GitSource{
+				URL: "https://github.com/example/repo",
+			},
+		}
+		err := tx.Source().Create(adminUserContext, src)
+		require.NoError(t, err)
+		srcID = src.ID
+		return nil
+	}))
+
+	payload := customTemplateUpdatePayload{
+		Title:       "Source Template",
+		Description: "Updated via source ID",
+		SourceID:    srcID,
+		Type:        portainer.DockerComposeStack,
+		Platform:    portainer.CustomTemplatePlatformLinux,
+	}
+
+	r := updateTemplateRequest(t, "1", payload, &security.RestrictedRequestContext{UserID: 1, IsAdmin: true})
+	rr := httptest.NewRecorder()
+
+	herr := handler.customTemplateUpdate(rr, r)
+	require.Nil(t, herr)
+	require.Equal(t, http.StatusOK, rr.Code)
+
+	var tmpl portainer.CustomTemplate
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&tmpl))
+	require.NotNil(t, tmpl.Artifact)
+	require.Len(t, tmpl.Artifact.Files, 1)
+	require.Equal(t, srcID, tmpl.Artifact.Files[0].SourceID)
+	require.Equal(t, "deadbeef123", tmpl.Artifact.Files[0].Hash)
+}
+
+func TestCustomTemplateUpdate_WithSourceID_NonExistentSource(t *testing.T) {
+	t.Parallel()
+
+	handler, ds, _ := newTestHandler(t)
+	handler.GitService = &gitServiceCreatingFile{}
+
+	require.NoError(t, ds.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		return tx.CustomTemplate().Create(&portainer.CustomTemplate{
+			ID:              1,
+			Title:           "Source Template",
+			EntryPoint:      filesystem.ComposeFileDefaultName,
+			Type:            portainer.DockerComposeStack,
+			Platform:        portainer.CustomTemplatePlatformLinux,
+			CreatedByUserID: 1,
+		})
+	}))
+
+	payload := customTemplateUpdatePayload{
+		Title:       "Source Template",
+		Description: "Updated via non-existent source ID",
+		SourceID:    999,
+		Type:        portainer.DockerComposeStack,
+		Platform:    portainer.CustomTemplatePlatformLinux,
+	}
+
+	r := updateTemplateRequest(t, "1", payload, &security.RestrictedRequestContext{UserID: 1, IsAdmin: true})
+	rr := httptest.NewRecorder()
+
+	herr := handler.customTemplateUpdate(rr, r)
+	require.NotNil(t, herr)
+	require.Equal(t, http.StatusNotFound, herr.StatusCode)
+}
+
+func TestCustomTemplateUpdate_AdminCanUpdateAdminOnly(t *testing.T) {
+	t.Parallel()
+
+	handler, store, _ := newTestHandler(t)
+
+	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		err := tx.CustomTemplate().Create(&portainer.CustomTemplate{
+			ID:              1,
+			Title:           "User Template",
+			EntryPoint:      filesystem.ComposeFileDefaultName,
+			Type:            portainer.DockerComposeStack,
+			Platform:        portainer.CustomTemplatePlatformLinux,
+			CreatedByUserID: 2,
+		})
+		require.NoError(t, err)
+
+		err = tx.ResourceControl().Create(&portainer.ResourceControl{
+			ID:                 1,
+			ResourceID:         "1",
+			Type:               portainer.CustomTemplateResourceControl,
+			AdministratorsOnly: true,
+		})
+		require.NoError(t, err)
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	payload := customTemplateUpdatePayload{
+		Title:       "Updated by Admin",
+		Description: "Admin update of adminonly template",
+		FileContent: "version: '3'",
+		Type:        portainer.DockerComposeStack,
+		Platform:    portainer.CustomTemplatePlatformLinux,
+	}
+
+	r := updateTemplateRequest(t, "1", payload, &security.RestrictedRequestContext{UserID: 1, IsAdmin: true})
+	rr := httptest.NewRecorder()
+
+	herr := handler.customTemplateUpdate(rr, r)
+	require.Nil(t, herr)
+	require.Equal(t, http.StatusOK, rr.Code)
+}
+
 func TestCustomTemplateUpdate_GitRepository_Success(t *testing.T) {
 	t.Parallel()
 
@@ -489,7 +638,7 @@ func TestCustomTemplateUpdate_GitRepository_Success(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, stored.Artifact)
 
-		src, err := tx.Source().Read(stored.Artifact.Files[0].SourceID)
+		src, err := tx.Source().Read(adminUserContext, stored.Artifact.Files[0].SourceID)
 		require.NoError(t, err)
 		require.Equal(t, portainer.SourceTypeGit, src.Type)
 		require.Equal(t, "https://github.com/example/repo", src.Git.URL)

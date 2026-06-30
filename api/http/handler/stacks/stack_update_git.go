@@ -10,8 +10,10 @@ import (
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
+	"github.com/portainer/portainer/api/dataservices/source"
 	gittypes "github.com/portainer/portainer/api/git/types"
 	"github.com/portainer/portainer/api/git/update"
+	"github.com/portainer/portainer/api/gitops/sources"
 	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/stacks/deployments"
@@ -24,17 +26,25 @@ import (
 )
 
 type stackGitUpdatePayload struct {
-	AutoUpdate               *portainer.AutoUpdateSettings
-	Env                      []portainer.Pair
-	Prune                    bool
-	RepositoryURL            string
-	ConfigFilePath           string
-	AdditionalFiles          []string
-	RepositoryReferenceName  string
+	AutoUpdate              *portainer.AutoUpdateSettings
+	Env                     []portainer.Pair
+	Prune                   bool
+	ConfigFilePath          string
+	AdditionalFiles         []string
+	RepositoryReferenceName string
+	// SourceID references an existing Source for git credentials/URL.
+	// When set, the inline URL and authentication fields are ignored.
+	SourceID portainer.SourceID
+	// Deprecated: use SourceID instead. URL of a Git repository hosting the Stack file.
+	RepositoryURL string
+	// Deprecated: use SourceID instead. Use basic authentication to clone the Git repository.
 	RepositoryAuthentication bool
-	RepositoryUsername       string
-	RepositoryPassword       string
-	TLSSkipVerify            bool
+	// Deprecated: use SourceID instead. Username used in basic authentication.
+	RepositoryUsername string
+	// Deprecated: use SourceID instead. Password used in basic authentication.
+	RepositoryPassword string
+	// Deprecated: use SourceID instead. Skip TLS verification when cloning the Git repository.
+	TLSSkipVerify bool
 }
 
 func (payload *stackGitUpdatePayload) Validate(r *http.Request) error {
@@ -43,7 +53,7 @@ func (payload *stackGitUpdatePayload) Validate(r *http.Request) error {
 
 // @id StackUpdateGit
 // @summary Update a stack's Git configs
-// @description Update the Git settings in a stack, e.g., RepositoryReferenceName and AutoUpdate
+// @description Update the Git settings in a stack, e.g., RepositoryReferenceName and AutoUpdate. When SourceID is set, URL/auth/TLS are taken from the referenced Source.
 // @description **Access policy**: authenticated
 // @tags stacks
 // @security ApiKeyAuth
@@ -53,7 +63,7 @@ func (payload *stackGitUpdatePayload) Validate(r *http.Request) error {
 // @param id path int true "Stack identifier"
 // @param endpointId query int false "Stacks created before version 1.18.0 might not have an associated environment(endpoint) identifier. Use this optional parameter to set the environment(endpoint) identifier used by the stack."
 // @param body body stackGitUpdatePayload true "Git configs for pull and redeploy a stack"
-// @success 200 {object} portainer.Stack "Success"
+// @success 200 {object} stackResponse "Success"
 // @failure 400 "Invalid request"
 // @failure 403 "Permission denied"
 // @failure 404 "Not found"
@@ -94,13 +104,28 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 		return httperror.InternalServerError(msg, errors.New(msg))
 	}
 
-	gitConfig, sourceID, err := loadGitConfigForStack(handler.DataStore, stack.WorkflowID, stack.ID)
+	securityContext, err := security.RetrieveRestrictedRequestContext(r)
 	if err != nil {
-		return httperror.InternalServerError("Unable to load git config for stack", err)
+		return httperror.InternalServerError("Unable to retrieve info from request context", err)
 	}
-	if gitConfig == nil {
-		msg := "No Git config in the found stack source"
-		return httperror.InternalServerError(msg, errors.New(msg))
+
+	var gitConfig *gittypes.RepoConfig
+	var sourceID portainer.SourceID
+	if err := handler.DataStore.ViewTx(func(tx dataservices.DataStoreTx) error {
+		userContext := source.NewUserContext(securityContext.User, securityContext.UserMemberships)
+		gitConfig, sourceID, err = loadGitConfigForStack(tx, userContext, stack.WorkflowID, stack.ID)
+		if err != nil {
+			return httperror.InternalServerError("Unable to load git config for stack", err)
+		}
+
+		if gitConfig == nil {
+			msg := "No Git config in the found stack source"
+			return httperror.InternalServerError(msg, errors.New(msg))
+		}
+
+		return nil
+	}); err != nil {
+		return response.TxErrorResponse(err)
 	}
 
 	if payload.AutoUpdate != nil && payload.AutoUpdate.Webhook != "" &&
@@ -133,11 +158,6 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 		return httperror.Forbidden("Permission denied to access environment", err)
 	}
 
-	securityContext, err := security.RetrieveRestrictedRequestContext(r)
-	if err != nil {
-		return httperror.InternalServerError("Unable to retrieve info from request context", err)
-	}
-
 	user, err := handler.DataStore.User().Read(securityContext.UserID)
 	if err != nil {
 		return httperror.BadRequest("Cannot find context user", errors.Wrap(err, "failed to fetch the user"))
@@ -168,6 +188,7 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 		deployments.StopAutoupdate(stack.ID, stack.AutoUpdate.JobID, handler.Scheduler)
 	}
 
+	// Record the current git config as the deployment baseline if it was never set (legacy stacks).
 	if stack.CurrentDeploymentInfo == nil {
 		stack.CurrentDeploymentInfo = &portainer.StackDeploymentInfo{
 			RepositoryURL:   gitConfig.URL,
@@ -175,15 +196,12 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 			ConfigFilePath:  gitConfig.ConfigFilePath,
 			AdditionalFiles: stack.AdditionalFiles,
 			ConfigHash:      gitConfig.ConfigHash,
+			SourceID:        sourceID,
 		}
 	}
 
 	// Update gitConfig based on payload; the updated config is saved to Source (not stack.GitConfig).
 	gitConfig.ReferenceName = payload.RepositoryReferenceName
-	gitConfig.TLSSkipVerify = payload.TLSSkipVerify
-	if payload.RepositoryURL != "" {
-		gitConfig.URL = payload.RepositoryURL
-	}
 	if payload.ConfigFilePath != "" {
 		gitConfig.ConfigFilePath = payload.ConfigFilePath
 	}
@@ -202,32 +220,50 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 		stack.Option = &portainer.StackOption{Prune: payload.Prune}
 	}
 
-	if payload.RepositoryAuthentication {
-		password := payload.RepositoryPassword
+	userContext := source.NewUserContext(securityContext.User, securityContext.UserMemberships)
 
-		// When the existing stack is using the custom username/password and the password is not updated,
-		// the stack should keep using the saved username/password
-		if password == "" && gitConfig.Authentication != nil {
-			password = gitConfig.Authentication.Password
+	if payload.SourceID != 0 {
+		src, httpErr := sources.ValidateGitSourceAccess(handler.DataStore, userContext, payload.SourceID)
+		if httpErr != nil {
+			return httpErr
 		}
 
-		gitConfig.Authentication = &gittypes.GitAuthentication{
-			Username: payload.RepositoryUsername,
-			Password: password,
-		}
-
-		if _, err := handler.GitService.LatestCommitID(
-			context.TODO(),
-			gitConfig.URL,
-			gitConfig.ReferenceName,
-			gitConfig.Authentication.Username,
-			gitConfig.Authentication.Password,
-			gitConfig.TLSSkipVerify,
-		); err != nil {
-			return httperror.InternalServerError("Unable to fetch git repository", err)
+		if src.Git == nil {
+			return httperror.BadRequest("Source has no git configuration", errors.New("source has no git config"))
 		}
 	} else {
-		gitConfig.Authentication = nil
+		gitConfig.TLSSkipVerify = payload.TLSSkipVerify
+		if payload.RepositoryURL != "" {
+			gitConfig.URL = payload.RepositoryURL
+		}
+
+		if payload.RepositoryAuthentication {
+			password := payload.RepositoryPassword
+
+			// When the existing stack is using the custom username/password and the password is not updated,
+			// the stack should keep using the saved username/password
+			if password == "" && gitConfig.Authentication != nil {
+				password = gitConfig.Authentication.Password
+			}
+
+			gitConfig.Authentication = &gittypes.GitAuthentication{
+				Username: payload.RepositoryUsername,
+				Password: password,
+			}
+
+			if _, err := handler.GitService.LatestCommitID(
+				context.TODO(),
+				gitConfig.URL,
+				gitConfig.ReferenceName,
+				gitConfig.Authentication.Username,
+				gitConfig.Authentication.Password,
+				gitConfig.TLSSkipVerify,
+			); err != nil {
+				return httperror.InternalServerError("Unable to fetch git repository", err)
+			}
+		} else {
+			gitConfig.Authentication = nil
+		}
 	}
 
 	if payload.AutoUpdate != nil && payload.AutoUpdate.Interval != "" {
@@ -238,22 +274,26 @@ func (handler *Handler) stackUpdateGit(w http.ResponseWriter, r *http.Request) *
 		}
 	}
 
-	// Save the updated stack and git config to DB.
+	var resp *stackResponse
 	if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		if err := tx.Stack().Update(stack.ID, stack); err != nil {
 			return err
 		}
-		if err := saveStackGitConfig(tx, stack.WorkflowID, stack.ID, sourceID, gitConfig); err != nil {
+		userContext := source.NewUserContext(securityContext.User, securityContext.UserMemberships)
+		if err := saveStackGitConfig(tx, userContext, stack.WorkflowID, stack.ID, sourceID, payload.SourceID, gitConfig); err != nil {
 			return err
 		}
-		return fillStackGitConfig(tx, stack)
+		var err error
+		resp, err = newStackResponse(tx, userContext, stack)
+		return err
 	}); err != nil {
 		return httperror.InternalServerError("Unable to persist the stack changes inside the database", err)
 	}
+	// AIS log
 	if errorek == nil {
 		if r.Method != http.MethodGet {
 			log.Info().Msgf("[AIP AUDIT] [%s] [UPDATE GIT STACK %s]     [%s]", uzer.Username, stack.Name, r)
 		}
 	}
-	return response.JSON(w, stack)
+	return response.JSON(w, resp)
 }

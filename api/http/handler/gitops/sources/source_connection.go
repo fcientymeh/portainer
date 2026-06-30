@@ -8,16 +8,18 @@ import (
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
+	"github.com/portainer/portainer/api/dataservices/source"
 	gittypes "github.com/portainer/portainer/api/git/types"
+	"github.com/portainer/portainer/api/http/security"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
 )
 
-// @id GitOpsSourcesTestGit
-// @summary Test a Git source connection
+// @id GitOpsSourcesTestById
+// @summary Test the connection of a stored source
 // @description Tests connectivity for a GitOps source, applying optional overrides to the stored configuration.
-// @description **Access policy**: admin
+// @description **Access policy**: authenticated
 // @tags gitops
 // @security ApiKeyAuth
 // @security jwt
@@ -37,6 +39,11 @@ func (h *Handler) sourceTestConnection(w http.ResponseWriter, r *http.Request) *
 		return httperror.BadRequest("Invalid source identifier route variable", err)
 	}
 
+	securityContext, err := security.RetrieveRestrictedRequestContext(r)
+	if err != nil {
+		return httperror.InternalServerError("Unable to retrieve info from request context", err)
+	}
+
 	var payload GitSourceUpdatePayload
 	if err := request.DecodeAndValidateJSONPayload(r, &payload); err != nil && !errors.Is(err, io.EOF) {
 		return httperror.BadRequest("Invalid request payload", err)
@@ -44,10 +51,13 @@ func (h *Handler) sourceTestConnection(w http.ResponseWriter, r *http.Request) *
 
 	var src *portainer.Source
 	if err := h.dataStore.ViewTx(func(tx dataservices.DataStoreTx) error {
-		src, err = tx.Source().Read(portainer.SourceID(sourceID))
+		userContext := source.NewUserContext(securityContext.User, securityContext.UserMemberships)
+		src, err = tx.Source().Read(userContext, portainer.SourceID(sourceID))
 		return err
 	}); h.dataStore.IsErrObjectNotFound(err) {
 		return httperror.NotFound("Unable to find a source with the specified identifier", err)
+	} else if errors.Is(err, source.ErrNotEnoughPermission) {
+		return httperror.Forbidden("Not enough permissions to retrieve source", err)
 	} else if err != nil {
 		return httperror.InternalServerError("Unable to find source", err)
 	}
@@ -72,8 +82,42 @@ type ConnectionTestResult struct {
 	Error   string `json:"error,omitempty"`
 }
 
+// @id GitOpsSourcesTest
+// @summary Test a Git source connection
+// @description Tests connectivity for Git connection details that have not been persisted yet.
+// @description **Access policy**: authenticated
+// @tags gitops
+// @security ApiKeyAuth
+// @security jwt
+// @accept json
+// @produce json
+// @param body body GitSourceCreatePayload true "Git connection details"
+// @success 200 {object} ConnectionTestResult "Connection test result"
+// @failure 400 "Invalid request payload"
+// @failure 403 "Access denied"
+// @failure 500 "Server error"
+// @router /gitops/sources/test [post]
+func (h *Handler) gitSourceTest(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
+	var payload GitSourceCreatePayload
+	if err := request.DecodeAndValidateJSONPayload(r, &payload); err != nil {
+		return httperror.BadRequest("Invalid request payload", err)
+	}
+
+	src, err := BuildGitSource(payload)
+	if err != nil {
+		return httperror.BadRequest("Invalid request payload", err)
+	}
+	if src.Git == nil {
+		return httperror.InternalServerError("Source has no git configuration", nil)
+	}
+
+	result := testSourceConnection(r.Context(), h.gitService, src.Git)
+
+	return response.JSON(w, result)
+}
+
 // testSourceConnection verifies that a git repository is reachable with the given config.
-func testSourceConnection(ctx context.Context, gitService portainer.GitService, config *gittypes.RepoConfig) ConnectionTestResult {
+func testSourceConnection(ctx context.Context, gitService portainer.GitService, config *gittypes.GitSource) ConnectionTestResult {
 	var username, password string
 	if config.Authentication != nil {
 		username = config.Authentication.Username

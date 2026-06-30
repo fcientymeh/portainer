@@ -69,7 +69,6 @@ export function EditGroupView() {
   return (
     <>
       <PageHeader
-        title={groupName}
         breadcrumbs={[{ label: 'Groups', link: 'portainer.groups' }, groupName]}
       />
       <div className="mx-4 space-y-4">

@@ -28,7 +28,7 @@ func TestMergeSourceAndFile_NilFileLeaveFileFieldsEmpty(t *testing.T) {
 	t.Parallel()
 
 	src := &portainer.Source{
-		Git: &gittypes.RepoConfig{
+		Git: &gittypes.GitSource{
 			URL:           "https://github.com/example/repo",
 			TLSSkipVerify: true,
 			Authentication: &gittypes.GitAuthentication{
@@ -52,7 +52,7 @@ func TestMergeSourceAndFile_MergesAllFieldsFromFile(t *testing.T) {
 	t.Parallel()
 
 	src := &portainer.Source{
-		Git: &gittypes.RepoConfig{
+		Git: &gittypes.GitSource{
 			URL:           "https://github.com/example/repo",
 			TLSSkipVerify: true,
 		},
@@ -80,7 +80,7 @@ func TestGitSourceAndArtifactForStack_ZeroWorkflowIDReturnsNil(t *testing.T) {
 	var file *portainer.ArtifactFile
 	err := store.ViewTx(func(tx dataservices.DataStoreTx) error {
 		var txErr error
-		src, file, txErr = GitSourceAndArtifactForStack(tx, 0, 1)
+		src, file, txErr = GitSourceAndArtifactForStack(tx, adminUserContext, 0, 1)
 		return txErr
 	})
 	require.NoError(t, err)
@@ -96,9 +96,9 @@ func TestGitSourceAndArtifactForStack_ReturnsMatchingSourceAndFile(t *testing.T)
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		gitSrc := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git:  &gittypes.RepoConfig{URL: "https://github.com/example/repo"},
+			Git:  &gittypes.GitSource{URL: "https://github.com/example/repo"},
 		}
-		err := tx.Source().Create(gitSrc)
+		err := tx.Source().Create(adminUserContext, gitSrc)
 		require.NoError(t, err)
 
 		wf := &portainer.Workflow{
@@ -124,7 +124,7 @@ func TestGitSourceAndArtifactForStack_ReturnsMatchingSourceAndFile(t *testing.T)
 	var file *portainer.ArtifactFile
 	err = store.ViewTx(func(tx dataservices.DataStoreTx) error {
 		var txErr error
-		src, file, txErr = GitSourceAndArtifactForStack(tx, workflowID, 42)
+		src, file, txErr = GitSourceAndArtifactForStack(tx, adminUserContext, workflowID, 42)
 		return txErr
 	})
 	require.NoError(t, err)
@@ -144,9 +144,9 @@ func TestGitSourceAndArtifactForStack_NoMatchingArtifactReturnsNil(t *testing.T)
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		src := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git:  &gittypes.RepoConfig{URL: "https://github.com/example/repo"},
+			Git:  &gittypes.GitSource{URL: "https://github.com/example/repo"},
 		}
-		err := tx.Source().Create(src)
+		err := tx.Source().Create(adminUserContext, src)
 		require.NoError(t, err)
 
 		wf := &portainer.Workflow{
@@ -167,43 +167,7 @@ func TestGitSourceAndArtifactForStack_NoMatchingArtifactReturnsNil(t *testing.T)
 	var file *portainer.ArtifactFile
 	err = store.ViewTx(func(tx dataservices.DataStoreTx) error {
 		var txErr error
-		src, file, txErr = GitSourceAndArtifactForStack(tx, workflowID, 99)
-		return txErr
-	})
-	require.NoError(t, err)
-	require.Nil(t, src)
-	require.Nil(t, file)
-}
-
-func TestGitSourceAndArtifactForStack_NonGitSourceSkipped(t *testing.T) {
-	t.Parallel()
-	_, store := datastore.MustNewTestStore(t, false, true)
-
-	var workflowID portainer.WorkflowID
-	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		nonGitSrc := &portainer.Source{Type: portainer.SourceType(99)}
-		err := tx.Source().Create(nonGitSrc)
-		require.NoError(t, err)
-
-		wf := &portainer.Workflow{
-			Artifacts: []portainer.Artifact{{
-				StackID: 1,
-				Files:   []portainer.ArtifactFile{{SourceID: nonGitSrc.ID}},
-			}},
-		}
-		err = tx.Workflow().Create(wf)
-		require.NoError(t, err)
-		workflowID = wf.ID
-
-		return nil
-	})
-	require.NoError(t, err)
-
-	var src *portainer.Source
-	var file *portainer.ArtifactFile
-	err = store.ViewTx(func(tx dataservices.DataStoreTx) error {
-		var txErr error
-		src, file, txErr = GitSourceAndArtifactForStack(tx, workflowID, 1)
+		src, file, txErr = GitSourceAndArtifactForStack(tx, adminUserContext, workflowID, 99)
 		return txErr
 	})
 	require.NoError(t, err)
@@ -219,7 +183,7 @@ func TestGitSourceAndArtifactForEdgeStack_ZeroWorkflowIDReturnsNil(t *testing.T)
 	var file *portainer.ArtifactFile
 	err := store.ViewTx(func(tx dataservices.DataStoreTx) error {
 		var txErr error
-		src, file, txErr = GitSourceAndArtifactForEdgeStack(tx, 0, 1)
+		src, file, txErr = GitSourceAndArtifactForEdgeStack(tx, adminUserContext, 0, 1)
 		return txErr
 	})
 	require.NoError(t, err)
@@ -235,9 +199,9 @@ func TestGitSourceAndArtifactForEdgeStack_ReturnsMatchingSourceAndFile(t *testin
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		gitSrc := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git:  &gittypes.RepoConfig{URL: "https://github.com/example/edge-repo"},
+			Git:  &gittypes.GitSource{URL: "https://github.com/example/edge-repo"},
 		}
-		err := tx.Source().Create(gitSrc)
+		err := tx.Source().Create(adminUserContext, gitSrc)
 		require.NoError(t, err)
 
 		wf := &portainer.Workflow{
@@ -262,7 +226,7 @@ func TestGitSourceAndArtifactForEdgeStack_ReturnsMatchingSourceAndFile(t *testin
 	var file *portainer.ArtifactFile
 	err = store.ViewTx(func(tx dataservices.DataStoreTx) error {
 		var txErr error
-		src, file, txErr = GitSourceAndArtifactForEdgeStack(tx, workflowID, 5)
+		src, file, txErr = GitSourceAndArtifactForEdgeStack(tx, adminUserContext, workflowID, 5)
 		return txErr
 	})
 	require.NoError(t, err)
@@ -279,8 +243,8 @@ func TestUpdateArtifactFileForStack_NoMatchingArtifactIsNoOp(t *testing.T) {
 	var workflowID portainer.WorkflowID
 	var sourceID portainer.SourceID
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		src := &portainer.Source{Type: portainer.SourceTypeGit, Git: &gittypes.RepoConfig{URL: "https://example.com"}}
-		err := tx.Source().Create(src)
+		src := &portainer.Source{Type: portainer.SourceTypeGit, Git: &gittypes.GitSource{URL: "https://example.com"}}
+		err := tx.Source().Create(adminUserContext, src)
 		require.NoError(t, err)
 		sourceID = src.ID
 
@@ -317,8 +281,8 @@ func TestUpdateArtifactFileForStack_AppliesFnAndPersists(t *testing.T) {
 	var workflowID portainer.WorkflowID
 	var sourceID portainer.SourceID
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		src := &portainer.Source{Type: portainer.SourceTypeGit, Git: &gittypes.RepoConfig{URL: "https://example.com"}}
-		err := tx.Source().Create(src)
+		src := &portainer.Source{Type: portainer.SourceTypeGit, Git: &gittypes.GitSource{URL: "https://example.com"}}
+		err := tx.Source().Create(adminUserContext, src)
 		require.NoError(t, err)
 		sourceID = src.ID
 
@@ -355,8 +319,8 @@ func TestUpdateArtifactFileForEdgeStack_AppliesFnAndPersists(t *testing.T) {
 	var workflowID portainer.WorkflowID
 	var sourceID portainer.SourceID
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		src := &portainer.Source{Type: portainer.SourceTypeGit, Git: &gittypes.RepoConfig{URL: "https://example.com"}}
-		err := tx.Source().Create(src)
+		src := &portainer.Source{Type: portainer.SourceTypeGit, Git: &gittypes.GitSource{URL: "https://example.com"}}
+		err := tx.Source().Create(adminUserContext, src)
 		require.NoError(t, err)
 		sourceID = src.ID
 
@@ -393,10 +357,10 @@ func TestFindOrCreateGitSource_CreatesNewSource(t *testing.T) {
 	var src *portainer.Source
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		var txErr error
-		src, txErr = FindOrCreateGitSource(tx, &portainer.Source{
+		src, txErr = FindOrCreateGitSource(tx, adminUserContext, &portainer.Source{
 			Name: "my-repo",
 			Type: portainer.SourceTypeGit,
-			Git: &gittypes.RepoConfig{
+			Git: &gittypes.GitSource{
 				URL: "https://github.com/example/repo",
 			},
 		})
@@ -413,9 +377,9 @@ func TestFindOrCreateGitSource_ReusesExistingSourceForSameURLAndAuth(t *testing.
 	_, store := datastore.MustNewTestStore(t, false, true)
 
 	makeSource := func(tx dataservices.DataStoreTx) (*portainer.Source, error) {
-		return FindOrCreateGitSource(tx, &portainer.Source{
+		return FindOrCreateGitSource(tx, adminUserContext, &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git: &gittypes.RepoConfig{
+			Git: &gittypes.GitSource{
 				URL: "https://github.com/example/repo",
 			},
 		})
@@ -446,7 +410,7 @@ func TestFindOrCreateGitSource_ReusesExistingSourceForSameURLAndAuth(t *testing.
 	require.NoError(t, err)
 	require.Equal(t, firstID, secondID)
 
-	sources, err := store.Source().ReadAll()
+	sources, err := store.Source().ReadAll(adminUserContext)
 	require.NoError(t, err)
 	require.Len(t, sources, 1)
 }
@@ -456,9 +420,9 @@ func TestFindOrCreateGitSource_DifferentAuthCreatesNewSource(t *testing.T) {
 	_, store := datastore.MustNewTestStore(t, false, true)
 
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		_, txErr := FindOrCreateGitSource(tx, &portainer.Source{
+		_, txErr := FindOrCreateGitSource(tx, adminUserContext, &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git: &gittypes.RepoConfig{
+			Git: &gittypes.GitSource{
 				URL:            "https://github.com/example/repo",
 				Authentication: &gittypes.GitAuthentication{Username: "alice", Password: "pass1"},
 			},
@@ -468,9 +432,9 @@ func TestFindOrCreateGitSource_DifferentAuthCreatesNewSource(t *testing.T) {
 	require.NoError(t, err)
 
 	err = store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		_, txErr := FindOrCreateGitSource(tx, &portainer.Source{
+		_, txErr := FindOrCreateGitSource(tx, adminUserContext, &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git: &gittypes.RepoConfig{
+			Git: &gittypes.GitSource{
 				URL:            "https://github.com/example/repo",
 				Authentication: &gittypes.GitAuthentication{Username: "bob", Password: "pass2"},
 			},
@@ -479,7 +443,7 @@ func TestFindOrCreateGitSource_DifferentAuthCreatesNewSource(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	sources, err := store.Source().ReadAll()
+	sources, err := store.Source().ReadAll(adminUserContext)
 	require.NoError(t, err)
 	require.Len(t, sources, 2)
 }
@@ -494,7 +458,7 @@ func TestSaveWorkflowGitConfig_UpdatesFileAndSourceWhenURLUnchanged(t *testing.T
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		src := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git: &gittypes.RepoConfig{
+			Git: &gittypes.GitSource{
 				URL:           "https://github.com/example/repo",
 				TLSSkipVerify: false,
 				Authentication: &gittypes.GitAuthentication{
@@ -503,7 +467,7 @@ func TestSaveWorkflowGitConfig_UpdatesFileAndSourceWhenURLUnchanged(t *testing.T
 				},
 			},
 		}
-		err := tx.Source().Create(src)
+		err := tx.Source().Create(adminUserContext, src)
 		require.NoError(t, err)
 		sourceID = src.ID
 
@@ -539,7 +503,7 @@ func TestSaveWorkflowGitConfig_UpdatesFileAndSourceWhenURLUnchanged(t *testing.T
 	}
 
 	err = store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		return SaveWorkflowGitConfig(tx, workflowID, func(a portainer.Artifact) bool {
+		return SaveWorkflowGitConfig(tx, adminUserContext, workflowID, func(a portainer.Artifact) bool {
 			return a.StackID == 1
 		}, sourceID, newCfg)
 	})
@@ -552,7 +516,7 @@ func TestSaveWorkflowGitConfig_UpdatesFileAndSourceWhenURLUnchanged(t *testing.T
 	require.Equal(t, "new-hash", wf.Artifacts[0].Files[0].Hash)
 	require.Equal(t, sourceID, wf.Artifacts[0].Files[0].SourceID)
 
-	src, err := store.Source().Read(sourceID)
+	src, err := store.Source().Read(adminUserContext, sourceID)
 	require.NoError(t, err)
 	require.Equal(t, "new-user", src.Git.Authentication.Username)
 	require.Equal(t, "new-pass", src.Git.Authentication.Password)
@@ -569,9 +533,9 @@ func TestSaveWorkflowGitConfig_CreatesNewSourceOnURLChange(t *testing.T) {
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		src := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git:  &gittypes.RepoConfig{URL: "https://github.com/example/old-repo"},
+			Git:  &gittypes.GitSource{URL: "https://github.com/example/old-repo"},
 		}
-		err := tx.Source().Create(src)
+		err := tx.Source().Create(adminUserContext, src)
 		require.NoError(t, err)
 		oldSourceID = src.ID
 
@@ -592,7 +556,7 @@ func TestSaveWorkflowGitConfig_CreatesNewSourceOnURLChange(t *testing.T) {
 	newCfg := &gittypes.RepoConfig{URL: "https://github.com/example/new-repo"}
 
 	err = store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		return SaveWorkflowGitConfig(tx, workflowID, func(a portainer.Artifact) bool {
+		return SaveWorkflowGitConfig(tx, adminUserContext, workflowID, func(a portainer.Artifact) bool {
 			return a.StackID == 1
 		}, oldSourceID, newCfg)
 	})
@@ -603,7 +567,7 @@ func TestSaveWorkflowGitConfig_CreatesNewSourceOnURLChange(t *testing.T) {
 	newSourceID := wf.Artifacts[0].Files[0].SourceID
 	require.NotEqual(t, oldSourceID, newSourceID)
 
-	newSrc, err := store.Source().Read(newSourceID)
+	newSrc, err := store.Source().Read(adminUserContext, newSourceID)
 	require.NoError(t, err)
 	require.Equal(t, "https://github.com/example/new-repo", newSrc.Git.URL)
 }
@@ -618,17 +582,17 @@ func TestSaveWorkflowGitConfig_ReusesExistingSourceOnURLChange(t *testing.T) {
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		old := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git:  &gittypes.RepoConfig{URL: "https://github.com/example/old-repo"},
+			Git:  &gittypes.GitSource{URL: "https://github.com/example/old-repo"},
 		}
-		err := tx.Source().Create(old)
+		err := tx.Source().Create(adminUserContext, old)
 		require.NoError(t, err)
 		oldSourceID = old.ID
 
 		existing := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git:  &gittypes.RepoConfig{URL: "https://github.com/example/shared-repo"},
+			Git:  &gittypes.GitSource{URL: "https://github.com/example/shared-repo"},
 		}
-		err = tx.Source().Create(existing)
+		err = tx.Source().Create(adminUserContext, existing)
 		require.NoError(t, err)
 		existingSourceID = existing.ID
 
@@ -649,7 +613,7 @@ func TestSaveWorkflowGitConfig_ReusesExistingSourceOnURLChange(t *testing.T) {
 	newCfg := &gittypes.RepoConfig{URL: "https://github.com/example/shared-repo"}
 
 	err = store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		return SaveWorkflowGitConfig(tx, workflowID, func(a portainer.Artifact) bool {
+		return SaveWorkflowGitConfig(tx, adminUserContext, workflowID, func(a portainer.Artifact) bool {
 			return a.StackID == 1
 		}, oldSourceID, newCfg)
 	})
@@ -659,44 +623,9 @@ func TestSaveWorkflowGitConfig_ReusesExistingSourceOnURLChange(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, existingSourceID, wf.Artifacts[0].Files[0].SourceID)
 
-	sources, err := store.Source().ReadAll()
+	sources, err := store.Source().ReadAll(adminUserContext)
 	require.NoError(t, err)
 	require.Len(t, sources, 2)
-}
-
-func TestSaveWorkflowGitConfig_NilGitConfigReturnsError(t *testing.T) {
-	t.Parallel()
-	_, store := datastore.MustNewTestStore(t, false, true)
-
-	var workflowID portainer.WorkflowID
-	var sourceID portainer.SourceID
-
-	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		src := &portainer.Source{Type: portainer.SourceTypeGit}
-		err := tx.Source().Create(src)
-		require.NoError(t, err)
-		sourceID = src.ID
-
-		wf := &portainer.Workflow{
-			Artifacts: []portainer.Artifact{{
-				StackID: 1,
-				Files:   []portainer.ArtifactFile{{SourceID: sourceID}},
-			}},
-		}
-		err = tx.Workflow().Create(wf)
-		require.NoError(t, err)
-		workflowID = wf.ID
-
-		return nil
-	})
-	require.NoError(t, err)
-
-	err = store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		return SaveWorkflowGitConfig(tx, workflowID, func(a portainer.Artifact) bool {
-			return a.StackID == 1
-		}, sourceID, &gittypes.RepoConfig{URL: "https://github.com/example/repo"})
-	})
-	require.Error(t, err)
 }
 
 func TestSaveWorkflowGitConfig_OnlyMatchingArtifactUpdated(t *testing.T) {
@@ -709,9 +638,9 @@ func TestSaveWorkflowGitConfig_OnlyMatchingArtifactUpdated(t *testing.T) {
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		src := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git:  &gittypes.RepoConfig{URL: "https://github.com/example/repo"},
+			Git:  &gittypes.GitSource{URL: "https://github.com/example/repo"},
 		}
-		err := tx.Source().Create(src)
+		err := tx.Source().Create(adminUserContext, src)
 		require.NoError(t, err)
 		sourceID = src.ID
 
@@ -736,7 +665,7 @@ func TestSaveWorkflowGitConfig_OnlyMatchingArtifactUpdated(t *testing.T) {
 	require.NoError(t, err)
 
 	err = store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		return SaveWorkflowGitConfig(tx, workflowID, func(a portainer.Artifact) bool {
+		return SaveWorkflowGitConfig(tx, adminUserContext, workflowID, func(a portainer.Artifact) bool {
 			return a.StackID == 1
 		}, sourceID, &gittypes.RepoConfig{
 			URL:        "https://github.com/example/repo",
@@ -751,6 +680,311 @@ func TestSaveWorkflowGitConfig_OnlyMatchingArtifactUpdated(t *testing.T) {
 	require.Equal(t, "hash-2", wf.Artifacts[1].Files[0].Hash)
 }
 
+func TestUpdateArtifactFileForStack_MultipleArtifactsOnlyMatchingUpdated(t *testing.T) {
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
+
+	var workflowID portainer.WorkflowID
+	var srcID portainer.SourceID
+	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		src := &portainer.Source{Type: portainer.SourceTypeGit, Git: &gittypes.GitSource{URL: "https://example.com"}}
+		err := tx.Source().Create(adminUserContext, src)
+		require.NoError(t, err)
+		srcID = src.ID
+
+		wf := &portainer.Workflow{
+			Artifacts: []portainer.Artifact{
+				{StackID: 10, Files: []portainer.ArtifactFile{{SourceID: srcID, Hash: "hash-10"}}},
+				{StackID: 20, Files: []portainer.ArtifactFile{{SourceID: srcID, Hash: "hash-20"}}},
+			},
+		}
+		err = tx.Workflow().Create(wf)
+		require.NoError(t, err)
+		workflowID = wf.ID
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	err = store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		return UpdateArtifactFileForStack(tx, workflowID, 10, srcID, func(a *portainer.ArtifactFile) {
+			a.Hash = "updated-hash-10"
+		})
+	})
+	require.NoError(t, err)
+
+	wf, err := store.Workflow().Read(workflowID)
+	require.NoError(t, err)
+	require.Equal(t, "updated-hash-10", wf.Artifacts[0].Files[0].Hash)
+	require.Equal(t, "hash-20", wf.Artifacts[1].Files[0].Hash)
+}
+
+func TestSaveWorkflowArtifact_SwitchesSourceWithoutMutatingIt(t *testing.T) {
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
+
+	var workflowID portainer.WorkflowID
+	var oldSourceID, newSourceID portainer.SourceID
+
+	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		// Two distinct sources sharing the same URL: the case where URL-based
+		// resolution would fail to switch.
+		old := &portainer.Source{
+			Type: portainer.SourceTypeGit,
+			Git:  &gittypes.GitSource{URL: "https://github.com/example/repo"},
+		}
+		err := tx.Source().Create(adminUserContext, old)
+		require.NoError(t, err)
+		oldSourceID = old.ID
+
+		selected := &portainer.Source{
+			Type: portainer.SourceTypeGit,
+			Git: &gittypes.GitSource{
+				URL: "https://github.com/example/repo",
+				Authentication: &gittypes.GitAuthentication{
+					Username: "selected-user",
+					Password: "selected-pass",
+				},
+			},
+		}
+		err = tx.Source().Create(adminUserContext, selected)
+		require.NoError(t, err)
+		newSourceID = selected.ID
+
+		wf := &portainer.Workflow{
+			Artifacts: []portainer.Artifact{{
+				StackID: 1,
+				Files: []portainer.ArtifactFile{{
+					SourceID: oldSourceID,
+					Ref:      "refs/heads/main",
+					Path:     "docker-compose.yml",
+					Hash:     "old-hash",
+				}},
+			}},
+		}
+		err = tx.Workflow().Create(wf)
+		require.NoError(t, err)
+		workflowID = wf.ID
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	err = store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		return SaveWorkflowArtifact(tx, workflowID, func(a portainer.Artifact) bool {
+			return a.StackID == 1
+		}, oldSourceID, portainer.ArtifactFile{
+			SourceID: newSourceID,
+			Ref:      "refs/heads/dev",
+			Path:     "compose.yml",
+			Hash:     "new-hash",
+		})
+	})
+	require.NoError(t, err)
+
+	wf, err := store.Workflow().Read(workflowID)
+	require.NoError(t, err)
+	require.Equal(t, newSourceID, wf.Artifacts[0].Files[0].SourceID)
+	require.Equal(t, "refs/heads/dev", wf.Artifacts[0].Files[0].Ref)
+	require.Equal(t, "compose.yml", wf.Artifacts[0].Files[0].Path)
+	require.Equal(t, "new-hash", wf.Artifacts[0].Files[0].Hash)
+
+	// The selected source's git config must be left untouched.
+	selected, err := store.Source().Read(adminUserContext, newSourceID)
+	require.NoError(t, err)
+	require.Equal(t, "https://github.com/example/repo", selected.Git.URL)
+	require.Equal(t, "selected-user", selected.Git.Authentication.Username)
+	require.Equal(t, "selected-pass", selected.Git.Authentication.Password)
+}
+
+func TestUpdateArtifactFileForEdgeStack_MultipleArtifactsOnlyMatchingUpdated(t *testing.T) {
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
+
+	var workflowID portainer.WorkflowID
+	var srcID portainer.SourceID
+	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		src := &portainer.Source{Type: portainer.SourceTypeGit, Git: &gittypes.GitSource{URL: "https://example.com"}}
+		err := tx.Source().Create(adminUserContext, src)
+		require.NoError(t, err)
+		srcID = src.ID
+
+		wf := &portainer.Workflow{
+			Artifacts: []portainer.Artifact{
+				{EdgeStackID: 10, Files: []portainer.ArtifactFile{{SourceID: srcID, Hash: "hash-10"}}},
+				{EdgeStackID: 20, Files: []portainer.ArtifactFile{{SourceID: srcID, Hash: "hash-20"}}},
+			},
+		}
+		err = tx.Workflow().Create(wf)
+		require.NoError(t, err)
+		workflowID = wf.ID
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	err = store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		return UpdateArtifactFileForEdgeStack(tx, workflowID, 10, srcID, func(a *portainer.ArtifactFile) {
+			a.Hash = "updated-hash-10"
+		})
+	})
+	require.NoError(t, err)
+
+	wf, err := store.Workflow().Read(workflowID)
+	require.NoError(t, err)
+	require.Equal(t, "updated-hash-10", wf.Artifacts[0].Files[0].Hash)
+	require.Equal(t, "hash-20", wf.Artifacts[1].Files[0].Hash)
+}
+
+func TestSaveWorkflowArtifact_SameSourceUpdatesArtifactOnly(t *testing.T) {
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
+
+	var workflowID portainer.WorkflowID
+	var sourceID portainer.SourceID
+
+	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		src := &portainer.Source{
+			Type: portainer.SourceTypeGit,
+			Git:  &gittypes.GitSource{URL: "https://github.com/example/repo"},
+		}
+		err := tx.Source().Create(adminUserContext, src)
+		require.NoError(t, err)
+		sourceID = src.ID
+
+		wf := &portainer.Workflow{
+			Artifacts: []portainer.Artifact{{
+				StackID: 1,
+				Files: []portainer.ArtifactFile{{
+					SourceID: sourceID,
+					Ref:      "refs/heads/main",
+				}},
+			}},
+		}
+		err = tx.Workflow().Create(wf)
+		require.NoError(t, err)
+		workflowID = wf.ID
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	err = store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		return SaveWorkflowArtifact(tx, workflowID, func(a portainer.Artifact) bool {
+			return a.StackID == 1
+		}, sourceID, portainer.ArtifactFile{
+			SourceID: sourceID,
+			Ref:      "refs/heads/dev",
+			Path:     "compose.yml",
+			Hash:     "new-hash",
+		})
+	})
+	require.NoError(t, err)
+
+	wf, err := store.Workflow().Read(workflowID)
+	require.NoError(t, err)
+	require.Len(t, wf.Artifacts[0].Files, 1)
+	require.Equal(t, sourceID, wf.Artifacts[0].Files[0].SourceID)
+	require.Equal(t, "refs/heads/dev", wf.Artifacts[0].Files[0].Ref)
+	require.Equal(t, "compose.yml", wf.Artifacts[0].Files[0].Path)
+	require.Equal(t, "new-hash", wf.Artifacts[0].Files[0].Hash)
+}
+
+func TestGitSourceAndArtifactForStack_MultipleArtifactsReturnsCorrectOne(t *testing.T) {
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
+
+	var workflowID portainer.WorkflowID
+	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		gitSrc := &portainer.Source{
+			Type: portainer.SourceTypeGit,
+			Git:  &gittypes.GitSource{URL: "https://github.com/example/shared-repo"},
+		}
+		err := tx.Source().Create(adminUserContext, gitSrc)
+		require.NoError(t, err)
+
+		wf := &portainer.Workflow{
+			Artifacts: []portainer.Artifact{
+				{StackID: 10, Files: []portainer.ArtifactFile{{SourceID: gitSrc.ID, Ref: "refs/heads/main", Hash: "hash-10"}}},
+				{StackID: 20, Files: []portainer.ArtifactFile{{SourceID: gitSrc.ID, Ref: "refs/heads/dev", Hash: "hash-20"}}},
+			},
+		}
+		err = tx.Workflow().Create(wf)
+		require.NoError(t, err)
+		workflowID = wf.ID
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	var src *portainer.Source
+	var file *portainer.ArtifactFile
+	err = store.ViewTx(func(tx dataservices.DataStoreTx) error {
+		var txErr error
+		src, file, txErr = GitSourceAndArtifactForStack(tx, adminUserContext, workflowID, 20)
+		return txErr
+	})
+	require.NoError(t, err)
+	require.NotNil(t, src)
+	require.NotNil(t, file)
+	require.Equal(t, "refs/heads/dev", file.Ref)
+	require.Equal(t, "hash-20", file.Hash)
+}
+
+func TestGitSourceAndArtifactForEdgeStack_MultipleArtifactsReturnsCorrectOne(t *testing.T) {
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
+
+	var workflowID portainer.WorkflowID
+	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		gitSrc := &portainer.Source{
+			Type: portainer.SourceTypeGit,
+			Git:  &gittypes.GitSource{URL: "https://github.com/example/shared-edge-repo"},
+		}
+		err := tx.Source().Create(adminUserContext, gitSrc)
+		require.NoError(t, err)
+
+		wf := &portainer.Workflow{
+			Artifacts: []portainer.Artifact{
+				{EdgeStackID: 10, Files: []portainer.ArtifactFile{{SourceID: gitSrc.ID, Ref: "refs/heads/main", Hash: "hash-10"}}},
+				{EdgeStackID: 20, Files: []portainer.ArtifactFile{{SourceID: gitSrc.ID, Ref: "refs/heads/dev", Hash: "hash-20"}}},
+			},
+		}
+		err = tx.Workflow().Create(wf)
+		require.NoError(t, err)
+		workflowID = wf.ID
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	var src *portainer.Source
+	var file *portainer.ArtifactFile
+	err = store.ViewTx(func(tx dataservices.DataStoreTx) error {
+		var txErr error
+		src, file, txErr = GitSourceAndArtifactForEdgeStack(tx, adminUserContext, workflowID, 20)
+		return txErr
+	})
+	require.NoError(t, err)
+	require.NotNil(t, src)
+	require.NotNil(t, file)
+	require.Equal(t, "refs/heads/dev", file.Ref)
+	require.Equal(t, "hash-20", file.Hash)
+}
+
+func TestMergeSourceAndFile_ConfigHashComesFromFileNotSource(t *testing.T) {
+	t.Parallel()
+
+	src := &portainer.Source{
+		Git: &gittypes.GitSource{URL: "https://github.com/example/repo"},
+	}
+	file := &portainer.ArtifactFile{Hash: "artifact-hash"}
+
+	cfg := MergeSourceAndFile(src, file)
+	require.NotNil(t, cfg)
+	require.Equal(t, "artifact-hash", cfg.ConfigHash)
+}
+
 func TestFindOrCreateGitSource_StripsEmbeddedCredentialsFromURL(t *testing.T) {
 	t.Parallel()
 	_, store := datastore.MustNewTestStore(t, false, true)
@@ -758,9 +992,9 @@ func TestFindOrCreateGitSource_StripsEmbeddedCredentialsFromURL(t *testing.T) {
 	var src *portainer.Source
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		var txErr error
-		src, txErr = FindOrCreateGitSource(tx, &portainer.Source{
+		src, txErr = FindOrCreateGitSource(tx, adminUserContext, &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git: &gittypes.RepoConfig{
+			Git: &gittypes.GitSource{
 				URL: "https://user:secret@github.com/example/repo",
 			},
 		})

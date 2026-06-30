@@ -22,7 +22,7 @@ export default defineConfig({
     },
     {
       name: '@hey-api/sdk',
-      validator: true,
+      // validator: true, TODO revert in BE-13103
     },
     {
       name: '@hey-api/client-axios',

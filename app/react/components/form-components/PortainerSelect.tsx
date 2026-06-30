@@ -27,7 +27,7 @@ export interface GroupOption<TValue> {
   options: Option<TValue>[];
 }
 
-type Options<TValue> = OptionsOrGroups<
+export type Options<TValue> = OptionsOrGroups<
   Option<TValue>,
   GroupBase<Option<TValue>>
 >;

@@ -61,13 +61,15 @@ export function BoxSelector<T extends Value>({
           >
             {options
               .filter((option) => !option.hide)
-              .map((option) => (
+              .map(({ disabled, ...option }) => (
                 <BoxSelectorItem
                   key={option.id}
                   radioName={radioName}
                   option={option}
                   onSelect={handleSelect}
-                  disabled={option.disabled && option.disabled()}
+                  disabled={
+                    typeof disabled === 'function' ? disabled() : disabled
+                  }
                   tooltip={option.tooltip && option.tooltip()}
                   type={props.isMulti ? 'checkbox' : 'radio'}
                   isSelected={isSelected}

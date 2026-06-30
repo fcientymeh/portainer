@@ -48,6 +48,7 @@ export function GroupHeader({
           icon={Trash2}
           onClick={() => onDelete?.()}
           data-cy="group-header-delete"
+          color="dangerlight"
         >
           Delete
         </ActionBarButton>

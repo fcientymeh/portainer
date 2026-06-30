@@ -7,6 +7,7 @@ import (
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
+	"github.com/portainer/portainer/api/dataservices/source"
 	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/stacks/deployments"
@@ -39,20 +40,20 @@ func (handler *Handler) stackStop(w http.ResponseWriter, r *http.Request) *httpe
 		return httperror.BadRequest("Invalid stack identifier route variable", err)
 	}
 	uzer, errorek := security.RetrieveTokenData(r)
-//--- AIS: Read-Only user management ---
+	//--- AIS: Read-Only user management ---
 	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
 	team, err := handler.DataStore.Team().TeamByName("READONLY")
 	if err != nil {
-    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
 	}
 	for _, membership := range teamMemberships {
 		if membership.TeamID == team.ID {
-				if r.Method != http.MethodGet {
-          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
-        }				
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
 		}
 	}
-//------------------------
+	//------------------------
 
 	securityContext, err := security.RetrieveRestrictedRequestContext(r)
 	if err != nil {
@@ -123,7 +124,7 @@ func (handler *Handler) stackStop(w http.ResponseWriter, r *http.Request) *httpe
 		stack.AutoUpdate.JobID = ""
 	}
 
-	stopErr := handler.stopStack(r.Context(), stack, endpoint)
+	stopErr := handler.stopStack(r.Context(), securityContext.UserID, stack, endpoint)
 	if stopErr != nil {
 		if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 			stackutils.UpdateStackStatusFromUndeploymentResult(stack, stopErr)
@@ -135,31 +136,34 @@ func (handler *Handler) stackStop(w http.ResponseWriter, r *http.Request) *httpe
 		return httperror.InternalServerError("Unable to stop stack", stopErr)
 	}
 
-	if err := handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+	err = handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		stackutils.UpdateStackStatusFromUndeploymentResult(stack, nil)
-		return tx.Stack().Update(stack.ID, stack)
-	}); err != nil {
-		return httperror.InternalServerError("Unable to update stack status", err)
-	}
+		if err := tx.Stack().Update(stack.ID, stack); err != nil {
+			return httperror.InternalServerError("Unable to update stack status", err)
+		}
 
-	if err := fillStackGitConfig(handler.DataStore, stack); err != nil {
-		return httperror.InternalServerError("Unable to load git config for stack", err)
-	}
+		userContext := source.NewUserContext(securityContext.User, securityContext.UserMemberships)
+		if err := fillStackGitConfig(tx, userContext, stack); err != nil {
+			return httperror.InternalServerError("Unable to load git config for stack", err)
+		}
+		return nil
+	})
+	// AIS log
 	if errorek == nil {
 		if r.Method != http.MethodGet {
-			log.Info().Msgf("[AIP AUDIT] [%s] [STOP STACK %s]     [%s]", uzer.Username, stack.Name, r)	
+			log.Info().Msgf("[AIP AUDIT] [%s] [STOP STACK %s]     [%s]", uzer.Username, stack.Name, r)
 		}
 	}
-	return response.JSON(w, stack)
+	return response.TxResponse(w, stack, err)
 }
 
-func (handler *Handler) stopStack(ctx context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
+func (handler *Handler) stopStack(ctx context.Context, userId portainer.UserID, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
 	switch stack.Type {
 	case portainer.DockerComposeStack:
 		stack.Name = handler.ComposeStackManager.NormalizeStackName(stack.Name)
 
 		if stackutils.IsRelativePathStack(stack) {
-			return handler.StackDeployer.StopRemoteComposeStack(ctx, stack, endpoint)
+			return handler.StackDeployer.StopRemoteComposeStack(ctx, userId, stack, endpoint)
 		}
 
 		return handler.StackDeployer.UndeployComposeStack(ctx, stack, endpoint)
@@ -167,7 +171,7 @@ func (handler *Handler) stopStack(ctx context.Context, stack *portainer.Stack, e
 		stack.Name = handler.SwarmStackManager.NormalizeStackName(stack.Name)
 
 		if stackutils.IsRelativePathStack(stack) {
-			return handler.StackDeployer.StopRemoteSwarmStack(ctx, stack, endpoint)
+			return handler.StackDeployer.StopRemoteSwarmStack(ctx, userId, stack, endpoint)
 		}
 
 		return handler.SwarmStackManager.Remove(ctx, stack, endpoint)

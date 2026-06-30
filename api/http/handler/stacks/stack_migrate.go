@@ -8,8 +8,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
+	"github.com/portainer/portainer/api/dataservices/source"
 	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/stacks/deployments"
@@ -59,20 +60,20 @@ func (handler *Handler) stackMigrate(w http.ResponseWriter, r *http.Request) *ht
 		return httperror.BadRequest("Invalid stack identifier route variable", err)
 	}
 	uzer, errorek := security.RetrieveTokenData(r)
-//--- AIS: Read-Only user management ---
+	//--- AIS: Read-Only user management ---
 	teamMemberships, _ := handler.DataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
 	team, err := handler.DataStore.Team().TeamByName("READONLY")
 	if err != nil {
-    log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
 	}
 	for _, membership := range teamMemberships {
 		if membership.TeamID == team.ID {
-				if r.Method != http.MethodGet {
-          return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
-        }				
+			if r.Method != http.MethodGet {
+				return &httperror.HandlerError{http.StatusForbidden, "Permission DENIED. READONLY ROLE", httperrors.ErrResourceAccessDenied}
+			}
 		}
 	}
-//------------------------
+	//------------------------
 
 	var payload stackMigratePayload
 	if err := request.DecodeAndValidateJSONPayload(r, &payload); err != nil {
@@ -190,15 +191,22 @@ func (handler *Handler) stackMigrate(w http.ResponseWriter, r *http.Request) *ht
 		}
 	}
 
-	if err := fillStackGitConfig(handler.DataStore, stack); err != nil {
-		return httperror.InternalServerError("Unable to load git config for stack", err)
-	}
+	err = handler.DataStore.ViewTx(func(tx dataservices.DataStoreTx) error {
+		userContext := source.NewUserContext(securityContext.User, securityContext.UserMemberships)
+
+		if err := fillStackGitConfig(tx, userContext, stack); err != nil {
+			return httperror.InternalServerError("Unable to load git config for stack", err)
+		}
+
+		return nil
+	})
+	//AIS log
 	if errorek == nil {
 		if r.Method != http.MethodGet {
-			log.Info().Msgf("[AIP AUDIT] [%s] [MIGRATE STACK %s]     [%s]", uzer.Username, stack.Name, r)	
+			log.Info().Msgf("[AIP AUDIT] [%s] [MIGRATE STACK %s]     [%s]", uzer.Username, stack.Name, r)
 		}
 	}
-	return response.JSON(w, stack)
+	return response.TxResponse(w, stack, err)
 }
 
 func (handler *Handler) migrateStack(r *http.Request, stack *portainer.Stack, next *portainer.Endpoint) *httperror.HandlerError {

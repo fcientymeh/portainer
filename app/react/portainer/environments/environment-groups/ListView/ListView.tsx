@@ -16,7 +16,7 @@ export function ListView() {
         </AddButton>
       </PageHeader>
 
-      <div className="mx-5">
+      <div className="mx-5 mb-5">
         <EnvironmentGroupsTable />
       </div>
     </>

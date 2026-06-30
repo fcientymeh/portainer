@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 
 import { type SourcesConnectionTestResult } from '@api/types.gen';
-import { gitOpsSourcesTestGit } from '@api/sdk.gen';
+import { gitOpsSourcesTestById } from '@api/sdk.gen';
 
 import { withError } from '@/react-tools/react-query';
 
@@ -15,7 +15,7 @@ async function testSourceConnection(
   id: Source['id'],
   payload: UpdateSourcePayload
 ): Promise<ConnectionTestResult> {
-  const { data } = await gitOpsSourcesTestGit({ path: { id }, body: payload });
+  const { data } = await gitOpsSourcesTestById({ path: { id }, body: payload });
   return data;
 }
 

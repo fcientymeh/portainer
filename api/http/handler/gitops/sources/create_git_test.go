@@ -16,9 +16,10 @@ import (
 func TestBuildGitSource_DerivesNameFromURL(t *testing.T) {
 	t.Parallel()
 
-	src := BuildGitSource(GitSourceCreatePayload{
+	src, err := BuildGitSource(GitSourceCreatePayload{
 		URL: "https://github.com/org/my-repo.git",
 	})
+	require.NoError(t, err)
 
 	require.Equal(t, "my-repo", src.Name)
 	require.Equal(t, portainer.SourceTypeGit, src.Type)
@@ -28,10 +29,11 @@ func TestBuildGitSource_DerivesNameFromURL(t *testing.T) {
 func TestBuildGitSource_UsesExplicitName(t *testing.T) {
 	t.Parallel()
 
-	src := BuildGitSource(GitSourceCreatePayload{
+	src, err := BuildGitSource(GitSourceCreatePayload{
 		Name: "custom-name",
 		URL:  "https://github.com/org/repo.git",
 	})
+	require.NoError(t, err)
 
 	require.Equal(t, "custom-name", src.Name)
 }
@@ -39,13 +41,14 @@ func TestBuildGitSource_UsesExplicitName(t *testing.T) {
 func TestBuildGitSource_WithAuthentication(t *testing.T) {
 	t.Parallel()
 
-	src := BuildGitSource(GitSourceCreatePayload{
+	src, err := BuildGitSource(GitSourceCreatePayload{
 		URL: "https://github.com/org/repo.git",
 		Authentication: &GitAuthenticationPayload{
 			Username: "alice",
 			Password: "secret",
 		},
 	})
+	require.NoError(t, err)
 
 	require.NotNil(t, src.Git.Authentication)
 	require.Equal(t, "alice", src.Git.Authentication.Username)
@@ -94,7 +97,7 @@ func TestGitSourceCreate_Success(t *testing.T) {
 	require.Equal(t, portainer.SourceTypeGit, src.Type)
 	require.NotZero(t, src.ID)
 	require.NotNil(t, src.Git)
-	require.Equal(t, "https://github.com/org/repo.git", src.Git.URL)
+	require.Equal(t, "https://github.com/org/repo", src.Git.URL)
 }
 
 func TestGitSourceCreate_SanitizesCredentials(t *testing.T) {
@@ -147,6 +150,128 @@ func TestGitSourceCreate_MissingURL(t *testing.T) {
 	h.ServeHTTP(rr, buildCreateReq(t, 1, body))
 
 	require.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestGitSourceCreate_ConflictOnDuplicateURLAndCredentials(t *testing.T) {
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
+
+	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		return tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole})
+	}))
+
+	h := newTestHandler(t, store)
+
+	body, err := json.Marshal(GitSourceCreatePayload{
+		URL: "https://github.com/org/repo.git",
+		Authentication: &GitAuthenticationPayload{
+			Username: "alice",
+			Password: "secret",
+		},
+	})
+	require.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, buildCreateReq(t, 1, body))
+	require.Equal(t, http.StatusCreated, rr.Code)
+
+	rr = httptest.NewRecorder()
+	h.ServeHTTP(rr, buildCreateReq(t, 1, body))
+	require.Equal(t, http.StatusConflict, rr.Code)
+}
+
+func TestGitSourceCreate_AllowsDuplicateURLWithDifferentCredentials(t *testing.T) {
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
+
+	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		return tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole})
+	}))
+
+	h := newTestHandler(t, store)
+
+	first, err := json.Marshal(GitSourceCreatePayload{
+		URL: "https://github.com/org/repo.git",
+		Authentication: &GitAuthenticationPayload{
+			Username: "alice",
+			Password: "secret",
+		},
+	})
+	require.NoError(t, err)
+
+	second, err := json.Marshal(GitSourceCreatePayload{
+		URL: "https://github.com/org/repo.git",
+		Authentication: &GitAuthenticationPayload{
+			Username: "bob",
+			Password: "other",
+		},
+	})
+	require.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, buildCreateReq(t, 1, first))
+	require.Equal(t, http.StatusCreated, rr.Code)
+
+	rr = httptest.NewRecorder()
+	h.ServeHTTP(rr, buildCreateReq(t, 1, second))
+	require.Equal(t, http.StatusCreated, rr.Code)
+}
+
+func TestGitSourceCreate_ConflictOnDuplicateAuthlessSource(t *testing.T) {
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
+
+	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		return tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole})
+	}))
+
+	h := newTestHandler(t, store)
+
+	body, err := json.Marshal(GitSourceCreatePayload{
+		URL: "https://github.com/org/repo.git",
+	})
+	require.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, buildCreateReq(t, 1, body))
+	require.Equal(t, http.StatusCreated, rr.Code)
+
+	rr = httptest.NewRecorder()
+	h.ServeHTTP(rr, buildCreateReq(t, 1, body))
+	require.Equal(t, http.StatusConflict, rr.Code)
+}
+
+func TestGitSourceCreate_AllowsAuthlessAndAuthenticatedSameURL(t *testing.T) {
+	t.Parallel()
+	_, store := datastore.MustNewTestStore(t, false, true)
+
+	require.NoError(t, store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		return tx.User().Create(&portainer.User{ID: 1, Role: portainer.AdministratorRole})
+	}))
+
+	h := newTestHandler(t, store)
+
+	authless, err := json.Marshal(GitSourceCreatePayload{
+		URL: "https://github.com/org/repo.git",
+	})
+	require.NoError(t, err)
+
+	authenticated, err := json.Marshal(GitSourceCreatePayload{
+		URL: "https://github.com/org/repo.git",
+		Authentication: &GitAuthenticationPayload{
+			Username: "alice",
+			Password: "secret",
+		},
+	})
+	require.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, buildCreateReq(t, 1, authless))
+	require.Equal(t, http.StatusCreated, rr.Code)
+
+	rr = httptest.NewRecorder()
+	h.ServeHTTP(rr, buildCreateReq(t, 1, authenticated))
+	require.Equal(t, http.StatusCreated, rr.Code)
 }
 
 func TestGitSourceCreate_MalformedJSON(t *testing.T) {

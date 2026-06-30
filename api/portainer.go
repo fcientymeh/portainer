@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"time"
 
@@ -111,8 +112,6 @@ type (
 		KubectlShellImageSet      bool
 		PullLimitCheckDisabled    *bool
 		TrustedOrigins            *string
-		SSRFMode                  *string
-		SSRFAllowedHosts          *[]string
 		NoSetupToken              *bool
 		SetupToken                *string
 	}
@@ -321,6 +320,8 @@ type (
 		ReferenceName string `json:"ReferenceName,omitempty"`
 		// AdditionalFiles are the additional files used for deploying the stack
 		AdditionalFiles []string `json:"AdditionalFiles,omitempty"`
+		// SourceID is the Source used for deploying the stack
+		SourceID SourceID `json:"SourceID,omitempty"`
 	}
 
 	// EdgeStack represents an edge stack
@@ -462,8 +463,8 @@ type (
 		AzureCredentials AzureCredentials `json:"AzureCredentials,omitzero"`
 		// List of tag identifiers to which this environment(endpoint) is associated
 		TagIDs []TagID `json:"TagIds,omitempty"`
-		// The status of the environment(endpoint) (1 - up, 2 - down)
-		Status EndpointStatus `json:"Status" example:"1" validate:"required"`
+		// The status of the environment(endpoint) (1 - up, 2 - down, 3 - provisioning, 4 - error)
+		Status EndpointStatus `json:"Status,omitempty" example:"1" enums:"1,2,3,4"`
 		// List of snapshots
 		Snapshots []DockerSnapshot `json:"Snapshots,omitempty"`
 		// List of user identifiers authorized to connect to this environment(endpoint)
@@ -829,6 +830,7 @@ type (
 		IsServerMetricsDetected      bool `json:"IsServerMetricsDetected" validate:"required"`
 		IsServerIngressClassDetected bool `json:"IsServerIngressClassDetected" validate:"required"`
 		IsServerStorageDetected      bool `json:"IsServerStorageDetected" validate:"required"`
+		GPUOperator                  bool `json:"GPUOperator,omitempty"`
 	}
 
 	// KubernetesSnapshot represents a snapshot of a specific Kubernetes environment(endpoint) at a specific time
@@ -838,6 +840,9 @@ type (
 		NodeCount          int                 `json:"NodeCount" validate:"required"`
 		TotalCPU           int64               `json:"TotalCPU" validate:"required"`
 		TotalMemory        int64               `json:"TotalMemory" validate:"required"`
+		ClusterType        string              `json:"ClusterType,omitempty"`
+		GPUNodeCount       int                 `json:"GPUNodeCount,omitempty"`
+		TotalGPU           map[string]int64    `json:"TotalGPU,omitempty"`
 		DiagnosticsData    *DiagnosticsData    `json:"DiagnosticsData,omitempty"`
 		PerformanceMetrics *PerformanceMetrics `json:"PerformanceMetrics,omitempty"`
 	}
@@ -1214,6 +1219,21 @@ type (
 	// SoftwareEdition represents an edition of Portainer
 	SoftwareEdition int
 
+	// AllowList holds the list of permitted outbound proxy destinations.
+	AllowList struct {
+		ID      AllowListKey `json:"Id"`
+		Mode    SSRFMode     `json:"Mode"`
+		Entries []string     `json:"Entries"`
+	}
+
+	// ParsedAllowList holds the three parsed forms of allow list entries.
+	ParsedAllowList struct {
+		Mode  SSRFMode
+		Nets  []*net.IPNet
+		Hosts map[string]bool
+		Wilds []string // stored as ".foo.com" ("*." prefix stripped)
+	}
+
 	// SSLSettings represents a pair of SSL certificate and key
 	SSLSettings struct {
 		CertPath    string `json:"certPath"`
@@ -1301,13 +1321,19 @@ type (
 
 	// Source represents a GitOps source that can be referenced by stacks or deployments.
 	Source struct {
-		ID       SourceID             `json:"id" example:"1"`
-		Name     string               `json:"name" example:"my-source"`
-		LastSync int64                `json:"lastSync,omitempty" example:"1587399600"`
-		Type     SourceType           `json:"type" example:"1"`
-		Git      *gittypes.RepoConfig `json:"git,omitempty"`
-		Registry *Registry            `json:"registry,omitempty"`
-		Helm     *HelmConfig          `json:"helm,omitempty"`
+		ID       SourceID            `json:"id" example:"1"`
+		Name     string              `json:"name" example:"my-source"`
+		LastSync int64               `json:"lastSync,omitempty" example:"1587399600"`
+		Type     SourceType          `json:"type" example:"1"`
+		Git      *gittypes.GitSource `json:"git,omitempty"`
+		Registry *Registry           `json:"registry,omitempty"`
+		Helm     *HelmConfig         `json:"helm,omitempty"`
+
+		Public             bool     `json:"public"`
+		AdministratorsOnly bool     `json:"administratorsOnly"`
+		UserAccesses       []UserID `json:"userAccesses"`
+		TeamAccesses       []TeamID `json:"teamAccesses"`
+		OwnerID            UserID   `json:"ownerID,omitempty"`
 	}
 
 	// SourceID represents a source identifier
@@ -2061,6 +2087,8 @@ const (
 	PortainerAgentKubernetesSATokenHeader = "X-PortainerAgent-SA-Token"
 	// HTTPAlertStateHeaderName is the name of the header used to transmit edge alert evaluation state
 	HTTPAlertStateHeaderName = "X-PortainerAgent-AlertState"
+	// HTTPResponseAgentGPUOperator represents the name of the header indicating whether the GPU operator is enabled on the agent
+	HTTPResponseAgentGPUOperator = "Portainer-Agent-GPU-Operator"
 	// PortainerAgentSignatureMessage represents the message used to create a digital signature
 	// to be used when communicating with an agent
 	PortainerAgentSignatureMessage = "Portainer-App"
@@ -2641,6 +2669,7 @@ const (
 	RegistryDocker     PolicyType = "registry-docker"
 	ChangeConfirmation PolicyType = "change-confirmation"
 	CleanupDocker      PolicyType = "cleanup-docker"
+	ObservabilityK8s   PolicyType = "observability-k8s"
 )
 
 type HelmInstallStatus string
@@ -2668,3 +2697,17 @@ func DefaultEndpointSecuritySettings() EndpointSecuritySettings {
 		AllowStackManagementForRegularUsers: true,
 	}
 }
+
+type AllowListKey int
+
+const (
+	AllowListSSRF AllowListKey = iota
+)
+
+type SSRFMode int
+
+const (
+	SSRFModeOff SSRFMode = iota
+	SSRFModeAudit
+	SSRFModeEnforce
+)

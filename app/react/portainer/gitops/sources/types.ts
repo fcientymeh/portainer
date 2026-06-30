@@ -12,7 +12,6 @@ export interface Source {
   url: string;
   status: SourceStatus;
   error?: string;
-  provider?: number;
   usedBy: number;
   environments: number;
   lastSync: number;

@@ -119,8 +119,8 @@ export function EnvironmentGroupRow({ group, tags }: Props) {
           <Button
             as={Link}
             props={{
-              to: 'portainer.groups.group.access',
-              params: { id: group.Id },
+              to: 'portainer.groups.group',
+              params: { id: group.Id, tab: 'access' },
             }}
             color="link"
             icon={Users}

@@ -62,8 +62,12 @@ import (
 	"github.com/portainer/portainer/pkg/validate"
 
 	gelf_udp "github.com/Graylog2/go-gelf/gelf"
+	gogitclient "github.com/go-git/go-git/v5/plumbing/transport/client"
+	gogitraw "github.com/go-git/go-git/v5/plumbing/transport/git"
+
 	// "github.com/gofrs/uuid"
 	gogithttp "github.com/go-git/go-git/v5/plumbing/transport/http"
+	gogitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/google/uuid"
 
 	//"github.com/rs/zerolog"
@@ -398,19 +402,6 @@ func buildServer(flags *portainer.CLIFlags, shutdownCtx context.Context, shutdow
 	// -ce can not ever be run in FIPS mode
 	fips.InitFIPS(false)
 
-	ssrf.Configure(ssrf.Policy{
-		Mode:         ssrf.Mode(*flags.SSRFMode),
-		AllowedHosts: *flags.SSRFAllowedHosts,
-	})
-
-	if ssrf.IsEnabled() {
-		if dt, ok := nethttp.DefaultTransport.(*nethttp.Transport); ok {
-			nethttp.DefaultTransport = ssrf.WrapTransport(dt)
-		}
-
-		gogithttp.DefaultClient = gogithttp.NewClient(&nethttp.Client{Transport: nethttp.DefaultTransport})
-	}
-
 	fileService := initFileService(*flags.Data)
 	encryptionKey := loadEncryptionSecretKey(dbSecretPath(*flags.SecretKeyName))
 	if encryptionKey == nil {
@@ -427,6 +418,19 @@ func buildServer(flags *portainer.CLIFlags, shutdownCtx context.Context, shutdow
 	if !checkDBSchemaServerVersionMatch(dataStore, portainer.APIVersion, int(portainer.Edition)) {
 		log.Fatal().Msg("The database schema version does not align with the server version. Please consider reverting to the previous server version or addressing the database migration issue.")
 	}
+
+	if err := ssrf.Configure(dataStore.AllowList()); err != nil {
+		log.Fatal().Err(err).Msg("failed initializing ssrf service")
+	}
+
+	if !ssrf.WrapDefaultTransport() {
+		log.Fatal().Msg("failed to wrap default HTTP transport with SSRF protection")
+	}
+
+	gogithttp.DefaultClient = gogithttp.NewClient(&nethttp.Client{Transport: nethttp.DefaultTransport})
+	gogitclient.InstallProtocol("git", git.NewSSRFGitTransport(gogitraw.DefaultClient))
+	gogitclient.InstallProtocol("ssh", git.NewSSRFGitTransport(gogitssh.DefaultClient))
+	gogitclient.InstallProtocol("file", nil)
 
 	instanceID, err := dataStore.Version().InstanceID()
 	if err != nil {

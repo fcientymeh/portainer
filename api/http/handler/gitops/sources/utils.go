@@ -12,7 +12,7 @@ func (h *Handler) buildSource(ctx context.Context, src *portainer.Source, stats 
 	var status ce.Status
 	var sourceErr string
 	if src.Git != nil {
-		phase, _ := ce.ComputeGitPhasesForConfig(ctx, h.gitService, src.Git)
+		phase, _ := ce.ComputeGitPhasesForConfig(ctx, h.gitService, src.Git.ToRepoConfig())
 		status = phase.Status
 		sourceErr = phase.Error
 	} else {
@@ -20,12 +20,8 @@ func (h *Handler) buildSource(ctx context.Context, src *portainer.Source, stats 
 	}
 
 	url := ""
-	var provider gittypes.GitProvider
 	if src.Git != nil {
 		url = gittypes.SanitizeURL(src.Git.URL)
-		if src.Git.Authentication != nil {
-			provider = src.Git.Authentication.Provider
-		}
 	}
 
 	return Source{
@@ -35,7 +31,6 @@ func (h *Handler) buildSource(ctx context.Context, src *portainer.Source, stats 
 		URL:          url,
 		Status:       status,
 		Error:        sourceErr,
-		Provider:     provider,
 		UsedBy:       stats.WorkflowCount,
 		Environments: len(stats.EndpointIDs),
 		LastSync:     stats.LastSync,

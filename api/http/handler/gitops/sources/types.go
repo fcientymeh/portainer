@@ -4,22 +4,20 @@ import (
 	"fmt"
 
 	portainer "github.com/portainer/portainer/api"
-	gittypes "github.com/portainer/portainer/api/git/types"
 	"github.com/portainer/portainer/api/gitops/workflows"
 )
 
 // Source represents a unique git repository used as a GitOps source across one or more workflows.
 type Source struct {
-	ID           portainer.SourceID   `json:"id" validate:"required"`
-	Name         string               `json:"name" validate:"required"`
-	Type         SourceType           `json:"type" validate:"required"`
-	URL          string               `json:"url" validate:"required"`
-	Status       workflows.Status     `json:"status" validate:"required"`
-	Error        string               `json:"error,omitempty"`
-	Provider     gittypes.GitProvider `json:"provider,omitempty"`
-	UsedBy       int                  `json:"usedBy"`
-	Environments int                  `json:"environments"`
-	LastSync     int64                `json:"lastSync"`
+	ID           portainer.SourceID `json:"id" validate:"required"`
+	Name         string             `json:"name" validate:"required"`
+	Type         SourceType         `json:"type" validate:"required"`
+	URL          string             `json:"url" validate:"required"`
+	Status       workflows.Status   `json:"status" validate:"required"`
+	Error        string             `json:"error,omitempty"`
+	UsedBy       int                `json:"usedBy"`
+	Environments int                `json:"environments"`
+	LastSync     int64              `json:"lastSync"`
 }
 
 type SourceType string

@@ -139,7 +139,6 @@ services:
 `)
 
 	stack := &portainer.Stack{
-
 		ProjectPath: "/tmp/stack/1",
 		EntryPoint:  "docker-compose.yml",
 		Env:         []portainer.Pair{{Name: "API_PORT", Value: "3000"}},
@@ -186,7 +185,7 @@ func TestValidateStackFiles_DotEnvFile(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
 
-	err := os.WriteFile(filesystem.JoinPaths(tmpDir, ".env"), []byte("HOST_PORT=3000\n"), 0600)
+	err := os.WriteFile(filesystem.JoinPaths(tmpDir, ".env"), []byte("HOST_PORT=3000\n"), 0o600)
 	require.NoError(t, err)
 
 	fileContent := []byte(`
@@ -217,7 +216,7 @@ func TestValidateStackFiles_EnvFileAttribute(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
 
-	err := os.WriteFile(filesystem.JoinPaths(tmpDir, "web.env"), []byte("HOST_PORT=3000\n"), 0600)
+	err := os.WriteFile(filesystem.JoinPaths(tmpDir, "web.env"), []byte("HOST_PORT=3000\n"), 0o600)
 	require.NoError(t, err)
 
 	fileContent := []byte(`
@@ -298,8 +297,29 @@ func TestExtractImageRegistry(t *testing.T) {
 	}
 }
 
+type staticAllowListService struct {
+	parsed portainer.ParsedAllowList
+}
+
+func (s *staticAllowListService) ReadParsed(id portainer.AllowListKey) (*portainer.ParsedAllowList, error) {
+	return &s.parsed, nil
+}
+
+func configureSSRF(t *testing.T, mode portainer.SSRFMode, entries []string) {
+	t.Helper()
+
+	parsed := ssrf.ParseAllowedHosts(entries)
+	parsed.Mode = mode
+	err := ssrf.Configure(&staticAllowListService{parsed: parsed})
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		err := ssrf.Configure(&staticAllowListService{})
+		require.NoError(t, err)
+	})
+}
+
 func TestValidateComposeURLs_DisabledSSRF(t *testing.T) {
-	ssrf.Configure(ssrf.Policy{})
+	configureSSRF(t, portainer.SSRFModeOff, nil)
 
 	stack := &portainer.Stack{
 		ProjectPath: "/tmp/stack/1",
@@ -322,8 +342,7 @@ services:
 }
 
 func TestValidateComposeURLs_BuildContextBlocked(t *testing.T) {
-	ssrf.Configure(ssrf.Policy{Mode: ssrf.ModeEnforce, AllowedHosts: []string{"example.com"}})
-	t.Cleanup(func() { ssrf.Configure(ssrf.Policy{}) })
+	configureSSRF(t, portainer.SSRFModeEnforce, []string{"example.com"})
 
 	stack := &portainer.Stack{
 		ProjectPath: "/tmp/stack/1",
@@ -347,8 +366,7 @@ services:
 }
 
 func TestValidateComposeURLs_BuildContextPath(t *testing.T) {
-	ssrf.Configure(ssrf.Policy{Mode: ssrf.ModeEnforce, AllowedHosts: []string{"example.com"}})
-	t.Cleanup(func() { ssrf.Configure(ssrf.Policy{}) })
+	configureSSRF(t, portainer.SSRFModeEnforce, []string{"example.com"})
 
 	stack := &portainer.Stack{
 		ProjectPath: "/tmp/stack/1",
@@ -372,8 +390,7 @@ services:
 }
 
 func TestValidateComposeURLs_ImageRegistryBlocked(t *testing.T) {
-	ssrf.Configure(ssrf.Policy{Mode: ssrf.ModeEnforce, AllowedHosts: []string{"example.com"}})
-	t.Cleanup(func() { ssrf.Configure(ssrf.Policy{}) })
+	configureSSRF(t, portainer.SSRFModeEnforce, []string{"example.com"})
 
 	stack := &portainer.Stack{
 		ProjectPath: "/tmp/stack/1",
@@ -395,8 +412,7 @@ services:
 }
 
 func TestValidateComposeURLs_ImageRegistryAllowed(t *testing.T) {
-	ssrf.Configure(ssrf.Policy{Mode: ssrf.ModeEnforce, AllowedHosts: []string{"myregistry.com"}})
-	t.Cleanup(func() { ssrf.Configure(ssrf.Policy{}) })
+	configureSSRF(t, portainer.SSRFModeEnforce, []string{"myregistry.com"})
 
 	stack := &portainer.Stack{
 		ProjectPath: "/tmp/stack/1",
@@ -418,8 +434,7 @@ services:
 }
 
 func TestValidateComposeURLs_DockerHubImageAllowed(t *testing.T) {
-	ssrf.Configure(ssrf.Policy{Mode: ssrf.ModeEnforce, AllowedHosts: []string{"example.com"}})
-	t.Cleanup(func() { ssrf.Configure(ssrf.Policy{}) })
+	configureSSRF(t, portainer.SSRFModeEnforce, []string{"example.com"})
 
 	stack := &portainer.Stack{
 		ProjectPath: "/tmp/stack/1",

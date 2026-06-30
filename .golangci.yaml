@@ -1,4 +1,4 @@
-version: "2"
+version: '2'
 
 run:
   allow-parallel-runners: true
@@ -32,7 +32,7 @@ linters:
     - exptostd
   settings:
     staticcheck:
-      checks: ["all", "-ST1003", "-ST1005", "-ST1016", "-SA1019", "-QF1003"]
+      checks: ['all', '-ST1003', '-ST1005', '-ST1016', '-SA1019', '-QF1003']
     depguard:
       rules:
         main:
@@ -83,7 +83,7 @@ linters:
         - ruleguard
       settings:
         ruleguard:
-          rules: "./analysis/ssrf.go"
+          rules: './analysis/ssrf.go,./analysis/git.go'
     forbidigo:
       forbid:
         - pattern: ^tls\.Config$
@@ -91,9 +91,11 @@ linters:
         - pattern: ^tls\.Config\.(InsecureSkipVerify|MinVersion|MaxVersion|CipherSuites|CurvePreferences)$
           msg: Do not set this field directly, use crypto.CreateTLSConfiguration() instead
         - pattern: ^object\.(Commit|Tag)\.Verify$
-          msg: "Not allowed because of FIPS mode"
+          msg: 'Not allowed because of FIPS mode'
         - pattern: ^(types\.SystemContext\.)?(DockerDaemonInsecureSkipTLSVerify|DockerInsecureSkipTLSVerify|OCIInsecureSkipTLSVerify)$
-          msg: "Not allowed because of FIPS mode"
+          msg: 'Not allowed because of FIPS mode'
+        - pattern: ^git\.PlainClone(Context|WithOptions)?$
+          msg: Use git.CloneContext with NewNoSymlinkFS to prevent symlink traversal attacks
       analyze-types: true
   exclusions:
     generated: lax
@@ -106,6 +108,9 @@ linters:
         linters:
           - gocritic
         text: ruleguard
+      - path: pkg/libhttp/ssrf/builder\.go
+        linters:
+          - forbidigo
     paths:
       - third_party$
       - builtin$

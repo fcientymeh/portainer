@@ -9,9 +9,11 @@ import (
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
+	"github.com/portainer/portainer/api/dataservices/source"
 	"github.com/portainer/portainer/api/filesystem"
 	"github.com/portainer/portainer/api/git"
 	gittypes "github.com/portainer/portainer/api/git/types"
+	"github.com/portainer/portainer/api/gitops/sources"
 	"github.com/portainer/portainer/api/gitops/workflows"
 	httperrors "github.com/portainer/portainer/api/http/errors"
 	"github.com/portainer/portainer/api/http/security"
@@ -39,28 +41,26 @@ type customTemplateUpdatePayload struct {
 	Platform portainer.CustomTemplatePlatform `example:"1" enums:"1,2"`
 	// Type of created stack (1 - swarm, 2 - compose, 3 - kubernetes)
 	Type portainer.StackType `example:"1" enums:"1,2,3" validate:"required"`
-	// URL of a Git repository hosting the Stack file
-	RepositoryURL string `example:"https://github.com/openfaas/faas" validate:"required"`
+	// SourceID references an existing Source for git credentials/URL.
+	// When set, the inline URL and authentication fields are ignored.
+	SourceID portainer.SourceID `example:"1"`
+	// Deprecated: use SourceID instead. URL of a Git repository hosting the Stack file.
+	RepositoryURL string `example:"https://github.com/openfaas/faas"`
 	// Reference name of a Git repository hosting the Stack file
 	RepositoryReferenceName string `example:"refs/heads/master"`
-	// Use authentication to clone the Git repository
+	// Deprecated: use SourceID instead. Use authentication to clone the Git repository.
 	RepositoryAuthentication bool `example:"true"`
-	// Username used in basic authentication. Required when RepositoryAuthentication is true
-	// and RepositoryGitCredentialID is 0. Ignored if RepositoryAuthType is token
+	// Deprecated: use SourceID instead. Username used in basic authentication. Required when RepositoryAuthentication is true.
 	RepositoryUsername string `example:"myGitUsername"`
-	// Password used in basic authentication or token used in token authentication.
-	// Required when RepositoryAuthentication is true and RepositoryGitCredentialID is 0
+	// Deprecated: use SourceID instead. Password used in basic authentication or token used in token authentication. Required when RepositoryAuthentication is true.
 	RepositoryPassword string `example:"myGitPassword"`
-	// GitCredentialID used to identify the bound git credential. Required when RepositoryAuthentication
-	// is true and RepositoryUsername/RepositoryPassword are not provided
-	RepositoryGitCredentialID int `example:"0"`
 	// Path to the Stack file inside the Git repository
 	ComposeFilePathInRepository string `example:"docker-compose.yml" default:"docker-compose.yml"`
 	// Content of stack file
 	FileContent string `validate:"required"`
 	// Definitions of variables in the stack file
 	Variables []portainer.CustomTemplateVariableDefinition
-	// TLSSkipVerify skips SSL verification when cloning the Git repository
+	// Deprecated: use SourceID instead. TLSSkipVerify skips SSL verification when cloning the Git repository.
 	TLSSkipVerify bool `example:"false"`
 	// IsComposeFormat indicates if the Kubernetes template is created from a Docker Compose file
 	IsComposeFormat bool `example:"false"`
@@ -71,10 +71,6 @@ type customTemplateUpdatePayload struct {
 func (payload *customTemplateUpdatePayload) Validate(r *http.Request) error {
 	if len(payload.Title) == 0 {
 		return errors.New("Invalid custom template title")
-	}
-
-	if len(payload.FileContent) == 0 && len(payload.RepositoryURL) == 0 {
-		return errors.New("Either file content or git repository url need to be provided")
 	}
 
 	if payload.Type != portainer.KubernetesStack && payload.Platform != portainer.CustomTemplatePlatformLinux && payload.Platform != portainer.CustomTemplatePlatformWindows {
@@ -93,8 +89,19 @@ func (payload *customTemplateUpdatePayload) Validate(r *http.Request) error {
 		return errors.New("Invalid note. <img> tag is not supported")
 	}
 
-	if payload.RepositoryAuthentication && (len(payload.RepositoryUsername) == 0 || len(payload.RepositoryPassword) == 0) {
-		return errors.New("Invalid repository credentials. Username and password must be specified when authentication is enabled")
+	if len(payload.FileContent) == 0 && payload.SourceID == 0 {
+		if len(payload.RepositoryURL) == 0 {
+			return errors.New("Either file content, git repository url, or source ID need to be provided")
+		}
+
+		if !validate.IsURL(payload.RepositoryURL) {
+			return errors.New("Invalid repository URL. Must correspond to a valid URL format")
+		}
+
+		if payload.RepositoryAuthentication && (len(payload.RepositoryUsername) == 0 || len(payload.RepositoryPassword) == 0) {
+			return errors.New("Invalid repository credentials. Username and password must be specified when authentication is enabled")
+		}
+
 	}
 
 	if len(payload.ComposeFilePathInRepository) == 0 {
@@ -136,15 +143,15 @@ func (handler *Handler) customTemplateUpdate(w http.ResponseWriter, r *http.Requ
 		return httperror.BadRequest("Invalid request payload", err)
 	}
 
-	customTemplates, err := handler.DataStore.CustomTemplate().ReadAll()
+	duplicates, err := handler.DataStore.CustomTemplate().ReadAll(func(t portainer.CustomTemplate) bool {
+		return t.ID != portainer.CustomTemplateID(customTemplateID) && t.Title == payload.Title
+	})
 	if err != nil {
 		return httperror.InternalServerError("Unable to retrieve custom templates from the database", err)
 	}
 
-	for _, existingTemplate := range customTemplates {
-		if existingTemplate.ID != portainer.CustomTemplateID(customTemplateID) && existingTemplate.Title == payload.Title {
-			return httperror.InternalServerError("Template name must be unique", errors.New("Template name must be unique"))
-		}
+	if len(duplicates) > 0 {
+		return httperror.InternalServerError("Template name must be unique", errors.New("Template name must be unique"))
 	}
 
 	customTemplate, err := handler.DataStore.CustomTemplate().Read(portainer.CustomTemplateID(customTemplateID))
@@ -159,8 +166,13 @@ func (handler *Handler) customTemplateUpdate(w http.ResponseWriter, r *http.Requ
 		return httperror.InternalServerError("Unable to retrieve info from request context", err)
 	}
 
-	access := userCanEditTemplate(customTemplate, securityContext)
-	if !access {
+	resourceControl, err := handler.DataStore.ResourceControl().ResourceControlByResourceIDAndType(strconv.Itoa(customTemplateID), portainer.CustomTemplateResourceControl)
+	if err != nil {
+		return httperror.InternalServerError("Unable to retrieve a resource control associated to the custom template", err)
+	}
+
+	customTemplate.ResourceControl = resourceControl
+	if !userCanEditTemplate(customTemplate, securityContext) {
 		return httperror.Forbidden("Access denied to resource", httperrors.ErrResourceAccessDenied)
 	}
 
@@ -195,32 +207,35 @@ func (handler *Handler) customTemplateUpdate(w http.ResponseWriter, r *http.Requ
 	if payload.RepositoryURL != "" {
 		if !validate.IsURL(payload.RepositoryURL) {
 			return httperror.BadRequest("Invalid repository URL. Must correspond to a valid URL format", err)
+	userContext := source.NewUserContext(securityContext.User, securityContext.UserMemberships)
+
+	if payload.SourceID != 0 || payload.RepositoryURL != "" {
+		gitConfig, httpErr := sources.ResolveRepoConfig(handler.DataStore, userContext, sources.RepoConfigInput{
+			SourceID:                 payload.SourceID,
+			ReferenceName:            payload.RepositoryReferenceName,
+			ConfigFilePath:           payload.ComposeFilePathInRepository,
+			RepositoryURL:            payload.RepositoryURL,
+			TLSSkipVerify:            payload.TLSSkipVerify,
+			RepositoryAuthentication: payload.RepositoryAuthentication,
+			Username:                 payload.RepositoryUsername,
+			Password:                 payload.RepositoryPassword,
+		})
+		if httpErr != nil {
+			return httpErr
 		}
 
-		gitConfig := &gittypes.RepoConfig{
-			URL:            payload.RepositoryURL,
-			ReferenceName:  payload.RepositoryReferenceName,
-			ConfigFilePath: payload.ComposeFilePathInRepository,
-			TLSSkipVerify:  payload.TLSSkipVerify,
-		}
-
-		repositoryUsername := ""
-		repositoryPassword := ""
-		if payload.RepositoryAuthentication {
-			repositoryUsername = payload.RepositoryUsername
-			repositoryPassword = payload.RepositoryPassword
-			gitConfig.Authentication = &gittypes.GitAuthentication{
-				Username: payload.RepositoryUsername,
-				Password: payload.RepositoryPassword,
-			}
+		var username, password string
+		if gitConfig.Authentication != nil {
+			username = gitConfig.Authentication.Username
+			password = gitConfig.Authentication.Password
 		}
 
 		cleanBackup, err := git.CloneWithBackup(context.TODO(), handler.GitService, handler.FileService, git.CloneOptions{
 			ProjectPath:   customTemplate.ProjectPath,
 			URL:           gitConfig.URL,
 			ReferenceName: gitConfig.ReferenceName,
-			Username:      repositoryUsername,
-			Password:      repositoryPassword,
+			Username:      username,
+			Password:      password,
 			TLSSkipVerify: gitConfig.TLSSkipVerify,
 		})
 		if err != nil {
@@ -233,30 +248,34 @@ func (handler *Handler) customTemplateUpdate(w http.ResponseWriter, r *http.Requ
 			context.TODO(),
 			gitConfig.URL,
 			gitConfig.ReferenceName,
-			repositoryUsername,
-			repositoryPassword,
+			username,
+			password,
 			gitConfig.TLSSkipVerify,
 		)
 		if err != nil {
 			return httperror.InternalServerError("Unable get latest commit id", fmt.Errorf("failed to fetch latest commit id of the template %v: %w", customTemplate.ID, err))
 		}
 
-		src, err := workflows.FindOrCreateGitSource(handler.DataStore, &portainer.Source{
-			Name: gittypes.RepoName(gitConfig.URL),
-			Type: portainer.SourceTypeGit,
-			Git: &gittypes.RepoConfig{
-				URL:            gitConfig.URL,
-				Authentication: gitConfig.Authentication,
-				TLSSkipVerify:  gitConfig.TLSSkipVerify,
-			},
-		})
-		if err != nil {
-			return httperror.InternalServerError("Unable to find or create git source", err)
+		sourceID := payload.SourceID
+		if sourceID == 0 {
+			src, err := workflows.FindOrCreateGitSource(handler.DataStore, userContext, &portainer.Source{
+				Name: gittypes.RepoName(gitConfig.URL),
+				Type: portainer.SourceTypeGit,
+				Git: &gittypes.GitSource{
+					URL:            gitConfig.URL,
+					Authentication: gitConfig.Authentication,
+					TLSSkipVerify:  gitConfig.TLSSkipVerify,
+				},
+			})
+			if err != nil {
+				return httperror.InternalServerError("Unable to find or create git source", err)
+			}
+			sourceID = src.ID
 		}
 
 		customTemplate.Artifact = &portainer.Artifact{
 			Files: []portainer.ArtifactFile{{
-				SourceID: src.ID,
+				SourceID: sourceID,
 				Path:     gitConfig.ConfigFilePath,
 				Ref:      gitConfig.ReferenceName,
 				Hash:     commitHash,
@@ -291,7 +310,8 @@ func (handler *Handler) customTemplateUpdate(w http.ResponseWriter, r *http.Requ
 			return httperror.InternalServerError("Unable to persist custom template changes inside the database", err)
 		}
 
-		populateGitConfig(tx, customTemplate)
+		userContext := source.NewUserContext(securityContext.User, securityContext.UserMemberships)
+		populateGitConfig(tx, userContext, customTemplate)
 
 		return nil
 	})

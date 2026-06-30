@@ -268,17 +268,6 @@ angular
         },
       };
 
-      var groupAccess = {
-        name: 'portainer.groups.group.access',
-        url: '/access',
-        views: {
-          'content@': {
-            templateUrl: './views/groups/access/groupAccess.html',
-            controller: 'GroupAccessController',
-          },
-        },
-      };
-
       var home = {
         name: 'portainer.home',
         url: '/home?redirect&environmentId&environmentName&route&groupBy&groupFilter&search&order',
@@ -351,6 +340,16 @@ angular
         views: {
           'content@': {
             component: 'sourceItemView',
+          },
+        },
+      };
+
+      const gitopsSourceCreate = {
+        name: 'portainer.gitops.sources.new',
+        url: '/new',
+        views: {
+          'content@': {
+            component: 'sourceCreateView',
           },
         },
       };
@@ -472,13 +471,13 @@ angular
       $stateRegistryProvider.register(edgeAutoCreateScript);
       $stateRegistryProvider.register(groups);
       $stateRegistryProvider.register(group);
-      $stateRegistryProvider.register(groupAccess);
       $stateRegistryProvider.register(groupCreation);
       $stateRegistryProvider.register(home);
       $stateRegistryProvider.register(gitopsBase);
       $stateRegistryProvider.register(workflows);
       $stateRegistryProvider.register(gitopsSources);
       $stateRegistryProvider.register(gitopsSourceDetail);
+      $stateRegistryProvider.register(gitopsSourceCreate);
       $stateRegistryProvider.register(init);
       $stateRegistryProvider.register(initAdmin);
       $stateRegistryProvider.register(settings);

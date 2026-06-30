@@ -23,12 +23,12 @@ func TestCustomTemplateList_PopulatesGitConfigFromSource(t *testing.T) {
 	require.NoError(t, ds.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		src := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git: &gittypes.RepoConfig{
+			Git: &gittypes.GitSource{
 				URL:           "https://github.com/example/repo",
 				TLSSkipVerify: true,
 			},
 		}
-		err := tx.Source().Create(src)
+		err := tx.Source().Create(adminUserContext, src)
 		require.NoError(t, err)
 		srcID = src.ID
 		require.NoError(t, tx.CustomTemplate().Create(&portainer.CustomTemplate{
@@ -48,7 +48,7 @@ func TestCustomTemplateList_PopulatesGitConfigFromSource(t *testing.T) {
 	}))
 
 	r := httptest.NewRequest(http.MethodGet, "/custom_templates", nil)
-	r = r.WithContext(security.StoreRestrictedRequestContext(r, &security.RestrictedRequestContext{UserID: 1, IsAdmin: true}))
+	r = r.WithContext(security.StoreRestrictedRequestContext(r, &security.RestrictedRequestContext{UserID: 1, IsAdmin: true, User: &portainer.User{ID: 1, Role: portainer.AdministratorRole}}))
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, r)
 
@@ -89,7 +89,7 @@ func TestCustomTemplateList_StripsPasswordFromGitConfig(t *testing.T) {
 	require.NoError(t, ds.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		src := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git: &gittypes.RepoConfig{
+			Git: &gittypes.GitSource{
 				URL: "https://github.com/example/repo",
 				Authentication: &gittypes.GitAuthentication{
 					Username: "user",
@@ -97,7 +97,7 @@ func TestCustomTemplateList_StripsPasswordFromGitConfig(t *testing.T) {
 				},
 			},
 		}
-		err := tx.Source().Create(src)
+		err := tx.Source().Create(adminUserContext, src)
 		require.NoError(t, err)
 		srcID = src.ID
 		require.NoError(t, tx.CustomTemplate().Create(&portainer.CustomTemplate{
@@ -111,7 +111,7 @@ func TestCustomTemplateList_StripsPasswordFromGitConfig(t *testing.T) {
 	}))
 
 	r := httptest.NewRequest(http.MethodGet, "/custom_templates", nil)
-	r = r.WithContext(security.StoreRestrictedRequestContext(r, &security.RestrictedRequestContext{UserID: 1, IsAdmin: true}))
+	r = r.WithContext(security.StoreRestrictedRequestContext(r, &security.RestrictedRequestContext{UserID: 1, IsAdmin: true, User: &portainer.User{ID: 1, Role: portainer.AdministratorRole}}))
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, r)
 

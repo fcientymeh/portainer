@@ -1,45 +1,53 @@
 package sources
 
 import (
+	"errors"
 	"net/http"
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
+	sourceDS "github.com/portainer/portainer/api/dataservices/source"
 	gittypes "github.com/portainer/portainer/api/git/types"
 	"github.com/portainer/portainer/api/gitops/workflows"
+	"github.com/portainer/portainer/api/http/security"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
 )
 
 type gitAuthInfo struct {
-	Type     gittypes.GitCredentialAuthType `json:"type"`
-	Username string                         `json:"username"`
+	Username string `json:"username"`
 }
 
 type connectionInfo struct {
-	ConfigFilePath string       `json:"configFilePath"`
 	TLSSkipVerify  bool         `json:"tlsSkipVerify"`
 	Authentication *gitAuthInfo `json:"authentication,omitempty"`
 }
 
-type autoUpdateInfo struct {
+type AutoUpdateInfo struct {
 	Mechanism     string `json:"mechanism,omitempty"`
 	FetchInterval string `json:"fetchInterval,omitempty"`
+}
+
+type SourceAccess struct {
+	Public bool               `json:"public,omitempty"`
+	Users  []portainer.UserID `json:"users,omitempty"`
+	Teams  []portainer.TeamID `json:"teams,omitempty"`
 }
 
 // SourceDetail extends Source with connection settings and linked workflows.
 type SourceDetail struct {
 	Source
 	Connection connectionInfo       `json:"connection" validate:"required"`
-	AutoUpdate *autoUpdateInfo      `json:"autoUpdate,omitempty"`
+	AutoUpdate *AutoUpdateInfo      `json:"autoUpdate,omitempty"`
 	Workflows  []workflows.Workflow `json:"workflows"`
+	Access     SourceAccess         `json:"access"`
 }
 
 // @id GitOpsSourceGet
 // @summary Get a GitOps source by ID
 // @description Returns a single GitOps source with its connection settings and linked workflows.
-// @description **Access policy**: admin
+// @description **Access policy**: authenticated
 // @tags gitops
 // @security ApiKeyAuth
 // @security jwt
@@ -57,6 +65,11 @@ func (h *Handler) getSource(w http.ResponseWriter, r *http.Request) *httperror.H
 		return httperror.BadRequest("Invalid source identifier route variable", err)
 	}
 
+	securityContext, err := security.RetrieveRestrictedRequestContext(r)
+	if err != nil {
+		return httperror.InternalServerError("Unable to retrieve info from request context", err)
+	}
+
 	sourceID := portainer.SourceID(srcID)
 
 	var source *portainer.Source
@@ -65,7 +78,8 @@ func (h *Handler) getSource(w http.ResponseWriter, r *http.Request) *httperror.H
 
 	err = h.dataStore.ViewTx(func(tx dataservices.DataStoreTx) error {
 		var err error
-		source, err = tx.Source().Read(sourceID)
+		userContext := sourceDS.NewUserContext(securityContext.User, securityContext.UserMemberships)
+		source, err = tx.Source().Read(userContext, sourceID)
 		if err != nil {
 			return err
 		}
@@ -76,18 +90,22 @@ func (h *Handler) getSource(w http.ResponseWriter, r *http.Request) *httperror.H
 
 	if h.dataStore.IsErrObjectNotFound(err) {
 		return httperror.NotFound("Source not found", err)
+	} else if errors.Is(err, sourceDS.ErrNotEnoughPermission) {
+		return httperror.Forbidden("Not enough permissions to retrieve source", err)
 	} else if err != nil {
 		return httperror.InternalServerError("Unable to retrieve source", err)
 	}
 
-	detail := BuildSourceDetail(h.buildSource(r.Context(), source, stats), source.Git, sourceWfs)
+	access := BuildSourceAccess(source)
+
+	detail := BuildSourceDetail(h.buildSource(r.Context(), source, stats), source.Git, sourceWfs, access)
 	return response.JSON(w, detail)
 }
 
-func BuildSourceDetail(baseSource Source, cfg *gittypes.RepoConfig, sourceWfs []workflows.Workflow) SourceDetail {
-	var autoUpdate *autoUpdateInfo
+func BuildSourceDetail(baseSource Source, cfg *gittypes.GitSource, sourceWfs []workflows.Workflow, access SourceAccess) SourceDetail {
+	var autoUpdate *AutoUpdateInfo
 	if len(sourceWfs) > 0 {
-		autoUpdate = buildAutoUpdateInfo(sourceWfs[0].AutoUpdate)
+		autoUpdate = BuildAutoUpdateInfo(sourceWfs[0].AutoUpdate)
 	}
 
 	return SourceDetail{
@@ -95,15 +113,37 @@ func BuildSourceDetail(baseSource Source, cfg *gittypes.RepoConfig, sourceWfs []
 		Connection: buildConnectionInfo(cfg),
 		AutoUpdate: autoUpdate,
 		Workflows:  redactWorkflowCredentials(sourceWfs),
+		Access:     access,
 	}
 }
 
-func buildConnectionInfo(cfg *gittypes.RepoConfig) connectionInfo {
+func BuildSourceAccess(source *portainer.Source) SourceAccess {
+	if source == nil {
+		return SourceAccess{}
+	}
+
+	if source.AdministratorsOnly {
+		return SourceAccess{}
+	}
+
+	if source.Public {
+		return SourceAccess{
+			Public: true,
+		}
+	}
+
+	return SourceAccess{
+		Public: source.Public,
+		Users:  source.UserAccesses,
+		Teams:  source.TeamAccesses,
+	}
+}
+
+func buildConnectionInfo(cfg *gittypes.GitSource) connectionInfo {
 	if cfg == nil {
 		return connectionInfo{}
 	}
 	return connectionInfo{
-		ConfigFilePath: cfg.ConfigFilePath,
 		TLSSkipVerify:  cfg.TLSSkipVerify,
 		Authentication: buildGitAuthInfo(cfg.Authentication),
 	}
@@ -114,24 +154,23 @@ func buildGitAuthInfo(auth *gittypes.GitAuthentication) *gitAuthInfo {
 		return nil
 	}
 	return &gitAuthInfo{
-		Type:     auth.AuthorizationType,
 		Username: auth.Username,
 	}
 }
 
-func buildAutoUpdateInfo(autoUpdate *portainer.AutoUpdateSettings) *autoUpdateInfo {
+func BuildAutoUpdateInfo(autoUpdate *portainer.AutoUpdateSettings) *AutoUpdateInfo {
 	if autoUpdate == nil {
 		return nil
 	}
 
 	switch {
 	case autoUpdate.Interval != "":
-		return &autoUpdateInfo{
+		return &AutoUpdateInfo{
 			Mechanism:     "Interval",
 			FetchInterval: autoUpdate.Interval,
 		}
 	case autoUpdate.Webhook != "":
-		return &autoUpdateInfo{
+		return &AutoUpdateInfo{
 			Mechanism: "Webhook",
 		}
 	default:

@@ -30,6 +30,8 @@ import (
 	"github.com/portainer/portainer/api/internal/authorization"
 	"github.com/portainer/portainer/api/logs"
 	"github.com/portainer/portainer/api/slicesx"
+	"github.com/portainer/portainer/pkg/libhttp/ssrf"
+
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/encoding/json"
 )
@@ -531,6 +533,11 @@ func (transport *Transport) updateDefaultGitBranch(request *http.Request) error 
 	}
 
 	repositoryURL := remote[:len(remote)-4]
+
+	if err := ssrf.CheckURL(request.Context(), repositoryURL); err != nil {
+		return err
+	}
+
 	latestCommitID, err := transport.gitService.LatestCommitID(
 		request.Context(),
 		repositoryURL,
@@ -873,7 +880,7 @@ func (transport *Transport) decorateGenericResourceCreationOperation(request *ht
 	teamMemberships_aip, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(tokenData.ID)
 	team_aip, err := transport.dataStore.Team().TeamByName("READONLY")
 	if err != nil {
-		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE] - transport.go:876", tokenData.Username)
+		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE] - transport.go:883", tokenData.Username)
 	}
 	for _, membership_aip := range teamMemberships_aip {
 		if membership_aip.TeamID == team_aip.ID {

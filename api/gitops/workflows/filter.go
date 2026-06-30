@@ -16,6 +16,8 @@ import (
 	"github.com/portainer/portainer/api/set"
 	"github.com/portainer/portainer/api/slicesx"
 	"github.com/portainer/portainer/api/stacks/stackutils"
+
+	"github.com/rs/zerolog/log"
 )
 
 func EndpointMatchesStackType(ep portainer.Endpoint, stackType portainer.StackType) bool {
@@ -115,7 +117,8 @@ func buildEndpointAccessMap(k8sFactory *cli.ClientFactory, sc *security.Restrict
 
 		access, err := resolveKubeAccess(k8sFactory, sc, &ep)
 		if err != nil {
-			return nil, err
+			log.Warn().Err(err).Str("context", "buildEndpointAccessMap").Int("endpoint_id", int(epID)).Msg("Failed to resolve kube access for endpoint, skipping")
+			continue
 		}
 
 		result[epID] = access
@@ -148,7 +151,8 @@ func filterK8SStacks(items []portainer.Stack, endpointMap map[portainer.Endpoint
 
 		kcl, err := k8sFactory.GetPrivilegedKubeClient(&ep)
 		if err != nil {
-			return nil, err
+			log.Warn().Err(err).Str("context", "filterK8SStacks").Int("endpoint_id", int(envID)).Msg("Failed to get kube client for endpoint, skipping")
+			continue
 		}
 
 		access := accessMap[envID]
@@ -157,7 +161,8 @@ func filterK8SStacks(items []portainer.Stack, endpointMap map[portainer.Endpoint
 
 		apps, err := kcl.GetApplications("", "")
 		if err != nil {
-			return nil, err
+			log.Warn().Err(err).Str("context", "filterK8SStacks").Int("endpoint_id", int(envID)).Msg("Failed to get kube applications for endpoint, skipping")
+			continue
 		}
 
 		for _, s := range stacks {

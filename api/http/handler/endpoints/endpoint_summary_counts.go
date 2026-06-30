@@ -93,7 +93,7 @@ func (handler *Handler) endpointSummaryCounts(w http.ResponseWriter, r *http.Req
 	// write LastCheckInDate back to the database, so the tx value grows stale.
 	// The tx path cannot access the in-memory map; this non-tx access is
 	// intentional.
-	endpointSvc := handler.DataStore.Endpoint() //nolint:forbidigo
+	endpointSvc := handler.DataStore.Endpoint()
 	for i := range endpoints {
 		if t, ok := endpointSvc.Heartbeat(endpoints[i].ID); ok {
 			endpoints[i].LastCheckInDate = t

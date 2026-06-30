@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import clsx from 'clsx';
 
 import { FilterBarButton, Color } from './FilterBarButton';
@@ -19,6 +20,7 @@ interface Props<TValue> {
   ariaLabel?: string;
   isLoading?: boolean;
   'data-cy'?: string;
+  rightSlot?: ReactNode;
 }
 
 export function StatusSummaryBar<TValue extends string = string>({
@@ -30,6 +32,7 @@ export function StatusSummaryBar<TValue extends string = string>({
   ariaLabel = 'Filter by status',
   isLoading = false,
   'data-cy': dataCy = 'status-summary-bar',
+  rightSlot,
 }: Props<TValue>) {
   const isAllSelected = !value || value === 'all' || value === 'custom';
   const activeLabel = segments.find((s) => s.key === value)?.label;
@@ -76,14 +79,20 @@ export function StatusSummaryBar<TValue extends string = string>({
         />
       ))}
 
-      {activeLabel && (
-        <div className="ml-auto hidden xl:flex">
-          <Separator />
-          <FilterBarActiveIndicator
-            label={activeLabel}
-            onClear={() => onChange(null)}
-          />
+      {rightSlot ? (
+        <div className="ml-auto flex items-center">
+          <div className="flex items-center px-3">{rightSlot}</div>
         </div>
+      ) : (
+        activeLabel && (
+          <div className="ml-auto hidden xl:!flex">
+            <Separator />
+            <FilterBarActiveIndicator
+              label={activeLabel}
+              onClear={() => onChange(null)}
+            />
+          </div>
+        )
       )}
     </div>
   );

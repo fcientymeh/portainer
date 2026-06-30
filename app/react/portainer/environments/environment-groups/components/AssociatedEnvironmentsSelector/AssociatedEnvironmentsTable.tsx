@@ -28,6 +28,8 @@ interface Props extends AutomationTestingProps {
   confirmRemove?: boolean;
   /** When true, don't show the add/remove buttons and hide the checkbox */
   readOnly?: boolean;
+  /** Use when the datatable isn't a standalone widget, like in a form */
+  noWidget?: boolean;
 }
 
 export function AssociatedEnvironmentsTable({
@@ -40,6 +42,7 @@ export function AssociatedEnvironmentsTable({
   confirmRemove = true,
   readOnly = false,
   'data-cy': dataCy,
+  noWidget,
 }: Props) {
   const tableState = useTableStateWithoutStorage('Name');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -47,6 +50,7 @@ export function AssociatedEnvironmentsTable({
 
   return (
     <Datatable<EnvironmentTableData>
+      noWidget={noWidget}
       disableSelect={readOnly}
       isLoading={isLoading}
       title={title}

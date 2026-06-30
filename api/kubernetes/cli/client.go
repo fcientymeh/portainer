@@ -20,6 +20,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
+	gatewaycliv1 "sigs.k8s.io/gateway-api/pkg/client/clientset/versioned/typed/apis/v1"
 )
 
 const (
@@ -42,6 +43,7 @@ type (
 	// KubeClient represent a service used to execute Kubernetes operations
 	KubeClient struct {
 		cli                kubernetes.Interface
+		gatewayCLI         gatewaycliv1.GatewayV1Interface
 		instanceID         string
 		mu                 sync.Mutex
 		isKubeAdmin        bool
@@ -105,8 +107,10 @@ func (factory *ClientFactory) GetAddrHTTPS() string {
 	return factory.AddrHTTPS
 }
 
-// GetPrivilegedKubeClient checks if an existing client is already registered for the environment(endpoint) and returns it if one is found.
-// If no client is registered, it will create a new client, register it, and returns it.
+// GetPrivilegedKubeClient checks if an existing client is already registered
+// for the environment(endpoint) and returns it if one is found.
+//
+// If no client is registered, it will create a new client, register it, and return it.
 func (factory *ClientFactory) GetPrivilegedKubeClient(endpoint *portainer.Endpoint) (*KubeClient, error) {
 	key := strconv.Itoa(int(endpoint.ID))
 	pcl, ok := factory.endpointProxyClients.Get(key)
@@ -123,8 +127,11 @@ func (factory *ClientFactory) GetPrivilegedKubeClient(endpoint *portainer.Endpoi
 	return kcl, nil
 }
 
-// GetPrivilegedUserKubeClient checks if an existing admin client is already registered for the environment(endpoint) and user and returns it if one is found.
-// If no client is registered, it will create a new client, register it, and returns it.
+// GetPrivilegedUserKubeClient checks if an existing admin client is already
+// registered for the environment(endpoint) and user and returns it if one is
+// found.
+//
+// If no client is registered, it will create a new client, register it, and return it.
 func (factory *ClientFactory) GetPrivilegedUserKubeClient(endpoint *portainer.Endpoint, userID portainer.UserID) (*KubeClient, error) {
 	key := strconv.Itoa(int(endpoint.ID)) + ".admin." + strconv.Itoa(int(userID))
 	pcl, ok := factory.endpointProxyClients.Get(key)
@@ -174,13 +181,24 @@ func (factory *ClientFactory) CreateKubeClientFromKubeConfig(clusterID string, k
 	clientConfig.QPS = defaultKubeClientQPS
 	clientConfig.Burst = defaultKubeClientBurst
 
-	cli, err := kubernetes.NewForConfig(clientConfig)
+	httpClient, err := rest.HTTPClientFor(clientConfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create a new clientset for the given config: %w", err)
+		return nil, fmt.Errorf("failed to create http client for the given config: %w", err)
+	}
+
+	cli, err := kubernetes.NewForConfigAndClient(clientConfig, httpClient)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create clientset for the given config: %w", err)
+	}
+
+	gatewayCLI, err := gatewaycliv1.NewForConfigAndClient(clientConfig, httpClient)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create gateway clientset for the given config: %w", err)
 	}
 
 	return &KubeClient{
 		cli:                cli,
+		gatewayCLI:         gatewayCLI,
 		instanceID:         factory.instanceID,
 		isKubeAdmin:        IsKubeAdmin,
 		nonAdminNamespaces: NonAdminNamespaces,
@@ -188,29 +206,45 @@ func (factory *ClientFactory) CreateKubeClientFromKubeConfig(clusterID string, k
 }
 
 func (factory *ClientFactory) createCachedPrivilegedKubeClient(endpoint *portainer.Endpoint) (*KubeClient, error) {
-	cli, err := factory.CreateClient(endpoint)
+	cli, gatewayCLI, err := factory.CreateClient(endpoint)
 	if err != nil {
 		return nil, err
 	}
 
 	return &KubeClient{
 		cli:         cli,
+		gatewayCLI:  gatewayCLI,
 		instanceID:  factory.instanceID,
 		isKubeAdmin: true,
 	}, nil
 }
 
-// CreateClient returns a pointer to a new Clientset instance.
-func (factory *ClientFactory) CreateClient(endpoint *portainer.Endpoint) (*kubernetes.Clientset, error) {
+// CreateClient returns a pointer to a new Kubernetes Core Clientset instance.
+func (factory *ClientFactory) CreateClient(endpoint *portainer.Endpoint) (*kubernetes.Clientset, *gatewaycliv1.GatewayV1Client, error) {
 	switch endpoint.Type {
 	case portainer.KubernetesLocalEnvironment, portainer.AgentOnKubernetesEnvironment, portainer.EdgeAgentOnKubernetesEnvironment:
 		c, err := factory.CreateConfig(endpoint)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		return kubernetes.NewForConfig(c)
+
+		httpClient, err := rest.HTTPClientFor(c)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create http client for the given config: %w", err)
+		}
+
+		cli, err := kubernetes.NewForConfigAndClient(c, httpClient)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create clientset for the given config: %w", err)
+		}
+
+		gatewayCLI, err := gatewaycliv1.NewForConfigAndClient(c, httpClient)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create gateway clientset for the given config: %w", err)
+		}
+		return cli, gatewayCLI, nil
 	}
-	return nil, errors.New("unsupported environment type")
+	return nil, nil, errors.New("unsupported environment type")
 }
 
 // CreateConfig returns a pointer to a new kubeconfig ready to create a client.

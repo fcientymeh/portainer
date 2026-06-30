@@ -7,6 +7,7 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/database/models"
 	"github.com/portainer/portainer/api/dataservices"
+	"github.com/portainer/portainer/api/dataservices/allowlist"
 	"github.com/portainer/portainer/api/dataservices/apikeyrepository"
 	"github.com/portainer/portainer/api/dataservices/customtemplate"
 	"github.com/portainer/portainer/api/dataservices/dockerhub"
@@ -51,6 +52,7 @@ type Store struct {
 	connection portainer.Connection
 
 	fileService               portainer.FileService
+	AllowListService          *allowlist.Service
 	CustomTemplateService     *customtemplate.Service
 	DockerHubService          *dockerhub.Service
 	EdgeGroupService          *edgegroup.Service
@@ -84,6 +86,12 @@ type Store struct {
 }
 
 func (store *Store) initServices() error {
+	allowListService, err := allowlist.NewService(store.connection)
+	if err != nil {
+		return err
+	}
+	store.AllowListService = allowListService
+
 	authorizationsetService, err := role.NewService(store.connection)
 	if err != nil {
 		return err
@@ -273,6 +281,11 @@ func (store *Store) initServices() error {
 // PendingActions gives access to the PendingActions data management layer
 func (store *Store) PendingActions() dataservices.PendingActionsService {
 	return store.PendingActionsService
+}
+
+// AllowList gives access to the AllowList data management layer
+func (store *Store) AllowList() dataservices.AllowListService {
+	return store.AllowListService
 }
 
 // CustomTemplate gives access to the CustomTemplate data management layer
@@ -564,7 +577,7 @@ func (store *Store) Export(filename string) (err error) {
 		backup.SSLSettings = *settings
 	}
 
-	if s, err := store.Source().ReadAll(); err != nil {
+	if s, err := store.Source().ReadAll(source.InsecureNewAdminContext()); err != nil {
 		if !store.IsErrObjectNotFound(err) {
 			log.Error().Err(err).Msg("exporting Sources")
 		}
@@ -654,7 +667,7 @@ func (store *Store) Export(filename string) (err error) {
 		return err
 	}
 
-	return os.WriteFile(filename, b, 0600)
+	return os.WriteFile(filename, b, 0o600)
 }
 
 func (store *Store) Import(filename string) (err error) {
@@ -755,7 +768,7 @@ func (store *Store) Import(filename string) (err error) {
 	}
 
 	for _, v := range backup.Source {
-		if err := store.Source().Update(v.ID, &v); err != nil {
+		if err := store.Source().Update(source.InsecureNewAdminContext(), v.ID, &v); err != nil {
 			log.Warn().Err(err).Msg("failed to update the source in the database")
 		}
 	}

@@ -19,7 +19,8 @@ func TestPopulateGitConfig_NilArtifactIsNoOp(t *testing.T) {
 	template := &portainer.CustomTemplate{ID: 1}
 
 	err := store.ViewTx(func(tx dataservices.DataStoreTx) error {
-		populateGitConfig(tx, template)
+
+		populateGitConfig(tx, adminUserContext, template)
 
 		return nil
 	})
@@ -40,39 +41,7 @@ func TestPopulateGitConfig_EmptySourceIDsIsNoOp(t *testing.T) {
 	}
 
 	err := store.ViewTx(func(tx dataservices.DataStoreTx) error {
-		populateGitConfig(tx, template)
-
-		return nil
-	})
-	require.NoError(t, err)
-	require.Nil(t, template.GitConfig)
-}
-
-func TestPopulateGitConfig_SourceWithNilGitConfigIsNoOp(t *testing.T) {
-	t.Parallel()
-
-	_, store := datastore.MustNewTestStore(t, false, true)
-
-	var srcID portainer.SourceID
-	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		src := &portainer.Source{Type: portainer.SourceTypeGit}
-		err := tx.Source().Create(src)
-		require.NoError(t, err)
-		srcID = src.ID
-
-		return nil
-	})
-	require.NoError(t, err)
-
-	template := &portainer.CustomTemplate{
-		ID: 1,
-		Artifact: &portainer.Artifact{
-			Files: []portainer.ArtifactFile{{SourceID: srcID}},
-		},
-	}
-
-	err = store.ViewTx(func(tx dataservices.DataStoreTx) error {
-		populateGitConfig(tx, template)
+		populateGitConfig(tx, adminUserContext, template)
 
 		return nil
 	})
@@ -89,12 +58,12 @@ func TestPopulateGitConfig_PopulatesFromSourceAndArtifact(t *testing.T) {
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		src := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git: &gittypes.RepoConfig{
+			Git: &gittypes.GitSource{
 				URL:           "https://github.com/example/repo",
 				TLSSkipVerify: true,
 			},
 		}
-		err := tx.Source().Create(src)
+		err := tx.Source().Create(adminUserContext, src)
 		require.NoError(t, err)
 		srcID = src.ID
 
@@ -115,7 +84,7 @@ func TestPopulateGitConfig_PopulatesFromSourceAndArtifact(t *testing.T) {
 	}
 
 	err = store.ViewTx(func(tx dataservices.DataStoreTx) error {
-		populateGitConfig(tx, template)
+		populateGitConfig(tx, adminUserContext, template)
 
 		return nil
 	})
@@ -137,7 +106,7 @@ func TestPopulateGitConfig_StripsPassword(t *testing.T) {
 	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		src := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git: &gittypes.RepoConfig{
+			Git: &gittypes.GitSource{
 				URL: "https://github.com/example/repo",
 				Authentication: &gittypes.GitAuthentication{
 					Username: "user",
@@ -145,7 +114,7 @@ func TestPopulateGitConfig_StripsPassword(t *testing.T) {
 				},
 			},
 		}
-		err := tx.Source().Create(src)
+		err := tx.Source().Create(adminUserContext, src)
 		require.NoError(t, err)
 		srcID = src.ID
 
@@ -161,7 +130,7 @@ func TestPopulateGitConfig_StripsPassword(t *testing.T) {
 	}
 
 	err = store.ViewTx(func(tx dataservices.DataStoreTx) error {
-		populateGitConfig(tx, template)
+		populateGitConfig(tx, adminUserContext, template)
 
 		return nil
 	})

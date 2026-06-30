@@ -101,6 +101,45 @@ func TestCustomTemplateFile(t *testing.T) {
 	})
 }
 
+func TestCustomTemplateFile_CreatorDeniedWhenAdminOnly(t *testing.T) {
+	t.Parallel()
+
+	handler, store, fs := newTestHandler(t)
+
+	err := store.UpdateTx(func(tx dataservices.DataStoreTx) error {
+		path, err := fs.StoreCustomTemplateFileFromBytes("5", "entrypoint", []byte("content"))
+		require.NoError(t, err)
+
+		err = tx.CustomTemplate().Create(&portainer.CustomTemplate{
+			ID:              5,
+			EntryPoint:      "entrypoint",
+			ProjectPath:     path,
+			CreatedByUserID: 2,
+		})
+		require.NoError(t, err)
+
+		err = tx.ResourceControl().Create(&portainer.ResourceControl{
+			ID:                 5,
+			ResourceID:         "5",
+			Type:               portainer.CustomTemplateResourceControl,
+			AdministratorsOnly: true,
+		})
+		require.NoError(t, err)
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	r := httptest.NewRequest(http.MethodGet, "/custom_templates/5/file", nil)
+	r = mux.SetURLVars(r, map[string]string{"id": "5"})
+	r = r.WithContext(security.StoreRestrictedRequestContext(r, &security.RestrictedRequestContext{UserID: 2}))
+	rr := httptest.NewRecorder()
+
+	herr := handler.customTemplateFile(rr, r)
+	require.NotNil(t, herr)
+	require.Equal(t, http.StatusForbidden, herr.StatusCode)
+}
+
 func TestCustomTemplateFile_GitTemplate(t *testing.T) {
 	t.Parallel()
 
@@ -112,9 +151,9 @@ func TestCustomTemplateFile_GitTemplate(t *testing.T) {
 	require.NoError(t, ds.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		src := &portainer.Source{
 			Type: portainer.SourceTypeGit,
-			Git:  &gittypes.RepoConfig{URL: "https://github.com/example/repo"},
+			Git:  &gittypes.GitSource{URL: "https://github.com/example/repo"},
 		}
-		err := tx.Source().Create(src)
+		err := tx.Source().Create(adminUserContext, src)
 		require.NoError(t, err)
 
 		path, err := fs.StoreCustomTemplateFileFromBytes("10", configFilePath, []byte(templateContent))

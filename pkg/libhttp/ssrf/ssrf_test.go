@@ -7,124 +7,311 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	portainer "github.com/portainer/portainer/api"
 	"github.com/stretchr/testify/require"
 )
 
-func TestIpAllowed_CIDR(t *testing.T) {
-	t.Parallel()
-
-	d := newSafeDialer(Policy{
-		Mode:         ModeEnforce,
-		AllowedHosts: []string{"8.8.0.0/16", "2001:4860::/32"},
-	})
-
-	require.True(t, d.ipAllowed(net.ParseIP("8.8.8.8")))
-	require.True(t, d.ipAllowed(net.ParseIP("8.8.4.4")))
-	require.True(t, d.ipAllowed(net.ParseIP("2001:4860:4860::8888")))
-
-	require.False(t, d.ipAllowed(net.ParseIP("1.1.1.1")))
-	require.False(t, d.ipAllowed(net.ParseIP("127.0.0.1")))
-	require.False(t, d.ipAllowed(net.ParseIP("169.254.169.254")))
+// staticService is a simple in-memory AllowListService for testing.
+type staticService struct {
+	parsed portainer.ParsedAllowList
 }
 
-func TestIpAllowed_SingleIP(t *testing.T) {
+func (s *staticService) ReadParsed(id portainer.AllowListKey) (*portainer.ParsedAllowList, error) {
+	return &s.parsed, nil
+}
+
+func newStaticService(mode portainer.SSRFMode, entries []string) *staticService {
+	parsed := ParseAllowedHosts(entries)
+	parsed.Mode = mode
+	return &staticService{parsed: parsed}
+}
+
+func TestParseAllowedHosts_ipAllowed(t *testing.T) {
 	t.Parallel()
 
-	d := newSafeDialer(Policy{
-		Mode:         ModeEnforce,
-		AllowedHosts: []string{"1.2.3.4"},
-	})
+	testCases := []struct {
+		name        string
+		hostEntries []string
+		allowed     []string
+		denied      []string
+	}{
+		{
+			name:        "CIDR",
+			hostEntries: []string{"8.8.0.0/16", "2001:4860::/32"},
+			allowed:     []string{"8.8.8.8", "8.8.4.4", "2001:4860:4860::8888"},
+			denied:      []string{"1.1.1.1", "127.0.0.1", "169.254.169.254"},
+		},
+		{
+			name:        "Single IP",
+			hostEntries: []string{"1.2.3.4"},
+			allowed:     []string{"1.2.3.4"},
+			denied:      []string{"1.2.3.5"},
+		},
+		{
+			name:        "Single IPv6",
+			hostEntries: []string{"::1"},
+			allowed:     []string{"::1"},
+			denied:      []string{"::2"},
+		},
+	}
 
-	require.True(t, d.ipAllowed(net.ParseIP("1.2.3.4")))
-	require.False(t, d.ipAllowed(net.ParseIP("1.2.3.5")))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			parsed := ParseAllowedHosts(tc.hostEntries)
+			for _, a := range tc.allowed {
+				require.True(t, ipAllowed(net.ParseIP(a), parsed.Nets))
+			}
+
+			for _, d := range tc.denied {
+				require.False(t, ipAllowed(net.ParseIP(d), parsed.Nets))
+			}
+		})
+	}
+}
+
+func TestParseAllowedHosts_MixedEntries(t *testing.T) {
+	t.Parallel()
+
+	parsed := ParseAllowedHosts([]string{"example.com", "*.internal.net", "10.0.0.0/8", "1.2.3.4"})
+
+	require.True(t, parsed.Hosts["example.com"])
+	require.Contains(t, parsed.Wilds, ".internal.net")
+	require.Len(t, parsed.Nets, 2) // 10.0.0.0/8 and 1.2.3.4/32
 }
 
 func TestMatchesWildcard(t *testing.T) {
 	t.Parallel()
 
-	d := newSafeDialer(Policy{
-		Mode:         ModeEnforce,
-		AllowedHosts: []string{"*.example.com", "exact.host.com"},
-	})
+	parsed := ParseAllowedHosts([]string{"*.example.com", "exact.host.com"})
 
-	require.True(t, d.matchesWildcard("foo.example.com"))
-	require.True(t, d.matchesWildcard("bar.example.com"))
-	require.True(t, d.matchesWildcard("deep.nested.example.com"))
+	tests := []struct {
+		host string
+		want bool
+	}{
+		{"foo.example.com", true},
+		{"bar.example.com", true},
+		{"deep.nested.example.com", true},
+		{"example.com", false},
+		{"notexample.com", false},
+		{"exact.host.com", false},
+	}
 
-	require.False(t, d.matchesWildcard("example.com"))
-	require.False(t, d.matchesWildcard("notexample.com"))
-	require.False(t, d.matchesWildcard("exact.host.com"))
+	for _, tc := range tests {
+		got := matchesWildcard(tc.host, parsed.Wilds)
+		require.Equal(t, tc.want, got, "host: %s", tc.host)
+	}
 }
 
-func TestNewSafeDialer_MixedHosts(t *testing.T) {
-	t.Parallel()
-
-	d := newSafeDialer(Policy{
-		Mode:         ModeEnforce,
-		AllowedHosts: []string{"example.com", "*.internal.net", "10.0.0.0/8", "1.2.3.4"},
-	})
-
-	require.True(t, d.allowedHosts["example.com"])
-	require.Contains(t, d.allowedWilds, ".internal.net")
-	require.Len(t, d.allowedNets, 2) // 10.0.0.0/8 and 1.2.3.4/32
-}
-
-func TestConfigure_Disabled(t *testing.T) {
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"example.com"}})
+func TestConfigure_SetsDialer(t *testing.T) {
+	err := Configure(newStaticService(portainer.SSRFModeEnforce, []string{"example.com"}))
+	require.NoError(t, err)
 	require.NotNil(t, globalDialer.Load())
-
-	Configure(Policy{})
-	require.Nil(t, globalDialer.Load())
+	t.Cleanup(func() { globalDialer.Store(nil) })
 }
 
-func TestWrapTransport_NoPolicy(t *testing.T) {
+func TestConfigure_NilServicesReturnsError(t *testing.T) {
+	err := Configure(nil)
+	require.Error(t, err)
+}
+
+func TestNewTransport_NoPolicy(t *testing.T) {
 	globalDialer.Store(nil)
-
-	base := &http.Transport{}
-	result := WrapTransport(base)
-	require.Equal(t, base, result)
-}
-
-func TestWrapTransport_WithPolicy(t *testing.T) {
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"example.com"}})
 	t.Cleanup(func() { globalDialer.Store(nil) })
 
-	base := &http.Transport{}
-	result := WrapTransport(base)
-	require.NotEqual(t, base, result)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	client := &http.Client{Transport: NewTransport(nil)}
+	resp, err := client.Get(srv.URL)
+	require.NoError(t, err)
+	require.NoError(t, resp.Body.Close())
+}
+
+func TestNewTransport_WithPolicy(t *testing.T) {
+	err := Configure(newStaticService(portainer.SSRFModeEnforce, []string{"example.com"}))
+	require.NoError(t, err)
+	t.Cleanup(func() { globalDialer.Store(nil) })
+
+	result := NewTransport(nil)
 	require.NotNil(t, result.DialContext)
 }
 
-func TestCheckURL_Disabled(t *testing.T) {
-	globalDialer.Store(nil)
+func TestCheckURL(t *testing.T) {
+	tests := []struct {
+		name    string
+		mode    portainer.SSRFMode
+		entries []string
+		url     string
+		wantErr bool
+	}{
+		{
+			name:    "disabled",
+			mode:    portainer.SSRFModeOff,
+			url:     "http://169.254.169.254/latest/meta-data/",
+			wantErr: false,
+		},
+		{
+			name:    "blocks IP not in allowlist",
+			mode:    portainer.SSRFModeEnforce,
+			entries: []string{"8.8.8.0/24"},
+			url:     "http://169.254.169.254/latest/meta-data/",
+			wantErr: true,
+		},
+		{
+			name:    "allowed exact hostname",
+			mode:    portainer.SSRFModeEnforce,
+			entries: []string{"example.com"},
+			url:     "https://example.com/path",
+			wantErr: false,
+		},
+		{
+			name:    "audit mode allows blocked IP",
+			mode:    portainer.SSRFModeAudit,
+			entries: []string{"8.8.8.0/24"},
+			url:     "http://169.254.169.254/latest/meta-data/",
+			wantErr: false,
+		},
+		{
+			name:    "IP in CIDR allowlist",
+			mode:    portainer.SSRFModeEnforce,
+			entries: []string{"8.8.8.0/24"},
+			url:     "http://8.8.8.8/path",
+			wantErr: false,
+		},
+		{
+			name:    "wildcard hostname",
+			mode:    portainer.SSRFModeEnforce,
+			entries: []string{"*.example.com"},
+			url:     "https://api.example.com/path",
+			wantErr: false,
+		},
+		{
+			name:    "hostname DNS resolves to allowed IP",
+			mode:    portainer.SSRFModeEnforce,
+			entries: []string{"127.0.0.0/8", "::1/128"},
+			url:     "http://localhost/path",
+			wantErr: false,
+		},
+		{
+			name:    "hostname DNS resolves to blocked IP",
+			mode:    portainer.SSRFModeEnforce,
+			entries: []string{"8.8.8.0/24"},
+			url:     "http://localhost/path",
+			wantErr: true,
+		},
+		{
+			name:    "audit mode allows hostname resolving to blocked IP",
+			mode:    portainer.SSRFModeAudit,
+			entries: []string{"8.8.8.0/24"},
+			url:     "http://localhost/path",
+			wantErr: false,
+		},
+		{
+			name:    "invalid URL",
+			mode:    portainer.SSRFModeEnforce,
+			entries: []string{"example.com"},
+			url:     "http://%gg",
+			wantErr: true,
+		},
+		{
+			name:    "empty host",
+			mode:    portainer.SSRFModeEnforce,
+			entries: []string{"example.com"},
+			url:     "http://",
+			wantErr: false,
+		},
+		{
+			name:    "scheme-less IP:port SSRF disabled",
+			mode:    portainer.SSRFModeOff,
+			url:     "10.10.1.41:30775",
+			wantErr: false,
+		},
+		{
+			name:    "scheme-less IP:port blocked",
+			mode:    portainer.SSRFModeEnforce,
+			entries: []string{"8.8.8.0/24"},
+			url:     "10.10.1.41:30775",
+			wantErr: true,
+		},
+		{
+			name:    "scheme-less IP:port allowed by CIDR",
+			mode:    portainer.SSRFModeEnforce,
+			entries: []string{"10.10.1.0/24"},
+			url:     "10.10.1.41:30775",
+			wantErr: false,
+		},
+		{
+			name:    "git scheme IP blocked",
+			mode:    portainer.SSRFModeEnforce,
+			entries: []string{"8.8.8.0/24"},
+			url:     "git://10.10.1.41:9418/",
+			wantErr: true,
+		},
+		{
+			name:    "git scheme IP allowed by CIDR",
+			mode:    portainer.SSRFModeEnforce,
+			entries: []string{"10.10.1.0/24"},
+			url:     "git://10.10.1.41:9418/",
+			wantErr: false,
+		},
+	}
 
-	err := CheckURL(t.Context(), "http://169.254.169.254/latest/meta-data/")
-	require.NoError(t, err)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := Configure(newStaticService(tc.mode, tc.entries))
+			require.NoError(t, err)
+			t.Cleanup(func() { globalDialer.Store(nil) })
+
+			err = CheckURL(t.Context(), tc.url)
+			if tc.wantErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "ssrf")
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
 
-func TestCheckURL_BlocksIPNotInAllowlist(t *testing.T) {
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"8.8.8.0/24"}})
+// TestCheckURL_HostnameDNSError verifies that a DNS resolution failure is
+// propagated as an SSRF-prefixed error. Kept separate because it needs a
+// cancelled context rather than t.Context().
+func TestCheckURL_HostnameDNSError(t *testing.T) {
+	err := Configure(newStaticService(portainer.SSRFModeEnforce, []string{"8.8.8.0/24"}))
+	require.NoError(t, err)
 	t.Cleanup(func() { globalDialer.Store(nil) })
 
-	err := CheckURL(t.Context(), "http://169.254.169.254/latest/meta-data/")
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	err = CheckURL(ctx, "http://portainer-nonexistent.test.invalid/path")
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "ssrf")
 }
 
-func TestCheckURL_AllowedHostname(t *testing.T) {
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"example.com"}})
-	t.Cleanup(func() { globalDialer.Store(nil) })
+func TestIsEnabled(t *testing.T) {
+	globalDialer.Store(nil)
+	require.False(t, IsEnabled())
 
-	err := CheckURL(t.Context(), "https://example.com/path")
+	err := Configure(newStaticService(portainer.SSRFModeEnforce, []string{"example.com"}))
 	require.NoError(t, err)
+	t.Cleanup(func() { globalDialer.Store(nil) })
+	require.True(t, IsEnabled())
+
+	err = Configure(newStaticService(portainer.SSRFModeOff, nil))
+	require.NoError(t, err)
+	require.False(t, IsEnabled())
 }
 
-func TestCheckURL_AuditMode_ReturnsNil(t *testing.T) {
-	Configure(Policy{Mode: ModeAudit, AllowedHosts: []string{"8.8.8.0/24"}})
-	t.Cleanup(func() { globalDialer.Store(nil) })
+func TestNewInternalTransport(t *testing.T) {
+	t.Parallel()
 
-	err := CheckURL(t.Context(), "http://169.254.169.254/latest/meta-data/")
-	require.NoError(t, err)
+	result := NewInternalTransport(nil)
+	require.NotNil(t, result)
+	require.Nil(t, result.TLSClientConfig)
 }
 
 // TestDialContext_BlocksLoopback is an end-to-end test: it starts a real HTTP
@@ -136,10 +323,11 @@ func TestDialContext_BlocksLoopback(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"8.8.8.8"}})
+	err := Configure(newStaticService(portainer.SSRFModeEnforce, []string{"8.8.8.8"}))
+	require.NoError(t, err)
 	t.Cleanup(func() { globalDialer.Store(nil) })
 
-	blocked := &http.Client{Transport: WrapTransport(&http.Transport{})}
+	blocked := &http.Client{Transport: NewTransport(nil)}
 	resp, err := blocked.Get(srv.URL)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "ssrf")
@@ -147,9 +335,11 @@ func TestDialContext_BlocksLoopback(t *testing.T) {
 		require.NoError(t, resp.Body.Close())
 	}
 
-	Configure(Policy{})
+	// Switch to off mode — dialer stays configured but checks are skipped.
+	err = Configure(newStaticService(portainer.SSRFModeOff, nil))
+	require.NoError(t, err)
 
-	open := &http.Client{Transport: WrapTransport(&http.Transport{})}
+	open := &http.Client{Transport: NewTransport(nil)}
 	resp, err = open.Get(srv.URL)
 	require.NoError(t, err)
 	require.NoError(t, resp.Body.Close())
@@ -163,131 +353,25 @@ func TestDialContext_AuditMode_AllowsLoopback(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	Configure(Policy{Mode: ModeAudit, AllowedHosts: []string{"8.8.8.8"}})
+	err := Configure(newStaticService(portainer.SSRFModeAudit, []string{"8.8.8.8"}))
+	require.NoError(t, err)
 	t.Cleanup(func() { globalDialer.Store(nil) })
 
-	client := &http.Client{Transport: WrapTransport(&http.Transport{})}
+	client := &http.Client{Transport: NewTransport(nil)}
 	resp, err := client.Get(srv.URL)
 	require.NoError(t, err)
 	require.NoError(t, resp.Body.Close())
 }
 
-func TestIsEnabled(t *testing.T) {
-	globalDialer.Store(nil)
-	require.False(t, IsEnabled())
-
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"example.com"}})
-	t.Cleanup(func() { globalDialer.Store(nil) })
-	require.True(t, IsEnabled())
-}
-
-func TestWrapTransportInternal(t *testing.T) {
-	t.Parallel()
-
-	base := &http.Transport{}
-	result := WrapTransportInternal(base)
-	require.Equal(t, base, result)
-}
-
-func TestNewSafeDialer_IPv6SingleIP(t *testing.T) {
-	t.Parallel()
-
-	d := newSafeDialer(Policy{
-		Mode:         ModeEnforce,
-		AllowedHosts: []string{"::1"},
-	})
-
-	require.True(t, d.ipAllowed(net.ParseIP("::1")))
-	require.False(t, d.ipAllowed(net.ParseIP("::2")))
-}
-
-func TestCheckURL_InvalidURL(t *testing.T) {
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"example.com"}})
-	t.Cleanup(func() { globalDialer.Store(nil) })
-
-	err := CheckURL(t.Context(), "http://%gg")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "ssrf")
-}
-
-func TestCheckURL_EmptyHost(t *testing.T) {
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"example.com"}})
-	t.Cleanup(func() { globalDialer.Store(nil) })
-
-	err := CheckURL(t.Context(), "http://")
-	require.NoError(t, err)
-}
-
-// TestCheckURL_IPInAllowlist verifies that a literal IP address that falls
-// within an allowed CIDR range is permitted.
-func TestCheckURL_IPInAllowlist(t *testing.T) {
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"8.8.8.0/24"}})
-	t.Cleanup(func() { globalDialer.Store(nil) })
-
-	err := CheckURL(t.Context(), "http://8.8.8.8/path")
-	require.NoError(t, err)
-}
-
-func TestCheckURL_WildcardHostname(t *testing.T) {
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"*.example.com"}})
-	t.Cleanup(func() { globalDialer.Store(nil) })
-
-	err := CheckURL(t.Context(), "https://api.example.com/path")
-	require.NoError(t, err)
-}
-
-// TestCheckURL_HostnameDNSResolvesToAllowedIP verifies that a hostname
-// resolving to an IP within the allowlist is permitted (DNS resolution path).
-func TestCheckURL_HostnameDNSResolvesToAllowedIP(t *testing.T) {
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"127.0.0.0/8", "::1/128"}})
-	t.Cleanup(func() { globalDialer.Store(nil) })
-
-	err := CheckURL(t.Context(), "http://localhost/path")
-	require.NoError(t, err)
-}
-
-// TestCheckURL_HostnameDNSResolvesToBlockedIP verifies that a hostname
-// resolving to an IP outside the allowlist is blocked (DNS resolution path).
-func TestCheckURL_HostnameDNSResolvesToBlockedIP(t *testing.T) {
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"8.8.8.0/24"}})
-	t.Cleanup(func() { globalDialer.Store(nil) })
-
-	err := CheckURL(t.Context(), "http://localhost/path")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "ssrf")
-}
-
-// TestCheckURL_HostnameDNSAuditMode verifies that audit mode logs violations
-// from hostname DNS resolution but still returns nil.
-func TestCheckURL_HostnameDNSAuditMode(t *testing.T) {
-	Configure(Policy{Mode: ModeAudit, AllowedHosts: []string{"8.8.8.0/24"}})
-	t.Cleanup(func() { globalDialer.Store(nil) })
-
-	err := CheckURL(t.Context(), "http://localhost/path")
-	require.NoError(t, err)
-}
-
-// TestCheckURL_HostnameDNSError verifies that a DNS resolution failure is
-// propagated as an SSRF-prefixed error.
-func TestCheckURL_HostnameDNSError(t *testing.T) {
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"8.8.8.0/24"}})
-	t.Cleanup(func() { globalDialer.Store(nil) })
-
-	ctx, cancel := context.WithCancel(t.Context())
-	cancel()
-
-	err := CheckURL(ctx, "http://portainer-nonexistent.test.invalid/path")
-	require.Error(t, err)
-}
-
 // TestDialContext_InvalidAddress verifies that an address without a port
 // returns an SSRF-prefixed error.
 func TestDialContext_InvalidAddress(t *testing.T) {
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"example.com"}})
+	err := Configure(newStaticService(portainer.SSRFModeEnforce, []string{"example.com"}))
+	require.NoError(t, err)
 	t.Cleanup(func() { globalDialer.Store(nil) })
 
 	d := globalDialer.Load()
-	_, err := d.DialContext(t.Context(), "tcp", "no-port-here")
+	_, err = d.DialContext(t.Context(), "tcp", "no-port-here")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "ssrf")
 }
@@ -295,14 +379,15 @@ func TestDialContext_InvalidAddress(t *testing.T) {
 // TestDialContext_DNSError verifies that a DNS resolution failure in
 // DialContext is propagated as an SSRF-prefixed error.
 func TestDialContext_DNSError(t *testing.T) {
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{}})
+	err := Configure(newStaticService(portainer.SSRFModeEnforce, []string{}))
+	require.NoError(t, err)
 	t.Cleanup(func() { globalDialer.Store(nil) })
 
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 
 	d := globalDialer.Load()
-	_, err := d.DialContext(ctx, "tcp", "portainer-nonexistent.test.invalid:80")
+	_, err = d.DialContext(ctx, "tcp", "portainer-nonexistent.test.invalid:80")
 	require.Error(t, err)
 }
 
@@ -314,10 +399,11 @@ func TestDialContext_AllowedByCIDR(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"127.0.0.0/8"}})
+	err := Configure(newStaticService(portainer.SSRFModeEnforce, []string{"127.0.0.0/8"}))
+	require.NoError(t, err)
 	t.Cleanup(func() { globalDialer.Store(nil) })
 
-	client := &http.Client{Transport: WrapTransport(&http.Transport{})}
+	client := &http.Client{Transport: NewTransport(nil)}
 	resp, err := client.Get(srv.URL)
 	require.NoError(t, err)
 	require.NoError(t, resp.Body.Close())
@@ -347,10 +433,11 @@ func TestDialContext_AllowedByExactHostname(t *testing.T) {
 	_, portStr, err := net.SplitHostPort(l.Addr().String())
 	require.NoError(t, err)
 
-	Configure(Policy{Mode: ModeEnforce, AllowedHosts: []string{"localhost"}})
+	err = Configure(newStaticService(portainer.SSRFModeEnforce, []string{"localhost"}))
+	require.NoError(t, err)
 	t.Cleanup(func() { globalDialer.Store(nil) })
 
-	client := &http.Client{Transport: WrapTransport(&http.Transport{})}
+	client := &http.Client{Transport: NewTransport(nil)}
 	resp, err := client.Get("http://localhost:" + portStr)
 	require.NoError(t, err)
 	require.NoError(t, resp.Body.Close())

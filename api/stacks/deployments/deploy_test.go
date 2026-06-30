@@ -13,6 +13,7 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/crypto"
 	"github.com/portainer/portainer/api/dataservices"
+	"github.com/portainer/portainer/api/dataservices/source"
 	"github.com/portainer/portainer/api/datastore"
 	gittypes "github.com/portainer/portainer/api/git/types"
 	"github.com/portainer/portainer/api/internal/testhelpers"
@@ -77,6 +78,8 @@ L9x22ol5c5rToZa1qKSnSdSDCud298MyRujMUy2UcUKHeNs3MK9AT41sDv266I7b
 vJUUCFYm8+9p6gTVOcoMit+eGSwa81PCPEs1TnU1PV/PaDFeUhn/mg==
 -----END RSA PRIVATE KEY-----`
 
+var adminUserContext = source.InsecureNewAdminContext()
+
 type noopDeployer struct{}
 
 // without unpacker
@@ -97,28 +100,28 @@ func (s noopDeployer) DeployKubernetesStack(_ context.Context, stack *portainer.
 }
 
 // with unpacker
-func (s noopDeployer) DeployRemoteComposeStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, forcePullImage, forceRecreate bool) error {
+func (s noopDeployer) DeployRemoteComposeStack(_ context.Context, userId portainer.UserID, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, forcePullImage, forceRecreate bool) error {
 	return nil
 }
-func (s noopDeployer) UndeployRemoteComposeStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
+func (s noopDeployer) UndeployRemoteComposeStack(_ context.Context, userId portainer.UserID, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
 	return nil
 }
-func (s noopDeployer) StartRemoteComposeStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry) error {
+func (s noopDeployer) StartRemoteComposeStack(_ context.Context, userId portainer.UserID, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry) error {
 	return nil
 }
-func (s noopDeployer) StopRemoteComposeStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
+func (s noopDeployer) StopRemoteComposeStack(_ context.Context, userId portainer.UserID, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
 	return nil
 }
-func (s noopDeployer) DeployRemoteSwarmStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, pullImage bool) error {
+func (s noopDeployer) DeployRemoteSwarmStack(_ context.Context, userId portainer.UserID, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry, prune, pullImage bool) error {
 	return nil
 }
-func (s noopDeployer) UndeployRemoteSwarmStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
+func (s noopDeployer) UndeployRemoteSwarmStack(_ context.Context, userId portainer.UserID, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
 	return nil
 }
-func (s noopDeployer) StartRemoteSwarmStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry) error {
+func (s noopDeployer) StartRemoteSwarmStack(_ context.Context, userId portainer.UserID, stack *portainer.Stack, endpoint *portainer.Endpoint, registries []portainer.Registry) error {
 	return nil
 }
-func (s noopDeployer) StopRemoteSwarmStack(_ context.Context, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
+func (s noopDeployer) StopRemoteSwarmStack(_ context.Context, userId portainer.UserID, stack *portainer.Stack, endpoint *portainer.Endpoint) error {
 	return nil
 }
 
@@ -191,7 +194,7 @@ func Test_redeployWhenChanged_DoesNothingWhenNoGitChanges(t *testing.T) {
 
 	tmpDir := t.TempDir()
 
-	admin := &portainer.User{ID: 1, Username: "admin"}
+	admin := &portainer.User{ID: 1, Username: "admin", Role: portainer.AdministratorRole}
 	err := store.User().Create(admin)
 	require.NoError(t, err, "error creating an admin")
 
@@ -200,13 +203,11 @@ func Test_redeployWhenChanged_DoesNothingWhenNoGitChanges(t *testing.T) {
 
 	src := &portainer.Source{
 		Type: portainer.SourceTypeGit,
-		Git: &gittypes.RepoConfig{
-			URL:           "url",
-			ReferenceName: "ref",
-			ConfigHash:    "oldHash",
+		Git: &gittypes.GitSource{
+			URL: "url",
 		},
 	}
-	err = store.Source().Create(src)
+	err = store.Source().Create(adminUserContext, src)
 	require.NoError(t, err, "failed to create source")
 
 	wf := &portainer.Workflow{Artifacts: []portainer.Artifact{{Files: []portainer.ArtifactFile{{SourceID: src.ID}}}}}
@@ -231,7 +232,7 @@ func Test_redeployWhenChanged_FailsWhenCannotClone(t *testing.T) {
 	cloneErr := errors.New("failed to clone")
 	_, store := datastore.MustNewTestStore(t, false, true)
 
-	admin := &portainer.User{ID: 1, Username: "admin"}
+	admin := &portainer.User{ID: 1, Username: "admin", Role: portainer.AdministratorRole}
 	err := store.User().Create(admin)
 	require.NoError(t, err, "error creating an admin")
 
@@ -247,13 +248,11 @@ func Test_redeployWhenChanged_FailsWhenCannotClone(t *testing.T) {
 
 	src := &portainer.Source{
 		Type: portainer.SourceTypeGit,
-		Git: &gittypes.RepoConfig{
-			URL:           "url",
-			ReferenceName: "ref",
-			ConfigHash:    "oldHash",
+		Git: &gittypes.GitSource{
+			URL: "url",
 		},
 	}
-	err = store.Source().Create(src)
+	err = store.Source().Create(adminUserContext, src)
 	require.NoError(t, err, "failed to create source")
 
 	wf := &portainer.Workflow{Artifacts: []portainer.Artifact{{
@@ -290,13 +289,11 @@ func setupRedeployStore(t *testing.T, stackType portainer.StackType) (dataservic
 
 	src := &portainer.Source{
 		Type: portainer.SourceTypeGit,
-		Git: &gittypes.RepoConfig{
-			URL:           "url",
-			ReferenceName: "ref",
-			ConfigHash:    "oldHash",
+		Git: &gittypes.GitSource{
+			URL: "url",
 		},
 	}
-	err = store.Source().Create(src)
+	err = store.Source().Create(adminUserContext, src)
 	require.NoError(t, err, "failed to create source")
 
 	wf := &portainer.Workflow{Artifacts: []portainer.Artifact{{Files: []portainer.ArtifactFile{{SourceID: src.ID}}}}}
@@ -359,7 +356,7 @@ func Test_getUserRegistries(t *testing.T) {
 	err = store.User().Create(user)
 	require.NoError(t, err, "error creating a user")
 
-	team := portainer.Team{ID: 1, Name: "team"}
+	team := portainer.Team{ID: 1}
 
 	err = store.TeamMembership().Create(&portainer.TeamMembership{
 		ID:     1,

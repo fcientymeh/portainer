@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices/source"
 	"github.com/portainer/portainer/api/dataservices/stack"
 	gittypes "github.com/portainer/portainer/api/git/types"
 
@@ -24,7 +25,6 @@ type legacyGitAuthentication struct {
 	Password          string
 	Provider          int `json:",omitempty"`
 	AuthorizationType int `json:",omitempty"`
-	GitCredentialID   int
 }
 
 func (lrc *legacyRepoConfig) toRepoConfig() *gittypes.RepoConfig {
@@ -41,12 +41,6 @@ func (lrc *legacyRepoConfig) toRepoConfig() *gittypes.RepoConfig {
 	}
 
 	if lrc.Authentication != nil {
-		if lrc.Authentication.GitCredentialID != 0 {
-			log.Warn().
-				Int("git_credential_id", lrc.Authentication.GitCredentialID).
-				Msg("stack has a GitCredentialID reference which is not supported in CE; credential reference will be dropped during migration")
-		}
-
 		cfg.Authentication = &gittypes.GitAuthentication{
 			Username:          lrc.Authentication.Username,
 			Password:          lrc.Authentication.Password,
@@ -59,9 +53,11 @@ func (lrc *legacyRepoConfig) toRepoConfig() *gittypes.RepoConfig {
 }
 
 type legacyStack struct {
-	ID         int               `json:"Id"`
-	GitConfig  *legacyRepoConfig `json:"GitConfig"`
-	WorkflowID *int
+	ID              int               `json:"Id"`
+	GitConfig       *legacyRepoConfig `json:"GitConfig"`
+	WorkflowID      *int
+	ResourceControl *portainer.ResourceControl `json:"ResourceControl"`
+	CreatedBy       string
 }
 
 // sourceDedupeKey is the identity used to detect duplicate Sources during migration.
@@ -73,7 +69,13 @@ type sourceDedupeKey struct {
 }
 
 func gitSourceKey(cfg *gittypes.RepoConfig) sourceDedupeKey {
-	key := sourceDedupeKey{url: cfg.URL}
+	url, err := gittypes.NormalizeURL(gittypes.SanitizeURL(cfg.URL))
+	if err != nil {
+		log.Warn().Err(err).Str("url", cfg.URL).Msg("failed to normalize git URL for deduplication, using raw URL")
+		url = cfg.URL
+	}
+
+	key := sourceDedupeKey{url: url}
 	if cfg.Authentication != nil {
 		key.username = cfg.Authentication.Username
 		key.password = cfg.Authentication.Password
@@ -105,7 +107,8 @@ func (m *Migrator) migrateGitConfigToSources_2_43_0() error {
 		return err
 	}
 
-	existingSources, err := m.sourceService.ReadAll()
+	adminUserContext := source.InsecureNewAdminContext()
+	existingSources, err := m.sourceService.ReadAll(adminUserContext)
 	if err != nil {
 		return err
 	}
@@ -113,7 +116,7 @@ func (m *Migrator) migrateGitConfigToSources_2_43_0() error {
 	sourcesByKey := make(map[sourceDedupeKey]portainer.SourceID, len(existingSources))
 	for _, src := range existingSources {
 		if src.Git != nil {
-			sourcesByKey[gitSourceKey(src.Git)] = src.ID
+			sourcesByKey[gitSourceKey(&gittypes.RepoConfig{URL: src.Git.URL, Authentication: src.Git.Authentication})] = src.ID
 		}
 	}
 
@@ -129,24 +132,67 @@ func (m *Migrator) migrateGitConfigToSources_2_43_0() error {
 		var newSrcID portainer.SourceID
 
 		if err := m.stackService.Connection.UpdateTx(func(tx portainer.Transaction) error {
+			liveStack, err := m.stackService.Tx(tx).Read(portainer.StackID(ls.ID))
+			if err != nil {
+				return fmt.Errorf("failed to read stack %d: %w", ls.ID, err)
+			}
+
+			rc := ls.ResourceControl
+			if rc == nil {
+				rcID := fmt.Sprintf("%d_%s", liveStack.EndpointID, liveStack.Name)
+				rc, err = m.resourceControlService.Tx(tx).ResourceControlByResourceIDAndType(rcID, portainer.StackResourceControl)
+				if err != nil {
+					return fmt.Errorf("failed to read resource control for stack %d: %w", ls.ID, err)
+				}
+			}
+
+			users, teams, public, adminOnly, ownerId := GetValuesForUsersFromResourceOwnershipAndAccesses_2_43_0(rc,
+				func() (portainer.UserID, portainer.UserRole, error) {
+					user, err := m.userService.Tx(tx).UserByUsername(ls.CreatedBy)
+					if err != nil {
+						return 0, 0, err
+					}
+					return user.ID, user.Role, nil
+				},
+				func(userId portainer.UserID) ([]portainer.TeamMembership, error) {
+					return m.teamMembershipService.Tx(tx).TeamMembershipsByUserID(userId)
+				},
+			)
+
 			srcID, exists := sourcesByKey[key]
 
 			if !exists {
 				src := &portainer.Source{
 					Name: gittypes.RepoName(cfg.URL),
 					Type: portainer.SourceTypeGit,
-					Git:  cfg,
+					Git: &gittypes.GitSource{
+						URL:            cfg.URL,
+						Authentication: cfg.Authentication,
+						TLSSkipVerify:  cfg.TLSSkipVerify,
+					},
+					OwnerID:            ownerId,
+					Public:             public,
+					AdministratorsOnly: adminOnly,
+					UserAccesses:       users,
+					TeamAccesses:       teams,
 				}
-				if err := m.sourceService.Tx(tx).Create(src); err != nil {
+
+				if err := m.sourceService.Tx(tx).Create(adminUserContext, src); err != nil {
 					return fmt.Errorf("failed to create source for stack %d: %w", ls.ID, err)
 				}
 				srcID = src.ID
 				newSrcID = src.ID
-			}
+			} else {
+				src, err := m.sourceService.Tx(tx).Read(adminUserContext, srcID)
+				if err != nil {
+					return fmt.Errorf("failed to read source %d for stack %d: %w", srcID, ls.ID, err)
+				}
 
-			liveStack, err := m.stackService.Tx(tx).Read(portainer.StackID(ls.ID))
-			if err != nil {
-				return fmt.Errorf("failed to read stack %d: %w", ls.ID, err)
+				ApplyUACOnSourceUpdate_2_43_0(src, users, teams, public, adminOnly, ownerId)
+
+				if err := m.sourceService.Tx(tx).Update(adminUserContext, srcID, src); err != nil {
+					return fmt.Errorf("failed to update source %d for stack %d: %w", srcID, ls.ID, err)
+				}
 			}
 
 			wf := &portainer.Workflow{
@@ -189,7 +235,8 @@ func (m *Migrator) migrateCustomTemplateGitConfigToSources_2_43_0() error {
 		return err
 	}
 
-	existingSources, err := m.sourceService.ReadAll()
+	adminUserContext := source.InsecureNewAdminContext()
+	existingSources, err := m.sourceService.ReadAll(adminUserContext)
 	if err != nil {
 		return err
 	}
@@ -197,7 +244,7 @@ func (m *Migrator) migrateCustomTemplateGitConfigToSources_2_43_0() error {
 	sourcesByKey := make(map[sourceDedupeKey]portainer.SourceID, len(existingSources))
 	for _, src := range existingSources {
 		if src.Git != nil {
-			sourcesByKey[gitSourceKey(src.Git)] = src.ID
+			sourcesByKey[gitSourceKey(&gittypes.RepoConfig{URL: src.Git.URL, Authentication: src.Git.Authentication})] = src.ID
 		}
 	}
 
@@ -207,38 +254,59 @@ func (m *Migrator) migrateCustomTemplateGitConfigToSources_2_43_0() error {
 			continue
 		}
 
-		cfg := &gittypes.RepoConfig{
+		cfg := &gittypes.GitSource{
 			URL:            gittypes.SanitizeURL(t.GitConfig.URL),
 			Authentication: t.GitConfig.Authentication,
 			TLSSkipVerify:  t.GitConfig.TLSSkipVerify,
 		}
 
-		if cfg.Authentication != nil && cfg.Authentication.GitCredentialID != 0 {
-			log.Warn().
-				Int("git_credential_id", cfg.Authentication.GitCredentialID).
-				Msg("custom template has a GitCredentialID reference which is not supported in CE; credential reference will be dropped during migration")
-
-			cfg.Authentication.GitCredentialID = 0
-		}
-
-		key := gitSourceKey(cfg)
+		key := gitSourceKey(&gittypes.RepoConfig{URL: cfg.URL, Authentication: cfg.Authentication})
 
 		var newSrcID portainer.SourceID
 
 		if err := m.stackService.Connection.UpdateTx(func(tx portainer.Transaction) error {
+			users, teams, public, adminOnly, ownerId := GetValuesForUsersFromResourceOwnershipAndAccesses_2_43_0(t.ResourceControl,
+				func() (portainer.UserID, portainer.UserRole, error) {
+					user, err := m.userService.Tx(tx).Read(t.CreatedByUserID)
+					if err != nil {
+						return 0, 0, err
+					}
+					return user.ID, user.Role, nil
+				},
+				func(userId portainer.UserID) ([]portainer.TeamMembership, error) {
+					return m.teamMembershipService.Tx(tx).TeamMembershipsByUserID(userId)
+				},
+			)
+
 			srcID, exists := sourcesByKey[key]
 
 			if !exists {
 				src := &portainer.Source{
-					Name: gittypes.RepoName(cfg.URL),
-					Type: portainer.SourceTypeGit,
-					Git:  cfg,
+					Name:               gittypes.RepoName(cfg.URL),
+					Type:               portainer.SourceTypeGit,
+					Git:                cfg,
+					OwnerID:            ownerId,
+					Public:             public,
+					AdministratorsOnly: adminOnly,
+					UserAccesses:       users,
+					TeamAccesses:       teams,
 				}
-				if err := m.sourceService.Tx(tx).Create(src); err != nil {
+				if err := m.sourceService.Tx(tx).Create(adminUserContext, src); err != nil {
 					return fmt.Errorf("failed to create source for custom template %d: %w", t.ID, err)
 				}
 				srcID = src.ID
 				newSrcID = src.ID
+			} else {
+				src, err := m.sourceService.Tx(tx).Read(adminUserContext, srcID)
+				if err != nil {
+					return fmt.Errorf("failed to read source %d for custom template %d: %w", srcID, t.ID, err)
+				}
+
+				ApplyUACOnSourceUpdate_2_43_0(src, users, teams, public, adminOnly, ownerId)
+
+				if err := m.sourceService.Tx(tx).Update(adminUserContext, srcID, src); err != nil {
+					return fmt.Errorf("failed to update source %d for custom template %d: %w", srcID, t.ID, err)
+				}
 			}
 
 			t.Artifact = &portainer.Artifact{

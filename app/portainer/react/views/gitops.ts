@@ -3,6 +3,7 @@ import angular from 'angular';
 import { WorkflowsView } from '@/react/portainer/gitops/WorkflowsView/WorkflowsView';
 import { ListView as SourcesListView } from '@/react/portainer/gitops/sources/ListView/ListView';
 import { ItemView as SourceItemView } from '@/react/portainer/gitops/sources/ItemView/ItemView';
+import { CreateView as SourceCreateView } from '@/react/portainer/gitops/sources/CreateView/CreateView';
 import { r2a } from '@/react-tools/react2angular';
 import { withCurrentUser } from '@/react-tools/withCurrentUser';
 import { withUIRouter } from '@/react-tools/withUIRouter';
@@ -20,4 +21,8 @@ export const gitopsViewsModule = angular
   .component(
     'sourceItemView',
     r2a(withUIRouter(withCurrentUser(SourceItemView)), [])
+  )
+  .component(
+    'sourceCreateView',
+    r2a(withUIRouter(withCurrentUser(SourceCreateView)), [])
   ).name;
