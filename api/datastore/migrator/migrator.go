@@ -277,6 +277,13 @@ func (m *Migrator) initMigrations() {
 		m.migrateCustomTemplateGitConfigToSources_2_43_0,
 	)
 
+	m.addMigrations("2.44.0", m.backfillSourceInterval_2_44_0)
+
+	m.addMigrations("2.45.0",
+		m.cleanOrphanedWorkflowReferences_2_45_0,
+		m.pruneOrphanedStackArtifacts_2_45_0,
+	)
+
 	// WARNING: do not change migrations that have already been released!
 
 	// Add new migrations above...

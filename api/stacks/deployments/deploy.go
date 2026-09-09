@@ -44,6 +44,10 @@ func RedeployWhenChanged(ctx context.Context, stackID portainer.StackID, deploye
 		return errors.WithMessagef(err, "failed to get the stack %v", stackID)
 	}
 
+	if stack.Status == portainer.StackStatusInactive {
+		return nil
+	}
+
 	// Webhook
 	if stack.AutoUpdate != nil && stack.AutoUpdate.Webhook != "" {
 		return redeployWhenChanged(ctx, stack, deployer, datastore, gitService, true)
@@ -142,13 +146,28 @@ func redeployWhenChangedSecondStage(
 	}
 
 	gitConfig := workflows.MergeSourceAndFile(gitSrc, file)
+	if gitConfig == nil {
+		return errors.Errorf("stack %v has a git source with no git configuration", stack.ID)
+	}
 
 	var gitCommitChangedOrForceUpdate bool
 
 	if !stack.FromAppTemplate {
 		updated, newHash, err := update.UpdateGitObject(ctx, gitService, fmt.Sprintf("stack:%d", stack.ID), gitConfig, false, stack.ProjectPath)
 		if err != nil {
+			if txErr := datastore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+				return workflows.SaveStackStatus(tx, userContext, stack.WorkflowID, stack.ID, gitSrc.ID, err)
+			}); txErr != nil {
+				return fmt.Errorf("git check failed for stack %d: %w (and failed to persist status: %w)", stack.ID, err, txErr)
+			}
+
 			return err
+		}
+
+		if txErr := datastore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+			return workflows.SaveStackStatus(tx, userContext, stack.WorkflowID, stack.ID, gitSrc.ID, nil)
+		}); txErr != nil {
+			return fmt.Errorf("failed to persist git sync status for stack %d: %w", stack.ID, txErr)
 		}
 
 		if updated {
@@ -173,6 +192,8 @@ func redeployWhenChangedSecondStage(
 	}); err != nil {
 		return errors.WithMessagef(err, "failed to set the deploying status for stack %v", stack.ID)
 	}
+
+	previousDeploymentInfo := stack.CurrentDeploymentInfo
 
 	stack.CurrentDeploymentInfo = &portainer.StackDeploymentInfo{
 		RepositoryURL:   gitConfig.URL,
@@ -226,6 +247,9 @@ func redeployWhenChangedSecondStage(
 	}
 
 	deployErr := redeployStack(stack)
+	if deployErr != nil {
+		stack.CurrentDeploymentInfo = previousDeploymentInfo
+	}
 
 	if err := datastore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		stack.UpdateDate = time.Now().Unix()
@@ -235,13 +259,85 @@ func redeployWhenChangedSecondStage(
 			return err
 		}
 
+		if deployErr != nil {
+			return nil
+		}
+
 		newHash := gitConfig.ConfigHash
 
 		return workflows.UpdateArtifactFileForStack(tx, stack.WorkflowID, stack.ID, gitSrc.ID, func(a *portainer.ArtifactFile) {
 			a.Hash = newHash
+			a.RefStatus = portainer.SourceStatusHealthy
+			a.RefError = ""
+			a.PathStatus = portainer.SourceStatusHealthy
+			a.PathError = ""
 		})
 	}); err != nil {
 		return errors.WithMessagef(err, "failed to update the stack %v", stack.ID)
+	}
+
+	return nil
+}
+
+type erroredSwarmStack struct {
+	stack    portainer.Stack
+	endpoint *portainer.Endpoint
+}
+
+// ReconcileSwarmStackStatus flips errored Swarm stacks back to active once their live services recover.
+func ReconcileSwarmStackStatus(ctx context.Context, datastore dataservices.DataStore, swarmStackManager portainer.SwarmStackManager) error {
+	var erroredStacks []erroredSwarmStack
+
+	if err := datastore.ViewTx(func(tx dataservices.DataStoreTx) error {
+		stacks, err := tx.Stack().ReadAll(func(stack portainer.Stack) bool {
+			return stack.Type == portainer.DockerSwarmStack && stack.Status == portainer.StackStatusError
+		})
+		if err != nil {
+			return err
+		}
+
+		for _, stack := range stacks {
+			endpoint, err := tx.Endpoint().Endpoint(stack.EndpointID)
+			if err != nil {
+				log.Warn().Err(err).Int("stack_id", int(stack.ID)).Msg("Failed to find the environment for stack status check")
+				continue
+			}
+
+			erroredStacks = append(erroredStacks, erroredSwarmStack{stack: stack, endpoint: endpoint})
+		}
+
+		return nil
+	}); err != nil {
+		return errors.WithMessage(err, "failed to list errored swarm stacks")
+	}
+
+	for _, es := range erroredStacks {
+		running, err := swarmStackManager.CheckRunningStatus(ctx, &es.stack, es.endpoint)
+		if err != nil {
+			log.Warn().Err(err).Int("stack_id", int(es.stack.ID)).Msg("Failed to check swarm stack status")
+			continue
+		}
+
+		if !running {
+			continue
+		}
+
+		if err := datastore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+			current, err := tx.Stack().Read(es.stack.ID)
+			if err != nil {
+				return err
+			}
+
+			if current.Status != portainer.StackStatusError {
+				return nil
+			}
+
+			stackutils.UpdateStackStatusFromDeploymentResult(current, nil)
+
+			return tx.Stack().Update(current.ID, current)
+		}); err != nil {
+			log.Error().Err(err).Int("stack_id", int(es.stack.ID)).Msg("Failed to update stack status after recovery")
+		}
 	}
 
 	return nil

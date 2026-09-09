@@ -49,7 +49,7 @@ export function PersistentVolumeClaimsDatatable() {
   const namespaces = namespacesQuery.data ?? [];
   const deleteClaimsMutation = useDeletePersistentVolumeClaims(envId);
   const claimsQuery = usePersistentVolumeClaims(envId, {
-    refetchInterval: tableState.autoRefreshRate * 1000,
+    refetchInterval: tableState.autoRefreshRateMS,
     select: filterVolumeClaims,
   });
   const claims = claimsQuery.data ?? [];
@@ -96,7 +96,11 @@ export function PersistentVolumeClaimsDatatable() {
       />
 
       {editResizeClaim && (
-        <Modal onDismiss={() => setEditResizeClaim(null)} size="md">
+        <Modal
+          onDismiss={() => setEditResizeClaim(null)}
+          size="md"
+          aria-label="Resize Persistent Volume Claim"
+        >
           <ResizeClaimEditForm
             claim={editResizeClaim}
             onDismiss={() => setEditResizeClaim(null)}

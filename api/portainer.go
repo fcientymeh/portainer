@@ -21,9 +21,11 @@ import (
 	"github.com/docker/docker/api/types/volume"
 	"github.com/segmentio/encoding/json"
 	"golang.org/x/oauth2"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/tools/remotecommand"
+	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
 type (
@@ -50,6 +52,8 @@ type (
 	// AutoUpdateSettings represents the git auto sync config for stack deployment
 	AutoUpdateSettings struct {
 		// Auto update interval
+		// Deprecated: polling interval now lives on the associated Source (Source.Interval).
+		// Kept for DB backwards-compatibility only; new code must not read or write this field.
 		Interval string `example:"1m30s"`
 		// A UUID generated from client
 		Webhook string `example:"05de31a2-79fa-4644-9c12-faa67e5c49f0"`
@@ -114,6 +118,8 @@ type (
 		TrustedOrigins            *string
 		NoSetupToken              *bool
 		SetupToken                *string
+		EdgePortainerURL          *string
+		EdgeTrustOnFirstConnect   *bool
 	}
 
 	// CustomTemplateVariableDefinition
@@ -667,6 +673,26 @@ type (
 		Charts          []PolicyChartSummary `json:"charts"`
 		Bundles         []PolicyChartBundle  `json:"bundles,omitempty"`
 		RestoreSettings *RestoreSettings     `json:"restoreSettings,omitempty"`
+	}
+
+	// ResourcePatchConfig is the Config payload for resource-patch-k8s PolicyDesiredState entries:
+	// a policy-agnostic set of field patches the agent applies authoritatively and reverses on detach.
+	ResourcePatchConfig struct {
+		Patches []ResourcePatchOperation `json:"patches"`
+	}
+
+	// ResourcePatchOperation is the patcher operation details for the agent to apply.
+	ResourcePatchOperation struct {
+		APIVersion       string                     `json:"apiVersion"`
+		Kind             string                     `json:"kind"`
+		Resource         string                     `json:"resource"`
+		Name             string                     `json:"name"`
+		Namespace        string                     `json:"namespace,omitempty"`
+		FieldPath        []string                   `json:"fieldPath"`
+		Values           map[string]json.RawMessage `json:"values"`
+		OwnedKeyPrefixes []string                   `json:"ownedKeyPrefixes"`
+		Exclusive        bool                       `json:"exclusive,omitempty"`
+		CreateIfMissing  bool                       `json:"createIfMissing,omitempty"`
 	}
 
 	// PolicyType represents the type of policy
@@ -1329,12 +1355,17 @@ type (
 		Registry *Registry           `json:"registry,omitempty"`
 		Helm     *HelmConfig         `json:"helm,omitempty"`
 
-		Public             bool     `json:"public"`
-		AdministratorsOnly bool     `json:"administratorsOnly"`
-		UserAccesses       []UserID `json:"userAccesses"`
-		TeamAccesses       []TeamID `json:"teamAccesses"`
-		OwnerID            UserID   `json:"ownerID,omitempty"`
+		Public             bool         `json:"public"`
+		AdministratorsOnly bool         `json:"administratorsOnly"`
+		UserAccesses       []UserID     `json:"userAccesses"`
+		TeamAccesses       []TeamID     `json:"teamAccesses"`
+		OwnerID            UserID       `json:"ownerID,omitempty"`
+		Status             SourceStatus `json:"status,omitempty"`
+		StatusError        string       `json:"statusError,omitempty"`
+		Interval           string       `json:"interval,omitempty" example:"5m"`
 	}
+
+	SourceStatus int
 
 	// SourceID represents a source identifier
 	SourceID int
@@ -1371,6 +1402,8 @@ type (
 		ID TeamID `json:"Id" example:"1"`
 		// Team name
 		Name string `json:"Name" example:"developers"`
+		// Whether members of this team are denied access to Portainer itself (EE only)
+		DenyPortainerAccess bool `json:"DenyPortainerAccess" example:"false"`
 	}
 
 	// TeamAccessPolicies represent the association of an access policy and a team
@@ -1633,10 +1666,14 @@ type (
 
 	// ArtifactFile represents one file within an artifact, tied to a specific source and location within it
 	ArtifactFile struct {
-		SourceID SourceID `json:"sourceId"`
-		Path     string   `json:"path,omitempty" example:"portainer.yaml"`
-		Ref      string   `json:"ref,omitempty" example:"refs/heads/main"`
-		Hash     string   `json:"hash,omitempty" example:"abc123"`
+		SourceID   SourceID     `json:"sourceId"`
+		Path       string       `json:"path,omitempty" example:"portainer.yaml"`
+		Ref        string       `json:"ref,omitempty" example:"refs/heads/main"`
+		Hash       string       `json:"hash,omitempty" example:"abc123"`
+		RefStatus  SourceStatus `json:"refStatus,omitempty"`
+		RefError   string       `json:"refError,omitempty"`
+		PathStatus SourceStatus `json:"pathStatus,omitempty"`
+		PathError  string       `json:"pathError,omitempty"`
 	}
 
 	// Workflow represents a GitOps workflow
@@ -1852,6 +1889,7 @@ type (
 		SetIsKubeAdmin(isKubeAdmin bool)
 		GetClientNonAdminNamespaces() []string
 		SetClientNonAdminNamespaces([]string)
+		GetMetricsClient() metricsv.Interface
 		NamespaceAccessPoliciesDeleteNamespace(ns string) error
 		UpdateNamespaceAccessPolicies(accessPolicies map[string]K8sNamespaceAccessPolicy) error
 		GetNamespaceAccessPolicies() (map[string]K8sNamespaceAccessPolicy, error)
@@ -1868,6 +1906,9 @@ type (
 
 		// ConfigMap
 		GetConfigMap(namespace, configMapName string) (models.K8sConfigMap, error)
+		CreateConfigMap(namespace string, request models.K8sConfigMapWriteRequest) (models.K8sConfigMap, error)
+		UpdateConfigMap(namespace string, request models.K8sConfigMapWriteRequest) (models.K8sConfigMap, error)
+		DeleteConfigMap(namespace, name string) error
 		CombineConfigMapWithApplications(configMap models.K8sConfigMap) (models.K8sConfigMap, error)
 
 		// CronJob
@@ -1891,6 +1932,7 @@ type (
 		HasStackName(namespace string, stackName string) (bool, error)
 
 		// Ingress
+		GetIngressClasses() ([]models.K8sIngressClass, error)
 		GetIngressControllers() (models.K8sIngressControllers, error)
 		GetIngress(namespace, ingressName string) (models.K8sIngressInfo, error)
 		GetIngresses(namespace string) ([]models.K8sIngressInfo, error)
@@ -1923,10 +1965,28 @@ type (
 		GetMaxResourceLimits(skipNamespace string, overCommitEnabled bool, resourceOverCommitPercent int) (K8sNodeLimits, error)
 
 		// Pod
+		GetPods(namespace string, opts models.K8sResourceListOptions) ([]corev1.Pod, error)
+		GetPodLogsStream(ctx context.Context, namespace, podName string, opts corev1.PodLogOptions) (io.ReadCloser, error)
 		CreateUserShellPod(ctx context.Context, serviceAccountName, shellPodImage string) (*KubernetesShellPod, error)
 		DeletePod(namespace, name string) error
 		RestartPod(namespace, name string) error
 		SupportsPodRestart(ctx context.Context) (bool, error)
+
+		// ReplicaSet
+		GetReplicaSets(namespace, ownerDeployment string, opts models.K8sResourceListOptions) ([]appsv1.ReplicaSet, error)
+
+		// Deployment
+		GetDeployment(namespace, name string) (*appsv1.Deployment, error)
+		GetDeployments(namespace string, opts models.K8sResourceListOptions) ([]appsv1.Deployment, error)
+		CreateDeployment(namespace string, request models.K8sDeploymentWriteRequest) (*appsv1.Deployment, error)
+		UpdateDeployment(namespace string, request models.K8sDeploymentWriteRequest) (*appsv1.Deployment, error)
+		ScaleDeployment(namespace, name string, replicas int32) (*appsv1.Deployment, error)
+		PatchDeployment(namespace, name string, request models.K8sDeploymentPatchRequest) (*appsv1.Deployment, error)
+		RolloutUndo(namespace, name string, revision int64) (*appsv1.Deployment, error)
+		DeleteDeployment(namespace, name string) error
+
+		// ResourceQuota
+		GetResourceQuotas(namespace string) (*[]corev1.ResourceQuota, error)
 
 		// RBAC
 		IsRBACEnabled() (bool, error)
@@ -1946,6 +2006,9 @@ type (
 		// Secret
 		GetSecrets(namespace string) ([]models.K8sSecret, error)
 		GetSecret(namespace string, secretName string) (models.K8sSecret, error)
+		CreateSecret(namespace string, request models.K8sSecretWriteRequest) (models.K8sSecret, error)
+		UpdateSecret(namespace string, request models.K8sSecretWriteRequest) (models.K8sSecret, error)
+		DeleteSecret(namespace, name string) error
 		CombineSecretWithApplications(secret models.K8sSecret) (models.K8sSecret, error)
 
 		// ServiceAccount
@@ -1956,12 +2019,14 @@ type (
 		RemoveImagePullSecretFromServiceAccount(namespace, serviceAccountName, secretName string) error
 		UpdateServiceAccountImagePullSecrets(namespace, name string, secretNames []string) error
 		SetupUserServiceAccount(int, []int, bool) error
+		RemoveUserServiceAccountBindings(userID int) error
+		RemoveUserServiceAccount(userID int) error
 		GetPortainerUserServiceAccount(tokendata *TokenData) (*corev1.ServiceAccount, error)
 		GetServiceAccountBearerToken(userID int) (string, error)
 
 		// Service
 		GetServices(namespace string) ([]models.K8sServiceInfo, error)
-		CombineServicesWithApplications(services []models.K8sServiceInfo) ([]models.K8sServiceInfo, error)
+		CombineServicesWithApplications(namespace string, services []models.K8sServiceInfo) ([]models.K8sServiceInfo, error)
 		CreateService(namespace string, info models.K8sServiceInfo) error
 		DeleteServices(reqs models.K8sServiceDeleteRequests) error
 		UpdateService(namespace string, info models.K8sServiceInfo) error
@@ -1992,6 +2057,7 @@ type (
 		// PersistentVolumeClaim
 		GetPersistentVolumeClaims(namespace string) ([]models.K8sPersistentVolumeClaim, error)
 		GetPersistentVolumeClaim(namespace, name string) (*models.K8sPersistentVolumeClaim, error)
+		CreatePersistentVolumeClaim(namespace string, request models.K8sPersistentVolumeClaimCreateRequest) (*models.K8sPersistentVolumeClaim, error)
 		DeletePersistentVolumeClaims(reqs models.K8sVolumeDeleteRequests) error
 		ResizePersistentVolumeClaim(namespace, name, newSize string) error
 	}
@@ -2051,14 +2117,15 @@ type (
 		Deploy(ctx context.Context, stack *Stack, prune bool, pullImage bool, endpoint *Endpoint, registries []Registry) error
 		Remove(ctx context.Context, stack *Stack, endpoint *Endpoint) error
 		NormalizeStackName(name string) string
+		CheckRunningStatus(ctx context.Context, stack *Stack, endpoint *Endpoint) (bool, error)
 	}
 )
 
 const (
 	// APIVersion is the version number of the Portainer API
-	APIVersion = "2.43.0"
+	APIVersion = "2.45.0"
 	// Support annotation for the API version ("STS" for Short-Term Support or "LTS" for Long-Term Support)
-	APIVersionSupport = "STS"
+	APIVersionSupport = "LTS"
 	// Edition is what this edition of Portainer is called
 	Edition = PortainerCE
 	// ComposeSyntaxMaxVersion is a maximum supported version of the docker compose syntax
@@ -2112,6 +2179,8 @@ const (
 	AuthCookieKey = "portainer_api_key"
 	// PortainerCacheHeader is used to enabled FE caching for Kubernetes resources
 	PortainerCacheHeader = "X-Portainer-Cache"
+	// APIKeyHeader is the name of the header used for API key authentication
+	APIKeyHeader = "X-API-KEY"
 	// KubectlShellImageEnvVar is the environment variable used to override the default kubectl shell image
 	KubectlShellImageEnvVar = "KUBECTL_SHELL_IMAGE"
 	// PullLimitCheckDisabledEnvVar is the environment variable used to disable the pull limit check
@@ -2133,6 +2202,14 @@ const (
 	NoSetupTokenEnvVar = "PORTAINER_NO_SETUP_TOKEN"
 	// SetupTokenEnvVar is the environment variable used to provide a custom setup token for admin initialization and restore on an uninitialized instance
 	SetupTokenEnvVar = "PORTAINER_SETUP_TOKEN"
+	// CSRFAllowNoOriginEnvVar is the environment variable used to allow unsafe cookie-authenticated requests that carry no Origin or Sec-Fetch-Site header, reverting the CSRF protection to fail open for such requests
+	CSRFAllowNoOriginEnvVar = "CSRF_ALLOW_NO_ORIGIN"
+	// EdgeComputeEnvVar is the environment variable used to enable Edge Compute features
+	EdgeComputeEnvVar = "EDGE_COMPUTE"
+	// EdgePortainerURLEnvVar is the environment variable used to set the URL that edge agents connect back to
+	EdgePortainerURLEnvVar = "EDGE_PORTAINER_URL"
+	// EdgeTrustOnFirstConnectEnvVar is the environment variable used to auto-trust edge agents on first connect
+	EdgeTrustOnFirstConnectEnvVar = "EDGE_TRUST_ON_FIRST_CONNECT"
 )
 
 // List of supported features
@@ -2299,6 +2376,15 @@ const (
 	SourceTypeGit
 	SourceTypeRegistry
 	SourceTypeHelm
+)
+
+const (
+	// SourceStatusUnknown means the check has not been performed yet
+	SourceStatusUnknown SourceStatus = iota
+	// SourceStatusHealthy means the last check succeeded
+	SourceStatusHealthy
+	// SourceStatusError means the last check failed
+	SourceStatusError
 )
 
 const (
@@ -2659,18 +2745,22 @@ const (
 
 const (
 	// PolicyType constants
-	RbacK8s            PolicyType = "rbac-k8s"
-	SecurityK8s        PolicyType = "security-k8s"
-	SetupK8s           PolicyType = "setup-k8s"
-	RegistryK8s        PolicyType = "registry-k8s"
-	RbacDocker         PolicyType = "rbac-docker"
-	SecurityDocker     PolicyType = "security-docker"
-	SetupDocker        PolicyType = "setup-docker"
-	RegistryDocker     PolicyType = "registry-docker"
-	ChangeConfirmation PolicyType = "change-confirmation"
-	CleanupDocker      PolicyType = "cleanup-docker"
-	ObservabilityK8s   PolicyType = "observability-k8s"
+	RbacK8s                 PolicyType = "rbac-k8s"
+	SecurityK8s             PolicyType = "security-k8s"
+	SetupK8s                PolicyType = "setup-k8s"
+	RegistryK8s             PolicyType = "registry-k8s"
+	RbacDocker              PolicyType = "rbac-docker"
+	SecurityDocker          PolicyType = "security-docker"
+	SetupDocker             PolicyType = "setup-docker"
+	RegistryDocker          PolicyType = "registry-docker"
+	ChangeConfirmation      PolicyType = "change-confirmation"
+	CleanupDocker           PolicyType = "cleanup-docker"
+	ObservabilityK8s        PolicyType = "observability-k8s"
+	PodSecurityStandardsK8s PolicyType = "pod-security-standards-k8s"
+	NetworkSecurityK8s      PolicyType = "network-security-k8s"
 )
+
+const ResourcePatchAgentType = "resource-patch-k8s"
 
 type HelmInstallStatus string
 

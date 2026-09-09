@@ -242,7 +242,7 @@ angular
 
       var group = {
         name: 'portainer.groups.group',
-        url: '/:id',
+        url: '/:id?tab',
         views: {
           'content@': {
             component: 'environmentGroupEditView',
@@ -297,6 +297,7 @@ angular
       var workflows = {
         name: 'portainer.gitops.workflows',
         url: '/workflows?search&sort&order&page&pageSize&status&type&platform&groupBy&groupFilter',
+        data: { docs: '/user/app-delivery/workflows' },
         params: {
           ...paginationParams(),
           sort: filterParam(),
@@ -314,9 +315,20 @@ angular
         },
       };
 
+      var gitopsWorkflowDetail = {
+        name: 'portainer.gitops.workflows.item',
+        url: '/:workflowId',
+        views: {
+          'content@': {
+            component: 'workflowItemView',
+          },
+        },
+      };
+
       var gitopsSources = {
         name: 'portainer.gitops.sources',
         url: '/sources?search&sort&order&page&pageSize&status&type',
+        data: { docs: '/user/app-delivery/sources' },
         params: {
           ...paginationParams(),
           sort: filterParam(),
@@ -373,6 +385,16 @@ angular
           'content@': {
             templateUrl: './views/init/admin/initAdmin.html',
             controller: 'InitAdminController',
+          },
+        },
+      };
+
+      const initEdge = {
+        name: 'portainer.init.edge',
+        url: '/edge',
+        views: {
+          'content@': {
+            component: 'initEdgeView',
           },
         },
       };
@@ -475,11 +497,13 @@ angular
       $stateRegistryProvider.register(home);
       $stateRegistryProvider.register(gitopsBase);
       $stateRegistryProvider.register(workflows);
+      $stateRegistryProvider.register(gitopsWorkflowDetail);
       $stateRegistryProvider.register(gitopsSources);
       $stateRegistryProvider.register(gitopsSourceDetail);
       $stateRegistryProvider.register(gitopsSourceCreate);
       $stateRegistryProvider.register(init);
       $stateRegistryProvider.register(initAdmin);
+      $stateRegistryProvider.register(initEdge);
       $stateRegistryProvider.register(settings);
       $stateRegistryProvider.register(settingsAuthentication);
       $stateRegistryProvider.register(settingsEdgeCompute);

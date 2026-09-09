@@ -2,94 +2,261 @@
 
 import * as z from 'zod';
 
-import {
-  IntstrType,
-  K8sIoApiCoreV1ConditionStatus,
-  Oauth2AuthStyle,
-  PlatformContainerPlatform,
-  PortainerAuthenticationMethod,
-  PortainerCustomTemplatePlatform,
-  PortainerEdgeJobLogsStatus,
-  PortainerEdgeStackDeploymentType,
-  PortainerEdgeStackStatusType,
-  PortainerEndpointStatus,
-  PortainerEndpointType,
-  PortainerMembershipRole,
-  PortainerRegistryType,
-  PortainerResourceAccessLevel,
-  PortainerResourceControlType,
-  PortainerSourceType,
-  PortainerStackStatus,
-  PortainerStackType,
-  PortainerTemplateType,
-  PortainerUserRole,
-  PortainerWebhookType,
-  SourcesSourceType,
-  UsersAccessLocation,
-  V1AppArmorProfileType,
-  V1ContainerRestartPolicy,
-  V1ContainerRestartRuleAction,
-  V1ContainerRestartRuleOnExitCodesOperator,
-  V1ManagedFieldsOperationType,
-  V1MountPropagationMode,
-  V1NamespaceConditionType,
-  V1NamespacePhase,
-  V1NodeAddressType,
-  V1NodeConditionType,
-  V1NodePhase,
-  V1PersistentVolumeAccessMode,
-  V1PersistentVolumeClaimPhase,
-  V1PersistentVolumeMode,
-  V1PersistentVolumePhase,
-  V1PersistentVolumeReclaimPolicy,
-  V1ProcMountType,
-  V1Protocol,
-  V1PullPolicy,
-  V1RecursiveReadOnlyMode,
-  V1ResourceName,
-  V1ResourceQuotaScope,
-  V1ResourceResizeRestartPolicy,
-  V1ScopeSelectorOperator,
-  V1SeccompProfileType,
-  V1Signal,
-  V1TaintEffect,
-  V1TerminationMessagePolicy,
-  V1UriScheme,
-  WorkflowsDeploymentPlatform,
-  WorkflowsStatus,
-  WorkflowsType,
-} from './types.gen';
-
-export const zWorkflowsStatus = z.enum(WorkflowsStatus);
-
-export const zWorkflowsWorkflowPhaseStatus = z.object({
-  error: z.string().optional(),
-  status: zWorkflowsStatus.optional(),
+export const zAuthAuthenticatePayload = z.object({
+  Password: z.string(),
+  Username: z.string(),
 });
 
-export const zWorkflowsWorkflowStatusObject = z.object({
-  artifact: zWorkflowsWorkflowPhaseStatus.optional(),
-  source: zWorkflowsWorkflowPhaseStatus.optional(),
-  target: zWorkflowsWorkflowPhaseStatus.optional(),
+export const zAuthAuthenticateResponse = z.object({
+  jwt: z.string().optional(),
 });
 
-export const zWorkflowsType = z.enum(WorkflowsType);
-
-export const zWorkflowsTarget = z.object({
-  edgeGroupIds: z.array(z.int()).optional(),
-  endpointId: z.int().optional(),
-  groupStatus: z.record(z.string(), zWorkflowsStatus).optional(),
-  namespace: z.string().optional(),
-  resolvedEndpointIds: z.array(z.int()).optional(),
+export const zAuthOauthPayload = z.object({
+  Code: z.string().optional(),
 });
 
-export const zWorkflowsDeploymentPlatform = z.enum(WorkflowsDeploymentPlatform);
+export const zBackupBackupPayload = z.object({
+  Password: z.string().optional(),
+});
+
+export const zBackupRestorePayload = z.object({
+  FileContent: z
+    .array(
+      z
+        .int()
+        .min(-2147483648, {
+          error: 'Invalid value: Expected int32 to be >= -2147483648',
+        })
+        .max(2147483647, {
+          error: 'Invalid value: Expected int32 to be <= 2147483647',
+        })
+    )
+    .optional(),
+  FileName: z.string().optional(),
+  Password: z.string().optional(),
+});
+
+export const zBuildBuildInfo = z.object({
+  BuildNumber: z.string().optional(),
+  GitCommit: z.string().optional(),
+  GoVersion: z.string().optional(),
+  ImageTag: z.string().optional(),
+  NodejsVersion: z.string().optional(),
+  PnpmVersion: z.string().optional(),
+  WebpackVersion: z.string().optional(),
+});
+
+export const zBuildDependenciesInfo = z.object({
+  ComposeVersion: z.string().optional(),
+  DockerVersion: z.string().optional(),
+  HelmVersion: z.string().optional(),
+  KubectlVersion: z.string().optional(),
+});
+
+export const zBuildRuntimeInfo = z.object({
+  Env: z.array(z.string()).optional(),
+});
+
+export const zContainersContainerGpusResponse = z.object({
+  gpus: z.string().optional(),
+});
+
+export const zCustomtemplatesFileResponse = z.object({
+  FileContent: z.string().optional(),
+});
+
+export const zDockerImagesCounters = z.object({
+  size: z.int().optional(),
+  total: z.int().optional(),
+});
+
+export const zEdgegroupsEdgeGroupCreatePayload = z.object({
+  Dynamic: z.boolean().optional(),
+  Endpoints: z.array(z.int()).optional(),
+  Name: z.string().optional(),
+  PartialMatch: z.boolean().optional(),
+  TagIDs: z.array(z.int()).optional(),
+});
+
+export const zEdgegroupsEdgeGroupUpdatePayload = z.object({
+  Dynamic: z.boolean().optional(),
+  Endpoints: z.array(z.int()).optional(),
+  Name: z.string().optional(),
+  PartialMatch: z.boolean().optional(),
+  TagIDs: z.array(z.int()).optional(),
+});
+
+export const zEdgejobsEdgeJobCreateFromFileContentPayload = z.object({
+  CronExpression: z.string().optional(),
+  EdgeGroups: z.array(z.int()).optional(),
+  Endpoints: z.array(z.int()).optional(),
+  FileContent: z.string().optional(),
+  Name: z.string().optional(),
+  Recurring: z.boolean().optional(),
+});
+
+export const zEdgejobsEdgeJobFileResponse = z.object({
+  FileContent: z.string().optional(),
+});
+
+export const zEdgejobsEdgeJobUpdatePayload = z.object({
+  CronExpression: z.string().optional(),
+  EdgeGroups: z.array(z.int()).optional(),
+  Endpoints: z.array(z.int()).optional(),
+  FileContent: z.string().optional(),
+  Name: z.string().optional(),
+  Recurring: z.boolean().optional(),
+});
+
+export const zEdgejobsFileResponse = z.object({
+  FileContent: z.string().optional(),
+});
+
+export const zEdgestacksEdgeStackFromGitRepositoryPayload = z.object({
+  DeploymentType: z
+    .union([z.literal(0), z.literal(1), z.literal(2)])
+    .optional(),
+  EdgeGroups: z.array(z.int()),
+  FilePathInRepository: z.string().optional().default('docker-compose.yml'),
+  Name: z.string(),
+  Registries: z.array(z.int()).optional(),
+  RepositoryAuthentication: z.boolean().optional(),
+  RepositoryPassword: z.string().optional(),
+  RepositoryReferenceName: z.string().optional(),
+  RepositoryURL: z.string().optional(),
+  RepositoryUsername: z.string().optional(),
+  SourceID: z.int().optional(),
+  TLSSkipVerify: z.boolean().optional(),
+  UseManifestNamespaces: z.boolean().optional(),
+});
+
+export const zEdgestacksEdgeStackFromStringPayload = z.object({
+  DeploymentType: z
+    .union([z.literal(0), z.literal(1), z.literal(2)])
+    .optional(),
+  EdgeGroups: z.array(z.int()).optional(),
+  Name: z.string(),
+  Registries: z.array(z.int()).optional(),
+  StackFileContent: z.string(),
+  UseManifestNamespaces: z.boolean().optional(),
+});
+
+export const zEdgestacksStackFileResponse = z.object({
+  StackFileContent: z.string().optional(),
+});
+
+export const zEndpointgroupsEndpointGroupTypeInfo = z.object({
+  Docker: z.int(),
+  Kubernetes: z.int(),
+  Mixed: z.boolean(),
+  Podman: z.int(),
+});
+
+export const zEndpointgroupsEndpointGroupCreatePayload = z.object({
+  AssociatedEndpoints: z.array(z.int()).optional(),
+  Description: z.string().optional(),
+  Name: z.string(),
+  TagIDs: z.array(z.int()).optional(),
+});
+
+export const zEndpointsDockerhubStatusResponse = z.object({
+  limit: z.int().optional(),
+  remaining: z.int().optional(),
+});
+
+export const zEndpointsEndpointCreateGlobalKeyResponse = z.object({
+  endpointID: z.int().optional(),
+});
+
+export const zEndpointsEndpointDeleteBatchPartialResponse = z.object({
+  deleted: z.array(z.int()).optional(),
+  errors: z.array(z.int()).optional(),
+});
+
+export const zEndpointsEndpointDeleteRequest = z.object({
+  deleteCluster: z.boolean().optional(),
+  id: z.int().optional(),
+});
+
+export const zEndpointsEndpointDeleteBatchPayload = z.object({
+  endpoints: z.array(zEndpointsEndpointDeleteRequest).optional(),
+});
+
+export const zEndpointsEndpointUpdateRelationsPayload = z.object({
+  Relations: z
+    .record(
+      z.string(),
+      z.object({
+        EdgeGroups: z.array(z.int()).optional(),
+        Group: z.int().optional(),
+        Tags: z.array(z.int()).optional(),
+      })
+    )
+    .optional(),
+});
+
+export const zEndpointsForceUpdateServicePayload = z.object({
+  PullImage: z.boolean().optional(),
+  ServiceID: z.string().optional(),
+});
+
+export const zEndpointsGroupCount = z.object({
+  count: z.int().optional(),
+  groupID: z.int().optional(),
+  groupName: z.string().optional(),
+});
+
+export const zEndpointsHealthCounts = z.object({
+  down: z.int().optional(),
+  heartbeat: z.int().optional(),
+  outdated: z.int().optional(),
+  up: z.int().optional(),
+});
+
+export const zEndpointsPlatformCounts = z.object({
+  azure: z.int().optional(),
+  docker: z.int().optional(),
+  kubernetes: z.int().optional(),
+  podman: z.int().optional(),
+});
+
+export const zEndpointsEnvironmentSummaryCountsResponse = z.object({
+  byGroup: z.array(zEndpointsGroupCount).optional(),
+  byHealth: zEndpointsHealthCounts.optional(),
+  byPlatformType: zEndpointsPlatformCounts.optional(),
+  down: z.int().optional(),
+  outdated: z.int().optional(),
+  total: z.int().optional(),
+  unassigned: z.int().optional(),
+  up: z.int().optional(),
+});
+
+export const zGitopsFileResponse = z.object({
+  FileContent: z.string().optional(),
+});
+
+export const zGitopsRepositoryFilePreviewPayload = z.object({
+  password: z.string().optional(),
+  reference: z.string().optional(),
+  repository: z.string().optional(),
+  sourceID: z.int().optional(),
+  targetFile: z.string().optional(),
+  tlsSkipVerify: z.boolean().optional(),
+  username: z.string().optional(),
+});
 
 export const zGittypesGitAuthentication = z.object({
   AuthorizationType: z.int().optional(),
+  GitCredentialID: z.int().optional(),
   Password: z.string().optional(),
   Provider: z.int().optional(),
   Username: z.string().optional(),
+});
+
+export const zGittypesGitSource = z.object({
+  Authentication: zGittypesGitAuthentication.optional(),
+  TLSSkipVerify: z.boolean().optional(),
+  URL: z.string().optional(),
 });
 
 export const zGittypesRepoConfig = z.object({
@@ -101,181 +268,26 @@ export const zGittypesRepoConfig = z.object({
   URL: z.string().optional(),
 });
 
-export const zPortainerAutoUpdateSettings = z.object({
-  ForcePullImage: z.boolean().optional(),
-  ForceUpdate: z.boolean().optional(),
-  Interval: z.string().optional(),
-  JobID: z.string().optional(),
-  Webhook: z.string().optional(),
-});
-
-export const zWorkflowsWorkflow = z.object({
-  autoUpdate: zPortainerAutoUpdateSettings.optional(),
-  creationDate: z.int().optional(),
-  gitConfig: zGittypesRepoConfig.optional(),
-  id: z.int(),
-  lastSyncDate: z.int().optional(),
-  name: z.string(),
-  platform: zWorkflowsDeploymentPlatform,
-  status: zWorkflowsWorkflowStatusObject,
-  target: zWorkflowsTarget,
-  type: zWorkflowsType,
-});
-
-export const zWorkflowsStatusSummary = z.object({
-  error: z.int().optional(),
-  healthy: z.int().optional(),
-  paused: z.int().optional(),
-  syncing: z.int().optional(),
-  unknown: z.int().optional(),
-});
-
-export const zWebhooksWebhookUpdatePayload = z.object({
-  RegistryID: z.int().optional(),
-});
-
-export const zPortainerWebhookType = z.enum(PortainerWebhookType);
-
-export const zWebhooksWebhookCreatePayload = z.object({
-  EndpointID: z.int().optional(),
-  RegistryID: z.int().optional(),
-  ResourceID: z.string().optional(),
-  WebhookType: zPortainerWebhookType.optional(),
-});
-
-export const zV1ListMeta = z.object({
-  continue: z.string().optional(),
-  remainingItemCount: z.int().optional(),
-  resourceVersion: z.string().optional(),
-  selfLink: z.string().optional(),
-});
-
-export const zV1OwnerReference = z.object({
-  apiVersion: z.string().optional(),
-  blockOwnerDeletion: z.boolean().optional(),
-  controller: z.boolean().optional(),
-  kind: z.string().optional(),
-  name: z.string().optional(),
-  uid: z.string().optional(),
-});
-
-export const zV1ManagedFieldsOperationType = z.enum(
-  V1ManagedFieldsOperationType
-);
-
-export const zV1FieldsV1 = z.record(z.string(), z.unknown());
-
-export const zV1ManagedFieldsEntry = z.object({
-  apiVersion: z.string().optional(),
-  fieldsType: z.string().optional(),
-  fieldsV1: zV1FieldsV1.optional(),
-  manager: z.string().optional(),
-  operation: zV1ManagedFieldsOperationType.optional(),
-  subresource: z.string().optional(),
-  time: z.string().optional(),
-});
-
-export const zV1ObjectMeta = z.object({
-  annotations: z.record(z.string(), z.string()).optional(),
-  creationTimestamp: z.string().optional(),
-  deletionGracePeriodSeconds: z.int().optional(),
-  deletionTimestamp: z.string().optional(),
-  finalizers: z.array(z.string()).optional(),
-  generateName: z.string().optional(),
-  generation: z.int().optional(),
-  labels: z.record(z.string(), z.string()).optional(),
-  managedFields: z.array(zV1ManagedFieldsEntry).optional(),
+export const zHelmInstallChartPayload = z.object({
+  atomic: z.boolean().optional(),
+  chart: z.string().optional(),
   name: z.string().optional(),
   namespace: z.string().optional(),
-  ownerReferences: z.array(zV1OwnerReference).optional(),
-  resourceVersion: z.string().optional(),
-  selfLink: z.string().optional(),
-  uid: z.string().optional(),
+  repo: z.string().optional(),
+  values: z.string().optional(),
+  version: z.string().optional(),
 });
 
-export const zResourceQuantity = z.object({
-  Format: z.enum(['DecimalExponent', 'BinarySI', 'DecimalSI']).optional(),
+export const zImagesImageResponse = z.object({
+  created: z.int().optional(),
+  id: z.string().optional(),
+  nodeName: z.string().optional(),
+  size: z.int().optional(),
+  tags: z.array(z.string()).optional(),
+  used: z.boolean().optional(),
 });
 
-export const zV1ResourceList = z.record(z.string(), zResourceQuantity);
-
-export const zV1Beta1ContainerMetrics = z.object({
-  name: z.string().optional(),
-  usage: zV1ResourceList.optional(),
-});
-
-export const zV1Beta1PodMetrics = z.object({
-  apiVersion: z.string().optional(),
-  containers: z.array(zV1Beta1ContainerMetrics).optional(),
-  kind: z.string().optional(),
-  metadata: zV1ObjectMeta.optional(),
-  timestamp: z.string().optional(),
-  window: z.string().optional(),
-});
-
-export const zV1Beta1PodMetricsList = z.object({
-  apiVersion: z.string().optional(),
-  items: z.array(zV1Beta1PodMetrics).optional(),
-  kind: z.string().optional(),
-  metadata: zV1ListMeta.optional(),
-});
-
-export const zV1Beta1NodeMetrics = z.object({
-  apiVersion: z.string().optional(),
-  kind: z.string().optional(),
-  metadata: zV1ObjectMeta.optional(),
-  timestamp: z.string().optional(),
-  usage: zV1ResourceList.optional(),
-  window: z.string().optional(),
-});
-
-export const zV1Beta1NodeMetricsList = z.object({
-  apiVersion: z.string().optional(),
-  items: z.array(zV1Beta1NodeMetrics).optional(),
-  kind: z.string().optional(),
-  metadata: zV1ListMeta.optional(),
-});
-
-export const zV1WindowsSecurityContextOptions = z.object({
-  gmsaCredentialSpec: z.string().optional(),
-  gmsaCredentialSpecName: z.string().optional(),
-  hostProcess: z.boolean().optional(),
-  runAsUserName: z.string().optional(),
-});
-
-export const zV1RecursiveReadOnlyMode = z.enum(V1RecursiveReadOnlyMode);
-
-export const zV1MountPropagationMode = z.enum(V1MountPropagationMode);
-
-export const zV1VolumeMount = z.object({
-  mountPath: z.string().optional(),
-  mountPropagation: zV1MountPropagationMode.optional(),
-  name: z.string().optional(),
-  readOnly: z.boolean().optional(),
-  recursiveReadOnly: zV1RecursiveReadOnlyMode.optional(),
-  subPath: z.string().optional(),
-  subPathExpr: z.string().optional(),
-});
-
-export const zV1VolumeDevice = z.object({
-  devicePath: z.string().optional(),
-  name: z.string().optional(),
-});
-
-export const zV1UriScheme = z.enum(V1UriScheme);
-
-export const zV1TerminationMessagePolicy = z.enum(V1TerminationMessagePolicy);
-
-export const zV1TaintEffect = z.enum(V1TaintEffect);
-
-export const zV1Taint = z.object({
-  effect: zV1TaintEffect.optional(),
-  key: z.string().optional(),
-  timeAdded: z.string().optional(),
-  value: z.string().optional(),
-});
-
-export const zIntstrType = z.enum(IntstrType);
+export const zIntstrType = z.union([z.literal(0), z.literal(1)]);
 
 export const zIntstrIntOrString = z.object({
   IntVal: z.int().optional(),
@@ -283,522 +295,536 @@ export const zIntstrIntOrString = z.object({
   Type: zIntstrType.optional(),
 });
 
-export const zV1TcpSocketAction = z.object({
-  host: z.string().optional(),
-  port: zIntstrIntOrString.optional(),
-});
+export const zK8sIoApiCoreV1ConditionStatus = z.enum([
+  'True',
+  'False',
+  'Unknown',
+]);
 
-export const zV1SleepAction = z.object({
-  seconds: z.int().optional(),
-});
-
-export const zV1Signal = z.enum(V1Signal);
-
-export const zV1SeccompProfileType = z.enum(V1SeccompProfileType);
-
-export const zV1SeccompProfile = z.object({
-  localhostProfile: z.string().optional(),
-  type: zV1SeccompProfileType.optional(),
-});
-
-export const zV1SeLinuxOptions = z.object({
-  level: z.string().optional(),
-  role: z.string().optional(),
-  type: z.string().optional(),
-  user: z.string().optional(),
-});
-
-export const zV1ProcMountType = z.enum(V1ProcMountType);
-
-export const zV1Capabilities = z.object({
-  add: z.array(z.string()).optional(),
-  drop: z.array(z.string()).optional(),
-});
-
-export const zV1AppArmorProfileType = z.enum(V1AppArmorProfileType);
-
-export const zV1AppArmorProfile = z.object({
-  localhostProfile: z.string().optional(),
-  type: zV1AppArmorProfileType.optional(),
-});
-
-export const zV1SecurityContext = z.object({
-  allowPrivilegeEscalation: z.boolean().optional(),
-  appArmorProfile: zV1AppArmorProfile.optional(),
-  capabilities: zV1Capabilities.optional(),
-  privileged: z.boolean().optional(),
-  procMount: zV1ProcMountType.optional(),
-  readOnlyRootFilesystem: z.boolean().optional(),
-  runAsGroup: z.int().optional(),
-  runAsNonRoot: z.boolean().optional(),
-  runAsUser: z.int().optional(),
-  seLinuxOptions: zV1SeLinuxOptions.optional(),
-  seccompProfile: zV1SeccompProfile.optional(),
-  windowsOptions: zV1WindowsSecurityContextOptions.optional(),
-});
-
-export const zV1SecretReference = z.object({
+export const zK8sIoApiCoreV1HttpHeader = z.object({
   name: z.string().optional(),
-  namespace: z.string().optional(),
+  value: z.string().optional(),
 });
 
-export const zV1SecretKeySelector = z.object({
-  key: z.string().optional(),
+export const zK8sIoApiCoreV1LocalObjectReference = z.object({
   name: z.string().optional(),
-  optional: z.boolean().optional(),
 });
 
-export const zV1SecretEnvSource = z.object({
-  name: z.string().optional(),
-  optional: z.boolean().optional(),
-});
-
-export const zV1ResourceQuotaScope = z.enum(V1ResourceQuotaScope);
-
-export const zV1ScopeSelectorOperator = z.enum(V1ScopeSelectorOperator);
-
-export const zV1ScopedResourceSelectorRequirement = z.object({
-  operator: zV1ScopeSelectorOperator.optional(),
-  scopeName: zV1ResourceQuotaScope.optional(),
-  values: z.array(z.string()).optional(),
-});
-
-export const zV1ScopeSelector = z.object({
-  matchExpressions: z.array(zV1ScopedResourceSelectorRequirement).optional(),
-});
-
-export const zV1RoleRef = z.object({
-  apiGroup: z.string().optional(),
+export const zK8sIoApiCoreV1ObjectReference = z.object({
+  apiVersion: z.string().optional(),
+  fieldPath: z.string().optional(),
   kind: z.string().optional(),
   name: z.string().optional(),
+  namespace: z.string().optional(),
+  resourceVersion: z.string().optional(),
+  uid: z.string().optional(),
 });
-
-export const zV1ResourceResizeRestartPolicy = z.enum(
-  V1ResourceResizeRestartPolicy
-);
 
 export const zK8sIoApiCoreV1ResourceClaim = z.object({
   name: z.string().optional(),
   request: z.string().optional(),
 });
 
-export const zV1ResourceRequirements = z.object({
-  claims: z.array(zK8sIoApiCoreV1ResourceClaim).optional(),
-  limits: zV1ResourceList.optional(),
-  requests: zV1ResourceList.optional(),
-});
-
-export const zV1ResourceQuotaStatus = z.object({
-  hard: zV1ResourceList.optional(),
-  used: zV1ResourceList.optional(),
-});
-
-export const zV1ResourceQuotaSpec = z.object({
-  hard: zV1ResourceList.optional(),
-  scopeSelector: zV1ScopeSelector.optional(),
-  scopes: z.array(zV1ResourceQuotaScope).optional(),
-});
-
-export const zV1ResourceQuota = z.object({
-  apiVersion: z.string().optional(),
-  kind: z.string().optional(),
-  metadata: zV1ObjectMeta.optional(),
-  spec: zV1ResourceQuotaSpec.optional(),
-  status: zV1ResourceQuotaStatus.optional(),
-});
-
-export const zV1ResourceName = z.enum(V1ResourceName);
-
-export const zV1ResourceFieldSelector = z.object({
-  containerName: z.string().optional(),
-  divisor: zResourceQuantity.optional(),
-  resource: z.string().optional(),
-});
-
-export const zV1PullPolicy = z.enum(V1PullPolicy);
-
-export const zV1Protocol = z.enum(V1Protocol);
-
-export const zV1HttpHeader = z.object({
-  name: z.string().optional(),
-  value: z.string().optional(),
-});
-
-export const zV1HttpGetAction = z.object({
-  host: z.string().optional(),
-  httpHeaders: z.array(zV1HttpHeader).optional(),
-  path: z.string().optional(),
-  port: zIntstrIntOrString.optional(),
-  scheme: zV1UriScheme.optional(),
-});
-
-export const zV1GrpcAction = z.object({
-  port: z.int().optional(),
-  service: z.string().optional(),
-});
-
-export const zV1ExecAction = z.object({
-  command: z.array(z.string()).optional(),
-});
-
-export const zV1Probe = z.object({
-  exec: zV1ExecAction.optional(),
-  failureThreshold: z.int().optional(),
-  grpc: zV1GrpcAction.optional(),
-  httpGet: zV1HttpGetAction.optional(),
-  initialDelaySeconds: z.int().optional(),
-  periodSeconds: z.int().optional(),
-  successThreshold: z.int().optional(),
-  tcpSocket: zV1TcpSocketAction.optional(),
-  terminationGracePeriodSeconds: z.int().optional(),
-  timeoutSeconds: z.int().optional(),
-});
-
-export const zV1PersistentVolumeReclaimPolicy = z.enum(
-  V1PersistentVolumeReclaimPolicy
-);
-
-export const zV1PersistentVolumePhase = z.enum(V1PersistentVolumePhase);
-
-export const zV1PersistentVolumeMode = z.enum(V1PersistentVolumeMode);
-
-export const zV1PersistentVolumeClaimPhase = z.enum(
-  V1PersistentVolumeClaimPhase
-);
-
-export const zV1PersistentVolumeAccessMode = z.enum(
-  V1PersistentVolumeAccessMode
-);
-
-export const zV1ObjectReference = z.object({
-  apiVersion: z.string().optional(),
-  fieldPath: z.string().optional(),
+export const zK8sIoApiRbacV1Subject = z.object({
+  apiGroup: z.string().optional(),
   kind: z.string().optional(),
   name: z.string().optional(),
   namespace: z.string().optional(),
-  resourceVersion: z.string().optional(),
-  uid: z.string().optional(),
 });
 
-export const zV1ObjectFieldSelector = z.object({
+export const zKubernetesConfiguration = z.object({
+  ConfigurationOwner: z.string().optional(),
+  Data: z.record(z.string(), z.unknown()).optional(),
+  Kind: z.string().optional(),
+});
+
+export const zKubernetesCustomResourceMetadata = z.object({
   apiVersion: z.string().optional(),
-  fieldPath: z.string().optional(),
-});
-
-export const zV1NodeSwapStatus = z.object({
-  capacity: z.int().optional(),
-});
-
-export const zV1NodeSystemInfo = z.object({
-  architecture: z.string().optional(),
-  bootID: z.string().optional(),
-  containerRuntimeVersion: z.string().optional(),
-  kernelVersion: z.string().optional(),
-  kubeProxyVersion: z.string().optional(),
-  kubeletVersion: z.string().optional(),
-  machineID: z.string().optional(),
-  operatingSystem: z.string().optional(),
-  osImage: z.string().optional(),
-  swap: zV1NodeSwapStatus.optional(),
-  systemUUID: z.string().optional(),
-});
-
-export const zV1AttachedVolume = z.object({
-  devicePath: z.string().optional(),
+  kind: z.string().optional(),
   name: z.string().optional(),
+  plural: z.string().optional(),
+  scope: z.string().optional(),
 });
 
-export const zV1NodeRuntimeHandlerFeatures = z.object({
-  recursiveReadOnlyMounts: z.boolean().optional(),
-  userNamespaces: z.boolean().optional(),
+export const zKubernetesK8sApplicationResource = z.object({
+  CpuLimit: z.number().optional(),
+  CpuRequest: z.number().optional(),
+  MemoryLimit: z.int().optional(),
+  MemoryRequest: z.int().optional(),
 });
 
-export const zV1NodeRuntimeHandler = z.object({
-  features: zV1NodeRuntimeHandlerFeatures.optional(),
+export const zKubernetesK8sClusterRole = z.object({
+  creationDate: z.string().optional(),
+  isSystem: z.boolean().optional(),
   name: z.string().optional(),
-});
-
-export const zV1NodePhase = z.enum(V1NodePhase);
-
-export const zV1ContainerImage = z.object({
-  names: z.array(z.string()).optional(),
-  sizeBytes: z.int().optional(),
-});
-
-export const zV1NodeFeatures = z.object({
-  supplementalGroupsPolicy: z.boolean().optional(),
-});
-
-export const zV1DaemonEndpoint = z.object({
-  Port: z.int().optional(),
-});
-
-export const zV1NodeDaemonEndpoints = z.object({
-  kubeletEndpoint: zV1DaemonEndpoint.optional(),
-});
-
-export const zV1ConfigMapNodeConfigSource = z.object({
-  kubeletConfigKey: z.string().optional(),
-  name: z.string().optional(),
-  namespace: z.string().optional(),
-  resourceVersion: z.string().optional(),
   uid: z.string().optional(),
 });
 
-export const zV1NodeConfigSource = z.object({
-  configMap: zV1ConfigMapNodeConfigSource.optional(),
+export const zKubernetesK8sConfigMapWriteRequest = z.object({
+  Annotations: z.record(z.string(), z.string()).optional(),
+  Data: z.record(z.string(), z.string()).optional(),
+  Labels: z.record(z.string(), z.string()).optional(),
+  Name: z.string().optional(),
 });
 
-export const zV1NodeConfigStatus = z.object({
-  active: zV1NodeConfigSource.optional(),
-  assigned: zV1NodeConfigSource.optional(),
-  error: z.string().optional(),
-  lastKnownGood: zV1NodeConfigSource.optional(),
+export const zKubernetesK8sConfigurationOwnerResource = z.object({
+  Id: z.string().optional(),
+  Name: z.string().optional(),
+  ResourceKind: z.string().optional(),
 });
 
-export const zV1NodeConditionType = z.enum(V1NodeConditionType);
-
-export const zK8sIoApiCoreV1ConditionStatus = z.enum(
-  K8sIoApiCoreV1ConditionStatus
-);
-
-export const zV1NodeCondition = z.object({
-  lastHeartbeatTime: z.string().optional(),
-  lastTransitionTime: z.string().optional(),
-  message: z.string().optional(),
-  reason: z.string().optional(),
-  status: zK8sIoApiCoreV1ConditionStatus.optional(),
-  type: zV1NodeConditionType.optional(),
+export const zKubernetesK8sConfigMap = z.object({
+  Annotations: z.record(z.string(), z.string()).optional(),
+  ConfigurationOwner: z.string().optional(),
+  ConfigurationOwnerId: z.string().optional(),
+  ConfigurationOwners: z
+    .array(zKubernetesK8sConfigurationOwnerResource)
+    .optional(),
+  CreationDate: z.string().optional(),
+  Data: z.record(z.string(), z.string()).optional(),
+  IsUsed: z.boolean().optional(),
+  Labels: z.record(z.string(), z.string()).optional(),
+  Name: z.string().optional(),
+  Namespace: z.string().optional(),
+  UID: z.string().optional(),
 });
 
-export const zV1NodeAddressType = z.enum(V1NodeAddressType);
-
-export const zV1NodeAddress = z.object({
-  address: z.string().optional(),
-  type: zV1NodeAddressType.optional(),
-});
-
-export const zV1NodeStatus = z.object({
-  addresses: z.array(zV1NodeAddress).optional(),
-  allocatable: zV1ResourceList.optional(),
-  capacity: zV1ResourceList.optional(),
-  conditions: z.array(zV1NodeCondition).optional(),
-  config: zV1NodeConfigStatus.optional(),
-  daemonEndpoints: zV1NodeDaemonEndpoints.optional(),
-  declaredFeatures: z.array(z.string()).optional(),
-  features: zV1NodeFeatures.optional(),
-  images: z.array(zV1ContainerImage).optional(),
-  nodeInfo: zV1NodeSystemInfo.optional(),
-  phase: zV1NodePhase.optional(),
-  runtimeHandlers: z.array(zV1NodeRuntimeHandler).optional(),
-  volumesAttached: z.array(zV1AttachedVolume).optional(),
-  volumesInUse: z.array(z.string()).optional(),
-});
-
-export const zV1NodeSpec = z.object({
-  configSource: zV1NodeConfigSource.optional(),
-  externalID: z.string().optional(),
-  podCIDR: z.string().optional(),
-  podCIDRs: z.array(z.string()).optional(),
-  providerID: z.string().optional(),
-  taints: z.array(zV1Taint).optional(),
-  unschedulable: z.boolean().optional(),
-});
-
-export const zV1NamespacePhase = z.enum(V1NamespacePhase);
-
-export const zV1NamespaceConditionType = z.enum(V1NamespaceConditionType);
-
-export const zV1NamespaceCondition = z.object({
-  lastTransitionTime: z.string().optional(),
-  message: z.string().optional(),
-  reason: z.string().optional(),
-  status: zK8sIoApiCoreV1ConditionStatus.optional(),
-  type: zV1NamespaceConditionType.optional(),
-});
-
-export const zV1NamespaceStatus = z.object({
-  conditions: z.array(zV1NamespaceCondition).optional(),
-  phase: zV1NamespacePhase.optional(),
-});
-
-export const zV1LocalObjectReference = z.object({
-  name: z.string().optional(),
-});
-
-export const zV1LifecycleHandler = z.object({
-  exec: zV1ExecAction.optional(),
-  httpGet: zV1HttpGetAction.optional(),
-  sleep: zV1SleepAction.optional(),
-  tcpSocket: zV1TcpSocketAction.optional(),
-});
-
-export const zV1Lifecycle = z.object({
-  postStart: zV1LifecycleHandler.optional(),
-  preStop: zV1LifecycleHandler.optional(),
-  stopSignal: zV1Signal.optional(),
-});
-
-export const zV1FileKeySelector = z.object({
-  key: z.string().optional(),
-  optional: z.boolean().optional(),
-  path: z.string().optional(),
-  volumeName: z.string().optional(),
-});
-
-export const zV1ConfigMapKeySelector = z.object({
-  key: z.string().optional(),
-  name: z.string().optional(),
-  optional: z.boolean().optional(),
-});
-
-export const zV1EnvVarSource = z.object({
-  configMapKeyRef: zV1ConfigMapKeySelector.optional(),
-  fieldRef: zV1ObjectFieldSelector.optional(),
-  fileKeyRef: zV1FileKeySelector.optional(),
-  resourceFieldRef: zV1ResourceFieldSelector.optional(),
-  secretKeyRef: zV1SecretKeySelector.optional(),
-});
-
-export const zV1EnvVar = z.object({
-  name: z.string().optional(),
-  value: z.string().optional(),
-  valueFrom: zV1EnvVarSource.optional(),
-});
-
-export const zV1ConfigMapEnvSource = z.object({
-  name: z.string().optional(),
-  optional: z.boolean().optional(),
-});
-
-export const zV1EnvFromSource = z.object({
-  configMapRef: zV1ConfigMapEnvSource.optional(),
-  prefix: z.string().optional(),
-  secretRef: zV1SecretEnvSource.optional(),
-});
-
-export const zV1ContainerRestartRuleOnExitCodesOperator = z.enum(
-  V1ContainerRestartRuleOnExitCodesOperator
-);
-
-export const zV1ContainerRestartRuleOnExitCodes = z.object({
-  operator: zV1ContainerRestartRuleOnExitCodesOperator.optional(),
-  values: z.array(z.int()).optional(),
-});
-
-export const zV1ContainerRestartRuleAction = z.enum(
-  V1ContainerRestartRuleAction
-);
-
-export const zV1ContainerRestartRule = z.object({
-  action: zV1ContainerRestartRuleAction.optional(),
-  exitCodes: zV1ContainerRestartRuleOnExitCodes.optional(),
-});
-
-export const zV1ContainerRestartPolicy = z.enum(V1ContainerRestartPolicy);
-
-export const zV1ContainerResizePolicy = z.object({
-  resourceName: zV1ResourceName.optional(),
-  restartPolicy: zV1ResourceResizeRestartPolicy.optional(),
-});
-
-export const zV1ContainerPort = z.object({
+export const zKubernetesK8sContainerPort = z.object({
   containerPort: z.int().optional(),
-  hostIP: z.string().optional(),
-  hostPort: z.int().optional(),
   name: z.string().optional(),
-  protocol: zV1Protocol.optional(),
+  protocol: z.string().optional(),
 });
 
-export const zV1Container = z.object({
+export const zKubernetesK8sCronJobDeleteRequests = z.record(
+  z.string(),
+  z.array(z.string())
+);
+
+export const zKubernetesK8sDashboard = z.object({
+  applicationsCount: z.int().optional(),
+  configMapsCount: z.int().optional(),
+  ingressesCount: z.int().optional(),
+  namespacesCount: z.int().optional(),
+  secretsCount: z.int().optional(),
+  servicesCount: z.int().optional(),
+  volumesCount: z.int().optional(),
+});
+
+export const zKubernetesK8sDeploymentPatchRequest = z.object({
+  annotations: z.record(z.string(), z.string()).optional(),
+  podAnnotations: z.record(z.string(), z.string()).optional(),
+});
+
+export const zKubernetesK8sDeploymentRollbackRequest = z.object({
+  revision: z.int().optional(),
+});
+
+export const zKubernetesK8sDeploymentScaleRequest = z.object({
+  replicas: z.int().optional(),
+});
+
+export const zKubernetesK8sEventInvolvedObject = z.object({
+  kind: z.string().optional(),
+  name: z.string().optional(),
+  namespace: z.string().optional(),
+  uid: z.string().optional(),
+});
+
+export const zKubernetesK8sEvent = z.object({
+  count: z.int().optional(),
+  eventTime: z.string().optional(),
+  firstTimestamp: z.string().optional(),
+  involvedObject: zKubernetesK8sEventInvolvedObject.optional(),
+  kind: z.string().optional(),
+  lastTimestamp: z.string().optional(),
+  message: z.string().optional(),
+  name: z.string().optional(),
+  namespace: z.string().optional(),
+  reason: z.string().optional(),
+  type: z.string().optional(),
+  uid: z.string().optional(),
+});
+
+export const zKubernetesK8sIngressClass = z.object({
+  Annotations: z.record(z.string(), z.string()).optional(),
+  Controller: z.string().optional(),
+  IsDefault: z.boolean().optional(),
+  Name: z.string().optional(),
+});
+
+export const zKubernetesK8sIngressController = z.object({
+  Availability: z.boolean().optional(),
+  ClassName: z.string().optional(),
+  Name: z.string().optional(),
+  New: z.boolean().optional(),
+  Type: z.string().optional(),
+  Used: z.boolean().optional(),
+});
+
+export const zKubernetesK8sIngressDeleteRequests = z.record(
+  z.string(),
+  z.array(z.string())
+);
+
+export const zKubernetesK8sIngressPath = z.object({
+  HasService: z.boolean().optional(),
+  Host: z.string().optional(),
+  IngressName: z.string().optional(),
+  Path: z.string().optional(),
+  PathType: z.string().optional(),
+  Port: z.int().optional(),
+  PortName: z.string().optional(),
+  ServiceName: z.string().optional(),
+});
+
+export const zKubernetesK8sIngressTls = z.object({
+  Hosts: z.array(z.string()).optional(),
+  SecretName: z.string().optional(),
+});
+
+export const zKubernetesK8sIngressInfo = z.object({
+  Annotations: z.record(z.string(), z.string()).optional(),
+  ClassName: z.string().optional(),
+  CreationDate: z.string().optional(),
+  Hosts: z.array(z.string()).optional(),
+  Labels: z.record(z.string(), z.string()).optional(),
+  Name: z.string().optional(),
+  Namespace: z.string().optional(),
+  Paths: z.array(zKubernetesK8sIngressPath).optional(),
+  TLS: z.array(zKubernetesK8sIngressTls).optional(),
+  Type: z.string().optional(),
+  UID: z.string().optional(),
+});
+
+export const zKubernetesK8sJobDeleteRequests = z.record(
+  z.string(),
+  z.array(z.string())
+);
+
+export const zKubernetesK8sPvcResizeRequest = z.object({
+  name: z.string().optional(),
+  namespace: z.string().optional(),
+  newSize: z.string().optional(),
+});
+
+export const zKubernetesK8sPodVolume = z.object({
+  claimName: z.string().optional(),
+  name: z.string().optional(),
+});
+
+export const zKubernetesK8sResourceQuota = z.object({
+  cpu: z.string().optional(),
+  enabled: z.boolean().optional(),
+  memory: z.string().optional(),
+});
+
+export const zKubernetesK8sNamespaceDetails = z.object({
+  Annotations: z.record(z.string(), z.string()).optional(),
+  Name: z.string().optional(),
+  Owner: z.string().optional(),
+  ResourceQuota: zKubernetesK8sResourceQuota.optional(),
+});
+
+export const zKubernetesK8sResourceRequirements = z.object({
+  limits: z.record(z.string(), z.string()).optional(),
+  requests: z.record(z.string(), z.string()).optional(),
+});
+
+export const zKubernetesK8sRole = z.object({
+  creationDate: z.string().optional(),
+  isSystem: z.boolean().optional(),
+  name: z.string().optional(),
+  namespace: z.string().optional(),
+  uid: z.string().optional(),
+});
+
+export const zKubernetesK8sRoleBindingDeleteRequests = z.record(
+  z.string(),
+  z.array(z.string())
+);
+
+export const zKubernetesK8sRoleDeleteRequests = z.record(
+  z.string(),
+  z.array(z.string())
+);
+
+export const zKubernetesK8sSecret = z.object({
+  Annotations: z.record(z.string(), z.string()).optional(),
+  ConfigurationOwner: z.string().optional(),
+  ConfigurationOwnerId: z.string().optional(),
+  ConfigurationOwners: z
+    .array(zKubernetesK8sConfigurationOwnerResource)
+    .optional(),
+  CreationDate: z.string().optional(),
+  Data: z.record(z.string(), z.string()).optional(),
+  IsUsed: z.boolean().optional(),
+  Labels: z.record(z.string(), z.string()).optional(),
+  Name: z.string().optional(),
+  Namespace: z.string().optional(),
+  SecretType: z.string().optional(),
+  UID: z.string().optional(),
+});
+
+export const zKubernetesK8sSecretKeyRef = z.object({
+  key: z.string().optional(),
+  name: z.string().optional(),
+});
+
+export const zKubernetesK8sEnvVar = z.object({
+  name: z.string().optional(),
+  secretRef: zKubernetesK8sSecretKeyRef.optional(),
+  value: z.string().optional(),
+});
+
+export const zKubernetesK8sSecretWriteRequest = z.object({
+  Annotations: z.record(z.string(), z.string()).optional(),
+  Data: z.record(z.string(), z.string()).optional(),
+  Labels: z.record(z.string(), z.string()).optional(),
+  Name: z.string().optional(),
+  SecretType: z.string().optional(),
+});
+
+export const zKubernetesK8sServiceAccount = z.object({
+  annotations: z.record(z.string(), z.string()).optional(),
+  automountServiceAccountToken: z.boolean().optional(),
+  creationDate: z.string().optional(),
+  imagePullSecrets: z.array(zK8sIoApiCoreV1LocalObjectReference).optional(),
+  isSystem: z.boolean().optional(),
+  labels: z.record(z.string(), z.string()).optional(),
+  name: z.string().optional(),
+  namespace: z.string().optional(),
+  uid: z.string().optional(),
+});
+
+export const zKubernetesK8sServiceAccountDeleteRequests = z.record(
+  z.string(),
+  z.array(z.string())
+);
+
+export const zKubernetesK8sServiceAccountImagePullSecretsUpdatePayload =
+  z.object({
+    secretNames: z.array(z.string()).optional(),
+  });
+
+export const zKubernetesK8sServiceDeleteRequests = z.record(
+  z.string(),
+  z.array(z.string())
+);
+
+export const zKubernetesK8sServiceIngress = z.object({
+  Hostname: z.string().optional(),
+  IP: z.string().optional(),
+});
+
+export const zKubernetesK8sServicePort = z.object({
+  Name: z.string().optional(),
+  NodePort: z.int().optional(),
+  Port: z.int().optional(),
+  Protocol: z.string().optional(),
+  TargetPort: z.string().optional(),
+});
+
+export const zKubernetesK8sVolumeDeleteRequest = z.object({
+  name: z.string().optional(),
+  namespace: z.string().optional(),
+});
+
+export const zKubernetesK8sVolumeMount = z.object({
+  mountPath: z.string().optional(),
+  name: z.string().optional(),
+  readOnly: z.boolean().optional(),
+  subPath: z.string().optional(),
+});
+
+export const zKubernetesK8sContainer = z.object({
   args: z.array(z.string()).optional(),
   command: z.array(z.string()).optional(),
-  env: z.array(zV1EnvVar).optional(),
-  envFrom: z.array(zV1EnvFromSource).optional(),
+  env: z.array(zKubernetesK8sEnvVar).optional(),
+  envFromSecrets: z.array(z.string()).optional(),
   image: z.string().optional(),
-  imagePullPolicy: zV1PullPolicy.optional(),
-  lifecycle: zV1Lifecycle.optional(),
-  livenessProbe: zV1Probe.optional(),
+  imagePullPolicy: z.string().optional(),
   name: z.string().optional(),
-  ports: z.array(zV1ContainerPort).optional(),
-  readinessProbe: zV1Probe.optional(),
-  resizePolicy: z.array(zV1ContainerResizePolicy).optional(),
-  resources: zV1ResourceRequirements.optional(),
-  restartPolicy: zV1ContainerRestartPolicy.optional(),
-  restartPolicyRules: z.array(zV1ContainerRestartRule).optional(),
-  securityContext: zV1SecurityContext.optional(),
-  startupProbe: zV1Probe.optional(),
-  stdin: z.boolean().optional(),
-  stdinOnce: z.boolean().optional(),
-  terminationMessagePath: z.string().optional(),
-  terminationMessagePolicy: zV1TerminationMessagePolicy.optional(),
-  tty: z.boolean().optional(),
-  volumeDevices: z.array(zV1VolumeDevice).optional(),
-  volumeMounts: z.array(zV1VolumeMount).optional(),
+  ports: z.array(zKubernetesK8sContainerPort).optional(),
+  resources: zKubernetesK8sResourceRequirements.optional(),
+  volumeMounts: z.array(zKubernetesK8sVolumeMount).optional(),
   workingDir: z.string().optional(),
 });
 
-export const zV1CsiPersistentVolumeSource = z.object({
-  controllerExpandSecretRef: zV1SecretReference.optional(),
-  controllerPublishSecretRef: zV1SecretReference.optional(),
-  driver: z.string().optional(),
-  fsType: z.string().optional(),
-  nodeExpandSecretRef: zV1SecretReference.optional(),
-  nodePublishSecretRef: zV1SecretReference.optional(),
-  nodeStageSecretRef: zV1SecretReference.optional(),
-  readOnly: z.boolean().optional(),
-  volumeAttributes: z.record(z.string(), z.string()).optional(),
-  volumeHandle: z.string().optional(),
+export const zKubernetesK8sPodTemplate = z.object({
+  annotations: z.record(z.string(), z.string()).optional(),
+  containers: z.array(zKubernetesK8sContainer).optional(),
+  labels: z.record(z.string(), z.string()).optional(),
+  volumes: z.array(zKubernetesK8sPodVolume).optional(),
 });
 
-export const zUsersThemePayload = z.object({
-  color: z.enum(['dark', 'light', 'highcontrast', 'auto']).optional(),
+export const zKubernetesK8sDeploymentWriteRequest = z.object({
+  annotations: z.record(z.string(), z.string()).optional(),
+  labels: z.record(z.string(), z.string()).optional(),
+  name: z.string().optional(),
+  pod: zKubernetesK8sPodTemplate.optional(),
+  replicas: z.int().optional(),
+  selector: z.record(z.string(), z.string()).optional(),
 });
 
-export const zUsersUserUpdatePayload = z.object({
-  NewPassword: z.string(),
-  Password: z.string(),
-  Role: z.union([z.literal(1), z.literal(2)]),
-  Theme: zUsersThemePayload.optional(),
-  UseCache: z.boolean(),
-  Username: z.string(),
+export const zKubernetesMetadata = z.object({
+  annotations: z.record(z.string(), z.string()).optional(),
+  labels: z.record(z.string(), z.string()).optional(),
 });
 
-export const zUsersUserUpdatePasswordPayload = z.object({
-  NewPassword: z.string(),
-  Password: z.string(),
+export const zKubernetesPod = z.object({
+  ContainerName: z.string().optional(),
+  CreationDate: z.string().optional(),
+  Image: z.string().optional(),
+  ImagePullPolicy: z.string().optional(),
+  Name: z.string().optional(),
+  NodeName: z.string().optional(),
+  PodIP: z.string().optional(),
+  Resource: zKubernetesK8sApplicationResource.optional(),
+  Status: z.string().optional(),
+  Uid: z.string().optional(),
 });
 
-export const zUsersUserCreatePayload = z.object({
-  Password: z.string(),
-  Role: z.union([z.literal(1), z.literal(2)]),
-  Username: z.string(),
+export const zKubernetesTlsInfo = z.object({
+  hosts: z.array(z.string()).optional(),
 });
 
-export const zUsersUserAccessTokenCreatePayload = z.object({
-  description: z.string(),
-  password: z.string(),
+export const zKubernetesIngressRule = z.object({
+  Host: z.string().optional(),
+  IP: z.string().optional(),
+  Path: z.string().optional(),
+  TLS: z.array(zKubernetesTlsInfo).optional(),
 });
 
-export const zPortainerHelmUserRepository = z.object({
-  Id: z.int().optional(),
-  URL: z.string().optional(),
-  UserId: z.int().optional(),
+export const zKubernetesPublishedPort = z.object({
+  IngressRules: z.array(zKubernetesIngressRule).optional(),
+  Port: z.int().optional(),
 });
 
-export const zUsersHelmUserRepositoryResponse = z.object({
-  GlobalRepository: z.string().optional(),
-  UserRepositories: z.array(zPortainerHelmUserRepository).optional(),
+export const zKubernetesK8sApplication = z.object({
+  Annotations: z.record(z.string(), z.string()).optional(),
+  ApplicationOwner: z.string().optional(),
+  ApplicationType: z.string().optional(),
+  Configurations: z.array(zKubernetesConfiguration).optional(),
+  Containers: z.array(z.unknown()).optional(),
+  CreationDate: z.string().optional(),
+  CustomResourceMetadata: zKubernetesCustomResourceMetadata.optional(),
+  DeploymentType: z.string().optional(),
+  Id: z.string().optional(),
+  Image: z.string().optional(),
+  Kind: z.string().optional(),
+  Labels: z.record(z.string(), z.string()).optional(),
+  LoadBalancerIPAddress: z.string().optional(),
+  MatchLabels: z.record(z.string(), z.string()).optional(),
+  Metadata: zKubernetesMetadata.optional(),
+  Name: z.string().optional(),
+  Namespace: z.string().optional(),
+  Pods: z.array(zKubernetesPod).optional(),
+  PublishedPorts: z.array(zKubernetesPublishedPort).optional(),
+  Resource: zKubernetesK8sApplicationResource.optional(),
+  ResourcePool: z.string().optional(),
+  RunningPodsCount: z.int().optional(),
+  ServiceId: z.string().optional(),
+  ServiceName: z.string().optional(),
+  ServiceType: z.string().optional(),
+  StackId: z.string().optional(),
+  StackKind: z.string().optional(),
+  StackName: z.string().optional(),
+  Status: z.string().optional(),
+  TotalPodsCount: z.int().optional(),
+  Uid: z.string().optional(),
 });
 
-export const zUsersAdminInitPayload = z.object({
-  Password: z.string(),
-  Username: z.string(),
+export const zKubernetesK8sServiceInfo = z.object({
+  AllocateLoadBalancerNodePorts: z.boolean().optional(),
+  Annotations: z.record(z.string(), z.string()).optional(),
+  Applications: z.array(zKubernetesK8sApplication).optional(),
+  ClusterIPs: z.array(z.string()).optional(),
+  CreationDate: z.string().optional(),
+  ExternalIPs: z.array(z.string()).optional(),
+  ExternalName: z.string().optional(),
+  IngressStatus: z.array(zKubernetesK8sServiceIngress).optional(),
+  Labels: z.record(z.string(), z.string()).optional(),
+  Name: z.string().optional(),
+  Namespace: z.string().optional(),
+  Ports: z.array(zKubernetesK8sServicePort).optional(),
+  Selector: z.record(z.string(), z.string()).optional(),
+  Type: z.string().optional(),
+  UID: z.string().optional(),
 });
 
-export const zUsersAddHelmRepoUrlPayload = z.object({
-  url: z.string().optional(),
+export const zKubernetesDescribeResourceResponse = z.object({
+  describe: z.string().optional(),
 });
+
+export const zKubernetesDrainNodePayload = z.object({
+  DeleteEmptyDirData: z.boolean().optional(),
+  DisableEviction: z.boolean().optional(),
+  Force: z.boolean().optional(),
+  GracePeriodSeconds: z.int().optional(),
+  IgnoreDaemonSets: z.boolean().optional(),
+  TimeoutSeconds: z.int().optional(),
+});
+
+export const zKubernetesKubernetesVersionResponse = z.object({
+  buildDate: z.string().optional(),
+  compiler: z.string().optional(),
+  emulationMajor: z.string().optional(),
+  emulationMinor: z.string().optional(),
+  gitCommit: z.string().optional(),
+  gitTreeState: z.string().optional(),
+  gitVersion: z.string().optional(),
+  goVersion: z.string().optional(),
+  major: z.string().optional(),
+  minCompatibilityMajor: z.string().optional(),
+  minCompatibilityMinor: z.string().optional(),
+  minor: z.string().optional(),
+  platform: z.string().optional(),
+  supportsPodRestart: z.boolean().optional(),
+});
+
+export const zKubernetesManifestDryRunPayload = z.object({
+  manifests: z.array(z.string()).optional(),
+  namespace: z.string().optional(),
+});
+
+export const zKubernetesManifestDryRunResult = z.object({
+  documentIndex: z.int().optional(),
+  kind: z.string().optional(),
+  message: z.string().optional(),
+  name: z.string().optional(),
+  namespace: z.string().optional(),
+  status: z.string().optional(),
+});
+
+export const zKubernetesManifestDryRunResponse = z.object({
+  results: z.array(zKubernetesManifestDryRunResult).optional(),
+});
+
+export const zKubernetesNamespacesToggleSystemPayload = z.object({
+  System: z.boolean().optional(),
+});
+
+export const zMotdMotd = z.object({
+  ContentLayout: z.record(z.string(), z.string()).optional(),
+  Hash: z.array(z.int()).optional(),
+  Message: z.string().optional(),
+  Style: z.string().optional(),
+  Title: z.string().optional(),
+});
+
+export const zOauth2AuthStyle = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+]);
+
+export const zPlatformContainerPlatform = z.enum([
+  'Docker',
+  'Docker Standalone',
+  'Docker Swarm',
+  'Kubernetes',
+  'Podman',
+]);
 
 export const zPortainerApiKey = z.object({
   dateCreated: z.int().optional(),
@@ -810,46 +836,730 @@ export const zPortainerApiKey = z.object({
   userId: z.int().optional(),
 });
 
-export const zUsersAccessTokenResponse = z.object({
-  apiKey: zPortainerApiKey.optional(),
-  rawAPIKey: z.string().optional(),
+export const zPortainerAccessPolicy = z.object({
+  Namespaces: z.array(z.string()).optional(),
+  RoleId: z.int(),
 });
 
-export const zUsersAccessLocation = z.enum(UsersAccessLocation);
+export const zPortainerAuthenticationMethod = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+]);
 
-export const zUsersEffectiveAccessEntry = z.object({
-  accessLocation: zUsersAccessLocation.optional(),
-  endpointId: z.int().optional(),
-  endpointName: z.string().optional(),
-  groupId: z.int().optional(),
-  groupName: z.string().optional(),
-  roleId: z.int().optional(),
-  roleName: z.string().optional(),
-  rolePriority: z.int().optional(),
-  teamId: z.int().optional(),
-  teamName: z.string().optional(),
+export const zPortainerAuthorizations = z.record(z.string(), z.boolean());
+
+export const zPortainerAutoUpdateSettings = z.object({
+  ForcePullImage: z.boolean().optional(),
+  ForceUpdate: z.boolean().optional(),
+  Interval: z.string().optional(),
+  JobID: z.string().optional(),
+  Webhook: z.string().optional(),
 });
 
-export const zUnstructuredUnstructured = z.object({
-  Object: z.record(z.string(), z.unknown()).optional(),
+export const zPortainerAzureCredentials = z.object({
+  ApplicationID: z.string(),
+  AuthenticationKey: z.string(),
+  TenantID: z.string(),
 });
 
-export const zPortainerTemplateVolume = z.object({
-  bind: z.string().optional(),
-  container: z.string().optional(),
-  readonly: z.boolean().optional(),
+export const zPortainerCustomTemplatePlatform = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+]);
+
+export const zPortainerCustomTemplateVariableDefinition = z.object({
+  defaultValue: z.string().optional(),
+  description: z.string().optional(),
+  label: z.string().optional(),
+  name: z.string().optional(),
 });
 
-export const zPortainerTemplateType = z.enum(PortainerTemplateType);
+export const zCustomtemplatesCustomTemplateFromFileContentPayload = z.object({
+  Description: z.string(),
+  EdgeTemplate: z.boolean().optional(),
+  FileContent: z.string(),
+  Logo: z.string().optional(),
+  Note: z.string().optional(),
+  Platform: z.union([z.literal(1), z.literal(2)]).optional(),
+  Title: z.string(),
+  Type: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  Variables: z.array(zPortainerCustomTemplateVariableDefinition).optional(),
+});
 
-export const zPortainerTemplateRepository = z.object({
-  stackfile: z.string().optional(),
-  url: z.string().optional(),
+export const zCustomtemplatesCustomTemplateFromGitRepositoryPayload = z.object({
+  ComposeFilePathInRepository: z
+    .string()
+    .optional()
+    .default('docker-compose.yml'),
+  Description: z.string(),
+  EdgeTemplate: z.boolean().optional(),
+  IsComposeFormat: z.boolean().optional(),
+  Logo: z.string().optional(),
+  Note: z.string().optional(),
+  Platform: z.union([z.literal(1), z.literal(2)]).optional(),
+  RepositoryAuthentication: z.boolean().optional(),
+  RepositoryPassword: z.string().optional(),
+  RepositoryReferenceName: z.string().optional(),
+  RepositoryURL: z.string().optional(),
+  RepositoryUsername: z.string().optional(),
+  SourceID: z.int(),
+  TLSSkipVerify: z.boolean().optional(),
+  Title: z.string(),
+  Type: z.union([z.literal(1), z.literal(2)]),
+  Variables: z.array(zPortainerCustomTemplateVariableDefinition).optional(),
+});
+
+export const zCustomtemplatesCustomTemplateUpdatePayload = z.object({
+  ComposeFilePathInRepository: z
+    .string()
+    .optional()
+    .default('docker-compose.yml'),
+  Description: z.string(),
+  EdgeTemplate: z.boolean().optional(),
+  FileContent: z.string(),
+  IsComposeFormat: z.boolean().optional(),
+  Logo: z.string().optional(),
+  Note: z.string().optional(),
+  Platform: z.union([z.literal(1), z.literal(2)]).optional(),
+  RepositoryAuthentication: z.boolean().optional(),
+  RepositoryPassword: z.string().optional(),
+  RepositoryReferenceName: z.string().optional(),
+  RepositoryURL: z.string().optional(),
+  RepositoryUsername: z.string().optional(),
+  SourceID: z.int().optional(),
+  TLSSkipVerify: z.boolean().optional(),
+  Title: z.string(),
+  Type: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  Variables: z.array(zPortainerCustomTemplateVariableDefinition).optional(),
+});
+
+export const zPortainerDiagnosticsData = z.object({
+  DNS: z.record(z.string(), z.string()).optional(),
+  Log: z.string().optional(),
+  Proxy: z.record(z.string(), z.string()).optional(),
+  Telnet: z.record(z.string(), z.string()).optional(),
+});
+
+export const zPortainerDockerSnapshotRaw = z.record(z.string(), z.unknown());
+
+export const zPortainerEcrData = z.object({
+  Region: z.string().optional(),
+});
+
+export const zPortainerEdge = z.object({
+  AsyncMode: z.boolean().optional(),
+  CommandInterval: z.int().optional(),
+  PingInterval: z.int().optional(),
+  SnapshotInterval: z.int().optional(),
+});
+
+export const zPortainerEdgeJobLogsStatus = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+]);
+
+export const zEdgejobsTaskContainer = z.object({
+  EndpointId: z.int().optional(),
+  EndpointName: z.string().optional(),
+  Id: z.string().optional(),
+  LogsStatus: zPortainerEdgeJobLogsStatus.optional(),
+});
+
+export const zPortainerEdgeJobEndpointMeta = z.object({
+  CollectLogs: z.boolean().optional(),
+  LogsStatus: zPortainerEdgeJobLogsStatus.optional(),
+});
+
+export const zPortainerEdgeJob = z.object({
+  Created: z.int().optional(),
+  CronExpression: z.string().optional(),
+  EdgeGroups: z.array(z.int()).optional(),
+  Endpoints: z.record(z.string(), zPortainerEdgeJobEndpointMeta).optional(),
+  GroupLogsCollection: z
+    .record(z.string(), zPortainerEdgeJobEndpointMeta)
+    .optional(),
+  Id: z.int().optional(),
+  Name: z.string().optional(),
+  Recurring: z.boolean().optional(),
+  ScriptPath: z.string().optional(),
+  Version: z.int().optional(),
+});
+
+export const zPortainerEdgeStackDeploymentType = z.union([
+  z.literal(0),
+  z.literal(1),
+]);
+
+export const zEdgestacksUpdateEdgeStackPayload = z.object({
+  DeploymentType: zPortainerEdgeStackDeploymentType.optional(),
+  EdgeGroups: z.array(z.int()).optional(),
+  StackFileContent: z.string().optional(),
+  UpdateVersion: z.boolean().optional(),
+  UseManifestNamespaces: z.boolean().optional(),
+});
+
+export const zPortainerEdgeStackStatusDetails = z.object({
+  Acknowledged: z.boolean().optional(),
+  Error: z.boolean().optional(),
+  ImagesPulled: z.boolean().optional(),
+  Ok: z.boolean().optional(),
+  Pending: z.boolean().optional(),
+  RemoteUpdateSuccess: z.boolean().optional(),
+  Remove: z.boolean().optional(),
+});
+
+export const zPortainerEdgeStackStatusType = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+  z.literal(6),
+  z.literal(7),
+  z.literal(8),
+  z.literal(9),
+  z.literal(10),
+  z.literal(11),
+  z.literal(12),
+  z.literal(13),
+]);
+
+export const zEdgestacksUpdateStatusPayload = z.object({
+  EndpointID: z.int().optional(),
+  Error: z.string().optional(),
+  Status: zPortainerEdgeStackStatusType.optional(),
+  Time: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    })
+    .optional(),
+  Version: z.int().optional(),
+});
+
+export const zPortainerEdgeStackDeploymentStatus = z.object({
+  Error: z.string().optional(),
+  RollbackTo: z.int().optional(),
+  Time: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    })
+    .optional(),
+  Type: zPortainerEdgeStackStatusType.optional(),
+  Version: z.int().optional(),
+});
+
+export const zPortainerEndpointSecuritySettings = z.object({
+  allowBindMountsForRegularUsers: z.boolean(),
+  allowContainerCapabilitiesForRegularUsers: z.boolean(),
+  allowDeviceMappingForRegularUsers: z.boolean(),
+  allowHostNamespaceForRegularUsers: z.boolean(),
+  allowPrivilegedModeForRegularUsers: z.boolean(),
+  allowSecurityOptForRegularUsers: z.boolean(),
+  allowStackManagementForRegularUsers: z.boolean(),
+  allowSysctlSettingForRegularUsers: z.boolean(),
+  allowVolumeBrowserForRegularUsers: z.boolean(),
+  enableHostManagementFeatures: z.boolean(),
+});
+
+export const zPortainerEndpointStatus = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+]);
+
+export const zPortainerEndpointType = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+  z.literal(6),
+  z.literal(7),
+]);
+
+export const zEdgegroupsDecoratedEdgeGroup = z.object({
+  Dynamic: z.boolean().optional(),
+  EndpointIds: z.int().optional(),
+  EndpointTypes: z.array(zPortainerEndpointType).optional(),
+  Endpoints: z.array(z.int()).optional(),
+  HasEdgeJob: z.boolean().optional(),
+  HasEdgeStack: z.boolean().optional(),
+  Id: z.int().optional(),
+  Name: z.string().optional(),
+  PartialMatch: z.boolean().optional(),
+  TagIds: z.array(z.int()).optional(),
+  TrustedEndpoints: z.array(z.int()).optional(),
+});
+
+export const zPortainerEnvironmentAgentData = z.object({
+  Version: z.string().optional(),
+});
+
+export const zPortainerEnvironmentEdgeSettings = z.object({
+  AsyncMode: z.boolean(),
+  CommandInterval: z.int(),
+  PingInterval: z.int(),
+  SnapshotInterval: z.int(),
+});
+
+export const zPortainerGithubRegistryData = z.object({
+  OrganisationName: z.string().optional(),
+  UseOrganisation: z.boolean().optional(),
+});
+
+export const zPortainerGitlabRegistryData = z.object({
+  InstanceURL: z.string().optional(),
+  ProjectId: z.int().optional(),
+  ProjectPath: z.string().optional(),
+});
+
+export const zPortainerGlobalDeploymentOptions = z.object({
+  hideStacksFunctionality: z.boolean().optional(),
+});
+
+export const zPortainerHelmConfig = z.object({
+  Atomic: z.boolean().optional(),
+  ChartName: z.string().optional(),
+  ChartPath: z.string().optional(),
+  ChartURL: z.string().optional(),
+  ChartVersion: z.string().optional(),
+  Namespace: z.string().optional(),
+  Timeout: z.string().optional(),
+  ValuesFiles: z.array(z.string()).optional(),
+  ValuesInline: z.string().optional(),
+});
+
+export const zPortainerHelmUserRepository = z.object({
+  Id: z.int().optional(),
+  URL: z.string().optional(),
+  UserId: z.int().optional(),
+});
+
+export const zPortainerInternalAuthSettings = z.object({
+  RequiredPasswordLength: z.int().optional(),
+});
+
+export const zPortainerK8sNodeLimits = z.object({
+  CPU: z.int().optional(),
+  Memory: z.int().optional(),
+});
+
+export const zPortainerK8sNodesLimits = z.record(
+  z.string(),
+  zPortainerK8sNodeLimits
+);
+
+export const zPortainerKubernetesFlags = z.object({
+  GPUOperator: z.boolean().optional(),
+  IsServerIngressClassDetected: z.boolean(),
+  IsServerMetricsDetected: z.boolean(),
+  IsServerStorageDetected: z.boolean(),
+});
+
+export const zPortainerKubernetesIngressClassConfig = z.object({
+  Blocked: z.boolean().optional(),
+  BlockedNamespaces: z.array(z.string()).optional(),
+  Name: z.string(),
+  Type: z.string(),
+});
+
+export const zPortainerKubernetesStorageClassConfig = z.object({
+  AccessModes: z.array(z.string()).optional(),
+  AllowVolumeExpansion: z.boolean(),
+  Name: z.string(),
+  Provisioner: z.string(),
+});
+
+export const zPortainerKubernetesConfiguration = z.object({
+  AllowNoneIngressClass: z.boolean(),
+  EnableResourceOverCommit: z.boolean().optional(),
+  IngressAvailabilityPerNamespace: z.boolean(),
+  IngressClasses: z.array(zPortainerKubernetesIngressClassConfig).optional(),
+  ResourceOverCommitPercentage: z.int().optional(),
+  RestrictDefaultNamespace: z.boolean().optional(),
+  StorageClasses: z.array(zPortainerKubernetesStorageClassConfig).optional(),
+  UseLoadBalancer: z.boolean().optional(),
+  UseServerMetrics: z.boolean().optional(),
+});
+
+export const zPortainerLdapGroupSearchSettings = z.object({
+  GroupAttribute: z.string().optional(),
+  GroupBaseDN: z.string().optional(),
+  GroupFilter: z.string().optional(),
+});
+
+export const zPortainerLdapSearchSettings = z.object({
+  BaseDN: z.string().optional(),
+  Filter: z.string().optional(),
+  UserNameAttribute: z.string().optional(),
+});
+
+export const zPortainerMembershipRole = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+]);
+
+export const zPortainerOAuthSettings = z.object({
+  AccessTokenURI: z.string().optional(),
+  AuthStyle: zOauth2AuthStyle.optional(),
+  AuthorizationURI: z.string().optional(),
+  ClientID: z.string().optional(),
+  ClientSecret: z.string().optional(),
+  DefaultTeamID: z.int().optional(),
+  KubeSecretKey: z.array(z.int()).optional(),
+  LogoutURI: z.string().optional(),
+  OAuthAutoCreateUsers: z.boolean().optional(),
+  RedirectURI: z.string().optional(),
+  ResourceURI: z.string().optional(),
+  SSO: z.boolean().optional(),
+  Scopes: z.string().optional(),
+  UserIdentifier: z.string().optional(),
 });
 
 export const zPortainerPair = z.object({
   name: z.string(),
   value: z.string(),
+});
+
+export const zEndpointsEndpointSettingsUpdatePayload = z.object({
+  allowBindMountsForRegularUsers: z.boolean().optional(),
+  allowContainerCapabilitiesForRegularUsers: z.boolean().optional(),
+  allowDeviceMappingForRegularUsers: z.boolean().optional(),
+  allowHostNamespaceForRegularUsers: z.boolean().optional(),
+  allowPrivilegedModeForRegularUsers: z.boolean().optional(),
+  allowSecurityOptForRegularUsers: z.boolean().optional(),
+  allowStackManagementForRegularUsers: z.boolean().optional(),
+  allowSysctlSettingForRegularUsers: z.boolean().optional(),
+  allowVolumeBrowserForRegularUsers: z.boolean().optional(),
+  enableGPUManagement: z.boolean().optional(),
+  enableHostManagementFeatures: z.boolean().optional(),
+  gpus: z.array(zPortainerPair).optional(),
+});
+
+export const zPortainerPerformanceMetrics = z.object({
+  CPUUsage: z.number().optional(),
+  DiskUsage: z.number().optional(),
+  MemoryUsage: z.number().optional(),
+  NetworkUsage: z.number().optional(),
+});
+
+export const zPortainerDockerSnapshot = z.object({
+  ContainerCount: z.int(),
+  DiagnosticsData: zPortainerDiagnosticsData.optional(),
+  DockerSnapshotRaw: zPortainerDockerSnapshotRaw.optional(),
+  DockerVersion: z.string(),
+  GpuUseAll: z.boolean(),
+  GpuUseList: z.array(z.string()).optional(),
+  HealthyContainerCount: z.int(),
+  ImageCount: z.int(),
+  IsPodman: z.boolean(),
+  NodeCount: z.int(),
+  PerformanceMetrics: zPortainerPerformanceMetrics.optional(),
+  RunningContainerCount: z.int(),
+  ServiceCount: z.int(),
+  StackCount: z.int(),
+  StoppedContainerCount: z.int(),
+  Swarm: z.boolean(),
+  Time: z.int(),
+  TotalCPU: z.int(),
+  TotalMemory: z.int(),
+  UnhealthyContainerCount: z.int(),
+  VolumeCount: z.int(),
+});
+
+export const zPortainerKubernetesSnapshot = z.object({
+  ClusterType: z.string().optional(),
+  DiagnosticsData: zPortainerDiagnosticsData.optional(),
+  GPUNodeCount: z.int().optional(),
+  KubernetesVersion: z.string(),
+  NodeCount: z.int(),
+  PerformanceMetrics: zPortainerPerformanceMetrics.optional(),
+  Time: z.int(),
+  TotalCPU: z.int(),
+  TotalGPU: z
+    .record(
+      z.string(),
+      z.coerce
+        .bigint()
+        .min(BigInt('-9223372036854775808'), {
+          error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+        })
+        .max(BigInt('9223372036854775807'), {
+          error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+        })
+    )
+    .optional(),
+  TotalMemory: z.int(),
+});
+
+export const zPortainerKubernetesData = z.object({
+  Configuration: zPortainerKubernetesConfiguration,
+  Flags: zPortainerKubernetesFlags,
+  Snapshots: z.array(zPortainerKubernetesSnapshot).optional(),
+});
+
+export const zPortainerQuayRegistryData = z.object({
+  OrganisationName: z.string().optional(),
+  UseOrganisation: z.boolean().optional(),
+});
+
+export const zPortainerRegistryType = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+  z.literal(6),
+  z.literal(7),
+  z.literal(8),
+]);
+
+export const zPortainerResourceAccessLevel = z.union([
+  z.literal(0),
+  z.literal(1),
+]);
+
+export const zPortainerResourceControlType = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+  z.literal(6),
+  z.literal(7),
+  z.literal(8),
+  z.literal(9),
+]);
+
+export const zPortainerRole = z.object({
+  Authorizations: zPortainerAuthorizations.optional(),
+  Description: z.string().optional(),
+  Id: z.int().optional(),
+  Name: z.string().optional(),
+  Priority: z.int().optional(),
+});
+
+export const zPortainerSslSettings = z.object({
+  certPath: z.string().optional(),
+  httpEnabled: z.boolean().optional(),
+  keyPath: z.string().optional(),
+  selfSigned: z.boolean().optional(),
+});
+
+export const zPortainerSourceStatus = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+]);
+
+export const zPortainerArtifactFile = z.object({
+  hash: z.string().optional(),
+  path: z.string().optional(),
+  pathError: z.string().optional(),
+  pathStatus: zPortainerSourceStatus.optional(),
+  ref: z.string().optional(),
+  refError: z.string().optional(),
+  refStatus: zPortainerSourceStatus.optional(),
+  sourceId: z.int().optional(),
+});
+
+export const zPortainerArtifact = z.object({
+  edgeGroups: z.array(z.int()).optional(),
+  edgeStackId: z.int().optional(),
+  envGroups: z.array(z.int()).optional(),
+  envIds: z.array(z.int()).optional(),
+  files: z.array(zPortainerArtifactFile).optional(),
+  stackId: z.int().optional(),
+});
+
+export const zPortainerSourceType = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+]);
+
+export const zPortainerStackDeploymentInfo = z.object({
+  AdditionalFiles: z.array(z.string()).optional(),
+  ConfigFilePath: z.string().optional(),
+  ConfigHash: z.string().optional(),
+  FileVersion: z.int().optional(),
+  ReferenceName: z.string().optional(),
+  RepositoryURL: z.string().optional(),
+  SourceID: z.int().optional(),
+  Version: z.int().optional(),
+});
+
+export const zPortainerEdgeStackStatus = z.object({
+  DeploymentInfo: zPortainerStackDeploymentInfo.optional(),
+  Details: zPortainerEdgeStackStatusDetails.optional(),
+  EndpointID: z.int().optional(),
+  Error: z.string().optional(),
+  ReadyRePullImage: z.boolean().optional(),
+  Status: z.array(zPortainerEdgeStackDeploymentStatus).optional(),
+  Type: zPortainerEdgeStackStatusType.optional(),
+});
+
+export const zPortainerEdgeStack = z.object({
+  CreatedBy: z.string().optional(),
+  CreatedByUserId: z.string().optional(),
+  CreationDate: z.int().optional(),
+  DeploymentType: zPortainerEdgeStackDeploymentType.optional(),
+  EdgeGroups: z.array(z.int()).optional(),
+  EntryPoint: z.string().optional(),
+  Id: z.int().optional(),
+  ManifestPath: z.string().optional(),
+  Name: z.string().optional(),
+  NumDeployments: z.int().optional(),
+  ProjectPath: z.string().optional(),
+  Status: z.record(z.string(), zPortainerEdgeStackStatus).optional(),
+  UseManifestNamespaces: z.boolean().optional(),
+  Version: z.int().optional(),
+});
+
+export const zPortainerStackOption = z.object({
+  HelmAtomic: z.boolean().optional(),
+  Prune: z.boolean().optional(),
+});
+
+export const zPortainerStackStatus = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+]);
+
+export const zPortainerStackDeploymentStatus = z.object({
+  Message: z.string().optional(),
+  Status: zPortainerStackStatus.optional(),
+  Time: z.int().optional(),
+});
+
+export const zPortainerStackType = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+]);
+
+export const zPortainerTlsConfiguration = z.object({
+  TLS: z.boolean(),
+  TLSCACert: z.string().optional(),
+  TLSCert: z.string().optional(),
+  TLSKey: z.string().optional(),
+  TLSSkipVerify: z.boolean(),
+});
+
+export const zPortainerLdapSettings = z.object({
+  AnonymousMode: z.boolean().optional(),
+  AutoCreateUsers: z.boolean().optional(),
+  GroupSearchSettings: z.array(zPortainerLdapGroupSearchSettings).optional(),
+  Password: z.string().optional(),
+  ReaderDN: z.string().optional(),
+  SearchSettings: z.array(zPortainerLdapSearchSettings).optional(),
+  StartTLS: z.boolean().optional(),
+  TLSConfig: zPortainerTlsConfiguration.optional(),
+  URL: z.string().optional(),
+});
+
+export const zLdapCheckPayload = z.object({
+  LDAPSettings: zPortainerLdapSettings.optional(),
+});
+
+export const zPortainerRegistryManagementConfiguration = z.object({
+  AccessToken: z.string().optional(),
+  AccessTokenExpiry: z.int().optional(),
+  Authentication: z.boolean().optional(),
+  Ecr: zPortainerEcrData.optional(),
+  Password: z.string().optional(),
+  TLSConfig: zPortainerTlsConfiguration.optional(),
+  Type: zPortainerRegistryType.optional(),
+  Username: z.string().optional(),
+});
+
+export const zPortainerSettings = z.object({
+  AgentSecret: z.string().optional(),
+  AllowBindMountsForRegularUsers: z.boolean().optional(),
+  AllowContainerCapabilitiesForRegularUsers: z.boolean().optional(),
+  AllowDeviceMappingForRegularUsers: z.boolean().optional(),
+  AllowHostNamespaceForRegularUsers: z.boolean().optional(),
+  AllowPrivilegedModeForRegularUsers: z.boolean().optional(),
+  AllowStackManagementForRegularUsers: z.boolean().optional(),
+  AllowVolumeBrowserForRegularUsers: z.boolean().optional(),
+  AuthenticationMethod: zPortainerAuthenticationMethod.optional(),
+  BlackListedLabels: z.array(zPortainerPair).optional(),
+  DisplayDonationHeader: z.boolean().optional(),
+  DisplayExternalContributors: z.boolean().optional(),
+  Edge: zPortainerEdge.optional(),
+  EdgeAgentCheckinInterval: z.int().optional(),
+  EdgePortainerUrl: z.string().optional(),
+  EnableEdgeComputeFeatures: z.boolean().optional(),
+  EnableHostManagementFeatures: z.boolean().optional(),
+  EnforceEdgeID: z.boolean().optional(),
+  FeatureFlagSettings: z.record(z.string(), z.boolean()).optional(),
+  ForceSecureCookies: z.boolean().optional(),
+  GlobalDeploymentOptions: zPortainerGlobalDeploymentOptions.optional(),
+  HelmRepositoryURL: z.string().optional(),
+  InternalAuthSettings: zPortainerInternalAuthSettings.optional(),
+  IsDockerDesktopExtension: z.boolean().optional(),
+  KubeconfigExpiry: z.string().optional(),
+  KubectlShellImage: z.string().optional(),
+  LDAPSettings: zPortainerLdapSettings.optional(),
+  LogoURL: z.string().optional(),
+  OAuthSettings: zPortainerOAuthSettings.optional(),
+  SnapshotInterval: z.string().optional(),
+  TemplatesURL: z.string().optional(),
+  TrustOnFirstConnect: z.boolean().optional(),
+  UserSessionTimeout: z.string().optional(),
+});
+
+export const zPortainerTag = z.object({
+  EndpointGroups: z.record(z.string(), z.boolean()).optional(),
+  Endpoints: z.record(z.string(), z.boolean()).optional(),
+  ID: z.int().optional(),
+  Name: z.string().optional(),
+});
+
+export const zPortainerTeam = z.object({
+  DenyPortainerAccess: z.boolean().optional(),
+  Id: z.int().optional(),
+  Name: z.string().optional(),
+});
+
+export const zPortainerTeamAccessPolicies = z.record(
+  z.string(),
+  zPortainerAccessPolicy
+);
+
+export const zPortainerTeamMembership = z.object({
+  Id: z.int().optional(),
+  Role: zPortainerMembershipRole.optional(),
+  TeamID: z.int().optional(),
+  UserID: z.int().optional(),
+});
+
+export const zPortainerTeamResourceAccess = z.object({
+  AccessLevel: zPortainerResourceAccessLevel.optional(),
+  TeamId: z.int().optional(),
 });
 
 export const zPortainerTemplateEnvSelect = z.object({
@@ -865,6 +1575,24 @@ export const zPortainerTemplateEnv = z.object({
   name: z.string().optional(),
   preset: z.boolean().optional(),
   select: z.array(zPortainerTemplateEnvSelect).optional(),
+});
+
+export const zPortainerTemplateRepository = z.object({
+  stackfile: z.string().optional(),
+  url: z.string().optional(),
+});
+
+export const zPortainerTemplateType = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+]);
+
+export const zPortainerTemplateVolume = z.object({
+  bind: z.string().optional(),
+  container: z.string().optional(),
+  readonly: z.boolean().optional(),
 });
 
 export const zPortainerTemplate = z.object({
@@ -894,153 +1622,163 @@ export const zPortainerTemplate = z.object({
   volumes: z.array(zPortainerTemplateVolume).optional(),
 });
 
-export const zTemplatesListResponse = z.object({
-  templates: z.array(zPortainerTemplate).optional(),
-  version: z.string().optional(),
-});
-
-export const zTemplatesFileResponse = z.object({
-  FileContent: z.string().optional(),
-});
-
-export const zTeamsTeamUpdatePayload = z.object({
-  Name: z.string().optional(),
-});
-
-export const zTeamsTeamCreatePayload = z.object({
-  Name: z.string(),
-  TeamLeaders: z.array(z.int()).optional(),
-});
-
-export const zTeammembershipsTeamMembershipUpdatePayload = z.object({
-  Role: z.union([z.literal(1), z.literal(2)]),
-  TeamID: z.int(),
-  UserID: z.int(),
-});
-
-export const zTeammembershipsTeamMembershipCreatePayload = z.object({
-  Role: z.union([z.literal(1), z.literal(2)]),
-  TeamID: z.int(),
-  UserID: z.int(),
-});
-
-export const zTagsTagCreatePayload = z.object({
-  Name: z.string(),
-});
-
-export const zBuildRuntimeInfo = z.object({
-  Env: z.array(z.string()).optional(),
-});
-
-export const zBuildDependenciesInfo = z.object({
-  ComposeVersion: z.string().optional(),
-  DockerVersion: z.string().optional(),
-  HelmVersion: z.string().optional(),
-  KubectlVersion: z.string().optional(),
-});
-
-export const zBuildBuildInfo = z.object({
-  BuildNumber: z.string().optional(),
-  GitCommit: z.string().optional(),
-  GoVersion: z.string().optional(),
-  ImageTag: z.string().optional(),
-  NodejsVersion: z.string().optional(),
-  PnpmVersion: z.string().optional(),
-  WebpackVersion: z.string().optional(),
-});
-
-export const zSystemVersionResponse = z.object({
-  Build: zBuildBuildInfo.optional(),
-  DatabaseVersion: z.string().optional(),
-  Dependencies: zBuildDependenciesInfo.optional(),
-  LatestVersion: z.string().optional(),
-  Runtime: zBuildRuntimeInfo.optional(),
-  ServerEdition: z.string().optional(),
-  ServerVersion: z.string().optional(),
-  UpdateAvailable: z.boolean().optional(),
-  VersionSupport: z.string().optional(),
-});
-
-export const zPlatformContainerPlatform = z.enum(PlatformContainerPlatform);
-
-export const zSystemSystemInfoResponse = z.object({
-  agents: z.int().optional(),
-  edgeAgents: z.int().optional(),
-  platform: zPlatformContainerPlatform.optional(),
-});
-
-export const zSystemStatus = z.object({
-  InstanceID: z.string().optional(),
-  Version: z.string().optional(),
-});
-
-export const zSystemNodesCountResponse = z.object({
-  nodes: z.int().optional(),
-});
-
-export const zSwarmServiceUpdateResponse = z.object({
-  Warnings: z.array(z.string()).optional(),
-});
-
-export const zStatsContainerStats = z.object({
-  healthy: z.int().optional(),
-  running: z.int().optional(),
-  stopped: z.int().optional(),
-  total: z.int().optional(),
-  unhealthy: z.int().optional(),
-});
-
-export const zStacksUpdateSwarmStackPayload = z.object({
-  Env: z.array(zPortainerPair).optional(),
-  Prune: z.boolean().optional(),
-  PullImage: z.boolean().optional(),
-  RepullImageAndRedeploy: z.boolean().optional(),
-  StackFileContent: z.string().optional(),
-});
-
-export const zStacksSwarmStackFromGitRepositoryPayload = z.object({
-  AdditionalFiles: z.array(z.string()).optional(),
-  AutoUpdate: zPortainerAutoUpdateSettings.optional(),
-  ComposeFile: z.string().optional().default('docker-compose.yml'),
-  Env: z.array(zPortainerPair).optional(),
-  FromAppTemplate: z.boolean().optional(),
-  Name: z.string(),
-  RepositoryAuthentication: z.boolean().optional(),
-  RepositoryPassword: z.string().optional(),
-  RepositoryReferenceName: z.string().optional(),
-  RepositoryURL: z.string().optional(),
-  RepositoryUsername: z.string().optional(),
-  SourceID: z.int().optional(),
-  SwarmID: z.string(),
-  TLSSkipVerify: z.boolean().optional(),
-});
-
-export const zStacksSwarmStackFromFileContentPayload = z.object({
-  Env: z.array(zPortainerPair).optional(),
-  FromAppTemplate: z.boolean().optional(),
-  Name: z.string(),
-  StackFileContent: z.string(),
-  SwarmID: z.string(),
-});
-
-export const zPortainerStackType = z.enum(PortainerStackType);
-
-export const zPortainerResourceAccessLevel = z.enum(
-  PortainerResourceAccessLevel
+export const zPortainerUserAccessPolicies = z.record(
+  z.string(),
+  zPortainerAccessPolicy
 );
+
+export const zEndpointgroupsEndpointGroupResponse = z.object({
+  Description: z.string(),
+  Id: z.int(),
+  Name: z.string(),
+  TagIds: z.array(z.int()).optional(),
+  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
+  Total: z.int().optional(),
+  TypeInfo: zEndpointgroupsEndpointGroupTypeInfo.optional(),
+  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
+});
+
+export const zEndpointgroupsEndpointGroupUpdatePayload = z.object({
+  AssociatedEndpoints: z.array(z.int()).optional(),
+  Description: z.string().optional(),
+  Name: z.string().optional(),
+  TagIDs: z.array(z.int()).optional(),
+  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
+  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
+});
+
+export const zEndpointsEndpointUpdatePayload = z.object({
+  AzureApplicationID: z.string().optional(),
+  AzureAuthenticationKey: z.string().optional(),
+  AzureTenantID: z.string().optional(),
+  EdgeCheckinInterval: z.int().optional(),
+  Gpus: z.array(zPortainerPair).optional(),
+  GroupID: z.int().optional(),
+  Kubernetes: zPortainerKubernetesData.optional(),
+  Name: z.string().optional(),
+  PublicURL: z.string().optional(),
+  Status: z.int().optional(),
+  TLS: z.boolean().optional(),
+  TLSSkipClientVerify: z.boolean().optional(),
+  TLSSkipVerify: z.boolean().optional(),
+  TagIDs: z.array(z.int()).optional(),
+  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
+  URL: z.string().optional(),
+  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
+});
+
+export const zEndpointsRegistryAccessPayload = z.object({
+  Namespaces: z.array(z.string()).optional(),
+  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
+  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
+});
+
+export const zPortainerEndpoint = z.object({
+  Agent: zPortainerEnvironmentAgentData,
+  AzureCredentials: zPortainerAzureCredentials.optional(),
+  ComposeSyntaxMaxVersion: z.string(),
+  ContainerEngine: z.string(),
+  Edge: zPortainerEnvironmentEdgeSettings,
+  EdgeCheckinInterval: z.int(),
+  EdgeID: z.string().optional(),
+  EdgeKey: z.string(),
+  EnableGPUManagement: z.boolean().optional(),
+  Gpus: z.array(zPortainerPair).optional(),
+  GroupId: z.int(),
+  Heartbeat: z.boolean().optional(),
+  Id: z.int(),
+  Kubernetes: zPortainerKubernetesData,
+  LastCheckInDate: z.int(),
+  Name: z.string(),
+  PublicURL: z.string(),
+  SecuritySettings: zPortainerEndpointSecuritySettings,
+  Snapshots: z.array(zPortainerDockerSnapshot).optional(),
+  Status: z
+    .union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)])
+    .optional(),
+  TLSConfig: zPortainerTlsConfiguration,
+  TagIds: z.array(z.int()).optional(),
+  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
+  Type: zPortainerEndpointType,
+  URL: z.string(),
+  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
+  UserTrusted: z.boolean().optional(),
+});
+
+export const zPortainerEndpointGroup = z.object({
+  Description: z.string(),
+  Id: z.int(),
+  Name: z.string(),
+  TagIds: z.array(z.int()).optional(),
+  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
+  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
+});
+
+export const zPortainerRegistryAccessPolicies = z.object({
+  Namespaces: z.array(z.string()).optional(),
+  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
+  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
+});
+
+export const zPortainerRegistryAccesses = z.record(
+  z.string(),
+  zPortainerRegistryAccessPolicies
+);
+
+export const zPortainerRegistry = z.object({
+  AccessToken: z.string().optional(),
+  AccessTokenExpiry: z.int().optional(),
+  Authentication: z.boolean().optional(),
+  AuthorizedTeams: z.array(z.int()).optional(),
+  AuthorizedUsers: z.array(z.int()).optional(),
+  BaseURL: z.string().optional(),
+  Ecr: zPortainerEcrData.optional(),
+  Github: zPortainerGithubRegistryData.optional(),
+  Gitlab: zPortainerGitlabRegistryData.optional(),
+  Id: z.int().optional(),
+  ManagementConfiguration: zPortainerRegistryManagementConfiguration.optional(),
+  Name: z.string().optional(),
+  Password: z.string().optional(),
+  Quay: zPortainerQuayRegistryData.optional(),
+  RegistryAccesses: zPortainerRegistryAccesses.optional(),
+  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
+  Type: z
+    .union([
+      z.literal(1),
+      z.literal(2),
+      z.literal(3),
+      z.literal(4),
+      z.literal(5),
+      z.literal(6),
+      z.literal(7),
+    ])
+    .optional(),
+  URL: z.string().optional(),
+  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
+  Username: z.string().optional(),
+});
+
+export const zPortainerSource = z.object({
+  administratorsOnly: z.boolean().optional(),
+  git: zGittypesGitSource.optional(),
+  helm: zPortainerHelmConfig.optional(),
+  id: z.int().optional(),
+  interval: z.string().optional(),
+  lastSync: z.int().optional(),
+  name: z.string().optional(),
+  ownerID: z.int().optional(),
+  public: z.boolean().optional(),
+  registry: zPortainerRegistry.optional(),
+  status: zPortainerSourceStatus.optional(),
+  statusError: z.string().optional(),
+  teamAccesses: z.array(z.int()).optional(),
+  type: zPortainerSourceType.optional(),
+  userAccesses: z.array(z.int()).optional(),
+});
 
 export const zPortainerUserResourceAccess = z.object({
   AccessLevel: zPortainerResourceAccessLevel.optional(),
   UserId: z.int().optional(),
-});
-
-export const zPortainerResourceControlType = z.enum(
-  PortainerResourceControlType
-);
-
-export const zPortainerTeamResourceAccess = z.object({
-  AccessLevel: zPortainerResourceAccessLevel.optional(),
-  TeamId: z.int().optional(),
 });
 
 export const zPortainerResourceControl = z.object({
@@ -1057,31 +1795,26 @@ export const zPortainerResourceControl = z.object({
   UserAccesses: z.array(zPortainerUserResourceAccess).optional(),
 });
 
-export const zPortainerStackOption = z.object({
-  HelmAtomic: z.boolean().optional(),
-  Prune: z.boolean().optional(),
+export const zPortainerCustomTemplate = z.object({
+  CreatedByUserId: z.int().optional(),
+  Description: z.string().optional(),
+  EdgeTemplate: z.boolean().optional(),
+  EntryPoint: z.string().optional(),
+  GitConfig: zGittypesRepoConfig.optional(),
+  Id: z.int().optional(),
+  IsComposeFormat: z.boolean().optional(),
+  Logo: z.string().optional(),
+  Note: z.string().optional(),
+  Platform: z.union([z.literal(1), z.literal(2)]).optional(),
+  ProjectPath: z.string().optional(),
+  ResourceControl: zPortainerResourceControl.optional(),
+  Title: z.string().optional(),
+  Type: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
+  Variables: z.array(zPortainerCustomTemplateVariableDefinition).optional(),
+  artifact: zPortainerArtifact.optional(),
 });
 
-export const zPortainerStackStatus = z.enum(PortainerStackStatus);
-
-export const zPortainerStackDeploymentStatus = z.object({
-  Message: z.string().optional(),
-  Status: zPortainerStackStatus.optional(),
-  Time: z.int().optional(),
-});
-
-export const zPortainerStackDeploymentInfo = z.object({
-  AdditionalFiles: z.array(z.string()).optional(),
-  ConfigFilePath: z.string().optional(),
-  ConfigHash: z.string().optional(),
-  FileVersion: z.int().optional(),
-  ReferenceName: z.string().optional(),
-  RepositoryURL: z.string().optional(),
-  SourceID: z.int().optional(),
-  Version: z.int().optional(),
-});
-
-export const zStacksStackResponse = z.object({
+export const zPortainerStack = z.object({
   AdditionalFiles: z.array(z.string()).optional(),
   AutoUpdate: zPortainerAutoUpdateSettings.optional(),
   CreatedBy: z.string().optional(),
@@ -1094,7 +1827,6 @@ export const zStacksStackResponse = z.object({
   Env: z.array(zPortainerPair).optional(),
   FromAppTemplate: z.boolean().optional(),
   GitConfig: zGittypesRepoConfig.optional(),
-  GitSourceId: z.int().optional(),
   Id: z.int().optional(),
   Name: z.string().optional(),
   Namespace: z.string().optional(),
@@ -1109,548 +1841,34 @@ export const zStacksStackResponse = z.object({
   WorkflowID: z.int().optional(),
 });
 
-export const zStacksStackMigratePayload = z.object({
-  EndpointID: z.int(),
-  Name: z.string().optional(),
-  SwarmID: z.string().optional(),
+export const zPortainerUserRole = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+]);
+
+export const zPortainerUserThemeSettings = z.object({
+  color: z.enum(['dark', 'light', 'highcontrast', 'auto', '']).optional(),
 });
 
-export const zStacksStackGitUpdatePayload = z.object({
-  AdditionalFiles: z.array(z.string()).optional(),
-  AutoUpdate: zPortainerAutoUpdateSettings.optional(),
-  ConfigFilePath: z.string().optional(),
-  Env: z.array(zPortainerPair).optional(),
-  Prune: z.boolean().optional(),
-  RepositoryAuthentication: z.boolean().optional(),
-  RepositoryPassword: z.string().optional(),
-  RepositoryReferenceName: z.string().optional(),
-  RepositoryURL: z.string().optional(),
-  RepositoryUsername: z.string().optional(),
-  SourceID: z.int().optional(),
-  TLSSkipVerify: z.boolean().optional(),
+export const zPortainerUser = z.object({
+  Id: z.int(),
+  Role: zPortainerUserRole,
+  ThemeSettings: zPortainerUserThemeSettings.optional(),
+  TokenIssueAt: z.int().optional(),
+  UseCache: z.boolean().optional(),
+  Username: z.string(),
 });
 
-export const zStacksStackGitRedeployPayload = z.object({
-  Env: z.array(zPortainerPair).optional(),
-  Prune: z.boolean().optional(),
-  PullImage: z.boolean().optional(),
-  RepositoryAuthentication: z.boolean().optional(),
-  RepositoryPassword: z.string().optional(),
-  RepositoryReferenceName: z.string().optional(),
-  RepositoryUsername: z.string().optional(),
-  RepullImageAndRedeploy: z.boolean().optional(),
-  StackName: z.string().optional(),
-});
+export const zPortainerWebhookType = z.union([z.literal(0), z.literal(1)]);
 
-export const zStacksStackFileResponse = z.object({
-  StackFileContent: z.string().optional(),
-});
-
-export const zStacksKubernetesStringDeploymentPayload = z.object({
-  ComposeFormat: z.boolean().optional(),
-  FromAppTemplate: z.boolean().optional(),
-  Namespace: z.string().optional(),
-  StackFileContent: z.string().optional(),
-  StackName: z.string().optional(),
-});
-
-export const zStacksKubernetesManifestUrlDeploymentPayload = z.object({
-  ComposeFormat: z.boolean().optional(),
-  ManifestURL: z.string().optional(),
-  Namespace: z.string().optional(),
-  StackName: z.string().optional(),
-});
-
-export const zStacksKubernetesGitDeploymentPayload = z.object({
-  AdditionalFiles: z.array(z.string()).optional(),
-  AutoUpdate: zPortainerAutoUpdateSettings.optional(),
-  ComposeFormat: z.boolean().optional(),
-  ManifestFile: z.string().optional(),
-  Namespace: z.string().optional(),
-  RepositoryAuthentication: z.boolean().optional(),
-  RepositoryPassword: z.string().optional(),
-  RepositoryReferenceName: z.string().optional(),
-  RepositoryURL: z.string().optional(),
-  RepositoryUsername: z.string().optional(),
-  SourceID: z.int().optional(),
-  StackName: z.string().optional(),
-  TLSSkipVerify: z.boolean().optional(),
-});
-
-export const zStacksComposeStackFromGitRepositoryPayload = z.object({
-  AdditionalFiles: z.array(z.string()).optional(),
-  AutoUpdate: zPortainerAutoUpdateSettings.optional(),
-  ComposeFile: z.string().optional().default('docker-compose.yml'),
-  Env: z.array(zPortainerPair).optional(),
-  FromAppTemplate: z.boolean().optional(),
-  Name: z.string(),
-  RepositoryAuthentication: z.boolean().optional(),
-  RepositoryPassword: z.string().optional(),
-  RepositoryReferenceName: z.string().optional(),
-  RepositoryURL: z.string().optional(),
-  RepositoryUsername: z.string().optional(),
-  SourceID: z.int().optional(),
-  TLSSkipVerify: z.boolean().optional(),
-});
-
-export const zStacksComposeStackFromFileContentPayload = z.object({
-  Env: z.array(zPortainerPair).optional(),
-  FromAppTemplate: z.boolean().optional(),
-  Name: z.string(),
-  StackFileContent: z.string(),
-});
-
-export const zSslSslUpdatePayload = z.object({
-  Cert: z.string().optional(),
-  HTTPEnabled: z.boolean().optional(),
-  Key: z.string().optional(),
-});
-
-export const zSourcesGitAuthInfo = z.object({
-  username: z.string().optional(),
-});
-
-export const zSourcesConnectionInfo = z.object({
-  authentication: zSourcesGitAuthInfo.optional(),
-  configFilePath: z.string().optional(),
-  tlsSkipVerify: z.boolean().optional(),
-});
-
-export const zSourcesSourceType = z.enum(SourcesSourceType);
-
-export const zSourcesAutoUpdateInfo = z.object({
-  fetchInterval: z.string().optional(),
-  mechanism: z.string().optional(),
-});
-
-export const zSourcesSourceAccess = z.object({
-  public: z.boolean().optional(),
-  teams: z.array(z.int()).optional(),
-  users: z.array(z.int()).optional(),
-});
-
-export const zSourcesSourceDetail = z.object({
-  access: zSourcesSourceAccess.optional(),
-  autoUpdate: zSourcesAutoUpdateInfo.optional(),
-  connection: zSourcesConnectionInfo,
-  environments: z.int().optional(),
-  error: z.string().optional(),
-  id: z.int(),
-  lastSync: z.int().optional(),
-  name: z.string(),
-  status: zWorkflowsStatus,
-  type: zSourcesSourceType,
-  url: z.string(),
-  usedBy: z.int().optional(),
-  workflows: z.array(zWorkflowsWorkflow).optional(),
-});
-
-export const zSourcesSourceAccessUpdatePayload = z.object({
-  public: z.boolean().optional(),
-  teams: z.array(z.int()).optional(),
-  users: z.array(z.int()).optional(),
-});
-
-export const zSourcesSource = z.object({
-  environments: z.int().optional(),
-  error: z.string().optional(),
-  id: z.int(),
-  lastSync: z.int().optional(),
-  name: z.string(),
-  status: zWorkflowsStatus,
-  type: zSourcesSourceType,
-  url: z.string(),
-  usedBy: z.int().optional(),
-});
-
-export const zSourcesGitAuthenticationUpdatePayload = z.object({
-  password: z.string().optional(),
-  username: z.string().optional(),
-});
-
-export const zSourcesGitSourceUpdatePayload = z.object({
-  authentication: zSourcesGitAuthenticationUpdatePayload.optional(),
-  name: z.string().optional(),
-  referenceName: z.string().optional(),
-  tlsSkipVerify: z.boolean().optional(),
-  url: z.string().optional(),
-});
-
-export const zSourcesGitAuthenticationPayload = z.object({
-  password: z.string().optional(),
-  username: z.string().optional(),
-});
-
-export const zSourcesGitSourceCreatePayload = z.object({
-  administratorsOnly: z.boolean().optional(),
-  authentication: zSourcesGitAuthenticationPayload.optional(),
-  name: z.string().optional(),
-  public: z.boolean().optional(),
-  teamAccesses: z.array(z.int()).optional(),
-  tlsSkipVerify: z.boolean().optional(),
-  url: z.string(),
-  userAccesses: z.array(z.int()).optional(),
-});
-
-export const zSourcesConnectionTestResult = z.object({
-  error: z.string().optional(),
-  success: z.boolean().optional(),
-});
-
-export const zOauth2AuthStyle = z.enum(Oauth2AuthStyle);
-
-export const zPortainerOAuthSettings = z.object({
-  AccessTokenURI: z.string().optional(),
-  AuthStyle: zOauth2AuthStyle.optional(),
-  AuthorizationURI: z.string().optional(),
-  ClientID: z.string().optional(),
-  ClientSecret: z.string().optional(),
-  DefaultTeamID: z.int().optional(),
-  KubeSecretKey: z.array(z.int()).optional(),
-  LogoutURI: z.string().optional(),
-  OAuthAutoCreateUsers: z.boolean().optional(),
-  RedirectURI: z.string().optional(),
-  ResourceURI: z.string().optional(),
-  SSO: z.boolean().optional(),
-  Scopes: z.string().optional(),
-  UserIdentifier: z.string().optional(),
-});
-
-export const zPortainerTlsConfiguration = z.object({
-  TLS: z.boolean(),
-  TLSCACert: z.string().optional(),
-  TLSCert: z.string().optional(),
-  TLSKey: z.string().optional(),
-  TLSSkipVerify: z.boolean(),
-});
-
-export const zPortainerLdapSearchSettings = z.object({
-  BaseDN: z.string().optional(),
-  Filter: z.string().optional(),
-  UserNameAttribute: z.string().optional(),
-});
-
-export const zPortainerLdapGroupSearchSettings = z.object({
-  GroupAttribute: z.string().optional(),
-  GroupBaseDN: z.string().optional(),
-  GroupFilter: z.string().optional(),
-});
-
-export const zPortainerLdapSettings = z.object({
-  AnonymousMode: z.boolean().optional(),
-  AutoCreateUsers: z.boolean().optional(),
-  GroupSearchSettings: z.array(zPortainerLdapGroupSearchSettings).optional(),
-  Password: z.string().optional(),
-  ReaderDN: z.string().optional(),
-  SearchSettings: z.array(zPortainerLdapSearchSettings).optional(),
-  StartTLS: z.boolean().optional(),
-  TLSConfig: zPortainerTlsConfiguration.optional(),
-  URL: z.string().optional(),
-});
-
-export const zPortainerInternalAuthSettings = z.object({
-  RequiredPasswordLength: z.int().optional(),
-});
-
-export const zPortainerGlobalDeploymentOptions = z.object({
-  hideStacksFunctionality: z.boolean().optional(),
-});
-
-export const zSettingsSettingsUpdatePayload = z.object({
-  AuthenticationMethod: z.int().optional(),
-  BlackListedLabels: z.array(zPortainerPair).optional(),
-  EdgeAgentCheckinInterval: z.int().optional(),
-  EdgePortainerURL: z.string().optional(),
-  EnableEdgeComputeFeatures: z.boolean().optional(),
-  EnforceEdgeID: z.boolean().optional(),
-  ForceSecureCookies: z.boolean().optional(),
-  GlobalDeploymentOptions: zPortainerGlobalDeploymentOptions.optional(),
-  HelmRepositoryURL: z.string().optional(),
-  InternalAuthSettings: zPortainerInternalAuthSettings.optional(),
-  KubeconfigExpiry: z.string().optional().default('0'),
-  KubectlShellImage: z.string().optional(),
-  LDAPSettings: zPortainerLdapSettings.optional(),
-  LogoURL: z.string().optional(),
-  OAuthSettings: zPortainerOAuthSettings.optional(),
-  SnapshotInterval: z.string().optional(),
-  TemplatesURL: z.string().optional(),
-  TrustOnFirstConnect: z.boolean().optional(),
-  UserSessionTimeout: z.string().optional(),
-});
-
-export const zPortainerAuthenticationMethod = z.enum(
-  PortainerAuthenticationMethod
-);
-
-export const zSettingsPublicSettingsResponse = z.object({
-  AuthenticationMethod: zPortainerAuthenticationMethod.optional(),
-  Edge: z
-    .object({
-      CheckinInterval: z.int().optional(),
-      CommandInterval: z.int().optional(),
-      PingInterval: z.int().optional(),
-      SnapshotInterval: z.int().optional(),
-    })
-    .optional(),
-  EnableEdgeComputeFeatures: z.boolean().optional(),
-  Features: z.record(z.string(), z.boolean()).optional(),
-  GlobalDeploymentOptions: zPortainerGlobalDeploymentOptions.optional(),
-  IsDockerDesktopExtension: z.boolean().optional(),
-  KubeconfigExpiry: z.string().optional().default('0'),
-  LogoURL: z.string().optional(),
-  OAuthLoginURI: z.string().optional(),
-  OAuthLogoutURI: z.string().optional(),
-  RequiredPasswordLength: z.int().optional(),
-  RequiresSetupToken: z.boolean().optional(),
-  TeamSync: z.boolean().optional(),
-});
-
-export const zRoarRoarPortainerEndpointId = z.record(z.string(), z.unknown());
-
-export const zResourcecontrolsResourceControlUpdatePayload = z.object({
-  AdministratorsOnly: z.boolean().optional(),
-  Public: z.boolean().optional(),
-  Teams: z.array(z.int()).optional(),
-  Users: z.array(z.int()).optional(),
-});
-
-export const zResourcecontrolsResourceControlCreatePayload = z.object({
-  AdministratorsOnly: z.boolean().optional(),
-  Public: z.boolean().optional(),
-  ResourceID: z.string(),
-  SubResourceIDs: z.array(z.string()).optional(),
-  Teams: z.array(z.int()).optional(),
-  Type: z.union([
-    z.literal(1),
-    z.literal(2),
-    z.literal(3),
-    z.literal(4),
-    z.literal(5),
-    z.literal(6),
-    z.literal(7),
-    z.literal(8),
-    z.literal(9),
-  ]),
-  Users: z.array(z.int()).optional(),
-});
-
-export const zReleaseValues = z.object({
-  computedValues: z.string().optional(),
-  userSuppliedValues: z.string().optional(),
-});
-
-export const zReleaseReleaseElement = z.object({
-  appVersion: z.string().optional(),
-  chart: z.string().optional(),
-  name: z.string().optional(),
-  namespace: z.string().optional(),
-  revision: z.string().optional(),
-  status: z.string().optional(),
-  updated: z.string().optional(),
-});
-
-export const zReleaseInfo = z.object({
-  deleted: z.string().optional(),
-  description: z.string().optional(),
-  first_deployed: z.string().optional(),
-  last_deployed: z.string().optional(),
-  notes: z.string().optional(),
-  resources: z.array(zUnstructuredUnstructured).optional(),
-  status: z.string().optional(),
-});
-
-export const zReleaseHookExecution = z.object({
-  completed_at: z.string().optional(),
-  phase: z.string().optional(),
-  started_at: z.string().optional(),
-});
-
-export const zGithubComPortainerPortainerPkgLibhelmReleaseHook = z.object({
-  delete_policies: z.array(z.string()).optional(),
-  events: z.array(z.string()).optional(),
-  kind: z.string().optional(),
-  last_run: zReleaseHookExecution.optional(),
-  manifest: z.string().optional(),
-  name: z.string().optional(),
-  path: z.string().optional(),
-  weight: z.int().optional(),
-});
-
-export const zReleaseChartReference = z.object({
-  chartPath: z.string().optional(),
-  registryID: z.int().optional(),
-  repoURL: z.string().optional(),
-});
-
-export const zReleaseMaintainer = z.object({
-  email: z.string().optional(),
-  name: z.string().optional(),
-  url: z.string().optional(),
-});
-
-export const zReleaseDependency = z.object({
-  alias: z.string().optional(),
-  condition: z.string().optional(),
-  enabled: z.boolean().optional(),
-  'import-values': z.array(z.unknown()).optional(),
-  name: z.string().optional(),
-  repository: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  version: z.string().optional(),
-});
-
-export const zReleaseMetadata = z.object({
-  annotations: z.record(z.string(), z.string()).optional(),
-  apiVersion: z.string().optional(),
-  appVersion: z.string().optional(),
-  condition: z.string().optional(),
-  dependencies: z.array(zReleaseDependency).optional(),
-  deprecated: z.boolean().optional(),
-  description: z.string().optional(),
-  home: z.string().optional(),
-  icon: z.string().optional(),
-  keywords: z.array(z.string()).optional(),
-  kubeVersion: z.string().optional(),
-  maintainers: z.array(zReleaseMaintainer).optional(),
-  name: z.string().optional(),
-  sources: z.array(z.string()).optional(),
-  tags: z.string().optional(),
-  type: z.string().optional(),
-  version: z.string().optional(),
-});
-
-export const zReleaseLock = z.object({
-  dependencies: z.array(zReleaseDependency).optional(),
-  digest: z.string().optional(),
-  generated: z.string().optional(),
-});
-
-export const zReleaseFile = z.object({
-  data: z.array(z.int()).optional(),
-  name: z.string().optional(),
-});
-
-export const zReleaseChart = z.object({
-  files: z.array(zReleaseFile).optional(),
-  lock: zReleaseLock.optional(),
-  metadata: zReleaseMetadata.optional(),
-  schema: z.array(z.int()).optional(),
-  templates: z.array(zReleaseFile).optional(),
-  values: z.record(z.string(), z.unknown()).optional(),
-});
-
-export const zReleaseRelease = z.object({
-  appVersion: z.string().optional(),
-  chart: zReleaseChart.optional(),
-  chartReference: zReleaseChartReference.optional(),
-  config: z.record(z.string(), z.unknown()).optional(),
-  hooks: z.array(zGithubComPortainerPortainerPkgLibhelmReleaseHook).optional(),
-  info: zReleaseInfo.optional(),
-  manifest: z.string().optional(),
-  name: z.string().optional(),
-  namespace: z.string().optional(),
-  stackID: z.int().optional(),
-  values: zReleaseValues.optional(),
-  version: z.int().optional(),
-});
-
-export const zPortainerAccessPolicy = z.object({
-  Namespaces: z.array(z.string()).optional(),
-  RoleId: z.int(),
-});
-
-export const zPortainerUserAccessPolicies = z.record(
-  z.string(),
-  zPortainerAccessPolicy
-);
-
-export const zPortainerTeamAccessPolicies = z.record(
-  z.string(),
-  zPortainerAccessPolicy
-);
-
-export const zPortainerRegistryAccessPolicies = z.object({
-  Namespaces: z.array(z.string()).optional(),
-  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
-  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
-});
-
-export const zPortainerRegistryAccesses = z.record(
-  z.string(),
-  zPortainerRegistryAccessPolicies
-);
-
-export const zPortainerQuayRegistryData = z.object({
-  OrganisationName: z.string().optional(),
-  UseOrganisation: z.boolean().optional(),
-});
-
-export const zPortainerEcrData = z.object({
-  Region: z.string().optional(),
-});
-
-export const zRegistriesRegistryUpdatePayload = z.object({
-  Authentication: z.boolean(),
-  BaseURL: z.string().optional(),
-  Ecr: zPortainerEcrData.optional(),
-  Name: z.string(),
-  Password: z.string().optional(),
-  Quay: zPortainerQuayRegistryData.optional(),
-  RegistryAccesses: zPortainerRegistryAccesses.optional(),
-  URL: z.string(),
-  Username: z.string().optional(),
-});
-
-export const zRegistriesRegistryPingResponse = z.object({
-  message: z.string().optional(),
-  success: z.boolean().optional(),
-});
-
-export const zRegistriesRegistryPingPayload = z.object({
-  Password: z.string().optional(),
-  TLS: z.boolean().optional(),
-  Type: z.union([
-    z.literal(1),
-    z.literal(2),
-    z.literal(3),
-    z.literal(4),
-    z.literal(5),
-    z.literal(6),
-    z.literal(7),
-    z.literal(8),
-  ]),
-  URL: z.string(),
-  Username: z.string().optional(),
-});
-
-export const zPortainerRegistryType = z.enum(PortainerRegistryType);
-
-export const zPortainerGitlabRegistryData = z.object({
-  InstanceURL: z.string().optional(),
-  ProjectId: z.int().optional(),
-  ProjectPath: z.string().optional(),
-});
-
-export const zRegistriesRegistryCreatePayload = z.object({
-  Authentication: z.boolean(),
-  BaseURL: z.string().optional(),
-  Ecr: zPortainerEcrData.optional(),
-  Gitlab: zPortainerGitlabRegistryData.optional(),
-  Name: z.string(),
-  Password: z.string().optional(),
-  Quay: zPortainerQuayRegistryData.optional(),
-  TLS: z.boolean().optional(),
-  Type: z.union([
-    z.literal(1),
-    z.literal(2),
-    z.literal(3),
-    z.literal(4),
-    z.literal(5),
-    z.literal(6),
-    z.literal(7),
-  ]),
-  URL: z.string(),
-  Username: z.string().optional(),
+export const zPortainerWebhook = z.object({
+  EndpointId: z.int().optional(),
+  Id: z.int().optional(),
+  RegistryId: z.int().optional(),
+  ResourceId: z.string().optional(),
+  Token: z.string().optional(),
+  Type: zPortainerWebhookType.optional(),
 });
 
 export const zRegistriesRegistryConfigurePayload = z.object({
@@ -1698,52 +1916,407 @@ export const zRegistriesRegistryConfigurePayload = z.object({
   Username: z.string().optional(),
 });
 
-export const zPortainerWebhook = z.object({
-  EndpointId: z.int().optional(),
-  Id: z.int().optional(),
-  RegistryId: z.int().optional(),
-  ResourceId: z.string().optional(),
-  Token: z.string().optional(),
-  Type: zPortainerWebhookType.optional(),
+export const zRegistriesRegistryCreatePayload = z.object({
+  Authentication: z.boolean(),
+  BaseURL: z.string().optional(),
+  Ecr: zPortainerEcrData.optional(),
+  Gitlab: zPortainerGitlabRegistryData.optional(),
+  Name: z.string(),
+  Password: z.string().optional(),
+  Quay: zPortainerQuayRegistryData.optional(),
+  TLS: z.boolean().optional(),
+  Type: z.union([
+    z.literal(1),
+    z.literal(2),
+    z.literal(3),
+    z.literal(4),
+    z.literal(5),
+    z.literal(6),
+    z.literal(7),
+  ]),
+  URL: z.string(),
+  Username: z.string().optional(),
 });
 
-export const zPortainerUserThemeSettings = z.object({
-  color: z.enum(['dark', 'light', 'highcontrast', 'auto', '']).optional(),
+export const zRegistriesRegistryPingPayload = z.object({
+  Password: z.string().optional(),
+  TLS: z.boolean().optional(),
+  Type: z.union([
+    z.literal(1),
+    z.literal(2),
+    z.literal(3),
+    z.literal(4),
+    z.literal(5),
+    z.literal(6),
+    z.literal(7),
+    z.literal(8),
+  ]),
+  URL: z.string(),
+  Username: z.string().optional(),
 });
 
-export const zPortainerUserRole = z.enum(PortainerUserRole);
-
-export const zPortainerUser = z.object({
-  Id: z.int(),
-  Role: zPortainerUserRole,
-  ThemeSettings: zPortainerUserThemeSettings.optional(),
-  TokenIssueAt: z.int().optional(),
-  UseCache: z.boolean().optional(),
-  Username: z.string(),
+export const zRegistriesRegistryPingResponse = z.object({
+  message: z.string().optional(),
+  success: z.boolean().optional(),
 });
 
-export const zPortainerMembershipRole = z.enum(PortainerMembershipRole);
-
-export const zPortainerTeamMembership = z.object({
-  Id: z.int().optional(),
-  Role: zPortainerMembershipRole.optional(),
-  TeamID: z.int().optional(),
-  UserID: z.int().optional(),
+export const zRegistriesRegistryUpdatePayload = z.object({
+  Authentication: z.boolean(),
+  BaseURL: z.string().optional(),
+  Ecr: zPortainerEcrData.optional(),
+  Name: z.string(),
+  Password: z.string().optional(),
+  Quay: zPortainerQuayRegistryData.optional(),
+  RegistryAccesses: zPortainerRegistryAccesses.optional(),
+  URL: z.string(),
+  Username: z.string().optional(),
 });
 
-export const zPortainerTeam = z.object({
+export const zReleaseChartReference = z.object({
+  chartPath: z.string().optional(),
+  registryID: z.int().optional(),
+  repoURL: z.string().optional(),
+});
+
+export const zReleaseDependency = z.object({
+  alias: z.string().optional(),
+  condition: z.string().optional(),
+  enabled: z.boolean().optional(),
+  'import-values': z.array(z.unknown()).optional(),
+  name: z.string().optional(),
+  repository: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  version: z.string().optional(),
+});
+
+export const zReleaseFile = z.object({
+  data: z.array(z.int()).optional(),
+  name: z.string().optional(),
+});
+
+export const zReleaseHookExecution = z.object({
+  completed_at: z.string().optional(),
+  phase: z.string().optional(),
+  started_at: z.string().optional(),
+});
+
+export const zGithubComPortainerPortainerPkgLibhelmReleaseHook = z.object({
+  delete_policies: z.array(z.string()).optional(),
+  events: z.array(z.string()).optional(),
+  kind: z.string().optional(),
+  last_run: zReleaseHookExecution.optional(),
+  manifest: z.string().optional(),
+  name: z.string().optional(),
+  path: z.string().optional(),
+  weight: z.int().optional(),
+});
+
+export const zReleaseLock = z.object({
+  dependencies: z.array(zReleaseDependency).optional(),
+  digest: z.string().optional(),
+  generated: z.string().optional(),
+});
+
+export const zReleaseMaintainer = z.object({
+  email: z.string().optional(),
+  name: z.string().optional(),
+  url: z.string().optional(),
+});
+
+export const zReleaseMetadata = z.object({
+  annotations: z.record(z.string(), z.string()).optional(),
+  apiVersion: z.string().optional(),
+  appVersion: z.string().optional(),
+  condition: z.string().optional(),
+  dependencies: z.array(zReleaseDependency).optional(),
+  deprecated: z.boolean().optional(),
+  description: z.string().optional(),
+  home: z.string().optional(),
+  icon: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+  kubeVersion: z.string().optional(),
+  maintainers: z.array(zReleaseMaintainer).optional(),
+  name: z.string().optional(),
+  sources: z.array(z.string()).optional(),
+  tags: z.string().optional(),
+  type: z.string().optional(),
+  version: z.string().optional(),
+});
+
+export const zReleaseChart = z.object({
+  files: z.array(zReleaseFile).optional(),
+  lock: zReleaseLock.optional(),
+  metadata: zReleaseMetadata.optional(),
+  schema: z.array(z.int()).optional(),
+  templates: z.array(zReleaseFile).optional(),
+  values: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const zReleaseReleaseElement = z.object({
+  appVersion: z.string().optional(),
+  chart: z.string().optional(),
+  name: z.string().optional(),
+  namespace: z.string().optional(),
+  revision: z.string().optional(),
+  status: z.string().optional(),
+  updated: z.string().optional(),
+});
+
+export const zReleaseValues = z.object({
+  computedValues: z.string().optional(),
+  userSuppliedValues: z.string().optional(),
+});
+
+export const zResourceQuantity = z.object({
+  Format: z.enum(['DecimalExponent', 'BinarySI', 'DecimalSI']).optional(),
+});
+
+export const zResourcecontrolsResourceControlCreatePayload = z.object({
+  AdministratorsOnly: z.boolean().optional(),
+  Public: z.boolean().optional(),
+  ResourceID: z.string(),
+  SubResourceIDs: z.array(z.string()).optional(),
+  Teams: z.array(z.int()).optional(),
+  Type: z.union([
+    z.literal(1),
+    z.literal(2),
+    z.literal(3),
+    z.literal(4),
+    z.literal(5),
+    z.literal(6),
+    z.literal(7),
+    z.literal(8),
+    z.literal(9),
+  ]),
+  Users: z.array(z.int()).optional(),
+});
+
+export const zResourcecontrolsResourceControlUpdatePayload = z.object({
+  AdministratorsOnly: z.boolean().optional(),
+  Public: z.boolean().optional(),
+  Teams: z.array(z.int()).optional(),
+  Users: z.array(z.int()).optional(),
+});
+
+export const zRoarRoarPortainerEndpointId = z.record(z.string(), z.unknown());
+
+export const zPortainerEdgeGroup = z.object({
+  Dynamic: z.boolean().optional(),
+  EndpointIds: zRoarRoarPortainerEndpointId.optional(),
+  Endpoints: z.array(z.int()).optional(),
   Id: z.int().optional(),
   Name: z.string().optional(),
+  PartialMatch: z.boolean().optional(),
+  TagIds: z.array(z.int()).optional(),
 });
 
-export const zPortainerTag = z.object({
-  EndpointGroups: z.record(z.string(), z.boolean()).optional(),
-  Endpoints: z.record(z.string(), z.boolean()).optional(),
-  ID: z.int().optional(),
+export const zSettingsPublicSettingsResponse = z.object({
+  AuthenticationMethod: zPortainerAuthenticationMethod.optional(),
+  Edge: z
+    .object({
+      CheckinInterval: z.int().optional(),
+      CommandInterval: z.int().optional(),
+      PingInterval: z.int().optional(),
+      SnapshotInterval: z.int().optional(),
+    })
+    .optional(),
+  EnableEdgeComputeFeatures: z.boolean().optional(),
+  Features: z.record(z.string(), z.boolean()).optional(),
+  GlobalDeploymentOptions: zPortainerGlobalDeploymentOptions.optional(),
+  IsDockerDesktopExtension: z.boolean().optional(),
+  KubeconfigExpiry: z.string().optional().default('0'),
+  LogoURL: z.string().optional(),
+  OAuthLoginURI: z.string().optional(),
+  OAuthLogoutURI: z.string().optional(),
+  RequiredPasswordLength: z.int().optional(),
+  RequiresSetupToken: z.boolean().optional(),
+  TeamSync: z.boolean().optional(),
+});
+
+export const zSettingsSettingsUpdatePayload = z.object({
+  AuthenticationMethod: z.int().optional(),
+  BlackListedLabels: z.array(zPortainerPair).optional(),
+  EdgeAgentCheckinInterval: z.int().optional(),
+  EdgePortainerURL: z.string().optional(),
+  EnableEdgeComputeFeatures: z.boolean().optional(),
+  EnforceEdgeID: z.boolean().optional(),
+  ForceSecureCookies: z.boolean().optional(),
+  GlobalDeploymentOptions: zPortainerGlobalDeploymentOptions.optional(),
+  HelmRepositoryURL: z.string().optional(),
+  InternalAuthSettings: zPortainerInternalAuthSettings.optional(),
+  KubeconfigExpiry: z.string().optional().default('0'),
+  KubectlShellImage: z.string().optional(),
+  LDAPSettings: zPortainerLdapSettings.optional(),
+  LogoURL: z.string().optional(),
+  OAuthSettings: zPortainerOAuthSettings.optional(),
+  SnapshotInterval: z.string().optional(),
+  TemplatesURL: z.string().optional(),
+  TrustOnFirstConnect: z.boolean().optional(),
+  UserSessionTimeout: z.string().optional(),
+});
+
+export const zSourcesConnectionTestResult = z.object({
+  error: z.string().optional(),
+  success: z.boolean().optional(),
+});
+
+export const zSourcesGitAuthenticationPayload = z.object({
+  password: z.string().optional(),
+  username: z.string().optional(),
+});
+
+export const zSourcesGitAuthenticationUpdatePayload = z.object({
+  password: z.string().optional(),
+  username: z.string().optional(),
+});
+
+export const zSourcesGitSourceCreatePayload = z.object({
+  administratorsOnly: z.boolean().optional(),
+  authentication: zSourcesGitAuthenticationPayload.optional(),
+  interval: z.string().optional(),
+  name: z.string().optional(),
+  public: z.boolean().optional(),
+  teamAccesses: z.array(z.int()).optional(),
+  tlsSkipVerify: z.boolean().optional(),
+  url: z.string(),
+  userAccesses: z.array(z.int()).optional(),
+});
+
+export const zSourcesGitSourceUpdatePayload = z.object({
+  authentication: zSourcesGitAuthenticationUpdatePayload.optional(),
+  interval: z.string().optional(),
+  name: z.string().optional(),
+  tlsSkipVerify: z.boolean().optional(),
+  url: z.string().optional(),
+});
+
+export const zSourcesSourceAccess = z.object({
+  public: z.boolean().optional(),
+  teams: z.array(z.int()).optional(),
+  users: z.array(z.int()).optional(),
+});
+
+export const zSourcesSourceAccessUpdatePayload = z.object({
+  public: z.boolean().optional(),
+  teams: z.array(z.int()).optional(),
+  users: z.array(z.int()).optional(),
+});
+
+export const zSourcesSourceType = z.enum(['git', 'helm', 'oci']);
+
+export const zSourcesStatus = z.enum(['unknown', 'healthy', 'error']);
+
+export const zSourcesGitAuthInfo = z.object({
+  username: z.string().optional(),
+});
+
+export const zSourcesConnectionInfo = z.object({
+  authentication: zSourcesGitAuthInfo.optional(),
+  tlsSkipVerify: z.boolean().optional(),
+});
+
+export const zSslSslUpdatePayload = z.object({
+  Cert: z.string().optional(),
+  HTTPEnabled: z.boolean().optional(),
+  Key: z.string().optional(),
+});
+
+export const zStacksComposeStackFromFileContentPayload = z.object({
+  Env: z.array(zPortainerPair).optional(),
+  FromAppTemplate: z.boolean().optional(),
+  Name: z.string(),
+  StackFileContent: z.string(),
+});
+
+export const zStacksComposeStackFromGitRepositoryPayload = z.object({
+  AdditionalFiles: z.array(z.string()).optional(),
+  AutoUpdate: zPortainerAutoUpdateSettings.optional(),
+  ComposeFile: z.string().optional().default('docker-compose.yml'),
+  Env: z.array(zPortainerPair).optional(),
+  FromAppTemplate: z.boolean().optional(),
+  Name: z.string(),
+  RepositoryAuthentication: z.boolean().optional(),
+  RepositoryPassword: z.string().optional(),
+  RepositoryReferenceName: z.string().optional(),
+  RepositoryURL: z.string().optional(),
+  RepositoryUsername: z.string().optional(),
+  SourceID: z.int().optional(),
+  TLSSkipVerify: z.boolean().optional(),
+});
+
+export const zStacksCreateKubernetesStackResponse = z.object({
+  Output: z.string().optional(),
+});
+
+export const zStacksKubernetesGitDeploymentPayload = z.object({
+  AdditionalFiles: z.array(z.string()).optional(),
+  AutoUpdate: zPortainerAutoUpdateSettings.optional(),
+  ComposeFormat: z.boolean().optional(),
+  ManifestFile: z.string().optional(),
+  Namespace: z.string().optional(),
+  RepositoryAuthentication: z.boolean().optional(),
+  RepositoryPassword: z.string().optional(),
+  RepositoryReferenceName: z.string().optional(),
+  RepositoryURL: z.string().optional(),
+  RepositoryUsername: z.string().optional(),
+  SourceID: z.int().optional(),
+  StackName: z.string().optional(),
+  TLSSkipVerify: z.boolean().optional(),
+});
+
+export const zStacksKubernetesManifestUrlDeploymentPayload = z.object({
+  ComposeFormat: z.boolean().optional(),
+  ManifestURL: z.string().optional(),
+  Namespace: z.string().optional(),
+  StackName: z.string().optional(),
+});
+
+export const zStacksKubernetesStringDeploymentPayload = z.object({
+  ComposeFormat: z.boolean().optional(),
+  FromAppTemplate: z.boolean().optional(),
+  Namespace: z.string().optional(),
+  StackFileContent: z.string().optional(),
+  StackName: z.string().optional(),
+});
+
+export const zStacksStackFileResponse = z.object({
+  StackFileContent: z.string().optional(),
+});
+
+export const zStacksStackGitRedeployPayload = z.object({
+  Env: z.array(zPortainerPair).optional(),
+  Prune: z.boolean().optional(),
+  PullImage: z.boolean().optional(),
+  RepositoryAuthentication: z.boolean().optional(),
+  RepositoryPassword: z.string().optional(),
+  RepositoryReferenceName: z.string().optional(),
+  RepositoryUsername: z.string().optional(),
+  RepullImageAndRedeploy: z.boolean().optional(),
+  StackName: z.string().optional(),
+});
+
+export const zStacksStackGitUpdatePayload = z.object({
+  AdditionalFiles: z.array(z.string()).optional(),
+  AutoUpdate: zPortainerAutoUpdateSettings.optional(),
+  ConfigFilePath: z.string().optional(),
+  Env: z.array(zPortainerPair).optional(),
+  Prune: z.boolean().optional(),
+  RepositoryAuthentication: z.boolean().optional(),
+  RepositoryPassword: z.string().optional(),
+  RepositoryReferenceName: z.string().optional(),
+  RepositoryURL: z.string().optional(),
+  RepositoryUsername: z.string().optional(),
+  SourceID: z.int().optional(),
+  TLSSkipVerify: z.boolean().optional(),
+});
+
+export const zStacksStackMigratePayload = z.object({
+  EndpointID: z.int(),
   Name: z.string().optional(),
+  SwarmID: z.string().optional(),
 });
 
-export const zPortainerStack = z.object({
+export const zStacksStackResponse = z.object({
   AdditionalFiles: z.array(z.string()).optional(),
   AutoUpdate: zPortainerAutoUpdateSettings.optional(),
   CreatedBy: z.string().optional(),
@@ -1756,6 +2329,7 @@ export const zPortainerStack = z.object({
   Env: z.array(zPortainerPair).optional(),
   FromAppTemplate: z.boolean().optional(),
   GitConfig: zGittypesRepoConfig.optional(),
+  GitSourceId: z.int().optional(),
   Id: z.int().optional(),
   Name: z.string().optional(),
   Namespace: z.string().optional(),
@@ -1770,554 +2344,820 @@ export const zPortainerStack = z.object({
   WorkflowID: z.int().optional(),
 });
 
-export const zPortainerSourceType = z.enum(PortainerSourceType);
-
-export const zPortainerRegistryManagementConfiguration = z.object({
-  AccessToken: z.string().optional(),
-  AccessTokenExpiry: z.int().optional(),
-  Authentication: z.boolean().optional(),
-  Ecr: zPortainerEcrData.optional(),
-  Password: z.string().optional(),
-  TLSConfig: zPortainerTlsConfiguration.optional(),
-  Type: zPortainerRegistryType.optional(),
-  Username: z.string().optional(),
-});
-
-export const zPortainerGithubRegistryData = z.object({
-  OrganisationName: z.string().optional(),
-  UseOrganisation: z.boolean().optional(),
-});
-
-export const zPortainerRegistry = z.object({
-  AccessToken: z.string().optional(),
-  AccessTokenExpiry: z.int().optional(),
-  Authentication: z.boolean().optional(),
-  AuthorizedTeams: z.array(z.int()).optional(),
-  AuthorizedUsers: z.array(z.int()).optional(),
-  BaseURL: z.string().optional(),
-  Ecr: zPortainerEcrData.optional(),
-  Github: zPortainerGithubRegistryData.optional(),
-  Gitlab: zPortainerGitlabRegistryData.optional(),
-  Id: z.int().optional(),
-  ManagementConfiguration: zPortainerRegistryManagementConfiguration.optional(),
-  Name: z.string().optional(),
-  Password: z.string().optional(),
-  Quay: zPortainerQuayRegistryData.optional(),
-  RegistryAccesses: zPortainerRegistryAccesses.optional(),
-  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
-  Type: z
-    .union([
-      z.literal(1),
-      z.literal(2),
-      z.literal(3),
-      z.literal(4),
-      z.literal(5),
-      z.literal(6),
-      z.literal(7),
-    ])
-    .optional(),
-  URL: z.string().optional(),
-  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
-  Username: z.string().optional(),
-});
-
-export const zPortainerHelmConfig = z.object({
-  Atomic: z.boolean().optional(),
-  ChartName: z.string().optional(),
-  ChartPath: z.string().optional(),
-  ChartURL: z.string().optional(),
-  ChartVersion: z.string().optional(),
-  Namespace: z.string().optional(),
-  Timeout: z.string().optional(),
-  ValuesFiles: z.array(z.string()).optional(),
-  ValuesInline: z.string().optional(),
-});
-
-export const zPortainerSource = z.object({
-  administratorsOnly: z.boolean().optional(),
-  git: zGittypesRepoConfig.optional(),
-  helm: zPortainerHelmConfig.optional(),
-  id: z.int().optional(),
-  lastSync: z.int().optional(),
-  name: z.string().optional(),
-  ownerID: z.int().optional(),
-  public: z.boolean().optional(),
-  registry: zPortainerRegistry.optional(),
-  teamAccesses: z.array(z.int()).optional(),
-  type: zPortainerSourceType.optional(),
-  userAccesses: z.array(z.int()).optional(),
-});
-
-export const zPortainerEdge = z.object({
-  AsyncMode: z.boolean().optional(),
-  CommandInterval: z.int().optional(),
-  PingInterval: z.int().optional(),
-  SnapshotInterval: z.int().optional(),
-});
-
-export const zPortainerSettings = z.object({
-  AgentSecret: z.string().optional(),
-  AllowBindMountsForRegularUsers: z.boolean().optional(),
-  AllowContainerCapabilitiesForRegularUsers: z.boolean().optional(),
-  AllowDeviceMappingForRegularUsers: z.boolean().optional(),
-  AllowHostNamespaceForRegularUsers: z.boolean().optional(),
-  AllowPrivilegedModeForRegularUsers: z.boolean().optional(),
-  AllowStackManagementForRegularUsers: z.boolean().optional(),
-  AllowVolumeBrowserForRegularUsers: z.boolean().optional(),
-  AuthenticationMethod: zPortainerAuthenticationMethod.optional(),
-  BlackListedLabels: z.array(zPortainerPair).optional(),
-  DisplayDonationHeader: z.boolean().optional(),
-  DisplayExternalContributors: z.boolean().optional(),
-  Edge: zPortainerEdge.optional(),
-  EdgeAgentCheckinInterval: z.int().optional(),
-  EdgePortainerUrl: z.string().optional(),
-  EnableEdgeComputeFeatures: z.boolean().optional(),
-  EnableHostManagementFeatures: z.boolean().optional(),
-  EnforceEdgeID: z.boolean().optional(),
-  FeatureFlagSettings: z.record(z.string(), z.boolean()).optional(),
-  ForceSecureCookies: z.boolean().optional(),
-  GlobalDeploymentOptions: zPortainerGlobalDeploymentOptions.optional(),
-  HelmRepositoryURL: z.string().optional(),
-  InternalAuthSettings: zPortainerInternalAuthSettings.optional(),
-  IsDockerDesktopExtension: z.boolean().optional(),
-  KubeconfigExpiry: z.string().optional(),
-  KubectlShellImage: z.string().optional(),
-  LDAPSettings: zPortainerLdapSettings.optional(),
-  LogoURL: z.string().optional(),
-  OAuthSettings: zPortainerOAuthSettings.optional(),
-  SnapshotInterval: z.string().optional(),
-  TemplatesURL: z.string().optional(),
-  TrustOnFirstConnect: z.boolean().optional(),
-  UserSessionTimeout: z.string().optional(),
-});
-
-export const zPortainerSslSettings = z.object({
-  certPath: z.string().optional(),
-  httpEnabled: z.boolean().optional(),
-  keyPath: z.string().optional(),
-  selfSigned: z.boolean().optional(),
-});
-
-export const zPortainerAuthorizations = z.record(z.string(), z.boolean());
-
-export const zPortainerRole = z.object({
-  Authorizations: zPortainerAuthorizations.optional(),
-  Description: z.string().optional(),
-  Id: z.int().optional(),
-  Name: z.string().optional(),
-  Priority: z.int().optional(),
-});
-
-export const zPortainerPerformanceMetrics = z.object({
-  CPUUsage: z.number().optional(),
-  DiskUsage: z.number().optional(),
-  MemoryUsage: z.number().optional(),
-  NetworkUsage: z.number().optional(),
-});
-
-export const zPortainerKubernetesStorageClassConfig = z.object({
-  AccessModes: z.array(z.string()).optional(),
-  AllowVolumeExpansion: z.boolean(),
+export const zStacksSwarmStackFromFileContentPayload = z.object({
+  Env: z.array(zPortainerPair).optional(),
+  FromAppTemplate: z.boolean().optional(),
   Name: z.string(),
-  Provisioner: z.string(),
+  StackFileContent: z.string(),
+  SwarmID: z.string(),
 });
 
-export const zPortainerDiagnosticsData = z.object({
-  DNS: z.record(z.string(), z.string()).optional(),
-  Log: z.string().optional(),
-  Proxy: z.record(z.string(), z.string()).optional(),
-  Telnet: z.record(z.string(), z.string()).optional(),
-});
-
-export const zPortainerKubernetesSnapshot = z.object({
-  ClusterType: z.string().optional(),
-  DiagnosticsData: zPortainerDiagnosticsData.optional(),
-  KubernetesVersion: z.string(),
-  NodeCount: z.int(),
-  PerformanceMetrics: zPortainerPerformanceMetrics.optional(),
-  Time: z.int(),
-  TotalCPU: z.int(),
-  TotalMemory: z.int(),
-});
-
-export const zPortainerKubernetesIngressClassConfig = z.object({
-  Blocked: z.boolean().optional(),
-  BlockedNamespaces: z.array(z.string()).optional(),
+export const zStacksSwarmStackFromGitRepositoryPayload = z.object({
+  AdditionalFiles: z.array(z.string()).optional(),
+  AutoUpdate: zPortainerAutoUpdateSettings.optional(),
+  ComposeFile: z.string().optional().default('docker-compose.yml'),
+  Env: z.array(zPortainerPair).optional(),
+  FromAppTemplate: z.boolean().optional(),
   Name: z.string(),
-  Type: z.string(),
+  RepositoryAuthentication: z.boolean().optional(),
+  RepositoryPassword: z.string().optional(),
+  RepositoryReferenceName: z.string().optional(),
+  RepositoryURL: z.string().optional(),
+  RepositoryUsername: z.string().optional(),
+  SourceID: z.int().optional(),
+  SwarmID: z.string(),
+  TLSSkipVerify: z.boolean().optional(),
 });
 
-export const zPortainerKubernetesFlags = z.object({
-  IsServerIngressClassDetected: z.boolean(),
-  IsServerMetricsDetected: z.boolean(),
-  IsServerStorageDetected: z.boolean(),
+export const zStacksUpdateSwarmStackPayload = z.object({
+  Env: z.array(zPortainerPair).optional(),
+  Prune: z.boolean().optional(),
+  PullImage: z.boolean().optional(),
+  RepullImageAndRedeploy: z.boolean().optional(),
+  StackFileContent: z.string().optional(),
 });
 
-export const zPortainerKubernetesConfiguration = z.object({
-  AllowNoneIngressClass: z.boolean(),
-  EnableResourceOverCommit: z.boolean().optional(),
-  IngressAvailabilityPerNamespace: z.boolean(),
-  IngressClasses: z.array(zPortainerKubernetesIngressClassConfig).optional(),
-  ResourceOverCommitPercentage: z.int().optional(),
-  RestrictDefaultNamespace: z.boolean().optional(),
-  StorageClasses: z.array(zPortainerKubernetesStorageClassConfig).optional(),
-  UseLoadBalancer: z.boolean().optional(),
-  UseServerMetrics: z.boolean().optional(),
-});
-
-export const zPortainerKubernetesData = z.object({
-  Configuration: zPortainerKubernetesConfiguration,
-  Flags: zPortainerKubernetesFlags,
-  Snapshots: z.array(zPortainerKubernetesSnapshot).optional(),
-});
-
-export const zPortainerK8sNodeLimits = z.object({
-  CPU: z.int().optional(),
-  Memory: z.int().optional(),
-});
-
-export const zPortainerK8sNodesLimits = z.record(
-  z.string(),
-  zPortainerK8sNodeLimits
-);
-
-export const zPortainerK8sNamespaceInfo = z.object({
-  Annotations: z.record(z.string(), z.string()).optional(),
-  CreationDate: z.string().optional(),
-  Id: z.string().optional(),
-  IsDefault: z.boolean().optional(),
-  IsSystem: z.boolean().optional(),
-  Name: z.string().optional(),
-  NamespaceOwner: z.string().optional(),
-  ResourceQuota: zV1ResourceQuota.optional(),
-  Status: zV1NamespaceStatus.optional(),
-  UnhealthyEventCount: z.int().optional(),
-});
-
-export const zPortainerEnvironmentEdgeSettings = z.object({
-  AsyncMode: z.boolean(),
-  CommandInterval: z.int(),
-  PingInterval: z.int(),
-  SnapshotInterval: z.int(),
-});
-
-export const zPortainerEnvironmentAgentData = z.object({
-  Version: z.string().optional(),
-});
-
-export const zPortainerEndpointType = z.enum(PortainerEndpointType);
-
-export const zPortainerEndpointStatus = z.enum(PortainerEndpointStatus);
-
-export const zPortainerEndpointSecuritySettings = z.object({
-  allowBindMountsForRegularUsers: z.boolean(),
-  allowContainerCapabilitiesForRegularUsers: z.boolean(),
-  allowDeviceMappingForRegularUsers: z.boolean(),
-  allowHostNamespaceForRegularUsers: z.boolean(),
-  allowPrivilegedModeForRegularUsers: z.boolean(),
-  allowSecurityOptForRegularUsers: z.boolean(),
-  allowStackManagementForRegularUsers: z.boolean(),
-  allowSysctlSettingForRegularUsers: z.boolean(),
-  allowVolumeBrowserForRegularUsers: z.boolean(),
-  enableHostManagementFeatures: z.boolean(),
-});
-
-export const zPortainerEndpointGroup = z.object({
-  Description: z.string(),
-  Id: z.int(),
-  Name: z.string(),
-  TagIds: z.array(z.int()).optional(),
-  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
-  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
-});
-
-export const zPortainerDockerSnapshotRaw = z.record(z.string(), z.unknown());
-
-export const zPortainerDockerSnapshot = z.object({
-  ContainerCount: z.int(),
-  DiagnosticsData: zPortainerDiagnosticsData.optional(),
-  DockerSnapshotRaw: zPortainerDockerSnapshotRaw.optional(),
-  DockerVersion: z.string(),
-  GpuUseAll: z.boolean(),
-  GpuUseList: z.array(z.string()).optional(),
-  HealthyContainerCount: z.int(),
-  ImageCount: z.int(),
-  IsPodman: z.boolean(),
-  NodeCount: z.int(),
-  PerformanceMetrics: zPortainerPerformanceMetrics.optional(),
-  RunningContainerCount: z.int(),
-  ServiceCount: z.int(),
-  StackCount: z.int(),
-  StoppedContainerCount: z.int(),
-  Swarm: z.boolean(),
-  Time: z.int(),
-  TotalCPU: z.int(),
-  TotalMemory: z.int(),
-  UnhealthyContainerCount: z.int(),
-  VolumeCount: z.int(),
-});
-
-export const zPortainerAzureCredentials = z.object({
-  ApplicationID: z.string(),
-  AuthenticationKey: z.string(),
-  TenantID: z.string(),
-});
-
-export const zPortainerEndpoint = z.object({
-  Agent: zPortainerEnvironmentAgentData,
-  AzureCredentials: zPortainerAzureCredentials.optional(),
-  ComposeSyntaxMaxVersion: z.string(),
-  ContainerEngine: z.string(),
-  Edge: zPortainerEnvironmentEdgeSettings,
-  EdgeCheckinInterval: z.int(),
-  EdgeID: z.string().optional(),
-  EdgeKey: z.string(),
-  EnableGPUManagement: z.boolean().optional(),
-  Gpus: z.array(zPortainerPair).optional(),
-  GroupId: z.int(),
-  Heartbeat: z.boolean().optional(),
-  Id: z.int(),
-  Kubernetes: zPortainerKubernetesData,
-  LastCheckInDate: z.int(),
-  Name: z.string(),
-  PublicURL: z.string(),
-  SecuritySettings: zPortainerEndpointSecuritySettings,
-  Snapshots: z.array(zPortainerDockerSnapshot).optional(),
-  Status: z
-    .union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)])
-    .optional(),
-  TLSConfig: zPortainerTlsConfiguration,
-  TagIds: z.array(z.int()).optional(),
-  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
-  Type: zPortainerEndpointType,
-  URL: z.string(),
-  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
-  UserTrusted: z.boolean().optional(),
-});
-
-export const zPortainerEdgeStackStatusType = z.enum(
-  PortainerEdgeStackStatusType
-);
-
-export const zPortainerEdgeStackStatusDetails = z.object({
-  Acknowledged: z.boolean().optional(),
-  Error: z.boolean().optional(),
-  ImagesPulled: z.boolean().optional(),
-  Ok: z.boolean().optional(),
-  Pending: z.boolean().optional(),
-  RemoteUpdateSuccess: z.boolean().optional(),
-  Remove: z.boolean().optional(),
-});
-
-export const zPortainerEdgeStackDeploymentStatus = z.object({
-  Error: z.string().optional(),
-  RollbackTo: z.int().optional(),
-  Time: z.coerce
-    .bigint()
-    .min(BigInt('-9223372036854775808'), {
-      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
-    })
-    .max(BigInt('9223372036854775807'), {
-      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
-    })
-    .optional(),
-  Type: zPortainerEdgeStackStatusType.optional(),
-  Version: z.int().optional(),
-});
-
-export const zPortainerEdgeStackStatus = z.object({
-  DeploymentInfo: zPortainerStackDeploymentInfo.optional(),
-  Details: zPortainerEdgeStackStatusDetails.optional(),
-  EndpointID: z.int().optional(),
-  Error: z.string().optional(),
-  ReadyRePullImage: z.boolean().optional(),
-  Status: z.array(zPortainerEdgeStackDeploymentStatus).optional(),
-  Type: zPortainerEdgeStackStatusType.optional(),
-});
-
-export const zPortainerEdgeStackDeploymentType = z.enum(
-  PortainerEdgeStackDeploymentType
-);
-
-export const zPortainerEdgeStack = z.object({
-  CreatedBy: z.string().optional(),
-  CreatedByUserId: z.string().optional(),
-  CreationDate: z.int().optional(),
-  DeploymentType: zPortainerEdgeStackDeploymentType.optional(),
-  EdgeGroups: z.array(z.int()).optional(),
-  EntryPoint: z.string().optional(),
-  Id: z.int().optional(),
-  ManifestPath: z.string().optional(),
-  Name: z.string().optional(),
-  NumDeployments: z.int().optional(),
-  ProjectPath: z.string().optional(),
-  Status: z.record(z.string(), zPortainerEdgeStackStatus).optional(),
-  UseManifestNamespaces: z.boolean().optional(),
-  Version: z.int().optional(),
-});
-
-export const zPortainerEdgeJobLogsStatus = z.enum(PortainerEdgeJobLogsStatus);
-
-export const zPortainerEdgeJobEndpointMeta = z.object({
-  CollectLogs: z.boolean().optional(),
-  LogsStatus: zPortainerEdgeJobLogsStatus.optional(),
-});
-
-export const zPortainerEdgeJob = z.object({
-  Created: z.int().optional(),
-  CronExpression: z.string().optional(),
-  EdgeGroups: z.array(z.int()).optional(),
-  Endpoints: z.record(z.string(), zPortainerEdgeJobEndpointMeta).optional(),
-  GroupLogsCollection: z
-    .record(z.string(), zPortainerEdgeJobEndpointMeta)
-    .optional(),
-  Id: z.int().optional(),
-  Name: z.string().optional(),
-  Recurring: z.boolean().optional(),
-  ScriptPath: z.string().optional(),
-  Version: z.int().optional(),
-});
-
-export const zPortainerEdgeGroup = z.object({
-  Dynamic: z.boolean().optional(),
-  EndpointIds: zRoarRoarPortainerEndpointId.optional(),
-  Endpoints: z.array(z.int()).optional(),
-  Id: z.int().optional(),
-  Name: z.string().optional(),
-  PartialMatch: z.boolean().optional(),
-  TagIds: z.array(z.int()).optional(),
-});
-
-export const zPortainerCustomTemplateVariableDefinition = z.object({
-  defaultValue: z.string().optional(),
-  description: z.string().optional(),
-  label: z.string().optional(),
-  name: z.string().optional(),
-});
-
-export const zPortainerCustomTemplatePlatform = z.enum(
-  PortainerCustomTemplatePlatform
-);
-
-export const zPortainerArtifactFile = z.object({
-  hash: z.string().optional(),
-  path: z.string().optional(),
-  ref: z.string().optional(),
-  sourceId: z.int().optional(),
-});
-
-export const zPortainerArtifact = z.object({
-  edgeGroups: z.array(z.int()).optional(),
-  edgeStackId: z.int().optional(),
-  envGroups: z.array(z.int()).optional(),
-  envIds: z.array(z.int()).optional(),
-  files: z.array(zPortainerArtifactFile).optional(),
+export const zStacksWebhookInvokeResponse = z.object({
+  message: z.string().optional(),
   stackId: z.int().optional(),
 });
 
-export const zPortainerCustomTemplate = z.object({
-  CreatedByUserId: z.int().optional(),
-  Description: z.string().optional(),
-  EdgeTemplate: z.boolean().optional(),
-  EntryPoint: z.string().optional(),
-  GitConfig: zGittypesRepoConfig.optional(),
-  Id: z.int().optional(),
-  IsComposeFormat: z.boolean().optional(),
-  Logo: z.string().optional(),
-  Note: z.string().optional(),
-  Platform: z.union([z.literal(1), z.literal(2)]).optional(),
-  ProjectPath: z.string().optional(),
-  ResourceControl: zPortainerResourceControl.optional(),
-  Title: z.string().optional(),
-  Type: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
-  Variables: z.array(zPortainerCustomTemplateVariableDefinition).optional(),
-  artifact: zPortainerArtifact.optional(),
+export const zStatsContainerStats = z.object({
+  healthy: z.int().optional(),
+  running: z.int().optional(),
+  stopped: z.int().optional(),
+  total: z.int().optional(),
+  unhealthy: z.int().optional(),
 });
 
-export const zMotdMotd = z.object({
-  ContentLayout: z.record(z.string(), z.string()).optional(),
-  Hash: z.array(z.int()).optional(),
-  Message: z.string().optional(),
-  Style: z.string().optional(),
-  Title: z.string().optional(),
+export const zDockerDashboardResponse = z.object({
+  containers: zStatsContainerStats.optional(),
+  images: zDockerImagesCounters.optional(),
+  networks: z.int().optional(),
+  services: z.int().optional(),
+  stacks: z.int().optional(),
+  volumes: z.int().optional(),
 });
 
-export const zLdapCheckPayload = z.object({
-  LDAPSettings: zPortainerLdapSettings.optional(),
+export const zSwarmServiceUpdateResponse = z.object({
+  Warnings: z.array(z.string()).optional(),
 });
 
-export const zKubernetesNamespacesToggleSystemPayload = z.object({
-  System: z.boolean().optional(),
+export const zSystemNodesCountResponse = z.object({
+  nodes: z.int().optional(),
 });
 
-export const zKubernetesKubernetesVersionResponse = z.object({
-  buildDate: z.string().optional(),
-  compiler: z.string().optional(),
-  emulationMajor: z.string().optional(),
-  emulationMinor: z.string().optional(),
-  gitCommit: z.string().optional(),
-  gitTreeState: z.string().optional(),
-  gitVersion: z.string().optional(),
-  goVersion: z.string().optional(),
-  major: z.string().optional(),
-  minCompatibilityMajor: z.string().optional(),
-  minCompatibilityMinor: z.string().optional(),
-  minor: z.string().optional(),
-  platform: z.string().optional(),
-  supportsPodRestart: z.boolean().optional(),
+export const zSystemStatus = z.object({
+  InstanceID: z.string().optional(),
+  Version: z.string().optional(),
 });
 
-export const zKubernetesDescribeResourceResponse = z.object({
-  describe: z.string().optional(),
+export const zSystemSystemInfoResponse = z.object({
+  agents: z.int().optional(),
+  edgeAgents: z.int().optional(),
+  platform: zPlatformContainerPlatform.optional(),
 });
 
-export const zKubernetesTlsInfo = z.object({
-  hosts: z.array(z.string()).optional(),
+export const zSystemVersionResponse = z.object({
+  Build: zBuildBuildInfo.optional(),
+  DatabaseVersion: z.string().optional(),
+  Dependencies: zBuildDependenciesInfo.optional(),
+  LatestVersion: z.string().optional(),
+  Runtime: zBuildRuntimeInfo.optional(),
+  ServerEdition: z.string().optional(),
+  ServerVersion: z.string().optional(),
+  UpdateAvailable: z.boolean().optional(),
+  VersionSupport: z.string().optional(),
 });
 
-export const zKubernetesIngressRule = z.object({
-  Host: z.string().optional(),
-  IP: z.string().optional(),
-  Path: z.string().optional(),
-  TLS: z.array(zKubernetesTlsInfo).optional(),
+export const zTagsTagCreatePayload = z.object({
+  Name: z.string(),
 });
 
-export const zKubernetesPublishedPort = z.object({
-  IngressRules: z.array(zKubernetesIngressRule).optional(),
+export const zTeammembershipsTeamMembershipCreatePayload = z.object({
+  Role: z.union([z.literal(1), z.literal(2)]),
+  TeamID: z.int(),
+  UserID: z.int(),
+});
+
+export const zTeammembershipsTeamMembershipUpdatePayload = z.object({
+  Role: z.union([z.literal(1), z.literal(2)]),
+  TeamID: z.int(),
+  UserID: z.int(),
+});
+
+export const zTeamsTeamCreatePayload = z.object({
+  Name: z.string(),
+  TeamLeaders: z.array(z.int()).optional(),
+});
+
+export const zTeamsTeamUpdatePayload = z.object({
+  Name: z.string().optional(),
+});
+
+export const zTemplatesFileResponse = z.object({
+  FileContent: z.string().optional(),
+});
+
+export const zTemplatesListResponse = z.object({
+  templates: z.array(zPortainerTemplate).optional(),
+  version: z.string().optional(),
+});
+
+export const zUnstructuredUnstructured = z.object({
+  Object: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const zReleaseInfo = z.object({
+  deleted: z.string().optional(),
+  description: z.string().optional(),
+  first_deployed: z.string().optional(),
+  last_deployed: z.string().optional(),
+  notes: z.string().optional(),
+  resources: z.array(zUnstructuredUnstructured).optional(),
+  status: z.string().optional(),
+});
+
+export const zReleaseRelease = z.object({
+  appVersion: z.string().optional(),
+  chart: zReleaseChart.optional(),
+  chartReference: zReleaseChartReference.optional(),
+  config: z.record(z.string(), z.unknown()).optional(),
+  hooks: z.array(zGithubComPortainerPortainerPkgLibhelmReleaseHook).optional(),
+  info: zReleaseInfo.optional(),
+  manifest: z.string().optional(),
+  name: z.string().optional(),
+  namespace: z.string().optional(),
+  stackID: z.int().optional(),
+  values: zReleaseValues.optional(),
+  version: z.int().optional(),
+});
+
+export const zUsersAccessLocation = z.enum(['environment', 'environmentGroup']);
+
+export const zUsersEffectiveAccessEntry = z.object({
+  accessLocation: zUsersAccessLocation.optional(),
+  endpointId: z.int().optional(),
+  endpointName: z.string().optional(),
+  groupId: z.int().optional(),
+  groupName: z.string().optional(),
+  roleId: z.int().optional(),
+  roleName: z.string().optional(),
+  rolePriority: z.int().optional(),
+  teamId: z.int().optional(),
+  teamName: z.string().optional(),
+});
+
+export const zUsersAccessTokenResponse = z.object({
+  apiKey: zPortainerApiKey.optional(),
+  rawAPIKey: z.string().optional(),
+});
+
+export const zUsersAddHelmRepoUrlPayload = z.object({
+  url: z.string().optional(),
+});
+
+export const zUsersAdminInitPayload = z.object({
+  Password: z.string(),
+  Username: z.string(),
+});
+
+export const zUsersHelmUserRepositoryResponse = z.object({
+  GlobalRepository: z.string().optional(),
+  UserRepositories: z.array(zPortainerHelmUserRepository).optional(),
+});
+
+export const zUsersThemePayload = z.object({
+  color: z.enum(['dark', 'light', 'highcontrast', 'auto']).optional(),
+});
+
+export const zUsersUserAccessTokenCreatePayload = z.object({
+  description: z.string(),
+  password: z.string(),
+});
+
+export const zUsersUserCreatePayload = z.object({
+  Password: z.string(),
+  Role: z.union([z.literal(1), z.literal(2)]),
+  Username: z.string(),
+});
+
+export const zUsersUserUpdatePasswordPayload = z.object({
+  NewPassword: z.string(),
+  Password: z.string(),
+});
+
+export const zUsersUserUpdatePayload = z.object({
+  NewPassword: z.string(),
+  Password: z.string(),
+  Role: z.union([z.literal(1), z.literal(2)]),
+  Theme: zUsersThemePayload.optional(),
+  UseCache: z.boolean(),
+  Username: z.string(),
+});
+
+export const zV1AwsElasticBlockStoreVolumeSource = z.object({
+  fsType: z.string().optional(),
+  partition: z.int().optional(),
+  readOnly: z.boolean().optional(),
+  volumeID: z.string().optional(),
+});
+
+export const zV1AppArmorProfileType = z.enum([
+  'Unconfined',
+  'RuntimeDefault',
+  'Localhost',
+]);
+
+export const zV1AppArmorProfile = z.object({
+  localhostProfile: z.string().optional(),
+  type: zV1AppArmorProfileType.optional(),
+});
+
+export const zV1AttachedVolume = z.object({
+  devicePath: z.string().optional(),
+  name: z.string().optional(),
+});
+
+export const zV1AzureDataDiskCachingMode = z.enum([
+  'None',
+  'ReadOnly',
+  'ReadWrite',
+]);
+
+export const zV1AzureDataDiskKind = z.enum(['Shared', 'Dedicated', 'Managed']);
+
+export const zV1AzureDiskVolumeSource = z.object({
+  cachingMode: zV1AzureDataDiskCachingMode.optional(),
+  diskName: z.string().optional(),
+  diskURI: z.string().optional(),
+  fsType: z.string().optional(),
+  kind: zV1AzureDataDiskKind.optional(),
+  readOnly: z.boolean().optional(),
+});
+
+export const zV1AzureFileVolumeSource = z.object({
+  readOnly: z.boolean().optional(),
+  secretName: z.string().optional(),
+  shareName: z.string().optional(),
+});
+
+export const zV1CsiVolumeSource = z.object({
+  driver: z.string().optional(),
+  fsType: z.string().optional(),
+  nodePublishSecretRef: zK8sIoApiCoreV1LocalObjectReference.optional(),
+  readOnly: z.boolean().optional(),
+  volumeAttributes: z.record(z.string(), z.string()).optional(),
+});
+
+export const zV1Capabilities = z.object({
+  add: z.array(z.string()).optional(),
+  drop: z.array(z.string()).optional(),
+});
+
+export const zV1CephFsVolumeSource = z.object({
+  monitors: z.array(z.string()).optional(),
+  path: z.string().optional(),
+  readOnly: z.boolean().optional(),
+  secretFile: z.string().optional(),
+  secretRef: zK8sIoApiCoreV1LocalObjectReference.optional(),
+  user: z.string().optional(),
+});
+
+export const zV1CinderVolumeSource = z.object({
+  fsType: z.string().optional(),
+  readOnly: z.boolean().optional(),
+  secretRef: zK8sIoApiCoreV1LocalObjectReference.optional(),
+  volumeID: z.string().optional(),
+});
+
+export const zV1ConfigMapEnvSource = z.object({
+  name: z.string().optional(),
+  optional: z.boolean().optional(),
+});
+
+export const zV1ConfigMapKeySelector = z.object({
+  key: z.string().optional(),
+  name: z.string().optional(),
+  optional: z.boolean().optional(),
+});
+
+export const zV1ConfigMapNodeConfigSource = z.object({
+  kubeletConfigKey: z.string().optional(),
+  name: z.string().optional(),
+  namespace: z.string().optional(),
+  resourceVersion: z.string().optional(),
+  uid: z.string().optional(),
+});
+
+export const zV1ContainerExtendedResourceRequest = z.object({
+  containerName: z.string().optional(),
+  requestName: z.string().optional(),
+  resourceName: z.string().optional(),
+});
+
+export const zV1ContainerImage = z.object({
+  names: z.array(z.string()).optional(),
+  sizeBytes: z.int().optional(),
+});
+
+export const zV1ContainerRestartPolicy = z.enum([
+  'Always',
+  'Never',
+  'OnFailure',
+]);
+
+export const zV1ContainerRestartRuleAction = z.enum([
+  'Restart',
+  'RestartAllContainers',
+]);
+
+export const zV1ContainerRestartRuleOnExitCodesOperator = z.enum([
+  'In',
+  'NotIn',
+]);
+
+export const zV1ContainerRestartRuleOnExitCodes = z.object({
+  operator: zV1ContainerRestartRuleOnExitCodesOperator.optional(),
+  values: z.array(z.int()).optional(),
+});
+
+export const zV1ContainerRestartRule = z.object({
+  action: zV1ContainerRestartRuleAction.optional(),
+  exitCodes: zV1ContainerRestartRuleOnExitCodes.optional(),
+});
+
+export const zV1ContainerStateRunning = z.object({
+  startedAt: z.string().optional(),
+});
+
+export const zV1ContainerStateTerminated = z.object({
+  containerID: z.string().optional(),
+  exitCode: z.int().optional(),
+  finishedAt: z.string().optional(),
+  message: z.string().optional(),
+  reason: z.string().optional(),
+  signal: z.int().optional(),
+  startedAt: z.string().optional(),
+});
+
+export const zV1ContainerStateWaiting = z.object({
+  message: z.string().optional(),
+  reason: z.string().optional(),
+});
+
+export const zV1ContainerState = z.object({
+  running: zV1ContainerStateRunning.optional(),
+  terminated: zV1ContainerStateTerminated.optional(),
+  waiting: zV1ContainerStateWaiting.optional(),
+});
+
+export const zV1DnsPolicy = z.enum([
+  'ClusterFirstWithHostNet',
+  'ClusterFirst',
+  'Default',
+  'None',
+]);
+
+export const zV1DaemonEndpoint = z.object({
   Port: z.int().optional(),
 });
 
-export const zKubernetesK8sApplicationResource = z.object({
-  CpuLimit: z.number().optional(),
-  CpuRequest: z.number().optional(),
-  MemoryLimit: z.int().optional(),
-  MemoryRequest: z.int().optional(),
+export const zV1DeploymentConditionType = z.enum([
+  'Available',
+  'Progressing',
+  'ReplicaFailure',
+]);
+
+export const zV1DeploymentCondition = z.object({
+  lastTransitionTime: z.string().optional(),
+  lastUpdateTime: z.string().optional(),
+  message: z.string().optional(),
+  reason: z.string().optional(),
+  status: zK8sIoApiCoreV1ConditionStatus.optional(),
+  type: zV1DeploymentConditionType.optional(),
 });
 
-export const zKubernetesPod = z.object({
-  ContainerName: z.string().optional(),
-  CreationDate: z.string().optional(),
-  Image: z.string().optional(),
-  ImagePullPolicy: z.string().optional(),
-  Name: z.string().optional(),
-  NodeName: z.string().optional(),
-  PodIP: z.string().optional(),
-  Resource: zKubernetesK8sApplicationResource.optional(),
-  Status: z.string().optional(),
-  Uid: z.string().optional(),
+export const zV1DeploymentStatus = z.object({
+  availableReplicas: z.int().optional(),
+  collisionCount: z.int().optional(),
+  conditions: z.array(zV1DeploymentCondition).optional(),
+  observedGeneration: z.int().optional(),
+  readyReplicas: z.int().optional(),
+  replicas: z.int().optional(),
+  terminatingReplicas: z.int().optional(),
+  unavailableReplicas: z.int().optional(),
+  updatedReplicas: z.int().optional(),
 });
 
-export const zKubernetesMetadata = z.object({
+export const zV1DeploymentStrategyType = z.enum(['Recreate', 'RollingUpdate']);
+
+export const zV1ExecAction = z.object({
+  command: z.array(z.string()).optional(),
+});
+
+export const zV1FcVolumeSource = z.object({
+  fsType: z.string().optional(),
+  lun: z.int().optional(),
+  readOnly: z.boolean().optional(),
+  targetWWNs: z.array(z.string()).optional(),
+  wwids: z.array(z.string()).optional(),
+});
+
+export const zV1FieldsV1 = z.record(z.string(), z.unknown());
+
+export const zV1FileKeySelector = z.object({
+  key: z.string().optional(),
+  optional: z.boolean().optional(),
+  path: z.string().optional(),
+  volumeName: z.string().optional(),
+});
+
+export const zV1FinalizerName = z.enum(['kubernetes']);
+
+export const zV1FlexVolumeSource = z.object({
+  driver: z.string().optional(),
+  fsType: z.string().optional(),
+  options: z.record(z.string(), z.string()).optional(),
+  readOnly: z.boolean().optional(),
+  secretRef: zK8sIoApiCoreV1LocalObjectReference.optional(),
+});
+
+export const zV1FlockerVolumeSource = z.object({
+  datasetName: z.string().optional(),
+  datasetUUID: z.string().optional(),
+});
+
+export const zV1GcePersistentDiskVolumeSource = z.object({
+  fsType: z.string().optional(),
+  partition: z.int().optional(),
+  pdName: z.string().optional(),
+  readOnly: z.boolean().optional(),
+});
+
+export const zV1GrpcAction = z.object({
+  port: z.int().optional(),
+  service: z.string().optional(),
+});
+
+export const zV1GitRepoVolumeSource = z.object({
+  directory: z.string().optional(),
+  repository: z.string().optional(),
+  revision: z.string().optional(),
+});
+
+export const zV1GlusterfsVolumeSource = z.object({
+  endpoints: z.string().optional(),
+  path: z.string().optional(),
+  readOnly: z.boolean().optional(),
+});
+
+export const zV1HostAlias = z.object({
+  hostnames: z.array(z.string()).optional(),
+  ip: z.string().optional(),
+});
+
+export const zV1HostIp = z.object({
+  ip: z.string().optional(),
+});
+
+export const zV1HostPathType = z.enum([
+  '',
+  'DirectoryOrCreate',
+  'Directory',
+  'FileOrCreate',
+  'File',
+  'Socket',
+  'CharDevice',
+  'BlockDevice',
+]);
+
+export const zV1HostPathVolumeSource = z.object({
+  path: z.string().optional(),
+  type: zV1HostPathType.optional(),
+});
+
+export const zV1IscsiVolumeSource = z.object({
+  chapAuthDiscovery: z.boolean().optional(),
+  chapAuthSession: z.boolean().optional(),
+  fsType: z.string().optional(),
+  initiatorName: z.string().optional(),
+  iqn: z.string().optional(),
+  iscsiInterface: z.string().optional(),
+  lun: z.int().optional(),
+  portals: z.array(z.string()).optional(),
+  readOnly: z.boolean().optional(),
+  secretRef: zK8sIoApiCoreV1LocalObjectReference.optional(),
+  targetPortal: z.string().optional(),
+});
+
+export const zV1KeyToPath = z.object({
+  key: z.string().optional(),
+  mode: z.int().optional(),
+  path: z.string().optional(),
+});
+
+export const zV1ConfigMapProjection = z.object({
+  items: z.array(zV1KeyToPath).optional(),
+  name: z.string().optional(),
+  optional: z.boolean().optional(),
+});
+
+export const zV1ConfigMapVolumeSource = z.object({
+  defaultMode: z.int().optional(),
+  items: z.array(zV1KeyToPath).optional(),
+  name: z.string().optional(),
+  optional: z.boolean().optional(),
+});
+
+export const zV1LabelSelectorOperator = z.enum([
+  'In',
+  'NotIn',
+  'Exists',
+  'DoesNotExist',
+]);
+
+export const zV1LabelSelectorRequirement = z.object({
+  key: z.string().optional(),
+  operator: zV1LabelSelectorOperator.optional(),
+  values: z.array(z.string()).optional(),
+});
+
+export const zV1LabelSelector = z.object({
+  matchExpressions: z.array(zV1LabelSelectorRequirement).optional(),
+  matchLabels: z.record(z.string(), z.string()).optional(),
+});
+
+export const zV1ClusterTrustBundleProjection = z.object({
+  labelSelector: zV1LabelSelector.optional(),
+  name: z.string().optional(),
+  optional: z.boolean().optional(),
+  path: z.string().optional(),
+  signerName: z.string().optional(),
+});
+
+export const zV1LinuxContainerUser = z.object({
+  gid: z.int().optional(),
+  supplementalGroups: z.array(z.int()).optional(),
+  uid: z.int().optional(),
+});
+
+export const zV1ContainerUser = z.object({
+  linux: zV1LinuxContainerUser.optional(),
+});
+
+export const zV1ListMeta = z.object({
+  continue: z.string().optional(),
+  remainingItemCount: z.int().optional(),
+  resourceVersion: z.string().optional(),
+  selfLink: z.string().optional(),
+});
+
+export const zV1ManagedFieldsOperationType = z.enum(['Apply', 'Update']);
+
+export const zV1ManagedFieldsEntry = z.object({
+  apiVersion: z.string().optional(),
+  fieldsType: z.string().optional(),
+  fieldsV1: zV1FieldsV1.optional(),
+  manager: z.string().optional(),
+  operation: zV1ManagedFieldsOperationType.optional(),
+  subresource: z.string().optional(),
+  time: z.string().optional(),
+});
+
+export const zV1MountPropagationMode = z.enum([
+  'None',
+  'HostToContainer',
+  'Bidirectional',
+]);
+
+export const zV1NfsVolumeSource = z.object({
+  path: z.string().optional(),
+  readOnly: z.boolean().optional(),
+  server: z.string().optional(),
+});
+
+export const zV1NamespaceConditionType = z.enum([
+  'NamespaceDeletionDiscoveryFailure',
+  'NamespaceDeletionContentFailure',
+  'NamespaceDeletionGroupVersionParsingFailure',
+  'NamespaceContentRemaining',
+  'NamespaceFinalizersRemaining',
+]);
+
+export const zV1NamespaceCondition = z.object({
+  lastTransitionTime: z.string().optional(),
+  message: z.string().optional(),
+  reason: z.string().optional(),
+  status: zK8sIoApiCoreV1ConditionStatus.optional(),
+  type: zV1NamespaceConditionType.optional(),
+});
+
+export const zV1NamespacePhase = z.enum(['Active', 'Terminating']);
+
+export const zV1NamespaceSpec = z.object({
+  finalizers: z.array(zV1FinalizerName).optional(),
+});
+
+export const zV1NamespaceStatus = z.object({
+  conditions: z.array(zV1NamespaceCondition).optional(),
+  phase: zV1NamespacePhase.optional(),
+});
+
+export const zV1NodeAddressType = z.enum([
+  'Hostname',
+  'InternalIP',
+  'ExternalIP',
+  'InternalDNS',
+  'ExternalDNS',
+]);
+
+export const zV1NodeAddress = z.object({
+  address: z.string().optional(),
+  type: zV1NodeAddressType.optional(),
+});
+
+export const zV1NodeConditionType = z.enum([
+  'Ready',
+  'MemoryPressure',
+  'DiskPressure',
+  'PIDPressure',
+  'NetworkUnavailable',
+]);
+
+export const zV1NodeCondition = z.object({
+  lastHeartbeatTime: z.string().optional(),
+  lastTransitionTime: z.string().optional(),
+  message: z.string().optional(),
+  reason: z.string().optional(),
+  status: zK8sIoApiCoreV1ConditionStatus.optional(),
+  type: zV1NodeConditionType.optional(),
+});
+
+export const zV1NodeConfigSource = z.object({
+  configMap: zV1ConfigMapNodeConfigSource.optional(),
+});
+
+export const zV1NodeConfigStatus = z.object({
+  active: zV1NodeConfigSource.optional(),
+  assigned: zV1NodeConfigSource.optional(),
+  error: z.string().optional(),
+  lastKnownGood: zV1NodeConfigSource.optional(),
+});
+
+export const zV1NodeDaemonEndpoints = z.object({
+  kubeletEndpoint: zV1DaemonEndpoint.optional(),
+});
+
+export const zV1NodeFeatures = z.object({
+  supplementalGroupsPolicy: z.boolean().optional(),
+});
+
+export const zV1NodeInclusionPolicy = z.enum(['Ignore', 'Honor']);
+
+export const zV1NodePhase = z.enum(['Pending', 'Running', 'Terminated']);
+
+export const zV1NodeRuntimeHandlerFeatures = z.object({
+  recursiveReadOnlyMounts: z.boolean().optional(),
+  userNamespaces: z.boolean().optional(),
+});
+
+export const zV1NodeRuntimeHandler = z.object({
+  features: zV1NodeRuntimeHandlerFeatures.optional(),
+  name: z.string().optional(),
+});
+
+export const zV1NodeSelectorOperator = z.enum([
+  'In',
+  'NotIn',
+  'Exists',
+  'DoesNotExist',
+  'Gt',
+  'Lt',
+]);
+
+export const zV1NodeSelectorRequirement = z.object({
+  key: z.string().optional(),
+  operator: zV1NodeSelectorOperator.optional(),
+  values: z.array(z.string()).optional(),
+});
+
+export const zV1NodeSelectorTerm = z.object({
+  matchExpressions: z.array(zV1NodeSelectorRequirement).optional(),
+  matchFields: z.array(zV1NodeSelectorRequirement).optional(),
+});
+
+export const zV1NodeSelector = z.object({
+  nodeSelectorTerms: z.array(zV1NodeSelectorTerm).optional(),
+});
+
+export const zV1NodeSwapStatus = z.object({
+  capacity: z.int().optional(),
+});
+
+export const zV1NodeSystemInfo = z.object({
+  architecture: z.string().optional(),
+  bootID: z.string().optional(),
+  containerRuntimeVersion: z.string().optional(),
+  kernelVersion: z.string().optional(),
+  kubeProxyVersion: z.string().optional(),
+  kubeletVersion: z.string().optional(),
+  machineID: z.string().optional(),
+  operatingSystem: z.string().optional(),
+  osImage: z.string().optional(),
+  swap: zV1NodeSwapStatus.optional(),
+  systemUUID: z.string().optional(),
+});
+
+export const zV1OsName = z.enum(['linux', 'windows']);
+
+export const zV1ObjectFieldSelector = z.object({
+  apiVersion: z.string().optional(),
+  fieldPath: z.string().optional(),
+});
+
+export const zV1OwnerReference = z.object({
+  apiVersion: z.string().optional(),
+  blockOwnerDeletion: z.boolean().optional(),
+  controller: z.boolean().optional(),
+  kind: z.string().optional(),
+  name: z.string().optional(),
+  uid: z.string().optional(),
+});
+
+export const zV1ObjectMeta = z.object({
   annotations: z.record(z.string(), z.string()).optional(),
+  creationTimestamp: z.string().optional(),
+  deletionGracePeriodSeconds: z.int().optional(),
+  deletionTimestamp: z.string().optional(),
+  finalizers: z.array(z.string()).optional(),
+  generateName: z.string().optional(),
+  generation: z.int().optional(),
   labels: z.record(z.string(), z.string()).optional(),
+  managedFields: z.array(zV1ManagedFieldsEntry).optional(),
+  name: z.string().optional(),
+  namespace: z.string().optional(),
+  ownerReferences: z.array(zV1OwnerReference).optional(),
+  resourceVersion: z.string().optional(),
+  selfLink: z.string().optional(),
+  uid: z.string().optional(),
 });
 
-export const zKubernetesKubernetesNodeResponse = z.object({
+export const zKubernetesKubernetesCreateNamespaceResponse = z.object({
   apiVersion: z.string().optional(),
   kind: z.string().optional(),
   metadata: zV1ObjectMeta.optional(),
-  spec: zV1NodeSpec.optional(),
-  status: zV1NodeStatus.optional(),
+  spec: zV1NamespaceSpec.optional(),
+  status: zV1NamespaceStatus.optional(),
+});
+
+export const zV1PersistentVolumeAccessMode = z.enum([
+  'ReadWriteOnce',
+  'ReadOnlyMany',
+  'ReadWriteMany',
+  'ReadWriteOncePod',
+]);
+
+export const zV1PersistentVolumeClaimPhase = z.enum([
+  'Pending',
+  'Bound',
+  'Lost',
+]);
+
+export const zV1PersistentVolumeClaimVolumeSource = z.object({
+  claimName: z.string().optional(),
+  readOnly: z.boolean().optional(),
+});
+
+export const zV1PersistentVolumeMode = z.enum(['Block', 'Filesystem']);
+
+export const zKubernetesK8sPersistentVolumeClaimCreateRequest = z.object({
+  accessModes: z.array(zV1PersistentVolumeAccessMode).optional(),
+  annotations: z.record(z.string(), z.string()).optional(),
+  labels: z.record(z.string(), z.string()).optional(),
+  name: z.string().optional(),
+  storage: z.string().optional(),
+  storageClass: z.string().optional(),
+  volumeMode: zV1PersistentVolumeMode.optional(),
+});
+
+export const zV1PersistentVolumePhase = z.enum([
+  'Pending',
+  'Available',
+  'Bound',
+  'Released',
+  'Failed',
+]);
+
+export const zV1PersistentVolumeReclaimPolicy = z.enum([
+  'Recycle',
+  'Delete',
+  'Retain',
+]);
+
+export const zKubernetesK8sPvReclaimPolicyRequest = z.object({
+  name: z.string().optional(),
+  reclaimPolicy: zV1PersistentVolumeReclaimPolicy.optional(),
 });
 
 export const zKubernetesK8sStorageClass = z.object({
@@ -2333,53 +3173,234 @@ export const zKubernetesK8sStorageClass = z.object({
   reclaimPolicy: zV1PersistentVolumeReclaimPolicy.optional(),
 });
 
-export const zKubernetesCustomResourceMetadata = z.object({
-  apiVersion: z.string().optional(),
-  kind: z.string().optional(),
+export const zV1PhotonPersistentDiskVolumeSource = z.object({
+  fsType: z.string().optional(),
+  pdID: z.string().optional(),
+});
+
+export const zV1PodAffinityTerm = z.object({
+  labelSelector: zV1LabelSelector.optional(),
+  matchLabelKeys: z.array(z.string()).optional(),
+  mismatchLabelKeys: z.array(z.string()).optional(),
+  namespaceSelector: zV1LabelSelector.optional(),
+  namespaces: z.array(z.string()).optional(),
+  topologyKey: z.string().optional(),
+});
+
+export const zV1PodCertificateProjection = z.object({
+  certificateChainPath: z.string().optional(),
+  credentialBundlePath: z.string().optional(),
+  keyPath: z.string().optional(),
+  keyType: z.string().optional(),
+  maxExpirationSeconds: z.int().optional(),
+  signerName: z.string().optional(),
+  userAnnotations: z.record(z.string(), z.string()).optional(),
+});
+
+export const zV1PodConditionType = z.enum([
+  'ContainersReady',
+  'Initialized',
+  'Ready',
+  'PodScheduled',
+  'DisruptionTarget',
+  'PodReadyToStartContainers',
+  'PodResizePending',
+  'PodResizeInProgress',
+  'AllContainersRestarting',
+]);
+
+export const zV1PodCondition = z.object({
+  lastProbeTime: z.string().optional(),
+  lastTransitionTime: z.string().optional(),
+  message: z.string().optional(),
+  observedGeneration: z.int().optional(),
+  reason: z.string().optional(),
+  status: zK8sIoApiCoreV1ConditionStatus.optional(),
+  type: zV1PodConditionType.optional(),
+});
+
+export const zV1PodDnsConfigOption = z.object({
   name: z.string().optional(),
-  plural: z.string().optional(),
-  scope: z.string().optional(),
+  value: z.string().optional(),
 });
 
-export const zKubernetesConfiguration = z.object({
-  ConfigurationOwner: z.string().optional(),
-  Data: z.record(z.string(), z.unknown()).optional(),
-  Kind: z.string().optional(),
+export const zV1PodDnsConfig = z.object({
+  nameservers: z.array(z.string()).optional(),
+  options: z.array(zV1PodDnsConfigOption).optional(),
+  searches: z.array(z.string()).optional(),
 });
 
-export const zKubernetesK8sApplication = z.object({
-  Annotations: z.record(z.string(), z.string()).optional(),
-  ApplicationOwner: z.string().optional(),
-  ApplicationType: z.string().optional(),
-  Configurations: z.array(zKubernetesConfiguration).optional(),
-  Containers: z.array(z.unknown()).optional(),
-  CreationDate: z.string().optional(),
-  CustomResourceMetadata: zKubernetesCustomResourceMetadata.optional(),
-  DeploymentType: z.string().optional(),
-  Id: z.string().optional(),
-  Image: z.string().optional(),
-  Kind: z.string().optional(),
-  Labels: z.record(z.string(), z.string()).optional(),
-  LoadBalancerIPAddress: z.string().optional(),
-  MatchLabels: z.record(z.string(), z.string()).optional(),
-  Metadata: zKubernetesMetadata.optional(),
-  Name: z.string().optional(),
-  Namespace: z.string().optional(),
-  Pods: z.array(zKubernetesPod).optional(),
-  PublishedPorts: z.array(zKubernetesPublishedPort).optional(),
-  Resource: zKubernetesK8sApplicationResource.optional(),
-  ResourcePool: z.string().optional(),
-  RunningPodsCount: z.int().optional(),
-  ServiceId: z.string().optional(),
-  ServiceName: z.string().optional(),
-  ServiceType: z.string().optional(),
-  StackId: z.string().optional(),
-  StackKind: z.string().optional(),
-  StackName: z.string().optional(),
-  Status: z.string().optional(),
-  TotalPodsCount: z.int().optional(),
-  Uid: z.string().optional(),
+export const zV1PodExtendedResourceClaimStatus = z.object({
+  requestMappings: z.array(zV1ContainerExtendedResourceRequest).optional(),
+  resourceClaimName: z.string().optional(),
 });
+
+export const zV1PodFsGroupChangePolicy = z.enum(['OnRootMismatch', 'Always']);
+
+export const zV1PodIp = z.object({
+  ip: z.string().optional(),
+});
+
+export const zV1PodOs = z.object({
+  name: zV1OsName.optional(),
+});
+
+export const zV1PodPhase = z.enum([
+  'Pending',
+  'Running',
+  'Succeeded',
+  'Failed',
+  'Unknown',
+]);
+
+export const zV1PodQosClass = z.enum(['Guaranteed', 'Burstable', 'BestEffort']);
+
+export const zV1PodReadinessGate = z.object({
+  conditionType: zV1PodConditionType.optional(),
+});
+
+export const zV1PodResizeStatus = z.enum([
+  'InProgress',
+  'Deferred',
+  'Infeasible',
+]);
+
+export const zV1PodResourceClaim = z.object({
+  name: z.string().optional(),
+  resourceClaimName: z.string().optional(),
+  resourceClaimTemplateName: z.string().optional(),
+});
+
+export const zV1PodResourceClaimStatus = z.object({
+  name: z.string().optional(),
+  resourceClaimName: z.string().optional(),
+});
+
+export const zV1PodSeLinuxChangePolicy = z.enum(['Recursive', 'MountOption']);
+
+export const zV1PodSchedulingGate = z.object({
+  name: z.string().optional(),
+});
+
+export const zV1PortworxVolumeSource = z.object({
+  fsType: z.string().optional(),
+  readOnly: z.boolean().optional(),
+  volumeID: z.string().optional(),
+});
+
+export const zV1PreemptionPolicy = z.enum(['PreemptLowerPriority', 'Never']);
+
+export const zV1PreferredSchedulingTerm = z.object({
+  preference: zV1NodeSelectorTerm.optional(),
+  weight: z.int().optional(),
+});
+
+export const zV1NodeAffinity = z.object({
+  preferredDuringSchedulingIgnoredDuringExecution: z
+    .array(zV1PreferredSchedulingTerm)
+    .optional(),
+  requiredDuringSchedulingIgnoredDuringExecution: zV1NodeSelector.optional(),
+});
+
+export const zV1ProcMountType = z.enum(['Default', 'Unmasked']);
+
+export const zV1Protocol = z.enum(['TCP', 'UDP', 'SCTP']);
+
+export const zV1ContainerPort = z.object({
+  containerPort: z.int().optional(),
+  hostIP: z.string().optional(),
+  hostPort: z.int().optional(),
+  name: z.string().optional(),
+  protocol: zV1Protocol.optional(),
+});
+
+export const zV1PullPolicy = z.enum(['Always', 'Never', 'IfNotPresent']);
+
+export const zV1ImageVolumeSource = z.object({
+  pullPolicy: zV1PullPolicy.optional(),
+  reference: z.string().optional(),
+});
+
+export const zV1QuobyteVolumeSource = z.object({
+  group: z.string().optional(),
+  readOnly: z.boolean().optional(),
+  registry: z.string().optional(),
+  tenant: z.string().optional(),
+  user: z.string().optional(),
+  volume: z.string().optional(),
+});
+
+export const zV1RbdVolumeSource = z.object({
+  fsType: z.string().optional(),
+  image: z.string().optional(),
+  keyring: z.string().optional(),
+  monitors: z.array(z.string()).optional(),
+  pool: z.string().optional(),
+  readOnly: z.boolean().optional(),
+  secretRef: zK8sIoApiCoreV1LocalObjectReference.optional(),
+  user: z.string().optional(),
+});
+
+export const zV1RecursiveReadOnlyMode = z.enum([
+  'Disabled',
+  'IfPossible',
+  'Enabled',
+]);
+
+export const zV1ReplicaSetConditionType = z.enum(['ReplicaFailure']);
+
+export const zV1ReplicaSetCondition = z.object({
+  lastTransitionTime: z.string().optional(),
+  message: z.string().optional(),
+  reason: z.string().optional(),
+  status: zK8sIoApiCoreV1ConditionStatus.optional(),
+  type: zV1ReplicaSetConditionType.optional(),
+});
+
+export const zV1ReplicaSetStatus = z.object({
+  availableReplicas: z.int().optional(),
+  conditions: z.array(zV1ReplicaSetCondition).optional(),
+  fullyLabeledReplicas: z.int().optional(),
+  observedGeneration: z.int().optional(),
+  readyReplicas: z.int().optional(),
+  replicas: z.int().optional(),
+  terminatingReplicas: z.int().optional(),
+});
+
+export const zV1ResourceFieldSelector = z.object({
+  containerName: z.string().optional(),
+  divisor: zResourceQuantity.optional(),
+  resource: z.string().optional(),
+});
+
+export const zV1DownwardApiVolumeFile = z.object({
+  fieldRef: zV1ObjectFieldSelector.optional(),
+  mode: z.int().optional(),
+  path: z.string().optional(),
+  resourceFieldRef: zV1ResourceFieldSelector.optional(),
+});
+
+export const zV1DownwardApiProjection = z.object({
+  items: z.array(zV1DownwardApiVolumeFile).optional(),
+});
+
+export const zV1DownwardApiVolumeSource = z.object({
+  defaultMode: z.int().optional(),
+  items: z.array(zV1DownwardApiVolumeFile).optional(),
+});
+
+export const zV1ResourceHealthStatus = z.enum([
+  'Healthy',
+  'Unhealthy',
+  'Unknown',
+]);
+
+export const zV1ResourceHealth = z.object({
+  health: zV1ResourceHealthStatus.optional(),
+  resourceID: z.string().optional(),
+});
+
+export const zV1ResourceList = z.record(z.string(), zResourceQuantity);
 
 export const zKubernetesK8sPersistentVolumeClaim = z.object({
   accessModes: z.array(z.string()).optional(),
@@ -2400,11 +3421,262 @@ export const zKubernetesK8sPersistentVolumeClaim = z.object({
   volumeName: z.string().optional(),
 });
 
+export const zV1NodeStatus = z.object({
+  addresses: z.array(zV1NodeAddress).optional(),
+  allocatable: zV1ResourceList.optional(),
+  capacity: zV1ResourceList.optional(),
+  conditions: z.array(zV1NodeCondition).optional(),
+  config: zV1NodeConfigStatus.optional(),
+  daemonEndpoints: zV1NodeDaemonEndpoints.optional(),
+  declaredFeatures: z.array(z.string()).optional(),
+  features: zV1NodeFeatures.optional(),
+  images: z.array(zV1ContainerImage).optional(),
+  nodeInfo: zV1NodeSystemInfo.optional(),
+  phase: zV1NodePhase.optional(),
+  runtimeHandlers: z.array(zV1NodeRuntimeHandler).optional(),
+  volumesAttached: z.array(zV1AttachedVolume).optional(),
+  volumesInUse: z.array(z.string()).optional(),
+});
+
+export const zV1ResourceName = z.enum([
+  'cpu',
+  'memory',
+  'storage',
+  'ephemeral-storage',
+  'pods',
+  'services',
+  'replicationcontrollers',
+  'resourcequotas',
+  'secrets',
+  'configmaps',
+  'persistentvolumeclaims',
+  'services.nodeports',
+  'services.loadbalancers',
+  'requests.cpu',
+  'requests.memory',
+  'requests.storage',
+  'requests.ephemeral-storage',
+  'limits.cpu',
+  'limits.memory',
+  'limits.ephemeral-storage',
+]);
+
+export const zV1ResourceQuotaScope = z.enum([
+  'Terminating',
+  'NotTerminating',
+  'BestEffort',
+  'NotBestEffort',
+  'PriorityClass',
+  'CrossNamespacePodAffinity',
+  'VolumeAttributesClass',
+]);
+
+export const zV1ResourceQuotaStatus = z.object({
+  hard: zV1ResourceList.optional(),
+  used: zV1ResourceList.optional(),
+});
+
+export const zV1ResourceRequirements = z.object({
+  claims: z.array(zK8sIoApiCoreV1ResourceClaim).optional(),
+  limits: zV1ResourceList.optional(),
+  requests: zV1ResourceList.optional(),
+});
+
+export const zV1ResourceResizeRestartPolicy = z.enum([
+  'NotRequired',
+  'RestartContainer',
+]);
+
+export const zV1ContainerResizePolicy = z.object({
+  resourceName: zV1ResourceName.optional(),
+  restartPolicy: zV1ResourceResizeRestartPolicy.optional(),
+});
+
+export const zV1ResourceStatus = z.object({
+  name: zV1ResourceName.optional(),
+  resources: z.array(zV1ResourceHealth).optional(),
+});
+
+export const zV1RestartPolicy = z.enum(['Always', 'OnFailure', 'Never']);
+
+export const zV1RoleRef = z.object({
+  apiGroup: z.string().optional(),
+  kind: z.string().optional(),
+  name: z.string().optional(),
+});
+
+export const zKubernetesK8sClusterRoleBinding = z.object({
+  creationDate: z.string().optional(),
+  isSystem: z.boolean().optional(),
+  name: z.string().optional(),
+  namespace: z.string().optional(),
+  roleRef: zV1RoleRef.optional(),
+  subjects: z.array(zK8sIoApiRbacV1Subject).optional(),
+  uid: z.string().optional(),
+});
+
+export const zKubernetesK8sRoleBinding = z.object({
+  creationDate: z.string().optional(),
+  isSystem: z.boolean().optional(),
+  name: z.string().optional(),
+  namespace: z.string().optional(),
+  roleRef: zV1RoleRef.optional(),
+  subjects: z.array(zK8sIoApiRbacV1Subject).optional(),
+  uid: z.string().optional(),
+});
+
+export const zV1RollingUpdateDeployment = z.object({
+  maxSurge: zIntstrIntOrString.optional(),
+  maxUnavailable: zIntstrIntOrString.optional(),
+});
+
+export const zV1DeploymentStrategy = z.object({
+  rollingUpdate: zV1RollingUpdateDeployment.optional(),
+  type: zV1DeploymentStrategyType.optional(),
+});
+
+export const zV1SeLinuxOptions = z.object({
+  level: z.string().optional(),
+  role: z.string().optional(),
+  type: z.string().optional(),
+  user: z.string().optional(),
+});
+
+export const zV1ScaleIoVolumeSource = z.object({
+  fsType: z.string().optional(),
+  gateway: z.string().optional(),
+  protectionDomain: z.string().optional(),
+  readOnly: z.boolean().optional(),
+  secretRef: zK8sIoApiCoreV1LocalObjectReference.optional(),
+  sslEnabled: z.boolean().optional(),
+  storageMode: z.string().optional(),
+  storagePool: z.string().optional(),
+  system: z.string().optional(),
+  volumeName: z.string().optional(),
+});
+
+export const zV1ScopeSelectorOperator = z.enum([
+  'In',
+  'NotIn',
+  'Exists',
+  'DoesNotExist',
+]);
+
+export const zV1ScopedResourceSelectorRequirement = z.object({
+  operator: zV1ScopeSelectorOperator.optional(),
+  scopeName: zV1ResourceQuotaScope.optional(),
+  values: z.array(z.string()).optional(),
+});
+
+export const zV1ScopeSelector = z.object({
+  matchExpressions: z.array(zV1ScopedResourceSelectorRequirement).optional(),
+});
+
+export const zV1ResourceQuotaSpec = z.object({
+  hard: zV1ResourceList.optional(),
+  scopeSelector: zV1ScopeSelector.optional(),
+  scopes: z.array(zV1ResourceQuotaScope).optional(),
+});
+
+export const zV1ResourceQuota = z.object({
+  apiVersion: z.string().optional(),
+  kind: z.string().optional(),
+  metadata: zV1ObjectMeta.optional(),
+  spec: zV1ResourceQuotaSpec.optional(),
+  status: zV1ResourceQuotaStatus.optional(),
+});
+
+export const zKubernetesKubernetesResourceQuotaListResponse = z.object({
+  apiVersion: z.string().optional(),
+  items: z.array(zV1ResourceQuota).optional(),
+  kind: z.string().optional(),
+  metadata: zV1ListMeta.optional(),
+});
+
+export const zPortainerK8sNamespaceInfo = z.object({
+  Annotations: z.record(z.string(), z.string()).optional(),
+  CreationDate: z.string().optional(),
+  Id: z.string().optional(),
+  IsDefault: z.boolean().optional(),
+  IsSystem: z.boolean().optional(),
+  Name: z.string().optional(),
+  NamespaceOwner: z.string().optional(),
+  ResourceQuota: zV1ResourceQuota.optional(),
+  Status: zV1NamespaceStatus.optional(),
+  UnhealthyEventCount: z.int().optional(),
+});
+
+export const zV1SeccompProfileType = z.enum([
+  'Unconfined',
+  'RuntimeDefault',
+  'Localhost',
+]);
+
+export const zV1SeccompProfile = z.object({
+  localhostProfile: z.string().optional(),
+  type: zV1SeccompProfileType.optional(),
+});
+
+export const zV1SecretEnvSource = z.object({
+  name: z.string().optional(),
+  optional: z.boolean().optional(),
+});
+
+export const zV1EnvFromSource = z.object({
+  configMapRef: zV1ConfigMapEnvSource.optional(),
+  prefix: z.string().optional(),
+  secretRef: zV1SecretEnvSource.optional(),
+});
+
+export const zV1SecretKeySelector = z.object({
+  key: z.string().optional(),
+  name: z.string().optional(),
+  optional: z.boolean().optional(),
+});
+
+export const zV1EnvVarSource = z.object({
+  configMapKeyRef: zV1ConfigMapKeySelector.optional(),
+  fieldRef: zV1ObjectFieldSelector.optional(),
+  fileKeyRef: zV1FileKeySelector.optional(),
+  resourceFieldRef: zV1ResourceFieldSelector.optional(),
+  secretKeyRef: zV1SecretKeySelector.optional(),
+});
+
+export const zV1EnvVar = z.object({
+  name: z.string().optional(),
+  value: z.string().optional(),
+  valueFrom: zV1EnvVarSource.optional(),
+});
+
+export const zV1SecretProjection = z.object({
+  items: z.array(zV1KeyToPath).optional(),
+  name: z.string().optional(),
+  optional: z.boolean().optional(),
+});
+
+export const zV1SecretReference = z.object({
+  name: z.string().optional(),
+  namespace: z.string().optional(),
+});
+
+export const zV1CsiPersistentVolumeSource = z.object({
+  controllerExpandSecretRef: zV1SecretReference.optional(),
+  controllerPublishSecretRef: zV1SecretReference.optional(),
+  driver: z.string().optional(),
+  fsType: z.string().optional(),
+  nodeExpandSecretRef: zV1SecretReference.optional(),
+  nodePublishSecretRef: zV1SecretReference.optional(),
+  nodeStageSecretRef: zV1SecretReference.optional(),
+  readOnly: z.boolean().optional(),
+  volumeAttributes: z.record(z.string(), z.string()).optional(),
+  volumeHandle: z.string().optional(),
+});
+
 export const zKubernetesK8sPersistentVolume = z.object({
   accessModes: z.array(z.string()).optional(),
   annotations: z.record(z.string(), z.string()).optional(),
   capacity: zV1ResourceList.optional(),
-  claimRef: zV1ObjectReference.optional(),
+  claimRef: zK8sIoApiCoreV1ObjectReference.optional(),
   creationDate: z.string().optional(),
   csi: zV1CsiPersistentVolumeSource.optional(),
   humanReadableAccessModes: z.array(zV1PersistentVolumeAccessMode).optional(),
@@ -2422,155 +3694,472 @@ export const zKubernetesK8sVolumeInfo = z.object({
   storageClass: zKubernetesK8sStorageClass.optional(),
 });
 
-export const zKubernetesK8sVolumeDeleteRequest = z.object({
+export const zV1SecretVolumeSource = z.object({
+  defaultMode: z.int().optional(),
+  items: z.array(zV1KeyToPath).optional(),
+  optional: z.boolean().optional(),
+  secretName: z.string().optional(),
+});
+
+export const zV1ServiceAccountTokenProjection = z.object({
+  audience: z.string().optional(),
+  expirationSeconds: z.int().optional(),
+  path: z.string().optional(),
+});
+
+export const zV1Signal = z.enum([
+  'SIGABRT',
+  'SIGALRM',
+  'SIGBUS',
+  'SIGCHLD',
+  'SIGCLD',
+  'SIGCONT',
+  'SIGFPE',
+  'SIGHUP',
+  'SIGILL',
+  'SIGINT',
+  'SIGIO',
+  'SIGIOT',
+  'SIGKILL',
+  'SIGPIPE',
+  'SIGPOLL',
+  'SIGPROF',
+  'SIGPWR',
+  'SIGQUIT',
+  'SIGSEGV',
+  'SIGSTKFLT',
+  'SIGSTOP',
+  'SIGSYS',
+  'SIGTERM',
+  'SIGTRAP',
+  'SIGTSTP',
+  'SIGTTIN',
+  'SIGTTOU',
+  'SIGURG',
+  'SIGUSR1',
+  'SIGUSR2',
+  'SIGVTALRM',
+  'SIGWINCH',
+  'SIGXCPU',
+  'SIGXFSZ',
+  'SIGRTMIN',
+  'SIGRTMIN+1',
+  'SIGRTMIN+2',
+  'SIGRTMIN+3',
+  'SIGRTMIN+4',
+  'SIGRTMIN+5',
+  'SIGRTMIN+6',
+  'SIGRTMIN+7',
+  'SIGRTMIN+8',
+  'SIGRTMIN+9',
+  'SIGRTMIN+10',
+  'SIGRTMIN+11',
+  'SIGRTMIN+12',
+  'SIGRTMIN+13',
+  'SIGRTMIN+14',
+  'SIGRTMIN+15',
+  'SIGRTMAX-14',
+  'SIGRTMAX-13',
+  'SIGRTMAX-12',
+  'SIGRTMAX-11',
+  'SIGRTMAX-10',
+  'SIGRTMAX-9',
+  'SIGRTMAX-8',
+  'SIGRTMAX-7',
+  'SIGRTMAX-6',
+  'SIGRTMAX-5',
+  'SIGRTMAX-4',
+  'SIGRTMAX-3',
+  'SIGRTMAX-2',
+  'SIGRTMAX-1',
+  'SIGRTMAX',
+]);
+
+export const zV1SleepAction = z.object({
+  seconds: z.int().optional(),
+});
+
+export const zV1StorageMedium = z.enum([
+  '',
+  'Memory',
+  'HugePages',
+  'HugePages-',
+]);
+
+export const zV1EmptyDirVolumeSource = z.object({
+  medium: zV1StorageMedium.optional(),
+  sizeLimit: zResourceQuantity.optional(),
+});
+
+export const zV1StorageOsVolumeSource = z.object({
+  fsType: z.string().optional(),
+  readOnly: z.boolean().optional(),
+  secretRef: zK8sIoApiCoreV1LocalObjectReference.optional(),
+  volumeName: z.string().optional(),
+  volumeNamespace: z.string().optional(),
+});
+
+export const zV1SupplementalGroupsPolicy = z.enum(['Merge', 'Strict']);
+
+export const zV1Sysctl = z.object({
   name: z.string().optional(),
-  namespace: z.string().optional(),
+  value: z.string().optional(),
 });
 
-export const zKubernetesK8sServicePort = z.object({
-  Name: z.string().optional(),
-  NodePort: z.int().optional(),
-  Port: z.int().optional(),
-  Protocol: z.string().optional(),
-  TargetPort: z.string().optional(),
+export const zV1TcpSocketAction = z.object({
+  host: z.string().optional(),
+  port: zIntstrIntOrString.optional(),
 });
 
-export const zKubernetesK8sServiceIngress = z.object({
-  Hostname: z.string().optional(),
-  IP: z.string().optional(),
+export const zV1TaintEffect = z.enum([
+  'NoSchedule',
+  'PreferNoSchedule',
+  'NoExecute',
+]);
+
+export const zV1Taint = z.object({
+  effect: zV1TaintEffect.optional(),
+  key: z.string().optional(),
+  timeAdded: z.string().optional(),
+  value: z.string().optional(),
 });
 
-export const zKubernetesK8sServiceInfo = z.object({
-  AllocateLoadBalancerNodePorts: z.boolean().optional(),
-  Annotations: z.record(z.string(), z.string()).optional(),
-  Applications: z.array(zKubernetesK8sApplication).optional(),
-  ClusterIPs: z.array(z.string()).optional(),
-  CreationDate: z.string().optional(),
-  ExternalIPs: z.array(z.string()).optional(),
-  ExternalName: z.string().optional(),
-  IngressStatus: z.array(zKubernetesK8sServiceIngress).optional(),
-  Labels: z.record(z.string(), z.string()).optional(),
-  Name: z.string().optional(),
-  Namespace: z.string().optional(),
-  Ports: z.array(zKubernetesK8sServicePort).optional(),
-  Selector: z.record(z.string(), z.string()).optional(),
-  Type: z.string().optional(),
-  UID: z.string().optional(),
+export const zV1NodeSpec = z.object({
+  configSource: zV1NodeConfigSource.optional(),
+  externalID: z.string().optional(),
+  podCIDR: z.string().optional(),
+  podCIDRs: z.array(z.string()).optional(),
+  providerID: z.string().optional(),
+  taints: z.array(zV1Taint).optional(),
+  unschedulable: z.boolean().optional(),
 });
 
-export const zKubernetesK8sServiceDeleteRequests = z.record(
-  z.string(),
-  z.array(z.string())
-);
+export const zKubernetesKubernetesNodeResponse = z.object({
+  apiVersion: z.string().optional(),
+  kind: z.string().optional(),
+  metadata: zV1ObjectMeta.optional(),
+  spec: zV1NodeSpec.optional(),
+  status: zV1NodeStatus.optional(),
+});
 
-export const zKubernetesK8sServiceAccountImagePullSecretsUpdatePayload =
-  z.object({
-    secretNames: z.array(z.string()).optional(),
-  });
+export const zV1TerminationMessagePolicy = z.enum([
+  'File',
+  'FallbackToLogsOnError',
+]);
 
-export const zKubernetesK8sServiceAccountDeleteRequests = z.record(
-  z.string(),
-  z.array(z.string())
-);
+export const zV1TolerationOperator = z.enum(['Exists', 'Equal', 'Lt', 'Gt']);
 
-export const zKubernetesK8sServiceAccount = z.object({
-  annotations: z.record(z.string(), z.string()).optional(),
-  automountServiceAccountToken: z.boolean().optional(),
-  creationDate: z.string().optional(),
-  imagePullSecrets: z.array(zV1LocalObjectReference).optional(),
-  isSystem: z.boolean().optional(),
-  labels: z.record(z.string(), z.string()).optional(),
+export const zV1Toleration = z.object({
+  effect: zV1TaintEffect.optional(),
+  key: z.string().optional(),
+  operator: zV1TolerationOperator.optional(),
+  tolerationSeconds: z.int().optional(),
+  value: z.string().optional(),
+});
+
+export const zV1TypedLocalObjectReference = z.object({
+  apiGroup: z.string().optional(),
+  kind: z.string().optional(),
   name: z.string().optional(),
-  namespace: z.string().optional(),
-  uid: z.string().optional(),
 });
 
-export const zKubernetesK8sConfigurationOwnerResource = z.object({
-  Id: z.string().optional(),
-  Name: z.string().optional(),
-  ResourceKind: z.string().optional(),
-});
-
-export const zKubernetesK8sSecret = z.object({
-  Annotations: z.record(z.string(), z.string()).optional(),
-  ConfigurationOwner: z.string().optional(),
-  ConfigurationOwnerId: z.string().optional(),
-  ConfigurationOwners: z
-    .array(zKubernetesK8sConfigurationOwnerResource)
-    .optional(),
-  CreationDate: z.string().optional(),
-  Data: z.record(z.string(), z.string()).optional(),
-  IsUsed: z.boolean().optional(),
-  Labels: z.record(z.string(), z.string()).optional(),
-  Name: z.string().optional(),
-  Namespace: z.string().optional(),
-  SecretType: z.string().optional(),
-  UID: z.string().optional(),
-});
-
-export const zKubernetesK8sRoleDeleteRequests = z.record(
-  z.string(),
-  z.array(z.string())
-);
-
-export const zKubernetesK8sRoleBindingDeleteRequests = z.record(
-  z.string(),
-  z.array(z.string())
-);
-
-export const zK8sIoApiRbacV1Subject = z.object({
+export const zV1TypedObjectReference = z.object({
   apiGroup: z.string().optional(),
   kind: z.string().optional(),
   name: z.string().optional(),
   namespace: z.string().optional(),
 });
 
-export const zKubernetesK8sRoleBinding = z.object({
-  creationDate: z.string().optional(),
-  isSystem: z.boolean().optional(),
+export const zV1UriScheme = z.enum(['HTTP', 'HTTPS']);
+
+export const zV1HttpGetAction = z.object({
+  host: z.string().optional(),
+  httpHeaders: z.array(zK8sIoApiCoreV1HttpHeader).optional(),
+  path: z.string().optional(),
+  port: zIntstrIntOrString.optional(),
+  scheme: zV1UriScheme.optional(),
+});
+
+export const zV1LifecycleHandler = z.object({
+  exec: zV1ExecAction.optional(),
+  httpGet: zV1HttpGetAction.optional(),
+  sleep: zV1SleepAction.optional(),
+  tcpSocket: zV1TcpSocketAction.optional(),
+});
+
+export const zV1Lifecycle = z.object({
+  postStart: zV1LifecycleHandler.optional(),
+  preStop: zV1LifecycleHandler.optional(),
+  stopSignal: zV1Signal.optional(),
+});
+
+export const zV1Probe = z.object({
+  exec: zV1ExecAction.optional(),
+  failureThreshold: z.int().optional(),
+  grpc: zV1GrpcAction.optional(),
+  httpGet: zV1HttpGetAction.optional(),
+  initialDelaySeconds: z.int().optional(),
+  periodSeconds: z.int().optional(),
+  successThreshold: z.int().optional(),
+  tcpSocket: zV1TcpSocketAction.optional(),
+  terminationGracePeriodSeconds: z.int().optional(),
+  timeoutSeconds: z.int().optional(),
+});
+
+export const zV1UnsatisfiableConstraintAction = z.enum([
+  'DoNotSchedule',
+  'ScheduleAnyway',
+]);
+
+export const zV1TopologySpreadConstraint = z.object({
+  labelSelector: zV1LabelSelector.optional(),
+  matchLabelKeys: z.array(z.string()).optional(),
+  maxSkew: z.int().optional(),
+  minDomains: z.int().optional(),
+  nodeAffinityPolicy: zV1NodeInclusionPolicy.optional(),
+  nodeTaintsPolicy: zV1NodeInclusionPolicy.optional(),
+  topologyKey: z.string().optional(),
+  whenUnsatisfiable: zV1UnsatisfiableConstraintAction.optional(),
+});
+
+export const zV1VolumeDevice = z.object({
+  devicePath: z.string().optional(),
   name: z.string().optional(),
-  namespace: z.string().optional(),
-  roleRef: zV1RoleRef.optional(),
-  subjects: z.array(zK8sIoApiRbacV1Subject).optional(),
-  uid: z.string().optional(),
 });
 
-export const zKubernetesK8sRole = z.object({
-  creationDate: z.string().optional(),
-  isSystem: z.boolean().optional(),
+export const zV1VolumeMount = z.object({
+  mountPath: z.string().optional(),
+  mountPropagation: zV1MountPropagationMode.optional(),
   name: z.string().optional(),
-  namespace: z.string().optional(),
-  uid: z.string().optional(),
+  readOnly: z.boolean().optional(),
+  recursiveReadOnly: zV1RecursiveReadOnlyMode.optional(),
+  subPath: z.string().optional(),
+  subPathExpr: z.string().optional(),
 });
 
-export const zKubernetesK8sResourceQuota = z.object({
-  cpu: z.string().optional(),
-  enabled: z.boolean().optional(),
-  memory: z.string().optional(),
-});
-
-export const zKubernetesK8sPvReclaimPolicyRequest = z.object({
+export const zV1VolumeMountStatus = z.object({
+  mountPath: z.string().optional(),
   name: z.string().optional(),
-  reclaimPolicy: zV1PersistentVolumeReclaimPolicy.optional(),
+  readOnly: z.boolean().optional(),
+  recursiveReadOnly: zV1RecursiveReadOnlyMode.optional(),
 });
 
-export const zKubernetesK8sPvcResizeRequest = z.object({
+export const zV1ContainerStatus = z.object({
+  allocatedResources: zV1ResourceList.optional(),
+  allocatedResourcesStatus: z.array(zV1ResourceStatus).optional(),
+  containerID: z.string().optional(),
+  image: z.string().optional(),
+  imageID: z.string().optional(),
+  lastState: zV1ContainerState.optional(),
   name: z.string().optional(),
-  namespace: z.string().optional(),
-  newSize: z.string().optional(),
+  ready: z.boolean().optional(),
+  resources: zV1ResourceRequirements.optional(),
+  restartCount: z.int().optional(),
+  started: z.boolean().optional(),
+  state: zV1ContainerState.optional(),
+  stopSignal: zV1Signal.optional(),
+  user: zV1ContainerUser.optional(),
+  volumeMounts: z.array(zV1VolumeMountStatus).optional(),
 });
 
-export const zKubernetesK8sNamespaceDetails = z.object({
-  Annotations: z.record(z.string(), z.string()).optional(),
-  Name: z.string().optional(),
-  Owner: z.string().optional(),
-  ResourceQuota: zKubernetesK8sResourceQuota.optional(),
+export const zV1PodStatus = z.object({
+  allocatedResources: zV1ResourceList.optional(),
+  conditions: z.array(zV1PodCondition).optional(),
+  containerStatuses: z.array(zV1ContainerStatus).optional(),
+  ephemeralContainerStatuses: z.array(zV1ContainerStatus).optional(),
+  extendedResourceClaimStatus: zV1PodExtendedResourceClaimStatus.optional(),
+  hostIP: z.string().optional(),
+  hostIPs: z.array(zV1HostIp).optional(),
+  initContainerStatuses: z.array(zV1ContainerStatus).optional(),
+  message: z.string().optional(),
+  nominatedNodeName: z.string().optional(),
+  observedGeneration: z.int().optional(),
+  phase: zV1PodPhase.optional(),
+  podIP: z.string().optional(),
+  podIPs: z.array(zV1PodIp).optional(),
+  qosClass: zV1PodQosClass.optional(),
+  reason: z.string().optional(),
+  resize: zV1PodResizeStatus.optional(),
+  resourceClaimStatuses: z.array(zV1PodResourceClaimStatus).optional(),
+  resources: zV1ResourceRequirements.optional(),
+  startTime: z.string().optional(),
 });
 
-export const zKubernetesK8sJobDeleteRequests = z.record(
-  z.string(),
-  z.array(z.string())
-);
+export const zV1VolumeProjection = z.object({
+  clusterTrustBundle: zV1ClusterTrustBundleProjection.optional(),
+  configMap: zV1ConfigMapProjection.optional(),
+  downwardAPI: zV1DownwardApiProjection.optional(),
+  podCertificate: zV1PodCertificateProjection.optional(),
+  secret: zV1SecretProjection.optional(),
+  serviceAccountToken: zV1ServiceAccountTokenProjection.optional(),
+});
+
+export const zV1ProjectedVolumeSource = z.object({
+  defaultMode: z.int().optional(),
+  sources: z.array(zV1VolumeProjection).optional(),
+});
+
+export const zV1VolumeResourceRequirements = z.object({
+  limits: zV1ResourceList.optional(),
+  requests: zV1ResourceList.optional(),
+});
+
+export const zV1PersistentVolumeClaimSpec = z.object({
+  accessModes: z.array(zV1PersistentVolumeAccessMode).optional(),
+  dataSource: zV1TypedLocalObjectReference.optional(),
+  dataSourceRef: zV1TypedObjectReference.optional(),
+  resources: zV1VolumeResourceRequirements.optional(),
+  selector: zV1LabelSelector.optional(),
+  storageClassName: z.string().optional(),
+  volumeAttributesClassName: z.string().optional(),
+  volumeMode: zV1PersistentVolumeMode.optional(),
+  volumeName: z.string().optional(),
+});
+
+export const zV1PersistentVolumeClaimTemplate = z.object({
+  metadata: zV1ObjectMeta.optional(),
+  spec: zV1PersistentVolumeClaimSpec.optional(),
+});
+
+export const zV1EphemeralVolumeSource = z.object({
+  volumeClaimTemplate: zV1PersistentVolumeClaimTemplate.optional(),
+});
+
+export const zV1VsphereVirtualDiskVolumeSource = z.object({
+  fsType: z.string().optional(),
+  storagePolicyID: z.string().optional(),
+  storagePolicyName: z.string().optional(),
+  volumePath: z.string().optional(),
+});
+
+export const zV1Volume = z.object({
+  awsElasticBlockStore: zV1AwsElasticBlockStoreVolumeSource.optional(),
+  azureDisk: zV1AzureDiskVolumeSource.optional(),
+  azureFile: zV1AzureFileVolumeSource.optional(),
+  cephfs: zV1CephFsVolumeSource.optional(),
+  cinder: zV1CinderVolumeSource.optional(),
+  configMap: zV1ConfigMapVolumeSource.optional(),
+  csi: zV1CsiVolumeSource.optional(),
+  downwardAPI: zV1DownwardApiVolumeSource.optional(),
+  emptyDir: zV1EmptyDirVolumeSource.optional(),
+  ephemeral: zV1EphemeralVolumeSource.optional(),
+  fc: zV1FcVolumeSource.optional(),
+  flexVolume: zV1FlexVolumeSource.optional(),
+  flocker: zV1FlockerVolumeSource.optional(),
+  gcePersistentDisk: zV1GcePersistentDiskVolumeSource.optional(),
+  gitRepo: zV1GitRepoVolumeSource.optional(),
+  glusterfs: zV1GlusterfsVolumeSource.optional(),
+  hostPath: zV1HostPathVolumeSource.optional(),
+  image: zV1ImageVolumeSource.optional(),
+  iscsi: zV1IscsiVolumeSource.optional(),
+  name: z.string().optional(),
+  nfs: zV1NfsVolumeSource.optional(),
+  persistentVolumeClaim: zV1PersistentVolumeClaimVolumeSource.optional(),
+  photonPersistentDisk: zV1PhotonPersistentDiskVolumeSource.optional(),
+  portworxVolume: zV1PortworxVolumeSource.optional(),
+  projected: zV1ProjectedVolumeSource.optional(),
+  quobyte: zV1QuobyteVolumeSource.optional(),
+  rbd: zV1RbdVolumeSource.optional(),
+  scaleIO: zV1ScaleIoVolumeSource.optional(),
+  secret: zV1SecretVolumeSource.optional(),
+  storageos: zV1StorageOsVolumeSource.optional(),
+  vsphereVolume: zV1VsphereVirtualDiskVolumeSource.optional(),
+});
+
+export const zV1WeightedPodAffinityTerm = z.object({
+  podAffinityTerm: zV1PodAffinityTerm.optional(),
+  weight: z.int().optional(),
+});
+
+export const zV1PodAffinity = z.object({
+  preferredDuringSchedulingIgnoredDuringExecution: z
+    .array(zV1WeightedPodAffinityTerm)
+    .optional(),
+  requiredDuringSchedulingIgnoredDuringExecution: z
+    .array(zV1PodAffinityTerm)
+    .optional(),
+});
+
+export const zV1PodAntiAffinity = z.object({
+  preferredDuringSchedulingIgnoredDuringExecution: z
+    .array(zV1WeightedPodAffinityTerm)
+    .optional(),
+  requiredDuringSchedulingIgnoredDuringExecution: z
+    .array(zV1PodAffinityTerm)
+    .optional(),
+});
+
+export const zV1Affinity = z.object({
+  nodeAffinity: zV1NodeAffinity.optional(),
+  podAffinity: zV1PodAffinity.optional(),
+  podAntiAffinity: zV1PodAntiAffinity.optional(),
+});
+
+export const zV1WindowsSecurityContextOptions = z.object({
+  gmsaCredentialSpec: z.string().optional(),
+  gmsaCredentialSpecName: z.string().optional(),
+  hostProcess: z.boolean().optional(),
+  runAsUserName: z.string().optional(),
+});
+
+export const zV1PodSecurityContext = z.object({
+  appArmorProfile: zV1AppArmorProfile.optional(),
+  fsGroup: z.int().optional(),
+  fsGroupChangePolicy: zV1PodFsGroupChangePolicy.optional(),
+  runAsGroup: z.int().optional(),
+  runAsNonRoot: z.boolean().optional(),
+  runAsUser: z.int().optional(),
+  seLinuxChangePolicy: zV1PodSeLinuxChangePolicy.optional(),
+  seLinuxOptions: zV1SeLinuxOptions.optional(),
+  seccompProfile: zV1SeccompProfile.optional(),
+  supplementalGroups: z.array(z.int()).optional(),
+  supplementalGroupsPolicy: zV1SupplementalGroupsPolicy.optional(),
+  sysctls: z.array(zV1Sysctl).optional(),
+  windowsOptions: zV1WindowsSecurityContextOptions.optional(),
+});
+
+export const zV1SecurityContext = z.object({
+  allowPrivilegeEscalation: z.boolean().optional(),
+  appArmorProfile: zV1AppArmorProfile.optional(),
+  capabilities: zV1Capabilities.optional(),
+  privileged: z.boolean().optional(),
+  procMount: zV1ProcMountType.optional(),
+  readOnlyRootFilesystem: z.boolean().optional(),
+  runAsGroup: z.int().optional(),
+  runAsNonRoot: z.boolean().optional(),
+  runAsUser: z.int().optional(),
+  seLinuxOptions: zV1SeLinuxOptions.optional(),
+  seccompProfile: zV1SeccompProfile.optional(),
+  windowsOptions: zV1WindowsSecurityContextOptions.optional(),
+});
+
+export const zV1Container = z.object({
+  args: z.array(z.string()).optional(),
+  command: z.array(z.string()).optional(),
+  env: z.array(zV1EnvVar).optional(),
+  envFrom: z.array(zV1EnvFromSource).optional(),
+  image: z.string().optional(),
+  imagePullPolicy: zV1PullPolicy.optional(),
+  lifecycle: zV1Lifecycle.optional(),
+  livenessProbe: zV1Probe.optional(),
+  name: z.string().optional(),
+  ports: z.array(zV1ContainerPort).optional(),
+  readinessProbe: zV1Probe.optional(),
+  resizePolicy: z.array(zV1ContainerResizePolicy).optional(),
+  resources: zV1ResourceRequirements.optional(),
+  restartPolicy: zV1ContainerRestartPolicy.optional(),
+  restartPolicyRules: z.array(zV1ContainerRestartRule).optional(),
+  securityContext: zV1SecurityContext.optional(),
+  startupProbe: zV1Probe.optional(),
+  stdin: z.boolean().optional(),
+  stdinOnce: z.boolean().optional(),
+  terminationMessagePath: z.string().optional(),
+  terminationMessagePolicy: zV1TerminationMessagePolicy.optional(),
+  tty: z.boolean().optional(),
+  volumeDevices: z.array(zV1VolumeDevice).optional(),
+  volumeMounts: z.array(zV1VolumeMount).optional(),
+  workingDir: z.string().optional(),
+});
 
 export const zKubernetesK8sJob = z.object({
   BackoffLimit: z.int().optional(),
@@ -2589,86 +4178,6 @@ export const zKubernetesK8sJob = z.object({
   Status: z.string().optional(),
 });
 
-export const zKubernetesK8sIngressTls = z.object({
-  Hosts: z.array(z.string()).optional(),
-  SecretName: z.string().optional(),
-});
-
-export const zKubernetesK8sIngressPath = z.object({
-  HasService: z.boolean().optional(),
-  Host: z.string().optional(),
-  IngressName: z.string().optional(),
-  Path: z.string().optional(),
-  PathType: z.string().optional(),
-  Port: z.int().optional(),
-  ServiceName: z.string().optional(),
-});
-
-export const zKubernetesK8sIngressInfo = z.object({
-  Annotations: z.record(z.string(), z.string()).optional(),
-  ClassName: z.string().optional(),
-  CreationDate: z.string().optional(),
-  Hosts: z.array(z.string()).optional(),
-  Labels: z.record(z.string(), z.string()).optional(),
-  Name: z.string().optional(),
-  Namespace: z.string().optional(),
-  Paths: z.array(zKubernetesK8sIngressPath).optional(),
-  TLS: z.array(zKubernetesK8sIngressTls).optional(),
-  Type: z.string().optional(),
-  UID: z.string().optional(),
-});
-
-export const zKubernetesK8sIngressDeleteRequests = z.record(
-  z.string(),
-  z.array(z.string())
-);
-
-export const zKubernetesK8sIngressController = z.object({
-  Availability: z.boolean().optional(),
-  ClassName: z.string().optional(),
-  Name: z.string().optional(),
-  New: z.boolean().optional(),
-  Type: z.string().optional(),
-  Used: z.boolean().optional(),
-});
-
-export const zKubernetesK8sEventInvolvedObject = z.object({
-  kind: z.string().optional(),
-  name: z.string().optional(),
-  namespace: z.string().optional(),
-  uid: z.string().optional(),
-});
-
-export const zKubernetesK8sEvent = z.object({
-  count: z.int().optional(),
-  eventTime: z.string().optional(),
-  firstTimestamp: z.string().optional(),
-  involvedObject: zKubernetesK8sEventInvolvedObject.optional(),
-  kind: z.string().optional(),
-  lastTimestamp: z.string().optional(),
-  message: z.string().optional(),
-  name: z.string().optional(),
-  namespace: z.string().optional(),
-  reason: z.string().optional(),
-  type: z.string().optional(),
-  uid: z.string().optional(),
-});
-
-export const zKubernetesK8sDashboard = z.object({
-  applicationsCount: z.int().optional(),
-  configMapsCount: z.int().optional(),
-  ingressesCount: z.int().optional(),
-  namespacesCount: z.int().optional(),
-  secretsCount: z.int().optional(),
-  servicesCount: z.int().optional(),
-  volumesCount: z.int().optional(),
-});
-
-export const zKubernetesK8sCronJobDeleteRequests = z.record(
-  z.string(),
-  z.array(z.string())
-);
-
 export const zKubernetesK8sCronJob = z.object({
   Command: z.string().optional(),
   Id: z.string().optional(),
@@ -2681,462 +4190,327 @@ export const zKubernetesK8sCronJob = z.object({
   Timezone: z.string().optional(),
 });
 
-export const zKubernetesK8sConfigMap = z.object({
-  Annotations: z.record(z.string(), z.string()).optional(),
-  ConfigurationOwner: z.string().optional(),
-  ConfigurationOwnerId: z.string().optional(),
-  ConfigurationOwners: z
-    .array(zKubernetesK8sConfigurationOwnerResource)
-    .optional(),
-  CreationDate: z.string().optional(),
-  Data: z.record(z.string(), z.string()).optional(),
-  IsUsed: z.boolean().optional(),
-  Labels: z.record(z.string(), z.string()).optional(),
-  Name: z.string().optional(),
-  Namespace: z.string().optional(),
-  UID: z.string().optional(),
-});
-
-export const zKubernetesK8sClusterRoleBinding = z.object({
-  creationDate: z.string().optional(),
-  isSystem: z.boolean().optional(),
+export const zV1EphemeralContainer = z.object({
+  args: z.array(z.string()).optional(),
+  command: z.array(z.string()).optional(),
+  env: z.array(zV1EnvVar).optional(),
+  envFrom: z.array(zV1EnvFromSource).optional(),
+  image: z.string().optional(),
+  imagePullPolicy: zV1PullPolicy.optional(),
+  lifecycle: zV1Lifecycle.optional(),
+  livenessProbe: zV1Probe.optional(),
   name: z.string().optional(),
-  namespace: z.string().optional(),
-  roleRef: zV1RoleRef.optional(),
-  subjects: z.array(zK8sIoApiRbacV1Subject).optional(),
-  uid: z.string().optional(),
+  ports: z.array(zV1ContainerPort).optional(),
+  readinessProbe: zV1Probe.optional(),
+  resizePolicy: z.array(zV1ContainerResizePolicy).optional(),
+  resources: zV1ResourceRequirements.optional(),
+  restartPolicy: zV1ContainerRestartPolicy.optional(),
+  restartPolicyRules: z.array(zV1ContainerRestartRule).optional(),
+  securityContext: zV1SecurityContext.optional(),
+  startupProbe: zV1Probe.optional(),
+  stdin: z.boolean().optional(),
+  stdinOnce: z.boolean().optional(),
+  targetContainerName: z.string().optional(),
+  terminationMessagePath: z.string().optional(),
+  terminationMessagePolicy: zV1TerminationMessagePolicy.optional(),
+  tty: z.boolean().optional(),
+  volumeDevices: z.array(zV1VolumeDevice).optional(),
+  volumeMounts: z.array(zV1VolumeMount).optional(),
+  workingDir: z.string().optional(),
 });
 
-export const zKubernetesK8sClusterRole = z.object({
-  creationDate: z.string().optional(),
-  isSystem: z.boolean().optional(),
+export const zV1WorkloadReference = z.object({
   name: z.string().optional(),
-  uid: z.string().optional(),
+  podGroup: z.string().optional(),
+  podGroupReplicaKey: z.string().optional(),
 });
 
-export const zImagesImageResponse = z.object({
-  created: z.int().optional(),
-  id: z.string().optional(),
+export const zV1PodSpec = z.object({
+  activeDeadlineSeconds: z.int().optional(),
+  affinity: zV1Affinity.optional(),
+  automountServiceAccountToken: z.boolean().optional(),
+  containers: z.array(zV1Container).optional(),
+  dnsConfig: zV1PodDnsConfig.optional(),
+  dnsPolicy: zV1DnsPolicy.optional(),
+  enableServiceLinks: z.boolean().optional(),
+  ephemeralContainers: z.array(zV1EphemeralContainer).optional(),
+  hostAliases: z.array(zV1HostAlias).optional(),
+  hostIPC: z.boolean().optional(),
+  hostNetwork: z.boolean().optional(),
+  hostPID: z.boolean().optional(),
+  hostUsers: z.boolean().optional(),
+  hostname: z.string().optional(),
+  hostnameOverride: z.string().optional(),
+  imagePullSecrets: z.array(zK8sIoApiCoreV1LocalObjectReference).optional(),
+  initContainers: z.array(zV1Container).optional(),
   nodeName: z.string().optional(),
-  size: z.int().optional(),
-  tags: z.array(z.string()).optional(),
-  used: z.boolean().optional(),
+  nodeSelector: z.record(z.string(), z.string()).optional(),
+  os: zV1PodOs.optional(),
+  overhead: zV1ResourceList.optional(),
+  preemptionPolicy: zV1PreemptionPolicy.optional(),
+  priority: z.int().optional(),
+  priorityClassName: z.string().optional(),
+  readinessGates: z.array(zV1PodReadinessGate).optional(),
+  resourceClaims: z.array(zV1PodResourceClaim).optional(),
+  resources: zV1ResourceRequirements.optional(),
+  restartPolicy: zV1RestartPolicy.optional(),
+  runtimeClassName: z.string().optional(),
+  schedulerName: z.string().optional(),
+  schedulingGates: z.array(zV1PodSchedulingGate).optional(),
+  securityContext: zV1PodSecurityContext.optional(),
+  serviceAccount: z.string().optional(),
+  serviceAccountName: z.string().optional(),
+  setHostnameAsFQDN: z.boolean().optional(),
+  shareProcessNamespace: z.boolean().optional(),
+  subdomain: z.string().optional(),
+  terminationGracePeriodSeconds: z.int().optional(),
+  tolerations: z.array(zV1Toleration).optional(),
+  topologySpreadConstraints: z.array(zV1TopologySpreadConstraint).optional(),
+  volumes: z.array(zV1Volume).optional(),
+  workloadRef: zV1WorkloadReference.optional(),
 });
 
-export const zHelmInstallChartPayload = z.object({
-  atomic: z.boolean().optional(),
-  chart: z.string().optional(),
+export const zV1Pod = z.object({
+  apiVersion: z.string().optional(),
+  kind: z.string().optional(),
+  metadata: zV1ObjectMeta.optional(),
+  spec: zV1PodSpec.optional(),
+  status: zV1PodStatus.optional(),
+});
+
+export const zKubernetesKubernetesPodListResponse = z.object({
+  apiVersion: z.string().optional(),
+  items: z.array(zV1Pod).optional(),
+  kind: z.string().optional(),
+  metadata: zV1ListMeta.optional(),
+});
+
+export const zV1PodTemplateSpec = z.object({
+  metadata: zV1ObjectMeta.optional(),
+  spec: zV1PodSpec.optional(),
+});
+
+export const zV1DeploymentSpec = z.object({
+  minReadySeconds: z.int().optional(),
+  paused: z.boolean().optional(),
+  progressDeadlineSeconds: z.int().optional(),
+  replicas: z.int().optional(),
+  revisionHistoryLimit: z.int().optional(),
+  selector: zV1LabelSelector.optional(),
+  strategy: zV1DeploymentStrategy.optional(),
+  template: zV1PodTemplateSpec.optional(),
+});
+
+export const zKubernetesKubernetesDeploymentResponse = z.object({
+  apiVersion: z.string().optional(),
+  kind: z.string().optional(),
+  metadata: zV1ObjectMeta.optional(),
+  spec: zV1DeploymentSpec.optional(),
+  status: zV1DeploymentStatus.optional(),
+});
+
+export const zV1Deployment = z.object({
+  apiVersion: z.string().optional(),
+  kind: z.string().optional(),
+  metadata: zV1ObjectMeta.optional(),
+  spec: zV1DeploymentSpec.optional(),
+  status: zV1DeploymentStatus.optional(),
+});
+
+export const zKubernetesKubernetesDeploymentListResponse = z.object({
+  apiVersion: z.string().optional(),
+  items: z.array(zV1Deployment).optional(),
+  kind: z.string().optional(),
+  metadata: zV1ListMeta.optional(),
+});
+
+export const zV1ReplicaSetSpec = z.object({
+  minReadySeconds: z.int().optional(),
+  replicas: z.int().optional(),
+  selector: zV1LabelSelector.optional(),
+  template: zV1PodTemplateSpec.optional(),
+});
+
+export const zV1ReplicaSet = z.object({
+  apiVersion: z.string().optional(),
+  kind: z.string().optional(),
+  metadata: zV1ObjectMeta.optional(),
+  spec: zV1ReplicaSetSpec.optional(),
+  status: zV1ReplicaSetStatus.optional(),
+});
+
+export const zKubernetesKubernetesReplicaSetListResponse = z.object({
+  apiVersion: z.string().optional(),
+  items: z.array(zV1ReplicaSet).optional(),
+  kind: z.string().optional(),
+  metadata: zV1ListMeta.optional(),
+});
+
+export const zV1Beta1ContainerMetrics = z.object({
   name: z.string().optional(),
-  namespace: z.string().optional(),
-  repo: z.string().optional(),
-  values: z.string().optional(),
-  version: z.string().optional(),
+  usage: zV1ResourceList.optional(),
 });
 
-export const zGitopsRepositoryFilePreviewPayload = z.object({
-  password: z.string().optional(),
-  reference: z.string().optional(),
-  repository: z.string().optional(),
-  sourceID: z.int().optional(),
-  targetFile: z.string().optional(),
-  tlsSkipVerify: z.boolean().optional(),
-  username: z.string().optional(),
+export const zV1Beta1NodeMetrics = z.object({
+  apiVersion: z.string().optional(),
+  kind: z.string().optional(),
+  metadata: zV1ObjectMeta.optional(),
+  timestamp: z.string().optional(),
+  usage: zV1ResourceList.optional(),
+  window: z.string().optional(),
 });
 
-export const zGitopsFileResponse = z.object({
-  FileContent: z.string().optional(),
+export const zV1Beta1NodeMetricsList = z.object({
+  apiVersion: z.string().optional(),
+  items: z.array(zV1Beta1NodeMetrics).optional(),
+  kind: z.string().optional(),
+  metadata: zV1ListMeta.optional(),
 });
 
-export const zEndpointsRegistryAccessPayload = z.object({
-  Namespaces: z.array(z.string()).optional(),
-  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
-  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
+export const zV1Beta1PodMetrics = z.object({
+  apiVersion: z.string().optional(),
+  containers: z.array(zV1Beta1ContainerMetrics).optional(),
+  kind: z.string().optional(),
+  metadata: zV1ObjectMeta.optional(),
+  timestamp: z.string().optional(),
+  window: z.string().optional(),
 });
 
-export const zEndpointsPlatformCounts = z.object({
-  azure: z.int().optional(),
-  docker: z.int().optional(),
-  kubernetes: z.int().optional(),
-  podman: z.int().optional(),
+export const zV1Beta1PodMetricsList = z.object({
+  apiVersion: z.string().optional(),
+  items: z.array(zV1Beta1PodMetrics).optional(),
+  kind: z.string().optional(),
+  metadata: zV1ListMeta.optional(),
 });
 
-export const zEndpointsHealthCounts = z.object({
-  down: z.int().optional(),
-  heartbeat: z.int().optional(),
-  outdated: z.int().optional(),
-  up: z.int().optional(),
-});
-
-export const zEndpointsGroupCount = z.object({
-  count: z.int().optional(),
-  groupID: z.int().optional(),
-  groupName: z.string().optional(),
-});
-
-export const zEndpointsForceUpdateServicePayload = z.object({
-  PullImage: z.boolean().optional(),
-  ServiceID: z.string().optional(),
-});
-
-export const zEndpointsEndpointUpdateRelationsPayload = z.object({
-  Relations: z
-    .record(
-      z.string(),
-      z.object({
-        EdgeGroups: z.array(z.int()).optional(),
-        Group: z.int().optional(),
-        Tags: z.array(z.int()).optional(),
-      })
-    )
-    .optional(),
-});
-
-export const zEndpointsEndpointUpdatePayload = z.object({
-  AzureApplicationID: z.string().optional(),
-  AzureAuthenticationKey: z.string().optional(),
-  AzureTenantID: z.string().optional(),
-  EdgeCheckinInterval: z.int().optional(),
-  Gpus: z.array(zPortainerPair).optional(),
-  GroupID: z.int().optional(),
-  Kubernetes: zPortainerKubernetesData.optional(),
-  Name: z.string().optional(),
-  PublicURL: z.string().optional(),
-  Status: z.int().optional(),
-  TLS: z.boolean().optional(),
-  TLSSkipClientVerify: z.boolean().optional(),
-  TLSSkipVerify: z.boolean().optional(),
-  TagIDs: z.array(z.int()).optional(),
-  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
-  URL: z.string().optional(),
-  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
-});
-
-export const zEndpointsEndpointSettingsUpdatePayload = z.object({
-  allowBindMountsForRegularUsers: z.boolean().optional(),
-  allowContainerCapabilitiesForRegularUsers: z.boolean().optional(),
-  allowDeviceMappingForRegularUsers: z.boolean().optional(),
-  allowHostNamespaceForRegularUsers: z.boolean().optional(),
-  allowPrivilegedModeForRegularUsers: z.boolean().optional(),
-  allowSecurityOptForRegularUsers: z.boolean().optional(),
-  allowStackManagementForRegularUsers: z.boolean().optional(),
-  allowSysctlSettingForRegularUsers: z.boolean().optional(),
-  allowVolumeBrowserForRegularUsers: z.boolean().optional(),
-  enableGPUManagement: z.boolean().optional(),
-  enableHostManagementFeatures: z.boolean().optional(),
-  gpus: z.array(zPortainerPair).optional(),
-});
-
-export const zEndpointsEndpointDeleteRequest = z.object({
-  deleteCluster: z.boolean().optional(),
-  id: z.int().optional(),
-});
-
-export const zEndpointsEndpointDeleteBatchPayload = z.object({
-  endpoints: z.array(zEndpointsEndpointDeleteRequest).optional(),
-});
-
-export const zEndpointsEndpointDeleteBatchPartialResponse = z.object({
-  deleted: z.array(z.int()).optional(),
-  errors: z.array(z.int()).optional(),
-});
-
-export const zEndpointsEndpointCreateGlobalKeyResponse = z.object({
-  endpointID: z.int().optional(),
-});
-
-export const zEndpointsDockerhubStatusResponse = z.object({
-  limit: z.int().optional(),
-  remaining: z.int().optional(),
-});
-
-export const zEndpointsEnvironmentSummaryCountsResponse = z.object({
-  byGroup: z.array(zEndpointsGroupCount).optional(),
-  byHealth: zEndpointsHealthCounts.optional(),
-  byPlatformType: zEndpointsPlatformCounts.optional(),
-  down: z.int().optional(),
-  outdated: z.int().optional(),
-  total: z.int().optional(),
-  unassigned: z.int().optional(),
-  up: z.int().optional(),
-});
-
-export const zEndpointgroupsEndpointGroupUpdatePayload = z.object({
-  AssociatedEndpoints: z.array(z.int()).optional(),
-  Description: z.string().optional(),
-  Name: z.string().optional(),
-  TagIDs: z.array(z.int()).optional(),
-  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
-  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
-});
-
-export const zEndpointgroupsEndpointGroupCreatePayload = z.object({
-  AssociatedEndpoints: z.array(z.int()).optional(),
-  Description: z.string().optional(),
-  Name: z.string(),
-  TagIDs: z.array(z.int()).optional(),
-});
-
-export const zEndpointgroupsEndpointGroupTypeInfo = z.object({
-  Docker: z.int(),
-  Kubernetes: z.int(),
-  Mixed: z.boolean(),
-  Podman: z.int(),
-});
-
-export const zEndpointgroupsEndpointGroupResponse = z.object({
-  Description: z.string(),
-  Id: z.int(),
-  Name: z.string(),
-  TagIds: z.array(z.int()).optional(),
-  TeamAccessPolicies: zPortainerTeamAccessPolicies.optional(),
-  Total: z.int().optional(),
-  TypeInfo: zEndpointgroupsEndpointGroupTypeInfo.optional(),
-  UserAccessPolicies: zPortainerUserAccessPolicies.optional(),
-});
-
-export const zEdgestacksUpdateStatusPayload = z.object({
+export const zWebhooksWebhookCreatePayload = z.object({
   EndpointID: z.int().optional(),
-  Error: z.string().optional(),
-  Status: zPortainerEdgeStackStatusType.optional(),
-  Time: z.coerce
-    .bigint()
-    .min(BigInt('-9223372036854775808'), {
-      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
-    })
-    .max(BigInt('9223372036854775807'), {
-      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
-    })
-    .optional(),
-  Version: z.int().optional(),
+  RegistryID: z.int().optional(),
+  ResourceID: z.string().optional(),
+  WebhookType: zPortainerWebhookType.optional(),
 });
 
-export const zEdgestacksUpdateEdgeStackPayload = z.object({
-  DeploymentType: zPortainerEdgeStackDeploymentType.optional(),
-  EdgeGroups: z.array(z.int()).optional(),
-  StackFileContent: z.string().optional(),
-  UpdateVersion: z.boolean().optional(),
-  UseManifestNamespaces: z.boolean().optional(),
+export const zWebhooksWebhookUpdatePayload = z.object({
+  RegistryID: z.int().optional(),
 });
 
-export const zEdgestacksStackFileResponse = z.object({
-  StackFileContent: z.string().optional(),
+export const zWorkflowsArtifactFileDetail = z.object({
+  hash: z.string().optional(),
+  path: z.string().optional(),
+  pathError: z.string().optional(),
+  pathStatus: zSourcesStatus.optional(),
+  ref: z.string().optional(),
+  refError: z.string().optional(),
+  refStatus: zSourcesStatus.optional(),
+  sourceId: z.int().optional(),
 });
 
-export const zEdgestacksEdgeStackFromStringPayload = z.object({
-  DeploymentType: z
-    .union([z.literal(0), z.literal(1), z.literal(2)])
-    .optional(),
-  EdgeGroups: z.array(z.int()).optional(),
-  Name: z.string(),
-  Registries: z.array(z.int()).optional(),
-  StackFileContent: z.string(),
-  UseManifestNamespaces: z.boolean().optional(),
+export const zWorkflowsDeploymentPlatform = z.enum([
+  'dockerStandalone',
+  'dockerSwarm',
+  'kubernetes',
+]);
+
+export const zWorkflowsStatus = z.enum([
+  'healthy',
+  'syncing',
+  'error',
+  'paused',
+  'unknown',
+]);
+
+export const zSourcesSource = z.object({
+  environments: z.int().optional(),
+  error: z.string().optional(),
+  id: z.int(),
+  interval: z.string().optional(),
+  lastSync: z.int().optional(),
+  name: z.string(),
+  status: zWorkflowsStatus,
+  type: zSourcesSourceType,
+  url: z.string(),
+  usedBy: z.int().optional(),
 });
 
-export const zEdgestacksEdgeStackFromGitRepositoryPayload = z.object({
-  DeploymentType: z
-    .union([z.literal(0), z.literal(1), z.literal(2)])
-    .optional(),
-  EdgeGroups: z.array(z.int()),
-  FilePathInRepository: z.string().optional().default('docker-compose.yml'),
-  Name: z.string(),
-  Registries: z.array(z.int()).optional(),
-  RepositoryAuthentication: z.boolean().optional(),
-  RepositoryPassword: z.string().optional(),
-  RepositoryReferenceName: z.string().optional(),
-  RepositoryURL: z.string().optional(),
-  RepositoryUsername: z.string().optional(),
-  SourceID: z.int().optional(),
-  TLSSkipVerify: z.boolean().optional(),
-  UseManifestNamespaces: z.boolean().optional(),
+export const zSourcesSourceDetail = z.object({
+  access: zSourcesSourceAccess.optional(),
+  connection: zSourcesConnectionInfo,
+  error: z.string().optional(),
+  id: z.int(),
+  interval: z.string().optional(),
+  lastSync: z.int().optional(),
+  name: z.string(),
+  status: zWorkflowsStatus,
+  type: zSourcesSourceType,
+  url: z.string(),
 });
 
-export const zEdgejobsTaskContainer = z.object({
-  EndpointId: z.int().optional(),
-  EndpointName: z.string().optional(),
-  Id: z.string().optional(),
-  LogsStatus: zPortainerEdgeJobLogsStatus.optional(),
+export const zWorkflowsStatusSummary = z.object({
+  error: z.int().optional(),
+  healthy: z.int().optional(),
+  paused: z.int().optional(),
+  syncing: z.int().optional(),
+  unknown: z.int().optional(),
 });
 
-export const zEdgejobsFileResponse = z.object({
-  FileContent: z.string().optional(),
+export const zWorkflowsTarget = z.object({
+  edgeGroupIds: z.array(z.int()).optional(),
+  endpointId: z.int().optional(),
+  groupStatus: z.record(z.string(), zWorkflowsStatus).optional(),
+  namespace: z.string().optional(),
+  resolvedEndpointIds: z.array(z.int()).optional(),
 });
 
-export const zEdgejobsEdgeJobUpdatePayload = z.object({
-  CronExpression: z.string().optional(),
-  EdgeGroups: z.array(z.int()).optional(),
-  Endpoints: z.array(z.int()).optional(),
-  FileContent: z.string().optional(),
-  Name: z.string().optional(),
-  Recurring: z.boolean().optional(),
+export const zWorkflowsType = z.enum(['stack', 'edgeStack']);
+
+export const zWorkflowsWorkflowPhaseStatus = z.object({
+  error: z.string().optional(),
+  status: zWorkflowsStatus.optional(),
 });
 
-export const zEdgejobsEdgeJobFileResponse = z.object({
-  FileContent: z.string().optional(),
+export const zWorkflowsWorkflowStatusObject = z.object({
+  artifact: zWorkflowsWorkflowPhaseStatus.optional(),
+  source: zWorkflowsWorkflowPhaseStatus.optional(),
+  target: zWorkflowsWorkflowPhaseStatus.optional(),
 });
 
-export const zEdgejobsEdgeJobCreateFromFileContentPayload = z.object({
-  CronExpression: z.string().optional(),
-  EdgeGroups: z.array(z.int()).optional(),
-  Endpoints: z.array(z.int()).optional(),
-  FileContent: z.string().optional(),
-  Name: z.string().optional(),
-  Recurring: z.boolean().optional(),
+export const zSourcesWorkflow = z.object({
+  creationDate: z.int().optional(),
+  gitConfig: zGittypesRepoConfig.optional(),
+  id: z.int(),
+  lastSyncDate: z.int().optional(),
+  name: z.string(),
+  platform: zWorkflowsDeploymentPlatform,
+  sourceId: z.int().optional(),
+  status: zWorkflowsWorkflowStatusObject,
+  target: zWorkflowsTarget,
+  type: zWorkflowsType,
 });
 
-export const zEdgegroupsEdgeGroupUpdatePayload = z.object({
-  Dynamic: z.boolean().optional(),
-  Endpoints: z.array(z.int()).optional(),
-  Name: z.string().optional(),
-  PartialMatch: z.boolean().optional(),
-  TagIDs: z.array(z.int()).optional(),
+export const zWorkflowsArtifactDetail = z.object({
+  autoUpdate: zPortainerAutoUpdateSettings.optional(),
+  creationDate: z.int().optional(),
+  files: z.array(zWorkflowsArtifactFileDetail).optional(),
+  id: z.int(),
+  lastSyncDate: z.int().optional(),
+  name: z.string(),
+  platform: zWorkflowsDeploymentPlatform.optional(),
+  status: zWorkflowsWorkflowStatusObject.optional(),
+  target: zWorkflowsTarget.optional(),
+  type: zWorkflowsType,
 });
 
-export const zEdgegroupsEdgeGroupCreatePayload = z.object({
-  Dynamic: z.boolean().optional(),
-  Endpoints: z.array(z.int()).optional(),
-  Name: z.string().optional(),
-  PartialMatch: z.boolean().optional(),
-  TagIDs: z.array(z.int()).optional(),
+export const zWorkflowsWorkflow = z.object({
+  artifacts: z.array(zWorkflowsArtifactDetail).optional(),
+  creationDate: z.int().optional(),
+  id: z.int(),
+  lastSyncDate: z.int().optional(),
+  name: z.string(),
+  status: zWorkflowsWorkflowStatusObject,
 });
 
-export const zEdgegroupsDecoratedEdgeGroup = z.object({
-  Dynamic: z.boolean().optional(),
-  EndpointIds: z.int().optional(),
-  EndpointTypes: z.array(zPortainerEndpointType).optional(),
-  Endpoints: z.array(z.int()).optional(),
-  HasEdgeJob: z.boolean().optional(),
-  HasEdgeStack: z.boolean().optional(),
-  Id: z.int().optional(),
-  Name: z.string().optional(),
-  PartialMatch: z.boolean().optional(),
-  TagIds: z.array(z.int()).optional(),
-  TrustedEndpoints: z.array(z.int()).optional(),
-});
-
-export const zDockerImagesCounters = z.object({
-  size: z.int().optional(),
-  total: z.int().optional(),
-});
-
-export const zDockerDashboardResponse = z.object({
-  containers: zStatsContainerStats.optional(),
-  images: zDockerImagesCounters.optional(),
-  networks: z.int().optional(),
-  services: z.int().optional(),
-  stacks: z.int().optional(),
-  volumes: z.int().optional(),
-});
-
-export const zCustomtemplatesFileResponse = z.object({
-  FileContent: z.string().optional(),
-});
-
-export const zCustomtemplatesCustomTemplateUpdatePayload = z.object({
-  ComposeFilePathInRepository: z
-    .string()
-    .optional()
-    .default('docker-compose.yml'),
-  Description: z.string(),
-  EdgeTemplate: z.boolean().optional(),
-  FileContent: z.string(),
-  IsComposeFormat: z.boolean().optional(),
-  Logo: z.string().optional(),
-  Note: z.string().optional(),
-  Platform: z.union([z.literal(1), z.literal(2)]).optional(),
-  RepositoryAuthentication: z.boolean().optional(),
-  RepositoryPassword: z.string().optional(),
-  RepositoryReferenceName: z.string().optional(),
-  RepositoryURL: z.string().optional(),
-  RepositoryUsername: z.string().optional(),
-  SourceID: z.int().optional(),
-  TLSSkipVerify: z.boolean().optional(),
-  Title: z.string(),
-  Type: z.union([z.literal(1), z.literal(2), z.literal(3)]),
-  Variables: z.array(zPortainerCustomTemplateVariableDefinition).optional(),
-});
-
-export const zCustomtemplatesCustomTemplateFromGitRepositoryPayload = z.object({
-  ComposeFilePathInRepository: z
-    .string()
-    .optional()
-    .default('docker-compose.yml'),
-  Description: z.string(),
-  EdgeTemplate: z.boolean().optional(),
-  IsComposeFormat: z.boolean().optional(),
-  Logo: z.string().optional(),
-  Note: z.string().optional(),
-  Platform: z.union([z.literal(1), z.literal(2)]).optional(),
-  RepositoryAuthentication: z.boolean().optional(),
-  RepositoryPassword: z.string().optional(),
-  RepositoryReferenceName: z.string().optional(),
-  RepositoryURL: z.string().optional(),
-  RepositoryUsername: z.string().optional(),
-  SourceID: z.int(),
-  TLSSkipVerify: z.boolean().optional(),
-  Title: z.string(),
-  Type: z.union([z.literal(1), z.literal(2)]),
-  Variables: z.array(zPortainerCustomTemplateVariableDefinition).optional(),
-});
-
-export const zCustomtemplatesCustomTemplateFromFileContentPayload = z.object({
-  Description: z.string(),
-  EdgeTemplate: z.boolean().optional(),
-  FileContent: z.string(),
-  Logo: z.string().optional(),
-  Note: z.string().optional(),
-  Platform: z.union([z.literal(1), z.literal(2)]).optional(),
-  Title: z.string(),
-  Type: z.union([z.literal(1), z.literal(2), z.literal(3)]),
-  Variables: z.array(zPortainerCustomTemplateVariableDefinition).optional(),
-});
-
-export const zContainersContainerGpusResponse = z.object({
-  gpus: z.string().optional(),
-});
-
-export const zBackupRestorePayload = z.object({
-  FileContent: z
-    .array(
-      z
-        .int()
-        .min(-2147483648, {
-          error: 'Invalid value: Expected int32 to be >= -2147483648',
-        })
-        .max(2147483647, {
-          error: 'Invalid value: Expected int32 to be <= 2147483647',
-        })
-    )
-    .optional(),
-  FileName: z.string().optional(),
-  Password: z.string().optional(),
-});
-
-export const zBackupBackupPayload = z.object({
-  Password: z.string().optional(),
-});
-
-export const zAuthOauthPayload = z.object({
-  Code: z.string().optional(),
-});
-
-export const zAuthAuthenticateResponse = z.object({
-  jwt: z.string().optional(),
-});
-
-export const zAuthAuthenticatePayload = z.object({
-  Password: z.string(),
-  Username: z.string(),
-});
-
-export const zKubernetesK8sServiceInfo2 = zKubernetesK8sServiceInfo;
-
-export const zKubernetesK8sIngressInfo2 = zKubernetesK8sIngressInfo;
-
-export const zKubernetesK8sNamespaceDetails2 = zKubernetesK8sNamespaceDetails;
-
-export const zEndpointsEndpointDeleteBatchPayload2 =
-  zEndpointsEndpointDeleteBatchPayload;
+export const zKubernetesK8sDeploymentWriteRequest2 =
+  zKubernetesK8sDeploymentWriteRequest;
 
 /**
  * Ingress controllers
@@ -3144,6 +4518,21 @@ export const zEndpointsEndpointDeleteBatchPayload2 =
 export const zKubernetesK8sIngressControllerArray = z.array(
   zKubernetesK8sIngressController
 );
+
+export const zEndpointsEndpointDeleteBatchPayload2 =
+  zEndpointsEndpointDeleteBatchPayload;
+
+export const zKubernetesK8sNamespaceDetails2 = zKubernetesK8sNamespaceDetails;
+
+export const zKubernetesK8sConfigMapWriteRequest2 =
+  zKubernetesK8sConfigMapWriteRequest;
+
+export const zKubernetesK8sIngressInfo2 = zKubernetesK8sIngressInfo;
+
+export const zKubernetesK8sSecretWriteRequest2 =
+  zKubernetesK8sSecretWriteRequest;
+
+export const zKubernetesK8sServiceInfo2 = zKubernetesK8sServiceInfo;
 
 /**
  * Credentials used for authentication
@@ -4137,6 +5526,15 @@ export const zGitOpsSourcesTestByIdPath = z.object({
  */
 export const zGitOpsSourcesTestByIdResponse = zSourcesConnectionTestResult;
 
+export const zGitOpsSourceWorkflowsListPath = z.object({
+  id: z.int(),
+});
+
+/**
+ * OK
+ */
+export const zGitOpsSourceWorkflowsListResponse = z.array(zSourcesWorkflow);
+
 /**
  * Git source details
  */
@@ -4164,20 +5562,33 @@ export const zGitOpsSourcesTestResponse = zSourcesConnectionTestResult;
 
 export const zGitOpsWorkflowsListQuery = z.object({
   search: z.string().optional(),
-  sort: z.string().optional(),
-  order: z.string().optional(),
+  sort: z.enum(['name', 'status', 'creationDate', 'lastSyncDate']).optional(),
+  order: z.enum(['asc', 'desc']).optional(),
   start: z.int().optional(),
   limit: z.int().optional(),
   endpointIds: z.array(z.int()).optional(),
-  status: z.string().optional(),
-  type: z.string().optional(),
-  platform: z.string().optional(),
+  status: z
+    .enum(['healthy', 'syncing', 'error', 'paused', 'unknown'])
+    .optional(),
+  type: z.enum(['stack']).optional(),
+  platform: z
+    .enum(['dockerStandalone', 'dockerSwarm', 'kubernetes'])
+    .optional(),
 });
 
 /**
  * OK
  */
 export const zGitOpsWorkflowsListResponse = z.array(zWorkflowsWorkflow);
+
+export const zGitOpsWorkflowGetPath = z.object({
+  id: z.int(),
+});
+
+/**
+ * OK
+ */
+export const zGitOpsWorkflowGetResponse = zWorkflowsWorkflow;
 
 /**
  * OK
@@ -4315,6 +5726,21 @@ export const zGetKubernetesDashboardPath = z.object({
  */
 export const zGetKubernetesDashboardResponse = z.array(zKubernetesK8sDashboard);
 
+export const zGetAllKubernetesDeploymentsPath = z.object({
+  id: z.int(),
+});
+
+export const zGetAllKubernetesDeploymentsQuery = z.object({
+  labelSelector: z.string().optional(),
+  fieldSelector: z.string().optional(),
+});
+
+/**
+ * Success
+ */
+export const zGetAllKubernetesDeploymentsResponse =
+  zKubernetesKubernetesDeploymentListResponse;
+
 export const zDescribeResourcePath = z.object({
   id: z.int(),
 });
@@ -4342,6 +5768,17 @@ export const zGetAllKubernetesEventsQuery = z.object({
  * Success
  */
 export const zGetAllKubernetesEventsResponse = z.array(zKubernetesK8sEvent);
+
+export const zGetKubernetesIngressClassesPath = z.object({
+  id: z.int(),
+});
+
+/**
+ * Success
+ */
+export const zGetKubernetesIngressClassesResponse = z.array(
+  zKubernetesK8sIngressClass
+);
 
 export const zGetAllKubernetesIngressControllersPath = z.object({
   id: z.int(),
@@ -4439,6 +5876,21 @@ export const zDeleteJobsPath = z.object({
  */
 export const zDeleteJobsResponse = z.void();
 
+/**
+ * The manifests to validate
+ */
+export const zDryRunKubernetesManifestsBody = zKubernetesManifestDryRunPayload;
+
+export const zDryRunKubernetesManifestsPath = z.object({
+  id: z.int(),
+});
+
+/**
+ * Success
+ */
+export const zDryRunKubernetesManifestsResponse =
+  zKubernetesManifestDryRunResponse;
+
 export const zGetKubernetesMaxResourceLimitsPath = z.object({
   id: z.int(),
 });
@@ -4481,16 +5933,6 @@ export const zGetKubernetesMetricsForNodePath = z.object({
  */
 export const zGetKubernetesMetricsForNodeResponse = zV1Beta1NodeMetrics;
 
-export const zGetKubernetesMetricsForAllPodsPath = z.object({
-  id: z.int(),
-  namespace: z.string(),
-});
-
-/**
- * Success
- */
-export const zGetKubernetesMetricsForAllPodsResponse = zV1Beta1PodMetricsList;
-
 export const zGetKubernetesMetricsForPodPath = z.object({
   id: z.int(),
   namespace: z.string(),
@@ -4501,6 +5943,21 @@ export const zGetKubernetesMetricsForPodPath = z.object({
  * Success
  */
 export const zGetKubernetesMetricsForPodResponse = zV1Beta1PodMetrics;
+
+export const zGetKubernetesMetricsForAllPodsPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zGetKubernetesMetricsForAllPodsResponse = zV1Beta1PodMetricsList;
+
+/**
+ * List of namespace names to delete
+ */
+export const zDeleteKubernetesNamespaceBody = z.array(z.string());
 
 export const zDeleteKubernetesNamespacePath = z.object({
   id: z.int(),
@@ -4516,8 +5973,8 @@ export const zGetKubernetesNamespacesPath = z.object({
 });
 
 export const zGetKubernetesNamespacesQuery = z.object({
-  withResourceQuota: z.boolean(),
-  withUnhealthyEvents: z.boolean(),
+  withResourceQuota: z.boolean().optional(),
+  withUnhealthyEvents: z.boolean().optional(),
 });
 
 /**
@@ -4539,7 +5996,8 @@ export const zCreateKubernetesNamespacePath = z.object({
 /**
  * Success
  */
-export const zCreateKubernetesNamespaceResponse = zPortainerK8sNamespaceInfo;
+export const zCreateKubernetesNamespaceResponse =
+  zKubernetesKubernetesCreateNamespaceResponse;
 
 /**
  * Namespace details
@@ -4564,7 +6022,7 @@ export const zGetKubernetesNamespacePath = z.object({
 });
 
 export const zGetKubernetesNamespaceQuery = z.object({
-  withResourceQuota: z.boolean(),
+  withResourceQuota: z.boolean().optional(),
 });
 
 /**
@@ -4587,6 +6045,33 @@ export const zUpdateKubernetesNamespacePath = z.object({
  */
 export const zUpdateKubernetesNamespaceResponse = zPortainerK8sNamespaceInfo;
 
+/**
+ * ConfigMap definition
+ */
+export const zCreateKubernetesConfigMapBody =
+  zKubernetesK8sConfigMapWriteRequest2;
+
+export const zCreateKubernetesConfigMapPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zCreateKubernetesConfigMapResponse = zKubernetesK8sConfigMap;
+
+export const zDeleteKubernetesConfigMapPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+  configmap: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zDeleteKubernetesConfigMapResponse = z.void();
+
 export const zGetKubernetesConfigMapPath = z.object({
   id: z.int(),
   namespace: z.string(),
@@ -4597,6 +6082,151 @@ export const zGetKubernetesConfigMapPath = z.object({
  * Success
  */
 export const zGetKubernetesConfigMapResponse = zKubernetesK8sConfigMap;
+
+/**
+ * ConfigMap definition
+ */
+export const zUpdateKubernetesConfigMapBody =
+  zKubernetesK8sConfigMapWriteRequest2;
+
+export const zUpdateKubernetesConfigMapPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+  configmap: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zUpdateKubernetesConfigMapResponse = zKubernetesK8sConfigMap;
+
+export const zGetKubernetesDeploymentsForNamespacePath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+});
+
+export const zGetKubernetesDeploymentsForNamespaceQuery = z.object({
+  labelSelector: z.string().optional(),
+  fieldSelector: z.string().optional(),
+});
+
+/**
+ * Success
+ */
+export const zGetKubernetesDeploymentsForNamespaceResponse =
+  zKubernetesKubernetesDeploymentListResponse;
+
+/**
+ * Deployment definition
+ */
+export const zCreateKubernetesDeploymentBody =
+  zKubernetesK8sDeploymentWriteRequest2;
+
+export const zCreateKubernetesDeploymentPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zCreateKubernetesDeploymentResponse =
+  zKubernetesKubernetesDeploymentResponse;
+
+export const zDeleteKubernetesDeploymentPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+  name: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zDeleteKubernetesDeploymentResponse = z.void();
+
+export const zGetKubernetesDeploymentPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+  name: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zGetKubernetesDeploymentResponse =
+  zKubernetesKubernetesDeploymentResponse;
+
+/**
+ * Annotations to apply
+ */
+export const zPatchKubernetesDeploymentBody =
+  zKubernetesK8sDeploymentPatchRequest;
+
+export const zPatchKubernetesDeploymentPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+  name: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zPatchKubernetesDeploymentResponse =
+  zKubernetesKubernetesDeploymentResponse;
+
+/**
+ * Deployment definition
+ */
+export const zUpdateKubernetesDeploymentBody =
+  zKubernetesK8sDeploymentWriteRequest2;
+
+export const zUpdateKubernetesDeploymentPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+  name: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zUpdateKubernetesDeploymentResponse =
+  zKubernetesKubernetesDeploymentResponse;
+
+/**
+ * Revision to roll back to
+ */
+export const zRollbackKubernetesDeploymentBody =
+  zKubernetesK8sDeploymentRollbackRequest;
+
+export const zRollbackKubernetesDeploymentPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+  name: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zRollbackKubernetesDeploymentResponse =
+  zKubernetesKubernetesDeploymentResponse;
+
+/**
+ * Desired replica count
+ */
+export const zScaleKubernetesDeploymentBody =
+  zKubernetesK8sDeploymentScaleRequest;
+
+export const zScaleKubernetesDeploymentPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+  name: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zScaleKubernetesDeploymentResponse =
+  zKubernetesKubernetesDeploymentResponse;
 
 export const zGetKubernetesEventsForNamespacePath = z.object({
   id: z.int(),
@@ -4706,6 +6336,23 @@ export const zGetKubernetesPersistentVolumeClaimsInNamespaceResponse = z.array(
   zKubernetesK8sPersistentVolumeClaim
 );
 
+/**
+ * PersistentVolumeClaim definition
+ */
+export const zCreateKubernetesPersistentVolumeClaimBody =
+  zKubernetesK8sPersistentVolumeClaimCreateRequest;
+
+export const zCreateKubernetesPersistentVolumeClaimPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zCreateKubernetesPersistentVolumeClaimResponse =
+  zKubernetesK8sPersistentVolumeClaim;
+
 export const zGetKubernetesPersistentVolumeClaimPath = z.object({
   id: z.int(),
   namespace: z.string(),
@@ -4718,6 +6365,22 @@ export const zGetKubernetesPersistentVolumeClaimPath = z.object({
 export const zGetKubernetesPersistentVolumeClaimResponse =
   zKubernetesK8sPersistentVolumeClaim;
 
+export const zGetKubernetesPodsForNamespacePath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+});
+
+export const zGetKubernetesPodsForNamespaceQuery = z.object({
+  labelSelector: z.string().optional(),
+  fieldSelector: z.string().optional(),
+});
+
+/**
+ * Success
+ */
+export const zGetKubernetesPodsForNamespaceResponse =
+  zKubernetesKubernetesPodListResponse;
+
 export const zDeleteKubernetesPodPath = z.object({
   id: z.int(),
   namespace: z.string(),
@@ -4728,6 +6391,26 @@ export const zDeleteKubernetesPodPath = z.object({
  * Success
  */
 export const zDeleteKubernetesPodResponse = z.void();
+
+export const zGetKubernetesPodLogsPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+  name: z.string(),
+});
+
+export const zGetKubernetesPodLogsQuery = z.object({
+  container: z.string().optional(),
+  tailLines: z.int().optional(),
+  sinceSeconds: z.int().optional(),
+  timestamps: z.boolean().optional(),
+  previous: z.boolean().optional(),
+  follow: z.boolean().optional(),
+});
+
+/**
+ * Success
+ */
+export const zGetKubernetesPodLogsResponse = z.string();
 
 export const zRestartKubernetesPodPath = z.object({
   id: z.int(),
@@ -4740,6 +6423,60 @@ export const zRestartKubernetesPodPath = z.object({
  */
 export const zRestartKubernetesPodResponse = z.void();
 
+export const zGetKubernetesReplicaSetsPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+});
+
+export const zGetKubernetesReplicaSetsQuery = z.object({
+  deployment: z.string().optional(),
+  labelSelector: z.string().optional(),
+  fieldSelector: z.string().optional(),
+});
+
+/**
+ * Success
+ */
+export const zGetKubernetesReplicaSetsResponse =
+  zKubernetesKubernetesReplicaSetListResponse;
+
+export const zGetKubernetesResourceQuotasPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zGetKubernetesResourceQuotasResponse =
+  zKubernetesKubernetesResourceQuotaListResponse;
+
+/**
+ * Secret definition
+ */
+export const zCreateKubernetesSecretBody = zKubernetesK8sSecretWriteRequest2;
+
+export const zCreateKubernetesSecretPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zCreateKubernetesSecretResponse = zKubernetesK8sSecret;
+
+export const zDeleteKubernetesSecretPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+  secret: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zDeleteKubernetesSecretResponse = z.void();
+
 export const zGetKubernetesSecretPath = z.object({
   id: z.int(),
   namespace: z.string(),
@@ -4750,6 +6487,22 @@ export const zGetKubernetesSecretPath = z.object({
  * Success
  */
 export const zGetKubernetesSecretResponse = zKubernetesK8sSecret;
+
+/**
+ * Secret definition
+ */
+export const zUpdateKubernetesSecretBody = zKubernetesK8sSecretWriteRequest2;
+
+export const zUpdateKubernetesSecretPath = z.object({
+  id: z.int(),
+  namespace: z.string(),
+  secret: z.string(),
+});
+
+/**
+ * Success
+ */
+export const zUpdateKubernetesSecretResponse = zKubernetesK8sSecret;
 
 export const zGetKubernetesServiceAccountPath = z.object({
   id: z.int(),
@@ -4875,6 +6628,11 @@ export const zGetKubernetesNodesResponse = z.array(
   zKubernetesKubernetesNodeResponse
 );
 
+/**
+ * Drain options, matching kubectl drain flags. Defaults are applied to any omitted field.
+ */
+export const zDrainNodeBody = zKubernetesDrainNodePayload;
+
 export const zDrainNodePath = z.object({
   id: z.int(),
   name: z.string(),
@@ -4986,6 +6744,21 @@ export const zUpdateKubernetesPersistentVolumeReclaimPolicyPath = z.object({
  * Success
  */
 export const zUpdateKubernetesPersistentVolumeReclaimPolicyResponse = z.void();
+
+export const zGetAllKubernetesPodsPath = z.object({
+  id: z.int(),
+});
+
+export const zGetAllKubernetesPodsQuery = z.object({
+  labelSelector: z.string().optional(),
+  fieldSelector: z.string().optional(),
+});
+
+/**
+ * Success
+ */
+export const zGetAllKubernetesPodsResponse =
+  zKubernetesKubernetesPodListResponse;
 
 export const zGetKubernetesRbacStatusPath = z.object({
   id: z.int(),
@@ -5561,7 +7334,8 @@ export const zStackCreateKubernetesGitQuery = z.object({
 /**
  * OK
  */
-export const zStackCreateKubernetesGitResponse = zPortainerStack;
+export const zStackCreateKubernetesGitResponse =
+  zStacksCreateKubernetesStackResponse;
 
 /**
  * stack config
@@ -5576,7 +7350,8 @@ export const zStackCreateKubernetesFileQuery = z.object({
 /**
  * OK
  */
-export const zStackCreateKubernetesFileResponse = zPortainerStack;
+export const zStackCreateKubernetesFileResponse =
+  zStacksCreateKubernetesStackResponse;
 
 /**
  * stack config
@@ -5591,7 +7366,8 @@ export const zStackCreateKubernetesUrlQuery = z.object({
 /**
  * OK
  */
-export const zStackCreateKubernetesUrlResponse = zPortainerStack;
+export const zStackCreateKubernetesUrlResponse =
+  zStacksCreateKubernetesStackResponse;
 
 export const zStackCreateDockerStandaloneFileBody = z.object({
   Name: z.string(),
@@ -5701,6 +7477,11 @@ export const zStackDeleteKubernetesByNameResponse = z.void();
 export const zWebhookInvokePath = z.object({
   webhookID: z.string(),
 });
+
+/**
+ * Accepted
+ */
+export const zWebhookInvokeResponse = zStacksWebhookInvokeResponse;
 
 /**
  * Success
@@ -5882,7 +7663,7 @@ export const zHelmShowPath = z.object({
 });
 
 export const zHelmShowQuery = z.object({
-  repo: z.string(),
+  repo: z.string().optional(),
   chart: z.string(),
   version: z.string().optional(),
 });

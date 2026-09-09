@@ -16,7 +16,6 @@ import (
 	"github.com/portainer/portainer/pkg/libcrypto"
 	"github.com/portainer/portainer/pkg/librand"
 
-	"github.com/dchest/uniuri"
 	"github.com/rs/zerolog/log"
 )
 
@@ -133,8 +132,6 @@ func (s *Service) TunnelAddr(endpoint *portainer.Endpoint) (string, error) {
 
 	for t0 := time.Now(); ; {
 		if time.Since(t0) > 2*checkinInterval {
-			s.close(endpoint.ID)
-
 			return "", errors.New("unable to open the tunnel")
 		}
 
@@ -225,8 +222,8 @@ func randomInt(min, max int) int {
 }
 
 func generateRandomCredentials() (string, string) {
-	username := uniuri.NewLen(8)
-	password := uniuri.NewLen(8)
+	username := librand.String(8)
+	password := librand.String(8)
 
 	return username, password
 }

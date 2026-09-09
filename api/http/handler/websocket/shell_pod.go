@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"net/http"
+	"net/url"
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/http/security"
@@ -32,9 +33,9 @@ func (handler *Handler) websocketShellPodExec(w http.ResponseWriter, r *http.Req
 
 	endpoint, err := handler.DataStore.Endpoint().Endpoint(portainer.EndpointID(endpointID))
 	if handler.DataStore.IsErrObjectNotFound(err) {
-		return httperror.NotFound("Unable to find the environment associated to the stack inside the database", err)
+		return httperror.NotFound("Unable to find the environment in the database", err)
 	} else if err != nil {
-		return httperror.InternalServerError("Unable to find the environment associated to the stack inside the database", err)
+		return httperror.InternalServerError("Unable to find the environment in the database", err)
 	}
 
 	if err := handler.requestBouncer.AuthorizedEndpointOperation(r, endpoint); err != nil {
@@ -66,15 +67,8 @@ func (handler *Handler) websocketShellPodExec(w http.ResponseWriter, r *http.Req
 		return httperror.InternalServerError("Unable to create user shell", err)
 	}
 
-	// Modifying request params mid-flight before forewarding to K8s API server (websocket)
-	q := r.URL.Query()
-
-	q.Add("namespace", shellPod.Namespace)
-	q.Add("podName", shellPod.PodName)
-	q.Add("containerName", shellPod.ContainerName)
-	q.Add("command", shellPod.ShellExecCommand)
-
-	r.URL.RawQuery = q.Encode()
+	// Modifying request params mid-flight before forwarding to K8s API server (websocket)
+	setPodExecTarget(r.URL, shellPod)
 
 	// Modify url path mid-flight before forewarding to k8s API server (websocket)
 	r.URL.Path = "/websocket/pod"
@@ -119,4 +113,13 @@ func (handler *Handler) websocketShellPodExec(w http.ResponseWriter, r *http.Req
 	}
 
 	return nil
+}
+
+func setPodExecTarget(u *url.URL, shellPod *portainer.KubernetesShellPod) {
+	q := u.Query()
+	q.Set("namespace", shellPod.Namespace)
+	q.Set("podName", shellPod.PodName)
+	q.Set("containerName", shellPod.ContainerName)
+	q.Set("command", shellPod.ShellExecCommand)
+	u.RawQuery = q.Encode()
 }

@@ -23,9 +23,12 @@ func (hspm *HelmSDKPackageManager) List(listOpts options.ListOptions) ([]release
 		Str("selector", listOpts.Selector).
 		Msg("Listing Helm releases")
 
-	// Initialize action configuration with kubernetes config
+	// Initialize action configuration with kubernetes config. The namespace is
+	// passed through as-is: an empty namespace keeps the release storage
+	// cluster-wide so the list covers every namespace, mirroring how the Helm
+	// CLI implements `helm list --all-namespaces`.
 	actionConfig := new(action.Configuration)
-	err := hspm.initActionConfig(actionConfig, listOpts.Namespace, listOpts.KubernetesClusterAccess)
+	err := hspm.initActionConfig(actionConfig, listOpts.Namespace, listOpts.KubernetesClusterAccess, listOpts.ReleaseStorage)
 	if err != nil {
 		// error is already logged in initActionConfig
 		return nil, errors.Wrap(err, "failed to initialize helm configuration")

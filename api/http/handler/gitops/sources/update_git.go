@@ -14,6 +14,8 @@ import (
 	"github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/response"
 	"github.com/portainer/portainer/pkg/validate"
+
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -26,6 +28,7 @@ type GitSourceUpdatePayload struct {
 	URL            *string                         `json:"url"`
 	TLSSkipVerify  *bool                           `json:"tlsSkipVerify"`
 	Authentication *GitAuthenticationUpdatePayload `json:"authentication"`
+	Interval       *string                         `json:"interval"`
 }
 
 type GitAuthenticationUpdatePayload struct {
@@ -37,6 +40,10 @@ type GitAuthenticationUpdatePayload struct {
 func (payload *GitSourceUpdatePayload) Validate(_ *http.Request) error {
 	if payload.URL != nil && !validate.IsURL(*payload.URL) {
 		return errors.New("invalid repository URL. Must correspond to a valid URL format")
+	}
+
+	if payload.Interval != nil {
+		return validateInterval(*payload.Interval)
 	}
 
 	return nil
@@ -78,13 +85,13 @@ func (h *Handler) gitSourceUpdate(w http.ResponseWriter, r *http.Request) *httpe
 	}
 
 	sourceID := portainer.SourceID(id)
+	userContext := source.NewUserContext(securityContext.User, securityContext.UserMemberships)
 
 	var src *portainer.Source
 
 	if err := h.dataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		var err error
 
-		userContext := source.NewUserContext(securityContext.User, securityContext.UserMemberships)
 		if src, err = tx.Source().Read(userContext, sourceID); err != nil {
 			return err
 		}
@@ -92,6 +99,9 @@ func (h *Handler) gitSourceUpdate(w http.ResponseWriter, r *http.Request) *httpe
 		if err := ApplyGitSourceChanges(src, payload); err != nil {
 			return err
 		}
+
+		src.Status = portainer.SourceStatusUnknown
+		src.StatusError = ""
 
 		return tx.Source().Update(userContext, src.ID, src)
 	}); h.dataStore.IsErrObjectNotFound(err) {
@@ -104,6 +114,14 @@ func (h *Handler) gitSourceUpdate(w http.ResponseWriter, r *http.Request) *httpe
 		return httperror.Conflict("A source with this URL and credentials already exists", err)
 	} else if err != nil {
 		return httperror.InternalServerError("Unable to update source", err)
+	}
+
+	if src, err = h.testAndSaveSourceConnection(r.Context(), userContext, src); err != nil {
+		return httperror.InternalServerError("Unable to persist source status", err)
+	}
+
+	if err := h.sourceScheduler.Reconcile(src.ID); err != nil {
+		log.Warn().Err(err).Int("source_id", int(src.ID)).Msg("source scheduler reconcile failed after source update")
 	}
 
 	src.Git = gittypes.SanitizeGitSource(src.Git)
@@ -134,6 +152,10 @@ func ApplyGitSourceChanges(src *portainer.Source, payload GitSourceUpdatePayload
 // ApplyBaseGitSourceChanges applies the non-authentication field changes (name,
 // URL, reference, TLS) to the source in place, ensuring src.Git is set
 func ApplyBaseGitSourceChanges(src *portainer.Source, payload GitSourceUpdatePayload) error {
+	if src == nil {
+		return ErrNotGitSource
+	}
+
 	if src.Type != portainer.SourceTypeGit {
 		return ErrNotGitSource
 	}
@@ -152,6 +174,10 @@ func ApplyBaseGitSourceChanges(src *portainer.Source, payload GitSourceUpdatePay
 
 	if payload.TLSSkipVerify != nil {
 		src.Git.TLSSkipVerify = *payload.TLSSkipVerify
+	}
+
+	if payload.Interval != nil {
+		src.Interval = *payload.Interval
 	}
 
 	return nil

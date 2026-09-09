@@ -4,6 +4,7 @@ import { updateAxiosAdapter } from '@/react/portainer/services/axios/axios';
 import { PortainerEndpointTypes } from '@/portainer/models/endpoint/models';
 import { cache } from '@/react/portainer/services/axios/axios';
 import { CACHE_REFRESH_EVENT, CACHE_DURATION } from '../portainer/services/http-request.helper';
+import { AccessHeaders } from '../portainer/authorization-guard';
 
 import registriesModule from './registries';
 import customTemplateModule from './custom-templates';
@@ -566,15 +567,9 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
       },
     };
 
-    const volumesBase = {
-      name: 'kubernetes.volumes',
-      url: '/volumes',
-      abstract: true,
-    };
-
     const volumes = {
-      name: 'kubernetes.volumes.index',
-      url: '?tab',
+      name: 'kubernetes.volumes',
+      url: '/volumes?tab',
       views: {
         'content@': {
           component: 'kubernetesVolumesView',
@@ -610,7 +605,7 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
         resourceConfig: {
           title: 'Persistent Volume details',
           breadcrumbLabel: 'Volumes',
-          breadcrumbLink: 'kubernetes.volumes.index',
+          breadcrumbLink: 'kubernetes.volumes',
           breadcrumbTab: 'volumes',
           resourceType: 'persistentvolume',
           apiVersion: 'v1',
@@ -634,7 +629,7 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
         resourceConfig: {
           title: 'Storage Class details',
           breadcrumbLabel: 'Volumes',
-          breadcrumbLink: 'kubernetes.volumes.index',
+          breadcrumbLink: 'kubernetes.volumes',
           breadcrumbTab: 'storage',
           resourceType: 'storageclass',
           apiVersion: 'storage.k8s.io/v1',
@@ -666,6 +661,9 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
         'content@': {
           component: 'kubernetesRegistryAccessView',
         },
+      },
+      data: {
+        access: AccessHeaders.Admin,
       },
     };
 
@@ -935,7 +933,6 @@ angular.module('portainer.kubernetes', ['portainer.app', registriesModule, custo
     $stateRegistryProvider.register(namespaceCreation);
     $stateRegistryProvider.register(namespace);
     $stateRegistryProvider.register(namespaceAccess);
-    $stateRegistryProvider.register(volumesBase);
     $stateRegistryProvider.register(volumes);
     $stateRegistryProvider.register(volume);
     $stateRegistryProvider.register(persistentVolume);

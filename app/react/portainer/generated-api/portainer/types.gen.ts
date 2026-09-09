@@ -4,101 +4,824 @@ export type ClientOptions = {
   baseURL: `${string}://${string}/api` | (string & {});
 };
 
-export type WorkflowsWorkflowStatusObject = {
-  artifact?: WorkflowsWorkflowPhaseStatus;
-  source?: WorkflowsWorkflowPhaseStatus;
-  target?: WorkflowsWorkflowPhaseStatus;
+export type AuthAuthenticatePayload = {
+  /**
+   * Password
+   */
+  Password: string;
+  /**
+   * Username
+   */
+  Username: string;
 };
 
-export const WorkflowsStatus = {
+export type AuthAuthenticateResponse = {
   /**
-   * StatusHealthy
+   * JWT token used to authenticate against the API
    */
-  STATUS_HEALTHY: 'healthy',
-  /**
-   * StatusSyncing
-   */
-  STATUS_SYNCING: 'syncing',
-  /**
-   * StatusError
-   */
-  STATUS_ERROR: 'error',
-  /**
-   * StatusPaused
-   */
-  STATUS_PAUSED: 'paused',
-  /**
-   * StatusUnknown
-   */
-  STATUS_UNKNOWN: 'unknown',
-} as const;
-
-export type WorkflowsStatus =
-  (typeof WorkflowsStatus)[keyof typeof WorkflowsStatus];
-
-export type WorkflowsWorkflowPhaseStatus = {
-  error?: string;
-  status?: WorkflowsStatus;
+  jwt?: string;
 };
 
-export type WorkflowsWorkflow = {
-  autoUpdate?: PortainerAutoUpdateSettings;
-  creationDate?: number;
-  gitConfig?: GittypesRepoConfig;
-  id: number;
-  lastSyncDate?: number;
-  name: string;
-  platform: WorkflowsDeploymentPlatform;
-  status: WorkflowsWorkflowStatusObject;
-  target: WorkflowsTarget;
-  type: WorkflowsType;
+export type AuthOauthPayload = {
+  /**
+   * OAuth code returned from OAuth Provided
+   */
+  Code?: string;
 };
 
-export const WorkflowsType = {
+export type BackupBackupPayload = {
+  Password?: string;
+};
+
+export type BackupRestorePayload = {
+  FileContent?: Array<number>;
+  FileName?: string;
+  Password?: string;
+};
+
+export type BuildBuildInfo = {
+  BuildNumber?: string;
+  GitCommit?: string;
+  GoVersion?: string;
+  ImageTag?: string;
+  NodejsVersion?: string;
+  PnpmVersion?: string;
+  WebpackVersion?: string;
+};
+
+export type BuildDependenciesInfo = {
+  ComposeVersion?: string;
+  DockerVersion?: string;
+  HelmVersion?: string;
+  KubectlVersion?: string;
+};
+
+export type BuildRuntimeInfo = {
+  Env?: Array<string>;
+};
+
+export type ContainersContainerGpusResponse = {
+  gpus?: string;
+};
+
+export type CustomtemplatesCustomTemplateFromFileContentPayload = {
   /**
-   * TypeStack
+   * Description of the template
    */
-  TYPE_STACK: 'stack' /**
-   * TypeEdgeStack
-   */,
-  TYPE_EDGE_STACK: 'edgeStack',
-} as const;
+  Description: string;
+  /**
+   * EdgeTemplate indicates if this template purpose for Edge Stack
+   */
+  EdgeTemplate?: boolean;
+  /**
+   * Content of stack file
+   */
+  FileContent: string;
+  /**
+   * URL of the template's logo
+   */
+  Logo?: string;
+  /**
+   * A note that will be displayed in the UI. Supports HTML content
+   */
+  Note?: string;
+  /**
+   * Platform associated to the template.
+   * Valid values are: 1 - 'linux', 2 - 'windows'
+   * Required for Docker stacks
+   */
+  Platform?: 1 | 2;
+  /**
+   * Title of the template
+   */
+  Title: string;
+  /**
+   * Type of created stack:
+   * * 1 - swarm
+   * * 2 - compose
+   * * 3 - kubernetes
+   */
+  Type: 1 | 2 | 3;
+  /**
+   * Definitions of variables in the stack file
+   */
+  Variables?: Array<PortainerCustomTemplateVariableDefinition>;
+};
 
-export type WorkflowsType = (typeof WorkflowsType)[keyof typeof WorkflowsType];
+export type CustomtemplatesCustomTemplateFromGitRepositoryPayload = {
+  /**
+   * Path to the Stack file inside the Git repository
+   */
+  ComposeFilePathInRepository?: string;
+  /**
+   * Description of the template
+   */
+  Description: string;
+  /**
+   * EdgeTemplate indicates if this template purpose for Edge Stack
+   */
+  EdgeTemplate?: boolean;
+  /**
+   * IsComposeFormat indicates if the Kubernetes template is created from a Docker Compose file
+   */
+  IsComposeFormat?: boolean;
+  /**
+   * URL of the template's logo
+   */
+  Logo?: string;
+  /**
+   * A note that will be displayed in the UI. Supports HTML content
+   */
+  Note?: string;
+  /**
+   * Platform associated to the template.
+   * Valid values are: 1 - 'linux', 2 - 'windows'
+   * Required for Docker stacks
+   */
+  Platform?: 1 | 2;
+  /**
+   * Deprecated: use SourceID instead. Use basic authentication to clone the Git repository.
+   */
+  RepositoryAuthentication?: boolean;
+  /**
+   * Deprecated: use SourceID instead. Password used in basic authentication. Required when RepositoryAuthentication is true.
+   */
+  RepositoryPassword?: string;
+  /**
+   * Reference name of a Git repository hosting the Stack file
+   */
+  RepositoryReferenceName?: string;
+  /**
+   * Deprecated: use SourceID instead. URL of a Git repository hosting the Stack file.
+   */
+  RepositoryURL?: string;
+  /**
+   * Deprecated: use SourceID instead. Username used in basic authentication. Required when RepositoryAuthentication is true.
+   */
+  RepositoryUsername?: string;
+  /**
+   * SourceID references an existing Source for git credentials/URL.
+   * When set, the inline URL and authentication fields are ignored.
+   */
+  SourceID: number;
+  /**
+   * Deprecated: use SourceID instead. TLSSkipVerify skips SSL verification when cloning the Git repository.
+   */
+  TLSSkipVerify?: boolean;
+  /**
+   * Title of the template
+   */
+  Title: string;
+  /**
+   * Type of created stack:
+   * * 1 - swarm
+   * * 2 - compose
+   * * 3 - kubernetes
+   */
+  Type: 1 | 2;
+  /**
+   * Definitions of variables in the stack file
+   */
+  Variables?: Array<PortainerCustomTemplateVariableDefinition>;
+};
 
-export type WorkflowsTarget = {
-  edgeGroupIds?: Array<number>;
-  endpointId?: number;
-  groupStatus?: {
-    [key: string]: WorkflowsStatus;
+export type CustomtemplatesCustomTemplateUpdatePayload = {
+  /**
+   * Path to the Stack file inside the Git repository
+   */
+  ComposeFilePathInRepository?: string;
+  /**
+   * Description of the template
+   */
+  Description: string;
+  /**
+   * EdgeTemplate indicates if this template purpose for Edge Stack
+   */
+  EdgeTemplate?: boolean;
+  /**
+   * Content of stack file
+   */
+  FileContent: string;
+  /**
+   * IsComposeFormat indicates if the Kubernetes template is created from a Docker Compose file
+   */
+  IsComposeFormat?: boolean;
+  /**
+   * URL of the template's logo
+   */
+  Logo?: string;
+  /**
+   * A note that will be displayed in the UI. Supports HTML content
+   */
+  Note?: string;
+  /**
+   * Platform associated to the template.
+   * Valid values are: 1 - 'linux', 2 - 'windows'
+   * Required for Docker stacks
+   */
+  Platform?: 1 | 2;
+  /**
+   * Deprecated: use SourceID instead. Use authentication to clone the Git repository.
+   */
+  RepositoryAuthentication?: boolean;
+  /**
+   * Deprecated: use SourceID instead. Password used in basic authentication or token used in token authentication. Required when RepositoryAuthentication is true.
+   */
+  RepositoryPassword?: string;
+  /**
+   * Reference name of a Git repository hosting the Stack file
+   */
+  RepositoryReferenceName?: string;
+  /**
+   * Deprecated: use SourceID instead. URL of a Git repository hosting the Stack file.
+   */
+  RepositoryURL?: string;
+  /**
+   * Deprecated: use SourceID instead. Username used in basic authentication. Required when RepositoryAuthentication is true.
+   */
+  RepositoryUsername?: string;
+  /**
+   * SourceID references an existing Source for git credentials/URL.
+   * When set, the inline URL and authentication fields are ignored.
+   */
+  SourceID?: number;
+  /**
+   * Deprecated: use SourceID instead. TLSSkipVerify skips SSL verification when cloning the Git repository.
+   */
+  TLSSkipVerify?: boolean;
+  /**
+   * Title of the template
+   */
+  Title: string;
+  /**
+   * Type of created stack (1 - swarm, 2 - compose, 3 - kubernetes)
+   */
+  Type: 1 | 2 | 3;
+  /**
+   * Definitions of variables in the stack file
+   */
+  Variables?: Array<PortainerCustomTemplateVariableDefinition>;
+};
+
+export type CustomtemplatesFileResponse = {
+  FileContent?: string;
+};
+
+export type DockerDashboardResponse = {
+  containers?: StatsContainerStats;
+  images?: DockerImagesCounters;
+  networks?: number;
+  services?: number;
+  stacks?: number;
+  volumes?: number;
+};
+
+export type DockerImagesCounters = {
+  size?: number;
+  total?: number;
+};
+
+export type EdgegroupsDecoratedEdgeGroup = {
+  Dynamic?: boolean;
+  /**
+   * Shadow to avoid exposing in the API
+   */
+  EndpointIds?: number;
+  EndpointTypes?: Array<PortainerEndpointType>;
+  /**
+   * Deprecated: only used for API responses
+   */
+  Endpoints?: Array<number>;
+  HasEdgeJob?: boolean;
+  HasEdgeStack?: boolean;
+  /**
+   * EdgeGroup Identifier
+   */
+  Id?: number;
+  Name?: string;
+  PartialMatch?: boolean;
+  TagIds?: Array<number>;
+  TrustedEndpoints?: Array<number>;
+};
+
+export type EdgegroupsEdgeGroupCreatePayload = {
+  Dynamic?: boolean;
+  Endpoints?: Array<number>;
+  Name?: string;
+  PartialMatch?: boolean;
+  TagIDs?: Array<number>;
+};
+
+export type EdgegroupsEdgeGroupUpdatePayload = {
+  Dynamic?: boolean;
+  Endpoints?: Array<number>;
+  Name?: string;
+  PartialMatch?: boolean;
+  TagIDs?: Array<number>;
+};
+
+export type EdgejobsEdgeJobCreateFromFileContentPayload = {
+  CronExpression?: string;
+  EdgeGroups?: Array<number>;
+  Endpoints?: Array<number>;
+  FileContent?: string;
+  Name?: string;
+  Recurring?: boolean;
+};
+
+export type EdgejobsEdgeJobFileResponse = {
+  FileContent?: string;
+};
+
+export type EdgejobsEdgeJobUpdatePayload = {
+  CronExpression?: string;
+  EdgeGroups?: Array<number>;
+  Endpoints?: Array<number>;
+  FileContent?: string;
+  Name?: string;
+  Recurring?: boolean;
+};
+
+export type EdgejobsFileResponse = {
+  FileContent?: string;
+};
+
+export type EdgejobsTaskContainer = {
+  EndpointId?: number;
+  EndpointName?: string;
+  Id?: string;
+  LogsStatus?: PortainerEdgeJobLogsStatus;
+};
+
+export type EdgestacksEdgeStackFromGitRepositoryPayload = {
+  /**
+   * Deployment type to deploy this stack
+   * Valid values are: 0 - 'compose', 1 - 'kubernetes'
+   * compose is enabled only for docker environments
+   * kubernetes is enabled only for kubernetes environments
+   */
+  DeploymentType?: 0 | 1 | 2;
+  /**
+   * List of identifiers of EdgeGroups
+   */
+  EdgeGroups: Array<number>;
+  /**
+   * Path to the Stack file inside the Git repository
+   */
+  FilePathInRepository?: string;
+  /**
+   * Name of the stack
+   * Max length: 255
+   * Name must only contains lowercase characters, numbers, hyphens, or underscores
+   * Name must start with a lowercase character or number
+   * Example: stack-name or stack_123 or stackName
+   */
+  Name: string;
+  /**
+   * List of Registries to use for this stack
+   */
+  Registries?: Array<number>;
+  /**
+   * Deprecated: Use SourceID instead. Use basic authentication to clone the Git repository.
+   */
+  RepositoryAuthentication?: boolean;
+  /**
+   * Deprecated: Use SourceID instead. Password used in basic authentication.
+   */
+  RepositoryPassword?: string;
+  /**
+   * Reference name of a Git repository hosting the Stack file
+   */
+  RepositoryReferenceName?: string;
+  /**
+   * Deprecated: Use SourceID instead. URL of a Git repository hosting the Stack file.
+   */
+  RepositoryURL?: string;
+  /**
+   * Deprecated: Use SourceID instead. Username used in basic authentication.
+   */
+  RepositoryUsername?: string;
+  /**
+   * SourceID references an existing Source for git credentials/URL.
+   * When set, the inline URL and authentication fields are ignored.
+   */
+  SourceID?: number;
+  /**
+   * Deprecated: Use SourceID instead. TLSSkipVerify skips SSL verification when cloning the Git repository.
+   */
+  TLSSkipVerify?: boolean;
+  /**
+   * Uses the manifest's namespaces instead of the default one
+   */
+  UseManifestNamespaces?: boolean;
+};
+
+export type EdgestacksEdgeStackFromStringPayload = {
+  /**
+   * Deployment type to deploy this stack
+   * Valid values are: 0 - 'compose', 1 - 'kubernetes'
+   * compose is enabled only for docker environments
+   * kubernetes is enabled only for kubernetes environments
+   */
+  DeploymentType?: 0 | 1 | 2;
+  /**
+   * List of identifiers of EdgeGroups
+   */
+  EdgeGroups?: Array<number>;
+  /**
+   * Name of the stack
+   * Max length: 255
+   * Name must only contains lowercase characters, numbers, hyphens, or underscores
+   * Name must start with a lowercase character or number
+   * Example: stack-name or stack_123 or stackName
+   */
+  Name: string;
+  /**
+   * List of Registries to use for this stack
+   */
+  Registries?: Array<number>;
+  /**
+   * Content of the Stack file
+   */
+  StackFileContent: string;
+  /**
+   * Uses the manifest's namespaces instead of the default one
+   */
+  UseManifestNamespaces?: boolean;
+};
+
+export type EdgestacksStackFileResponse = {
+  StackFileContent?: string;
+};
+
+export type EdgestacksUpdateEdgeStackPayload = {
+  DeploymentType?: PortainerEdgeStackDeploymentType;
+  EdgeGroups?: Array<number>;
+  StackFileContent?: string;
+  UpdateVersion?: boolean;
+  /**
+   * Uses the manifest's namespaces instead of the default one
+   */
+  UseManifestNamespaces?: boolean;
+};
+
+export type EdgestacksUpdateStatusPayload = {
+  EndpointID?: number;
+  Error?: string;
+  Status?: PortainerEdgeStackStatusType;
+  Time?: number;
+  Version?: number;
+};
+
+export type EndpointgroupsEndpointGroupResponse = {
+  /**
+   * Description associated to the environment(endpoint) group
+   */
+  Description: string;
+  /**
+   * Environment(Endpoint) group Identifier
+   */
+  Id: number;
+  /**
+   * Environment(Endpoint) group name
+   */
+  Name: string;
+  /**
+   * List of tags associated to this environment(endpoint) group
+   */
+  TagIds?: Array<number>;
+  TeamAccessPolicies?: PortainerTeamAccessPolicies;
+  Total?: number;
+  TypeInfo?: EndpointgroupsEndpointGroupTypeInfo;
+  UserAccessPolicies?: PortainerUserAccessPolicies;
+};
+
+export type EndpointgroupsEndpointGroupTypeInfo = {
+  Docker: number;
+  Kubernetes: number;
+  Mixed: boolean;
+  Podman: number;
+};
+
+export type EndpointgroupsEndpointGroupCreatePayload = {
+  /**
+   * List of environment(endpoint) identifiers that will be part of this group
+   */
+  AssociatedEndpoints?: Array<number>;
+  /**
+   * Environment(Endpoint) group description
+   */
+  Description?: string;
+  /**
+   * Environment(Endpoint) group name
+   */
+  Name: string;
+  /**
+   * List of tag identifiers to which this environment(endpoint) group is associated
+   */
+  TagIDs?: Array<number>;
+};
+
+export type EndpointgroupsEndpointGroupUpdatePayload = {
+  /**
+   * List of environment(endpoint) identifiers that will be part of this group
+   */
+  AssociatedEndpoints?: Array<number>;
+  /**
+   * Environment(Endpoint) group description
+   */
+  Description?: string;
+  /**
+   * Environment(Endpoint) group name
+   */
+  Name?: string;
+  /**
+   * List of tag identifiers associated to the environment(endpoint) group
+   */
+  TagIDs?: Array<number>;
+  TeamAccessPolicies?: PortainerTeamAccessPolicies;
+  UserAccessPolicies?: PortainerUserAccessPolicies;
+};
+
+export type EndpointsEnvironmentSummaryCountsResponse = {
+  byGroup?: Array<EndpointsGroupCount>;
+  byHealth?: EndpointsHealthCounts;
+  byPlatformType?: EndpointsPlatformCounts;
+  down?: number;
+  outdated?: number;
+  total?: number;
+  unassigned?: number;
+  up?: number;
+};
+
+export type EndpointsDockerhubStatusResponse = {
+  /**
+   * Daily limit
+   */
+  limit?: number;
+  /**
+   * Remaiming images to pull
+   */
+  remaining?: number;
+};
+
+export type EndpointsEndpointCreateGlobalKeyResponse = {
+  endpointID?: number;
+};
+
+export type EndpointsEndpointDeleteBatchPartialResponse = {
+  deleted?: Array<number>;
+  errors?: Array<number>;
+};
+
+export type EndpointsEndpointDeleteBatchPayload = {
+  endpoints?: Array<EndpointsEndpointDeleteRequest>;
+};
+
+export type EndpointsEndpointDeleteRequest = {
+  deleteCluster?: boolean;
+  id?: number;
+};
+
+export type EndpointsEndpointSettingsUpdatePayload = {
+  /**
+   * Whether non-administrator should be able to use bind mounts when creating containers
+   */
+  allowBindMountsForRegularUsers?: boolean;
+  /**
+   * Whether non-administrator should be able to use container capabilities
+   */
+  allowContainerCapabilitiesForRegularUsers?: boolean;
+  /**
+   * Whether non-administrator should be able to use device mapping
+   */
+  allowDeviceMappingForRegularUsers?: boolean;
+  /**
+   * Whether non-administrator should be able to use the host pid
+   */
+  allowHostNamespaceForRegularUsers?: boolean;
+  /**
+   * Whether non-administrator should be able to use privileged mode when creating containers
+   */
+  allowPrivilegedModeForRegularUsers?: boolean;
+  /**
+   * Whether non-administrator should be able to use security-opt settings
+   */
+  allowSecurityOptForRegularUsers?: boolean;
+  /**
+   * Whether non-administrator should be able to manage stacks
+   */
+  allowStackManagementForRegularUsers?: boolean;
+  /**
+   * Whether non-administrator should be able to use sysctl settings
+   */
+  allowSysctlSettingForRegularUsers?: boolean;
+  /**
+   * Whether non-administrator should be able to browse volumes
+   */
+  allowVolumeBrowserForRegularUsers?: boolean;
+  enableGPUManagement?: boolean;
+  /**
+   * Whether host management features are enabled
+   */
+  enableHostManagementFeatures?: boolean;
+  gpus?: Array<PortainerPair>;
+};
+
+export type EndpointsEndpointUpdatePayload = {
+  /**
+   * Azure application ID
+   */
+  AzureApplicationID?: string;
+  /**
+   * Azure authentication key
+   */
+  AzureAuthenticationKey?: string;
+  /**
+   * Azure tenant ID
+   */
+  AzureTenantID?: string;
+  /**
+   * The check in interval for edge agent (in seconds)
+   */
+  EdgeCheckinInterval?: number;
+  /**
+   * GPUs information
+   */
+  Gpus?: Array<PortainerPair>;
+  /**
+   * Group identifier
+   */
+  GroupID?: number;
+  /**
+   * Associated Kubernetes data
+   */
+  Kubernetes?: PortainerKubernetesData;
+  /**
+   * Name that will be used to identify this environment(endpoint)
+   */
+  Name?: string;
+  /**
+   * URL or IP address where exposed containers will be reachable.\
+   * Defaults to URL if not specified
+   */
+  PublicURL?: string;
+  /**
+   * The status of the environment(endpoint) (1 - up, 2 - down)
+   */
+  Status?: number;
+  /**
+   * Require TLS to connect against this environment(endpoint)
+   */
+  TLS?: boolean;
+  /**
+   * Skip client verification when using TLS
+   */
+  TLSSkipClientVerify?: boolean;
+  /**
+   * Skip server verification when using TLS
+   */
+  TLSSkipVerify?: boolean;
+  /**
+   * List of tag identifiers to which this environment(endpoint) is associated
+   */
+  TagIDs?: Array<number>;
+  TeamAccessPolicies?: PortainerTeamAccessPolicies;
+  /**
+   * URL or IP address of a Docker host
+   */
+  URL?: string;
+  UserAccessPolicies?: PortainerUserAccessPolicies;
+};
+
+export type EndpointsEndpointUpdateRelationsPayload = {
+  Relations?: {
+    [key: string]: {
+      EdgeGroups?: Array<number>;
+      Group?: number;
+      Tags?: Array<number>;
+    };
   };
-  namespace?: string;
-  resolvedEndpointIds?: Array<number>;
 };
 
-export const WorkflowsDeploymentPlatform = {
+export type EndpointsForceUpdateServicePayload = {
   /**
-   * DeploymentPlatformDockerStandalone
+   * PullImage if true will pull the image
    */
-  DEPLOYMENT_PLATFORM_DOCKER_STANDALONE: 'dockerStandalone',
+  PullImage?: boolean;
   /**
-   * DeploymentPlatformDockerSwarm
+   * ServiceId to update
    */
-  DEPLOYMENT_PLATFORM_DOCKER_SWARM: 'dockerSwarm',
-  /**
-   * DeploymentPlatformKubernetes
-   */
-  DEPLOYMENT_PLATFORM_KUBERNETES: 'kubernetes',
-} as const;
+  ServiceID?: string;
+};
 
-export type WorkflowsDeploymentPlatform =
-  (typeof WorkflowsDeploymentPlatform)[keyof typeof WorkflowsDeploymentPlatform];
+export type EndpointsGroupCount = {
+  count?: number;
+  groupID?: number;
+  groupName?: string;
+};
+
+export type EndpointsHealthCounts = {
+  down?: number;
+  heartbeat?: number;
+  outdated?: number;
+  up?: number;
+};
+
+export type EndpointsPlatformCounts = {
+  azure?: number;
+  docker?: number;
+  kubernetes?: number;
+  podman?: number;
+};
+
+export type EndpointsRegistryAccessPayload = {
+  Namespaces?: Array<string>;
+  TeamAccessPolicies?: PortainerTeamAccessPolicies;
+  UserAccessPolicies?: PortainerUserAccessPolicies;
+};
+
+export type GithubComPortainerPortainerPkgLibhelmReleaseHook = {
+  /**
+   * DeletePolicies are the policies that indicate when to delete the hook
+   */
+  delete_policies?: Array<string>;
+  /**
+   * Events are the events that this hook fires on.
+   */
+  events?: Array<string>;
+  /**
+   * Kind is the Kubernetes kind.
+   */
+  kind?: string;
+  /**
+   * LastRun indicates the date/time this was last run.
+   */
+  last_run?: ReleaseHookExecution;
+  /**
+   * Manifest is the manifest contents.
+   */
+  manifest?: string;
+  name?: string;
+  /**
+   * Path is the chart-relative path to the template.
+   */
+  path?: string;
+  /**
+   * Weight indicates the sort order for execution among similar Hook type
+   */
+  weight?: number;
+};
+
+export type GitopsFileResponse = {
+  FileContent?: string;
+};
+
+export type GitopsRepositoryFilePreviewPayload = {
+  /**
+   * Password for git authentication.
+   * Deprecated: use SourceID instead
+   */
+  password?: string;
+  reference?: string;
+  /**
+   * URL of a Git repository to preview.
+   * Deprecated: use SourceID instead
+   */
+  repository?: string;
+  /**
+   * SourceID resolves URL and auth from the stored Source record.
+   * When set, the inline Repository/Username/Password/TLSSkipVerify fields are ignored.
+   */
+  sourceID?: number;
+  /**
+   * Path to file whose content will be read
+   */
+  targetFile?: string;
+  /**
+   * TLSSkipVerify skips SSL verification when cloning the Git repository.
+   * Deprecated: use SourceID instead
+   */
+  tlsSkipVerify?: boolean;
+  /**
+   * Username for git authentication.
+   * Deprecated: use SourceID instead
+   */
+  username?: string;
+};
 
 export type GittypesGitAuthentication = {
   AuthorizationType?: number;
+  GitCredentialID?: number;
   Password?: string;
   Provider?: number;
   Username?: string;
+};
+
+export type GittypesGitSource = {
+  Authentication?: GittypesGitAuthentication;
+  TLSSkipVerify?: boolean;
+  URL?: string;
 };
 
 export type GittypesRepoConfig = {
@@ -129,6 +852,1305 @@ export type GittypesRepoConfig = {
   URL?: string;
 };
 
+export type HelmInstallChartPayload = {
+  atomic?: boolean;
+  chart?: string;
+  name?: string;
+  namespace?: string;
+  repo?: string;
+  values?: string;
+  version?: string;
+};
+
+export type ImagesImageResponse = {
+  created?: number;
+  id?: string;
+  nodeName?: string;
+  size?: number;
+  tags?: Array<string>;
+  /**
+   * Used is true if the image is used by at least one container
+   * supplied only when withUsage is true
+   */
+  used?: boolean;
+};
+
+export type IntstrIntOrString = {
+  IntVal?: number;
+  StrVal?: string;
+  Type?: IntstrType;
+};
+
+export const IntstrType = {
+  /**
+   * Int
+   *
+   * The IntOrString holds an int.
+   */
+  INT: 0 /**
+   * String
+   *
+   * The IntOrString holds a string.
+   */,
+  STRING: 1,
+} as const;
+
+export type IntstrType = (typeof IntstrType)[keyof typeof IntstrType];
+
+export const K8sIoApiCoreV1ConditionStatus = {
+  /**
+   * ConditionTrue
+   */
+  CONDITION_TRUE: 'True',
+  /**
+   * ConditionFalse
+   */
+  CONDITION_FALSE: 'False',
+  /**
+   * ConditionUnknown
+   */
+  CONDITION_UNKNOWN: 'Unknown',
+} as const;
+
+export type K8sIoApiCoreV1ConditionStatus =
+  (typeof K8sIoApiCoreV1ConditionStatus)[keyof typeof K8sIoApiCoreV1ConditionStatus];
+
+export type K8sIoApiCoreV1HttpHeader = {
+  /**
+   * The header field name.
+   * This will be canonicalized upon output, so case-variant names will be understood as the same header.
+   */
+  name?: string;
+  /**
+   * The header field value
+   */
+  value?: string;
+};
+
+export type K8sIoApiCoreV1LocalObjectReference = {
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   * +optional
+   * +default=""
+   * +kubebuilder:default=""
+   * TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
+   */
+  name?: string;
+};
+
+export type K8sIoApiCoreV1ObjectReference = {
+  /**
+   * API version of the referent.
+   * +optional
+   */
+  apiVersion?: string;
+  /**
+   * If referring to a piece of an object instead of an entire object, this string
+   * should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+   * For example, if the object reference is to a container within a pod, this would take on a value like:
+   * "spec.containers{name}" (where "name" refers to the name of the container that triggered
+   * the event) or if no container name is specified "spec.containers[2]" (container with
+   * index 2 in this pod). This syntax is chosen only to have some well-defined way of
+   * referencing a part of an object.
+   * TODO: this design is not final and this field is subject to change in the future.
+   * +optional
+   */
+  fieldPath?: string;
+  /**
+   * Kind of the referent.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
+   */
+  kind?: string;
+  /**
+   * Name of the referent.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   * +optional
+   */
+  name?: string;
+  /**
+   * Namespace of the referent.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+   * +optional
+   */
+  namespace?: string;
+  /**
+   * Specific resourceVersion to which this reference is made, if any.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+   * +optional
+   */
+  resourceVersion?: string;
+  /**
+   * UID of the referent.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+   * +optional
+   */
+  uid?: string;
+};
+
+export type K8sIoApiCoreV1ResourceClaim = {
+  /**
+   * Name must match the name of one entry in pod.spec.resourceClaims of
+   * the Pod where this field is used. It makes that resource available
+   * inside a container.
+   */
+  name?: string;
+  /**
+   * Request is the name chosen for a request in the referenced claim.
+   * If empty, everything from the claim is made available, otherwise
+   * only the result of this request.
+   *
+   * +optional
+   */
+  request?: string;
+};
+
+export type K8sIoApiRbacV1Subject = {
+  /**
+   * APIGroup holds the API group of the referenced subject.
+   * Defaults to "" for ServiceAccount subjects.
+   * Defaults to "rbac.authorization.k8s.io" for User and Group subjects.
+   * +optional
+   */
+  apiGroup?: string;
+  /**
+   * Kind of object being referenced. Values defined by this API group are "User", "Group", and "ServiceAccount".
+   * If the Authorizer does not recognized the kind value, the Authorizer should report an error.
+   */
+  kind?: string;
+  /**
+   * Name of the object being referenced.
+   * +required
+   * +k8s:required
+   */
+  name?: string;
+  /**
+   * Namespace of the referenced object.  If the object kind is non-namespace, such as "User" or "Group", and this value is not empty
+   * the Authorizer should report an error.
+   * +optional
+   */
+  namespace?: string;
+};
+
+export type KubernetesConfiguration = {
+  ConfigurationOwner?: string;
+  Data?: {
+    [key: string]: unknown;
+  };
+  Kind?: string;
+};
+
+export type KubernetesCustomResourceMetadata = {
+  apiVersion?: string;
+  kind?: string;
+  name?: string;
+  plural?: string;
+  scope?: string;
+};
+
+export type KubernetesIngressRule = {
+  Host?: string;
+  IP?: string;
+  Path?: string;
+  TLS?: Array<KubernetesTlsInfo>;
+};
+
+export type KubernetesK8sApplication = {
+  Annotations?: {
+    [key: string]: string;
+  };
+  ApplicationOwner?: string;
+  ApplicationType?: string;
+  Configurations?: Array<KubernetesConfiguration>;
+  Containers?: Array<unknown>;
+  CreationDate?: string;
+  CustomResourceMetadata?: KubernetesCustomResourceMetadata;
+  DeploymentType?: string;
+  Id?: string;
+  Image?: string;
+  Kind?: string;
+  Labels?: {
+    [key: string]: string;
+  };
+  LoadBalancerIPAddress?: string;
+  MatchLabels?: {
+    [key: string]: string;
+  };
+  Metadata?: KubernetesMetadata;
+  Name?: string;
+  Namespace?: string;
+  Pods?: Array<KubernetesPod>;
+  PublishedPorts?: Array<KubernetesPublishedPort>;
+  Resource?: KubernetesK8sApplicationResource;
+  ResourcePool?: string;
+  RunningPodsCount?: number;
+  ServiceId?: string;
+  ServiceName?: string;
+  ServiceType?: string;
+  StackId?: string;
+  StackKind?: string;
+  StackName?: string;
+  Status?: string;
+  TotalPodsCount?: number;
+  Uid?: string;
+};
+
+export type KubernetesK8sApplicationResource = {
+  CpuLimit?: number;
+  CpuRequest?: number;
+  MemoryLimit?: number;
+  MemoryRequest?: number;
+};
+
+export type KubernetesK8sClusterRole = {
+  creationDate?: string;
+  isSystem?: boolean;
+  name?: string;
+  uid?: string;
+};
+
+export type KubernetesK8sClusterRoleBinding = {
+  creationDate?: string;
+  isSystem?: boolean;
+  name?: string;
+  namespace?: string;
+  roleRef?: V1RoleRef;
+  subjects?: Array<K8sIoApiRbacV1Subject>;
+  uid?: string;
+};
+
+export type KubernetesK8sConfigMap = {
+  Annotations?: {
+    [key: string]: string;
+  };
+  ConfigurationOwner?: string;
+  ConfigurationOwnerId?: string;
+  ConfigurationOwners?: Array<KubernetesK8sConfigurationOwnerResource>;
+  CreationDate?: string;
+  Data?: {
+    [key: string]: string;
+  };
+  IsUsed?: boolean;
+  Labels?: {
+    [key: string]: string;
+  };
+  Name?: string;
+  Namespace?: string;
+  UID?: string;
+};
+
+export type KubernetesK8sConfigMapWriteRequest = {
+  Annotations?: {
+    [key: string]: string;
+  };
+  Data?: {
+    [key: string]: string;
+  };
+  Labels?: {
+    [key: string]: string;
+  };
+  Name?: string;
+};
+
+export type KubernetesK8sConfigurationOwnerResource = {
+  Id?: string;
+  Name?: string;
+  ResourceKind?: string;
+};
+
+export type KubernetesK8sContainer = {
+  args?: Array<string>;
+  command?: Array<string>;
+  env?: Array<KubernetesK8sEnvVar>;
+  /**
+   * EnvFromSecrets names secrets whose keys are all exposed as environment
+   * variables.
+   */
+  envFromSecrets?: Array<string>;
+  image?: string;
+  imagePullPolicy?: string;
+  name?: string;
+  ports?: Array<KubernetesK8sContainerPort>;
+  resources?: KubernetesK8sResourceRequirements;
+  volumeMounts?: Array<KubernetesK8sVolumeMount>;
+  workingDir?: string;
+};
+
+export type KubernetesK8sContainerPort = {
+  containerPort?: number;
+  name?: string;
+  protocol?: string;
+};
+
+export type KubernetesK8sCronJob = {
+  Command?: string;
+  Id?: string;
+  IsSystem?: boolean;
+  Jobs?: Array<KubernetesK8sJob>;
+  Name?: string;
+  Namespace?: string;
+  Schedule?: string;
+  Suspend?: boolean;
+  Timezone?: string;
+};
+
+export type KubernetesK8sCronJobDeleteRequests = {
+  [key: string]: Array<string>;
+};
+
+export type KubernetesK8sDashboard = {
+  applicationsCount?: number;
+  configMapsCount?: number;
+  ingressesCount?: number;
+  namespacesCount?: number;
+  secretsCount?: number;
+  servicesCount?: number;
+  volumesCount?: number;
+};
+
+export type KubernetesK8sDeploymentPatchRequest = {
+  annotations?: {
+    [key: string]: string;
+  };
+  podAnnotations?: {
+    [key: string]: string;
+  };
+};
+
+export type KubernetesK8sDeploymentRollbackRequest = {
+  revision?: number;
+};
+
+export type KubernetesK8sDeploymentScaleRequest = {
+  replicas?: number;
+};
+
+export type KubernetesK8sDeploymentWriteRequest = {
+  annotations?: {
+    [key: string]: string;
+  };
+  labels?: {
+    [key: string]: string;
+  };
+  name?: string;
+  pod?: KubernetesK8sPodTemplate;
+  replicas?: number;
+  /**
+   * Selector matches the pods this deployment owns. It is immutable once the
+   * deployment exists, so it is only read on create.
+   */
+  selector?: {
+    [key: string]: string;
+  };
+};
+
+export type KubernetesK8sEnvVar = {
+  name?: string;
+  secretRef?: KubernetesK8sSecretKeyRef;
+  value?: string;
+};
+
+export type KubernetesK8sEvent = {
+  count?: number;
+  eventTime?: string;
+  firstTimestamp?: string;
+  involvedObject?: KubernetesK8sEventInvolvedObject;
+  kind?: string;
+  lastTimestamp?: string;
+  message?: string;
+  name?: string;
+  namespace?: string;
+  reason?: string;
+  type?: string;
+  uid?: string;
+};
+
+export type KubernetesK8sEventInvolvedObject = {
+  kind?: string;
+  name?: string;
+  namespace?: string;
+  uid?: string;
+};
+
+export type KubernetesK8sIngressClass = {
+  Annotations?: {
+    [key: string]: string;
+  };
+  Controller?: string;
+  IsDefault?: boolean;
+  Name?: string;
+};
+
+export type KubernetesK8sIngressController = {
+  Availability?: boolean;
+  ClassName?: string;
+  Name?: string;
+  New?: boolean;
+  Type?: string;
+  Used?: boolean;
+};
+
+export type KubernetesK8sIngressDeleteRequests = {
+  [key: string]: Array<string>;
+};
+
+export type KubernetesK8sIngressInfo = {
+  Annotations?: {
+    [key: string]: string;
+  };
+  ClassName?: string;
+  CreationDate?: string;
+  Hosts?: Array<string>;
+  Labels?: {
+    [key: string]: string;
+  };
+  Name?: string;
+  Namespace?: string;
+  Paths?: Array<KubernetesK8sIngressPath>;
+  TLS?: Array<KubernetesK8sIngressTls>;
+  Type?: string;
+  UID?: string;
+};
+
+export type KubernetesK8sIngressPath = {
+  HasService?: boolean;
+  Host?: string;
+  IngressName?: string;
+  Path?: string;
+  PathType?: string;
+  Port?: number;
+  PortName?: string;
+  ServiceName?: string;
+};
+
+export type KubernetesK8sIngressTls = {
+  Hosts?: Array<string>;
+  SecretName?: string;
+};
+
+export type KubernetesK8sJob = {
+  BackoffLimit?: number;
+  Command?: string;
+  Completions?: number;
+  Container?: V1Container;
+  Duration?: string;
+  FailedReason?: string;
+  FinishTime?: string;
+  Id?: string;
+  IsSystem?: boolean;
+  Name?: string;
+  Namespace?: string;
+  PodName?: string;
+  StartTime?: string;
+  Status?: string;
+};
+
+export type KubernetesK8sJobDeleteRequests = {
+  [key: string]: Array<string>;
+};
+
+export type KubernetesK8sNamespaceDetails = {
+  Annotations?: {
+    [key: string]: string;
+  };
+  Name?: string;
+  Owner?: string;
+  ResourceQuota?: KubernetesK8sResourceQuota;
+};
+
+export type KubernetesK8sPvcResizeRequest = {
+  name?: string;
+  namespace?: string;
+  newSize?: string;
+};
+
+export type KubernetesK8sPvReclaimPolicyRequest = {
+  name?: string;
+  reclaimPolicy?: V1PersistentVolumeReclaimPolicy;
+};
+
+export type KubernetesK8sPersistentVolume = {
+  accessModes?: Array<string>;
+  annotations?: {
+    [key: string]: string;
+  };
+  capacity?: V1ResourceList;
+  claimRef?: K8sIoApiCoreV1ObjectReference;
+  creationDate?: string;
+  csi?: V1CsiPersistentVolumeSource;
+  humanReadableAccessModes?: Array<V1PersistentVolumeAccessMode>;
+  labels?: {
+    [key: string]: string;
+  };
+  name?: string;
+  persistentVolumeReclaimPolicy?: V1PersistentVolumeReclaimPolicy;
+  status?: V1PersistentVolumePhase;
+  storageClassName?: string;
+  volumeMode?: V1PersistentVolumeMode;
+};
+
+export type KubernetesK8sPersistentVolumeClaim = {
+  accessModes?: Array<string>;
+  allowVolumeExpansion?: boolean;
+  creationDate?: string;
+  humanReadableAccessModes?: Array<V1PersistentVolumeAccessMode>;
+  id?: string;
+  labels?: {
+    [key: string]: string;
+  };
+  name?: string;
+  namespace?: string;
+  owningApplications?: Array<KubernetesK8sApplication>;
+  phase?: V1PersistentVolumeClaimPhase;
+  resourcesRequests?: V1ResourceList;
+  storage?: number;
+  storageClass?: string;
+  storageRequest?: string;
+  volumeMode?: V1PersistentVolumeMode;
+  volumeName?: string;
+};
+
+export type KubernetesK8sPersistentVolumeClaimCreateRequest = {
+  accessModes?: Array<V1PersistentVolumeAccessMode>;
+  annotations?: {
+    [key: string]: string;
+  };
+  labels?: {
+    [key: string]: string;
+  };
+  name?: string;
+  storage?: string;
+  storageClass?: string;
+  volumeMode?: V1PersistentVolumeMode;
+};
+
+export type KubernetesK8sPodTemplate = {
+  annotations?: {
+    [key: string]: string;
+  };
+  containers?: Array<KubernetesK8sContainer>;
+  labels?: {
+    [key: string]: string;
+  };
+  volumes?: Array<KubernetesK8sPodVolume>;
+};
+
+export type KubernetesK8sPodVolume = {
+  claimName?: string;
+  name?: string;
+};
+
+export type KubernetesK8sResourceQuota = {
+  cpu?: string;
+  enabled?: boolean;
+  memory?: string;
+};
+
+export type KubernetesK8sResourceRequirements = {
+  limits?: {
+    [key: string]: string;
+  };
+  requests?: {
+    [key: string]: string;
+  };
+};
+
+export type KubernetesK8sRole = {
+  creationDate?: string;
+  /**
+   * isSystem is true if prefixed with "system:" or exists in the kube-system namespace
+   * or is one of the portainer roles
+   */
+  isSystem?: boolean;
+  name?: string;
+  namespace?: string;
+  uid?: string;
+};
+
+export type KubernetesK8sRoleBinding = {
+  creationDate?: string;
+  isSystem?: boolean;
+  name?: string;
+  namespace?: string;
+  roleRef?: V1RoleRef;
+  subjects?: Array<K8sIoApiRbacV1Subject>;
+  uid?: string;
+};
+
+export type KubernetesK8sRoleBindingDeleteRequests = {
+  [key: string]: Array<string>;
+};
+
+export type KubernetesK8sRoleDeleteRequests = {
+  [key: string]: Array<string>;
+};
+
+export type KubernetesK8sSecret = {
+  Annotations?: {
+    [key: string]: string;
+  };
+  ConfigurationOwner?: string;
+  ConfigurationOwnerId?: string;
+  ConfigurationOwners?: Array<KubernetesK8sConfigurationOwnerResource>;
+  CreationDate?: string;
+  Data?: {
+    [key: string]: string;
+  };
+  IsUsed?: boolean;
+  Labels?: {
+    [key: string]: string;
+  };
+  Name?: string;
+  Namespace?: string;
+  SecretType?: string;
+  UID?: string;
+};
+
+export type KubernetesK8sSecretKeyRef = {
+  key?: string;
+  name?: string;
+};
+
+export type KubernetesK8sSecretWriteRequest = {
+  Annotations?: {
+    [key: string]: string;
+  };
+  Data?: {
+    [key: string]: string;
+  };
+  Labels?: {
+    [key: string]: string;
+  };
+  Name?: string;
+  SecretType?: string;
+};
+
+export type KubernetesK8sServiceAccount = {
+  annotations?: {
+    [key: string]: string;
+  };
+  automountServiceAccountToken?: boolean;
+  creationDate?: string;
+  imagePullSecrets?: Array<K8sIoApiCoreV1LocalObjectReference>;
+  isSystem?: boolean;
+  labels?: {
+    [key: string]: string;
+  };
+  name?: string;
+  namespace?: string;
+  uid?: string;
+};
+
+export type KubernetesK8sServiceAccountDeleteRequests = {
+  [key: string]: Array<string>;
+};
+
+export type KubernetesK8sServiceAccountImagePullSecretsUpdatePayload = {
+  secretNames?: Array<string>;
+};
+
+export type KubernetesK8sServiceDeleteRequests = {
+  [key: string]: Array<string>;
+};
+
+export type KubernetesK8sServiceInfo = {
+  AllocateLoadBalancerNodePorts?: boolean;
+  Annotations?: {
+    [key: string]: string;
+  };
+  /**
+   * serviceList screen
+   */
+  Applications?: Array<KubernetesK8sApplication>;
+  ClusterIPs?: Array<string>;
+  CreationDate?: string;
+  ExternalIPs?: Array<string>;
+  ExternalName?: string;
+  IngressStatus?: Array<KubernetesK8sServiceIngress>;
+  Labels?: {
+    [key: string]: string;
+  };
+  Name?: string;
+  Namespace?: string;
+  Ports?: Array<KubernetesK8sServicePort>;
+  Selector?: {
+    [key: string]: string;
+  };
+  Type?: string;
+  UID?: string;
+};
+
+export type KubernetesK8sServiceIngress = {
+  Hostname?: string;
+  IP?: string;
+};
+
+export type KubernetesK8sServicePort = {
+  Name?: string;
+  NodePort?: number;
+  Port?: number;
+  Protocol?: string;
+  TargetPort?: string;
+};
+
+export type KubernetesK8sStorageClass = {
+  allowVolumeExpansion?: boolean;
+  annotations?: {
+    [key: string]: string;
+  };
+  creationDate?: string;
+  isDefault?: boolean;
+  labels?: {
+    [key: string]: string;
+  };
+  mountOptions?: Array<string>;
+  name?: string;
+  parameters?: {
+    [key: string]: string;
+  };
+  provisioner?: string;
+  reclaimPolicy?: V1PersistentVolumeReclaimPolicy;
+};
+
+export type KubernetesK8sVolumeDeleteRequest = {
+  name?: string;
+  namespace?: string;
+};
+
+export type KubernetesK8sVolumeInfo = {
+  persistentVolume?: KubernetesK8sPersistentVolume;
+  persistentVolumeClaim?: KubernetesK8sPersistentVolumeClaim;
+  storageClass?: KubernetesK8sStorageClass;
+};
+
+export type KubernetesK8sVolumeMount = {
+  mountPath?: string;
+  name?: string;
+  readOnly?: boolean;
+  subPath?: string;
+};
+
+export type KubernetesKubernetesCreateNamespaceResponse = {
+  /**
+   * APIVersion defines the versioned schema of this representation of an object.
+   * Servers should convert recognized schemas to the latest internal value, and
+   * may reject unrecognized values.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+   * +optional
+   */
+  apiVersion?: string;
+  /**
+   * Kind is a string value representing the REST resource this object represents.
+   * Servers may infer this from the endpoint the client submits requests to.
+   * Cannot be updated.
+   * In CamelCase.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
+   */
+  kind?: string;
+  /**
+   * Standard object's metadata.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+   * +optional
+   */
+  metadata?: V1ObjectMeta;
+  /**
+   * Spec defines the behavior of the Namespace.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+   * +optional
+   */
+  spec?: V1NamespaceSpec;
+  /**
+   * Status describes the current status of a Namespace.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+   * +optional
+   */
+  status?: V1NamespaceStatus;
+};
+
+export type KubernetesKubernetesDeploymentListResponse = {
+  /**
+   * APIVersion defines the versioned schema of this representation of an object.
+   * Servers should convert recognized schemas to the latest internal value, and
+   * may reject unrecognized values.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+   * +optional
+   */
+  apiVersion?: string;
+  /**
+   * Items is the list of Deployments.
+   */
+  items?: Array<V1Deployment>;
+  /**
+   * Kind is a string value representing the REST resource this object represents.
+   * Servers may infer this from the endpoint the client submits requests to.
+   * Cannot be updated.
+   * In CamelCase.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
+   */
+  kind?: string;
+  /**
+   * Standard list metadata.
+   * +optional
+   */
+  metadata?: V1ListMeta;
+};
+
+export type KubernetesKubernetesDeploymentResponse = {
+  /**
+   * APIVersion defines the versioned schema of this representation of an object.
+   * Servers should convert recognized schemas to the latest internal value, and
+   * may reject unrecognized values.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+   * +optional
+   */
+  apiVersion?: string;
+  /**
+   * Kind is a string value representing the REST resource this object represents.
+   * Servers may infer this from the endpoint the client submits requests to.
+   * Cannot be updated.
+   * In CamelCase.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
+   */
+  kind?: string;
+  /**
+   * Standard object's metadata.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+   * +optional
+   */
+  metadata?: V1ObjectMeta;
+  /**
+   * Specification of the desired behavior of the Deployment.
+   * +optional
+   */
+  spec?: V1DeploymentSpec;
+  /**
+   * Most recently observed status of the Deployment.
+   * +optional
+   */
+  status?: V1DeploymentStatus;
+};
+
+export type KubernetesKubernetesNodeResponse = {
+  /**
+   * APIVersion defines the versioned schema of this representation of an object.
+   * Servers should convert recognized schemas to the latest internal value, and
+   * may reject unrecognized values.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+   * +optional
+   */
+  apiVersion?: string;
+  /**
+   * Kind is a string value representing the REST resource this object represents.
+   * Servers may infer this from the endpoint the client submits requests to.
+   * Cannot be updated.
+   * In CamelCase.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
+   */
+  kind?: string;
+  /**
+   * Standard object's metadata.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+   * +optional
+   */
+  metadata?: V1ObjectMeta;
+  /**
+   * Spec defines the behavior of a node.
+   * https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+   * +optional
+   */
+  spec?: V1NodeSpec;
+  /**
+   * Most recently observed status of the node.
+   * Populated by the system.
+   * Read-only.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+   * +optional
+   */
+  status?: V1NodeStatus;
+};
+
+export type KubernetesKubernetesPodListResponse = {
+  /**
+   * APIVersion defines the versioned schema of this representation of an object.
+   * Servers should convert recognized schemas to the latest internal value, and
+   * may reject unrecognized values.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+   * +optional
+   */
+  apiVersion?: string;
+  /**
+   * List of pods.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md
+   */
+  items?: Array<V1Pod>;
+  /**
+   * Kind is a string value representing the REST resource this object represents.
+   * Servers may infer this from the endpoint the client submits requests to.
+   * Cannot be updated.
+   * In CamelCase.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
+   */
+  kind?: string;
+  /**
+   * Standard list metadata.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
+   */
+  metadata?: V1ListMeta;
+};
+
+export type KubernetesKubernetesReplicaSetListResponse = {
+  /**
+   * APIVersion defines the versioned schema of this representation of an object.
+   * Servers should convert recognized schemas to the latest internal value, and
+   * may reject unrecognized values.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+   * +optional
+   */
+  apiVersion?: string;
+  /**
+   * List of ReplicaSets.
+   * More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset
+   */
+  items?: Array<V1ReplicaSet>;
+  /**
+   * Kind is a string value representing the REST resource this object represents.
+   * Servers may infer this from the endpoint the client submits requests to.
+   * Cannot be updated.
+   * In CamelCase.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
+   */
+  kind?: string;
+  /**
+   * Standard list metadata.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
+   */
+  metadata?: V1ListMeta;
+};
+
+export type KubernetesKubernetesResourceQuotaListResponse = {
+  /**
+   * APIVersion defines the versioned schema of this representation of an object.
+   * Servers should convert recognized schemas to the latest internal value, and
+   * may reject unrecognized values.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+   * +optional
+   */
+  apiVersion?: string;
+  /**
+   * Items is a list of ResourceQuota objects.
+   * More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
+   */
+  items?: Array<V1ResourceQuota>;
+  /**
+   * Kind is a string value representing the REST resource this object represents.
+   * Servers may infer this from the endpoint the client submits requests to.
+   * Cannot be updated.
+   * In CamelCase.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
+   */
+  kind?: string;
+  /**
+   * Standard list metadata.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
+   */
+  metadata?: V1ListMeta;
+};
+
+export type KubernetesMetadata = {
+  annotations?: {
+    [key: string]: string;
+  };
+  labels?: {
+    [key: string]: string;
+  };
+};
+
+export type KubernetesPod = {
+  ContainerName?: string;
+  CreationDate?: string;
+  Image?: string;
+  ImagePullPolicy?: string;
+  Name?: string;
+  NodeName?: string;
+  PodIP?: string;
+  Resource?: KubernetesK8sApplicationResource;
+  Status?: string;
+  Uid?: string;
+};
+
+export type KubernetesPublishedPort = {
+  IngressRules?: Array<KubernetesIngressRule>;
+  Port?: number;
+};
+
+export type KubernetesTlsInfo = {
+  hosts?: Array<string>;
+};
+
+export type KubernetesDescribeResourceResponse = {
+  describe?: string;
+};
+
+export type KubernetesDrainNodePayload = {
+  /**
+   * DeleteEmptyDirData allows eviction of pods using emptyDir volumes, whose data is lost once the pod is deleted.
+   */
+  DeleteEmptyDirData?: boolean;
+  /**
+   * DisableEviction forces the use of direct pod deletion instead of the eviction API, ignoring any configured PodDisruptionBudgets.
+   */
+  DisableEviction?: boolean;
+  /**
+   * Force allows deletion of standalone pods not managed by a controller.
+   */
+  Force?: boolean;
+  /**
+   * GracePeriodSeconds overrides each pod's termination grace period. -1 uses the pod's own grace period.
+   */
+  GracePeriodSeconds?: number;
+  /**
+   * IgnoreDaemonSets skips DaemonSet-managed pods, which would otherwise block the drain.
+   */
+  IgnoreDaemonSets?: boolean;
+  /**
+   * TimeoutSeconds is the overall time to wait for the drain to complete. Defaults to 60 when omitted.
+   */
+  TimeoutSeconds?: number;
+};
+
+export type KubernetesKubernetesVersionResponse = {
+  buildDate?: string;
+  compiler?: string;
+  /**
+   * EmulationMajor is the major version of the emulation version
+   */
+  emulationMajor?: string;
+  /**
+   * EmulationMinor is the minor version of the emulation version
+   */
+  emulationMinor?: string;
+  gitCommit?: string;
+  gitTreeState?: string;
+  gitVersion?: string;
+  goVersion?: string;
+  /**
+   * Major is the major version of the binary version
+   */
+  major?: string;
+  /**
+   * MinCompatibilityMajor is the major version of the minimum compatibility version
+   */
+  minCompatibilityMajor?: string;
+  /**
+   * MinCompatibilityMinor is the minor version of the minimum compatibility version
+   */
+  minCompatibilityMinor?: string;
+  /**
+   * Minor is the minor version of the binary version
+   */
+  minor?: string;
+  platform?: string;
+  /**
+   * SupportsPodRestart is true when the cluster exposes the `pods/restart`
+   * subresource via API discovery — i.e. the feature gate is enabled and
+   * the cluster version is recent enough. This is the authoritative
+   * signal for whether Portainer can call the pod-restart endpoint, and
+   * is preferred over a raw Kubernetes-version comparison.
+   */
+  supportsPodRestart?: boolean;
+};
+
+export type KubernetesManifestDryRunPayload = {
+  /**
+   * The manifests to validate. Each entry may hold several YAML documents separated by "---".
+   */
+  manifests?: Array<string>;
+  /**
+   * The namespace applied to namespaced resources that do not declare one. A resource declaring a different namespace is rejected.
+   */
+  namespace?: string;
+};
+
+export type KubernetesManifestDryRunResponse = {
+  results?: Array<KubernetesManifestDryRunResult>;
+};
+
+export type KubernetesManifestDryRunResult = {
+  /**
+   * The zero-based position of the document among the non-empty documents of all manifests. It identifies a document rejected before its resource could be named, such as malformed YAML.
+   */
+  documentIndex?: number;
+  kind?: string;
+  /**
+   * The reason the resource was rejected. Empty when the resource passed.
+   */
+  message?: string;
+  name?: string;
+  namespace?: string;
+  /**
+   * Either "pass" or "fail".
+   */
+  status?: string;
+};
+
+export type KubernetesNamespacesToggleSystemPayload = {
+  /**
+   * Toggle the system state of this namespace to true or false
+   */
+  System?: boolean;
+};
+
+export type LdapCheckPayload = {
+  LDAPSettings?: PortainerLdapSettings;
+};
+
+export type MotdMotd = {
+  ContentLayout?: {
+    [key: string]: string;
+  };
+  Hash?: Array<number>;
+  Message?: string;
+  Style?: string;
+  Title?: string;
+};
+
+export const Oauth2AuthStyle = {
+  /**
+   * AuthStyleAutoDetect
+   */
+  AUTH_STYLE_AUTO_DETECT: 0,
+  /**
+   * AuthStyleInParams
+   */
+  AUTH_STYLE_IN_PARAMS: 1,
+  /**
+   * AuthStyleInHeader
+   */
+  AUTH_STYLE_IN_HEADER: 2,
+} as const;
+
+export type Oauth2AuthStyle =
+  (typeof Oauth2AuthStyle)[keyof typeof Oauth2AuthStyle];
+
+export const PlatformContainerPlatform = {
+  /**
+   * PlatformDocker
+   */
+  PLATFORM_DOCKER: 'Docker',
+  /**
+   * PlatformDockerStandalone
+   */
+  PLATFORM_DOCKER_STANDALONE: 'Docker Standalone',
+  /**
+   * PlatformDockerSwarm
+   */
+  PLATFORM_DOCKER_SWARM: 'Docker Swarm',
+  /**
+   * PlatformKubernetes
+   */
+  PLATFORM_KUBERNETES: 'Kubernetes',
+  /**
+   * PlatformPodman
+   */
+  PLATFORM_PODMAN: 'Podman',
+} as const;
+
+export type PlatformContainerPlatform =
+  (typeof PlatformContainerPlatform)[keyof typeof PlatformContainerPlatform];
+
+export type PortainerApiKey = {
+  /**
+   * Unix timestamp (UTC) when the API key was created
+   */
+  dateCreated?: number;
+  description?: string;
+  /**
+   * Digest represents SHA256 hash of the raw API key
+   */
+  digest?: string;
+  id?: number;
+  /**
+   * Unix timestamp (UTC) when the API key was last used
+   */
+  lastUsed?: number;
+  /**
+   * API key identifier (7 char prefix)
+   */
+  prefix?: string;
+  userId?: number;
+};
+
+export type PortainerAccessPolicy = {
+  /**
+   * Namespaces is a list of namespaces that this access policy applies to. Only used for namespaced level roles
+   */
+  Namespaces?: Array<string>;
+  /**
+   * Role identifier. Reference the role that will be associated to this access policy
+   */
+  RoleId: number;
+};
+
+export type PortainerArtifact = {
+  edgeGroups?: Array<number>;
+  edgeStackId?: number;
+  envGroups?: Array<number>;
+  envIds?: Array<number>;
+  files?: Array<PortainerArtifactFile>;
+  stackId?: number;
+};
+
+export type PortainerArtifactFile = {
+  hash?: string;
+  path?: string;
+  pathError?: string;
+  pathStatus?: PortainerSourceStatus;
+  ref?: string;
+  refError?: string;
+  refStatus?: PortainerSourceStatus;
+  sourceId?: number;
+};
+
+export const PortainerAuthenticationMethod = {
+  /**
+   * _
+   */
+  '': 0,
+  /**
+   * AuthenticationInternal
+   */
+  AUTHENTICATION_INTERNAL: 1,
+  /**
+   * AuthenticationLDAP
+   */
+  AUTHENTICATION_LDAP: 2,
+  /**
+   * AuthenticationOAuth
+   */
+  AUTHENTICATION_O_AUTH: 3,
+} as const;
+
+export type PortainerAuthenticationMethod =
+  (typeof PortainerAuthenticationMethod)[keyof typeof PortainerAuthenticationMethod];
+
+export type PortainerAuthorizations = {
+  [key: string]: boolean;
+};
+
 export type PortainerAutoUpdateSettings = {
   /**
    * Pull latest image
@@ -140,6 +2162,8 @@ export type PortainerAutoUpdateSettings = {
   ForceUpdate?: boolean;
   /**
    * Auto update interval
+   * Deprecated: polling interval now lives on the associated Source (Source.Interval).
+   * Kept for DB backwards-compatibility only; new code must not read or write this field.
    */
   Interval?: string;
   /**
@@ -152,26 +2176,1870 @@ export type PortainerAutoUpdateSettings = {
   Webhook?: string;
 };
 
-export type WorkflowsStatusSummary = {
-  error?: number;
-  healthy?: number;
-  paused?: number;
-  syncing?: number;
-  unknown?: number;
+export type PortainerAzureCredentials = {
+  /**
+   * Azure application ID
+   */
+  ApplicationID: string;
+  /**
+   * Azure authentication key
+   */
+  AuthenticationKey: string;
+  /**
+   * Azure tenant ID
+   */
+  TenantID: string;
 };
 
-export type WebhooksWebhookUpdatePayload = {
-  RegistryID?: number;
+export type PortainerCustomTemplate = {
+  /**
+   * User identifier who created this template
+   */
+  CreatedByUserId?: number;
+  /**
+   * Description of the template
+   */
+  Description?: string;
+  /**
+   * EdgeTemplate indicates if this template purpose for Edge Stack
+   */
+  EdgeTemplate?: boolean;
+  /**
+   * Path to the Stack file
+   */
+  EntryPoint?: string;
+  GitConfig?: GittypesRepoConfig;
+  /**
+   * CustomTemplate Identifier
+   */
+  Id?: number;
+  /**
+   * IsComposeFormat indicates if the Kubernetes template is created from a Docker Compose file
+   */
+  IsComposeFormat?: boolean;
+  /**
+   * URL of the template's logo
+   */
+  Logo?: string;
+  /**
+   * A note that will be displayed in the UI. Supports HTML content
+   */
+  Note?: string;
+  /**
+   * Platform associated to the template.
+   * Valid values are: 1 - 'linux', 2 - 'windows'
+   */
+  Platform?: 1 | 2;
+  /**
+   * Path on disk to the repository hosting the Stack file
+   */
+  ProjectPath?: string;
+  ResourceControl?: PortainerResourceControl;
+  /**
+   * Title of the template
+   */
+  Title?: string;
+  /**
+   * Type of created stack:
+   * * 1 - swarm
+   * * 2 - compose
+   * * 3 - kubernetes
+   */
+  Type?: 1 | 2 | 3;
+  Variables?: Array<PortainerCustomTemplateVariableDefinition>;
+  artifact?: PortainerArtifact;
 };
 
-export type WebhooksWebhookCreatePayload = {
+export const PortainerCustomTemplatePlatform = {
+  /**
+   * _
+   */
+  '': 0,
+  /**
+   * CustomTemplatePlatformLinux
+   */
+  CUSTOM_TEMPLATE_PLATFORM_LINUX: 1,
+  /**
+   * CustomTemplatePlatformWindows
+   */
+  CUSTOM_TEMPLATE_PLATFORM_WINDOWS: 2,
+} as const;
+
+export type PortainerCustomTemplatePlatform =
+  (typeof PortainerCustomTemplatePlatform)[keyof typeof PortainerCustomTemplatePlatform];
+
+export type PortainerCustomTemplateVariableDefinition = {
+  defaultValue?: string;
+  description?: string;
+  label?: string;
+  name?: string;
+};
+
+export type PortainerDiagnosticsData = {
+  DNS?: {
+    [key: string]: string;
+  };
+  Log?: string;
+  Proxy?: {
+    [key: string]: string;
+  };
+  Telnet?: {
+    [key: string]: string;
+  };
+};
+
+export type PortainerDockerSnapshot = {
+  ContainerCount: number;
+  DiagnosticsData?: PortainerDiagnosticsData;
+  DockerSnapshotRaw?: PortainerDockerSnapshotRaw;
+  DockerVersion: string;
+  GpuUseAll: boolean;
+  GpuUseList?: Array<string>;
+  HealthyContainerCount: number;
+  ImageCount: number;
+  IsPodman: boolean;
+  NodeCount: number;
+  PerformanceMetrics?: PortainerPerformanceMetrics;
+  RunningContainerCount: number;
+  ServiceCount: number;
+  StackCount: number;
+  StoppedContainerCount: number;
+  Swarm: boolean;
+  Time: number;
+  TotalCPU: number;
+  TotalMemory: number;
+  UnhealthyContainerCount: number;
+  VolumeCount: number;
+};
+
+export type PortainerDockerSnapshotRaw = {
+  [key: string]: unknown;
+};
+
+export type PortainerEcrData = {
+  Region?: string;
+};
+
+export type PortainerEdge = {
+  /**
+   * Deprecated 2.18
+   */
+  AsyncMode?: boolean;
+  /**
+   * The command list interval for edge agent - used in edge async mode (in seconds)
+   */
+  CommandInterval?: number;
+  /**
+   * The ping interval for edge agent - used in edge async mode (in seconds)
+   */
+  PingInterval?: number;
+  /**
+   * The snapshot interval for edge agent - used in edge async mode (in seconds)
+   */
+  SnapshotInterval?: number;
+};
+
+export type PortainerEdgeGroup = {
+  Dynamic?: boolean;
+  EndpointIds?: RoarRoarPortainerEndpointId;
+  /**
+   * Deprecated: only used for API responses
+   */
+  Endpoints?: Array<number>;
+  /**
+   * EdgeGroup Identifier
+   */
+  Id?: number;
+  Name?: string;
+  PartialMatch?: boolean;
+  TagIds?: Array<number>;
+};
+
+export type PortainerEdgeJob = {
+  Created?: number;
+  CronExpression?: string;
+  EdgeGroups?: Array<number>;
+  Endpoints?: {
+    [key: string]: PortainerEdgeJobEndpointMeta;
+  };
+  /**
+   * Field used for log collection of Endpoints belonging to EdgeGroups
+   */
+  GroupLogsCollection?: {
+    [key: string]: PortainerEdgeJobEndpointMeta;
+  };
+  /**
+   * EdgeJob Identifier
+   */
+  Id?: number;
+  Name?: string;
+  Recurring?: boolean;
+  ScriptPath?: string;
+  Version?: number;
+};
+
+export type PortainerEdgeJobEndpointMeta = {
+  CollectLogs?: boolean;
+  LogsStatus?: PortainerEdgeJobLogsStatus;
+};
+
+export const PortainerEdgeJobLogsStatus = {
+  /**
+   * _
+   */
+  '': 0,
+  /**
+   * EdgeJobLogsStatusIdle
+   */
+  EDGE_JOB_LOGS_STATUS_IDLE: 1,
+  /**
+   * EdgeJobLogsStatusPending
+   */
+  EDGE_JOB_LOGS_STATUS_PENDING: 2,
+  /**
+   * EdgeJobLogsStatusCollected
+   */
+  EDGE_JOB_LOGS_STATUS_COLLECTED: 3,
+} as const;
+
+export type PortainerEdgeJobLogsStatus =
+  (typeof PortainerEdgeJobLogsStatus)[keyof typeof PortainerEdgeJobLogsStatus];
+
+export type PortainerEdgeStack = {
+  /**
+   * The username which created this stack
+   */
+  CreatedBy?: string;
+  /**
+   * The username id which created this stack
+   */
+  CreatedByUserId?: string;
+  /**
+   * StatusArray    map[EndpointID][]EdgeStackStatus `json:"StatusArray"`
+   */
+  CreationDate?: number;
+  DeploymentType?: PortainerEdgeStackDeploymentType;
+  EdgeGroups?: Array<number>;
+  EntryPoint?: string;
+  /**
+   * EdgeStack Identifier
+   */
+  Id?: number;
+  ManifestPath?: string;
+  Name?: string;
+  NumDeployments?: number;
+  ProjectPath?: string;
+  Status?: {
+    [key: string]: PortainerEdgeStackStatus;
+  };
+  /**
+   * Uses the manifest's namespaces instead of the default one
+   */
+  UseManifestNamespaces?: boolean;
+  Version?: number;
+};
+
+export type PortainerEdgeStackDeploymentStatus = {
+  Error?: string;
+  /**
+   * EE only feature
+   */
+  RollbackTo?: number;
+  Time?: number;
+  Type?: PortainerEdgeStackStatusType;
+  Version?: number;
+};
+
+export const PortainerEdgeStackDeploymentType = {
+  /**
+   * EdgeStackDeploymentCompose
+   */
+  EDGE_STACK_DEPLOYMENT_COMPOSE: 0 /**
+   * EdgeStackDeploymentKubernetes
+   */,
+  EDGE_STACK_DEPLOYMENT_KUBERNETES: 1,
+} as const;
+
+export type PortainerEdgeStackDeploymentType =
+  (typeof PortainerEdgeStackDeploymentType)[keyof typeof PortainerEdgeStackDeploymentType];
+
+export type PortainerEdgeStackStatus = {
+  /**
+   * EE only feature
+   */
+  DeploymentInfo?: PortainerStackDeploymentInfo;
+  /**
+   * Deprecated
+   */
+  Details?: PortainerEdgeStackStatusDetails;
   EndpointID?: number;
-  RegistryID?: number;
-  ResourceID?: string;
+  /**
+   * Deprecated
+   */
+  Error?: string;
+  /**
+   * ReadyRePullImage is a flag to indicate whether the auto update is trigger to re-pull image
+   */
+  ReadyRePullImage?: boolean;
+  Status?: Array<PortainerEdgeStackDeploymentStatus>;
+  /**
+   * Deprecated
+   */
+  Type?: PortainerEdgeStackStatusType;
+};
+
+export type PortainerEdgeStackStatusDetails = {
+  Acknowledged?: boolean;
+  Error?: boolean;
+  ImagesPulled?: boolean;
+  Ok?: boolean;
+  Pending?: boolean;
+  RemoteUpdateSuccess?: boolean;
+  Remove?: boolean;
+};
+
+export const PortainerEdgeStackStatusType = {
+  /**
+   * EdgeStackStatusPending
+   */
+  EDGE_STACK_STATUS_PENDING: 0,
+  /**
+   * EdgeStackStatusDeploymentReceived
+   */
+  EDGE_STACK_STATUS_DEPLOYMENT_RECEIVED: 1,
+  /**
+   * EdgeStackStatusError
+   */
+  EDGE_STACK_STATUS_ERROR: 2,
+  /**
+   * EdgeStackStatusAcknowledged
+   */
+  EDGE_STACK_STATUS_ACKNOWLEDGED: 3,
+  /**
+   * EdgeStackStatusRemoved
+   */
+  EDGE_STACK_STATUS_REMOVED: 4,
+  /**
+   * EdgeStackStatusRemoteUpdateSuccess
+   */
+  EDGE_STACK_STATUS_REMOTE_UPDATE_SUCCESS: 5,
+  /**
+   * EdgeStackStatusImagesPulled
+   */
+  EDGE_STACK_STATUS_IMAGES_PULLED: 6,
+  /**
+   * EdgeStackStatusRunning
+   */
+  EDGE_STACK_STATUS_RUNNING: 7,
+  /**
+   * EdgeStackStatusDeploying
+   */
+  EDGE_STACK_STATUS_DEPLOYING: 8,
+  /**
+   * EdgeStackStatusRemoving
+   */
+  EDGE_STACK_STATUS_REMOVING: 9,
+  /**
+   * EdgeStackStatusPausedDeploying
+   */
+  EDGE_STACK_STATUS_PAUSED_DEPLOYING: 10,
+  /**
+   * EdgeStackStatusRollingBack
+   */
+  EDGE_STACK_STATUS_ROLLING_BACK: 11,
+  /**
+   * EdgeStackStatusRolledBack
+   */
+  EDGE_STACK_STATUS_ROLLED_BACK: 12,
+  /**
+   * EdgeStackStatusCompleted
+   */
+  EDGE_STACK_STATUS_COMPLETED: 13,
+} as const;
+
+export type PortainerEdgeStackStatusType =
+  (typeof PortainerEdgeStackStatusType)[keyof typeof PortainerEdgeStackStatusType];
+
+export type PortainerEndpoint = {
+  Agent: PortainerEnvironmentAgentData;
+  AzureCredentials?: PortainerAzureCredentials;
+  /**
+   * Maximum version of docker-compose
+   */
+  ComposeSyntaxMaxVersion: string;
+  /**
+   * ContainerEngine represents the container engine type. This can be 'docker' or 'podman' when interacting directly with these environments, otherwise '' for kubernetes environments.
+   */
+  ContainerEngine: string;
+  Edge: PortainerEnvironmentEdgeSettings;
+  /**
+   * The check in interval for edge agent (in seconds)
+   */
+  EdgeCheckinInterval: number;
+  /**
+   * The identifier of the edge agent associated with this environment(endpoint)
+   */
+  EdgeID?: string;
+  /**
+   * The key which is used to map the agent to Portainer
+   */
+  EdgeKey: string;
+  EnableGPUManagement?: boolean;
+  Gpus?: Array<PortainerPair>;
+  /**
+   * Environment(Endpoint) group identifier
+   */
+  GroupId: number;
+  /**
+   * Heartbeat indicates the heartbeat status of an edge environment
+   */
+  Heartbeat?: boolean;
+  /**
+   * Environment(Endpoint) Identifier
+   */
+  Id: number;
+  /**
+   * Associated Kubernetes data
+   */
+  Kubernetes: PortainerKubernetesData;
+  /**
+   * LastCheckInDate mark last check-in date on checkin
+   */
+  LastCheckInDate: number;
+  /**
+   * Environment(Endpoint) name
+   */
+  Name: string;
+  /**
+   * URL or IP address where exposed containers will be reachable
+   */
+  PublicURL: string;
+  /**
+   * Environment(Endpoint) specific security settings
+   */
+  SecuritySettings: PortainerEndpointSecuritySettings;
+  /**
+   * List of snapshots
+   */
+  Snapshots?: Array<PortainerDockerSnapshot>;
+  /**
+   * The status of the environment(endpoint) (1 - up, 2 - down, 3 - provisioning, 4 - error)
+   */
+  Status?: 1 | 2 | 3 | 4;
+  TLSConfig: PortainerTlsConfiguration;
+  /**
+   * List of tag identifiers to which this environment(endpoint) is associated
+   */
+  TagIds?: Array<number>;
+  /**
+   * List of team identifiers authorized to connect to this environment(endpoint)
+   */
+  TeamAccessPolicies?: PortainerTeamAccessPolicies;
+  /**
+   * Environment(Endpoint) environment(endpoint) type. 1 for a Docker environment(endpoint), 2 for an agent on Docker environment(endpoint) or 3 for an Azure environment(endpoint).
+   */
+  Type: PortainerEndpointType;
+  /**
+   * URL or IP address of the Docker host associated to this environment(endpoint)
+   */
+  URL: string;
+  /**
+   * List of user identifiers authorized to connect to this environment(endpoint)
+   */
+  UserAccessPolicies?: PortainerUserAccessPolicies;
+  /**
+   * Whether the device has been trusted or not by the user
+   */
+  UserTrusted?: boolean;
+};
+
+export type PortainerEndpointGroup = {
+  /**
+   * Description associated to the environment(endpoint) group
+   */
+  Description: string;
+  /**
+   * Environment(Endpoint) group Identifier
+   */
+  Id: number;
+  /**
+   * Environment(Endpoint) group name
+   */
+  Name: string;
+  /**
+   * List of tags associated to this environment(endpoint) group
+   */
+  TagIds?: Array<number>;
+  TeamAccessPolicies?: PortainerTeamAccessPolicies;
+  UserAccessPolicies?: PortainerUserAccessPolicies;
+};
+
+export type PortainerEndpointSecuritySettings = {
+  /**
+   * Whether non-administrator should be able to use bind mounts when creating containers
+   */
+  allowBindMountsForRegularUsers: boolean;
+  /**
+   * Whether non-administrator should be able to use container capabilities
+   */
+  allowContainerCapabilitiesForRegularUsers: boolean;
+  /**
+   * Whether non-administrator should be able to use device mapping
+   */
+  allowDeviceMappingForRegularUsers: boolean;
+  /**
+   * Whether non-administrator should be able to use the host pid
+   */
+  allowHostNamespaceForRegularUsers: boolean;
+  /**
+   * Whether non-administrator should be able to use privileged mode when creating containers
+   */
+  allowPrivilegedModeForRegularUsers: boolean;
+  /**
+   * Whether non-administrator should be able to use security-opt settings
+   */
+  allowSecurityOptForRegularUsers: boolean;
+  /**
+   * Whether non-administrator should be able to manage stacks
+   */
+  allowStackManagementForRegularUsers: boolean;
+  /**
+   * Whether non-administrator should be able to use sysctl settings
+   */
+  allowSysctlSettingForRegularUsers: boolean;
+  /**
+   * Whether non-administrator should be able to browse volumes
+   */
+  allowVolumeBrowserForRegularUsers: boolean;
+  /**
+   * Whether host management features are enabled
+   */
+  enableHostManagementFeatures: boolean;
+};
+
+export const PortainerEndpointStatus = {
+  /**
+   * _
+   */
+  '': 0,
+  /**
+   * EndpointStatusUp
+   */
+  ENDPOINT_STATUS_UP: 1,
+  /**
+   * EndpointStatusDown
+   */
+  ENDPOINT_STATUS_DOWN: 2,
+} as const;
+
+export type PortainerEndpointStatus =
+  (typeof PortainerEndpointStatus)[keyof typeof PortainerEndpointStatus];
+
+export const PortainerEndpointType = {
+  /**
+   * _
+   */
+  '': 0,
+  /**
+   * DockerEnvironment
+   */
+  DOCKER_ENVIRONMENT: 1,
+  /**
+   * AgentOnDockerEnvironment
+   */
+  AGENT_ON_DOCKER_ENVIRONMENT: 2,
+  /**
+   * AzureEnvironment
+   */
+  AZURE_ENVIRONMENT: 3,
+  /**
+   * EdgeAgentOnDockerEnvironment
+   */
+  EDGE_AGENT_ON_DOCKER_ENVIRONMENT: 4,
+  /**
+   * KubernetesLocalEnvironment
+   */
+  KUBERNETES_LOCAL_ENVIRONMENT: 5,
+  /**
+   * AgentOnKubernetesEnvironment
+   */
+  AGENT_ON_KUBERNETES_ENVIRONMENT: 6,
+  /**
+   * EdgeAgentOnKubernetesEnvironment
+   */
+  EDGE_AGENT_ON_KUBERNETES_ENVIRONMENT: 7,
+} as const;
+
+export type PortainerEndpointType =
+  (typeof PortainerEndpointType)[keyof typeof PortainerEndpointType];
+
+export type PortainerEnvironmentAgentData = {
+  Version?: string;
+};
+
+export type PortainerEnvironmentEdgeSettings = {
+  /**
+   * Whether the device has been started in edge async mode
+   */
+  AsyncMode: boolean;
+  /**
+   * The command list interval for edge agent - used in edge async mode [seconds]
+   */
+  CommandInterval: number;
+  /**
+   * The ping interval for edge agent - used in edge async mode [seconds]
+   */
+  PingInterval: number;
+  /**
+   * The snapshot interval for edge agent - used in edge async mode [seconds]
+   */
+  SnapshotInterval: number;
+};
+
+export type PortainerGithubRegistryData = {
+  OrganisationName?: string;
+  UseOrganisation?: boolean;
+};
+
+export type PortainerGitlabRegistryData = {
+  InstanceURL?: string;
+  ProjectId?: number;
+  ProjectPath?: string;
+};
+
+export type PortainerGlobalDeploymentOptions = {
+  hideStacksFunctionality?: boolean;
+};
+
+export type PortainerHelmConfig = {
+  /**
+   * Atomic enables automatic rollback on deployment failure (equivalent to helm --atomic).
+   * Used by both git repo and Helm repository deployments.
+   */
+  Atomic?: boolean;
+  /**
+   * ChartName is the name of the Helm chart within the repository.
+   * Required for Helm repository deployments.
+   */
+  ChartName?: string;
+  /**
+   * ChartPath is the path to a Helm chart folder within the cloned git repository.
+   * Used exclusively for git repo helm deployments. Mutually exclusive with ChartURL.
+   */
+  ChartPath?: string;
+  /**
+   * ChartURL is the URL of a Helm chart repository.
+   * Used exclusively for Helm repository deployments. Mutually exclusive with ChartPath.
+   */
+  ChartURL?: string;
+  /**
+   * ChartVersion is the version of the Helm chart to deploy. Empty means latest.
+   * Used exclusively for Helm repository deployments.
+   */
+  ChartVersion?: string;
+  /**
+   * Namespace is the Kubernetes namespace to deploy the Helm chart into.
+   * Used by both git repo and Helm repository deployments.
+   */
+  Namespace?: string;
+  /**
+   * Timeout sets the deadline for Helm operations (equivalent to helm --timeout, e.g. "5m0s").
+   * Used by both git repo and Helm repository deployments.
+   */
+  Timeout?: string;
+  /**
+   * ValuesFiles is a list of relative paths to Helm values YAML files within the cloned git repository.
+   * Used exclusively for git repo helm deployments.
+   */
+  ValuesFiles?: Array<string>;
+  /**
+   * ValuesInline is the inline YAML string of Helm values.
+   * Used exclusively for Helm repository deployments.
+   */
+  ValuesInline?: string;
+};
+
+export type PortainerHelmUserRepository = {
+  /**
+   * Membership Identifier
+   */
+  Id?: number;
+  /**
+   * Helm repository URL
+   */
+  URL?: string;
+  /**
+   * User identifier
+   */
+  UserId?: number;
+};
+
+export type PortainerInternalAuthSettings = {
+  RequiredPasswordLength?: number;
+};
+
+export type PortainerK8sNamespaceInfo = {
+  Annotations?: {
+    [key: string]: string;
+  };
+  CreationDate?: string;
+  Id?: string;
+  IsDefault?: boolean;
+  IsSystem?: boolean;
+  Name?: string;
+  NamespaceOwner?: string;
+  ResourceQuota?: V1ResourceQuota;
+  Status?: V1NamespaceStatus;
+  UnhealthyEventCount?: number;
+};
+
+export type PortainerK8sNodeLimits = {
+  CPU?: number;
+  Memory?: number;
+};
+
+export type PortainerK8sNodesLimits = {
+  [key: string]: PortainerK8sNodeLimits;
+};
+
+export type PortainerKubernetesConfiguration = {
+  AllowNoneIngressClass: boolean;
+  EnableResourceOverCommit?: boolean;
+  IngressAvailabilityPerNamespace: boolean;
+  IngressClasses?: Array<PortainerKubernetesIngressClassConfig>;
+  ResourceOverCommitPercentage?: number;
+  RestrictDefaultNamespace?: boolean;
+  StorageClasses?: Array<PortainerKubernetesStorageClassConfig>;
+  UseLoadBalancer?: boolean;
+  UseServerMetrics?: boolean;
+};
+
+export type PortainerKubernetesData = {
+  Configuration: PortainerKubernetesConfiguration;
+  Flags: PortainerKubernetesFlags;
+  Snapshots?: Array<PortainerKubernetesSnapshot>;
+};
+
+export type PortainerKubernetesFlags = {
+  GPUOperator?: boolean;
+  IsServerIngressClassDetected: boolean;
+  IsServerMetricsDetected: boolean;
+  IsServerStorageDetected: boolean;
+};
+
+export type PortainerKubernetesIngressClassConfig = {
+  Blocked?: boolean;
+  BlockedNamespaces?: Array<string>;
+  Name: string;
+  Type: string;
+};
+
+export type PortainerKubernetesSnapshot = {
+  ClusterType?: string;
+  DiagnosticsData?: PortainerDiagnosticsData;
+  GPUNodeCount?: number;
+  KubernetesVersion: string;
+  NodeCount: number;
+  PerformanceMetrics?: PortainerPerformanceMetrics;
+  Time: number;
+  TotalCPU: number;
+  TotalGPU?: {
+    [key: string]: number;
+  };
+  TotalMemory: number;
+};
+
+export type PortainerKubernetesStorageClassConfig = {
+  AccessModes?: Array<string>;
+  AllowVolumeExpansion: boolean;
+  Name: string;
+  Provisioner: string;
+};
+
+export type PortainerLdapGroupSearchSettings = {
+  /**
+   * LDAP attribute which denotes the group membership
+   */
+  GroupAttribute?: string;
+  /**
+   * The distinguished name of the element from which the LDAP server will search for groups
+   */
+  GroupBaseDN?: string;
+  /**
+   * The LDAP search filter used to select group elements, optional
+   */
+  GroupFilter?: string;
+};
+
+export type PortainerLdapSearchSettings = {
+  /**
+   * The distinguished name of the element from which the LDAP server will search for users
+   */
+  BaseDN?: string;
+  /**
+   * Optional LDAP search filter used to select user elements
+   */
+  Filter?: string;
+  /**
+   * LDAP attribute which denotes the username
+   */
+  UserNameAttribute?: string;
+};
+
+export type PortainerLdapSettings = {
+  /**
+   * Enable this option if the server is configured for Anonymous access. When enabled, ReaderDN and Password will not be used
+   */
+  AnonymousMode?: boolean;
+  /**
+   * Automatically provision users and assign them to matching LDAP group names
+   */
+  AutoCreateUsers?: boolean;
+  GroupSearchSettings?: Array<PortainerLdapGroupSearchSettings>;
+  /**
+   * Password of the account that will be used to search users
+   */
+  Password?: string;
+  /**
+   * Account that will be used to search for users
+   */
+  ReaderDN?: string;
+  SearchSettings?: Array<PortainerLdapSearchSettings>;
+  /**
+   * Whether LDAP connection should use StartTLS
+   */
+  StartTLS?: boolean;
+  TLSConfig?: PortainerTlsConfiguration;
+  /**
+   * URL or IP address of the LDAP server
+   */
+  URL?: string;
+};
+
+export const PortainerMembershipRole = {
+  /**
+   * _
+   */
+  '': 0,
+  /**
+   * TeamLeader
+   */
+  TEAM_LEADER: 1,
+  /**
+   * TeamMember
+   */
+  TEAM_MEMBER: 2,
+} as const;
+
+export type PortainerMembershipRole =
+  (typeof PortainerMembershipRole)[keyof typeof PortainerMembershipRole];
+
+export type PortainerOAuthSettings = {
+  AccessTokenURI?: string;
+  AuthStyle?: Oauth2AuthStyle;
+  AuthorizationURI?: string;
+  ClientID?: string;
+  ClientSecret?: string;
+  DefaultTeamID?: number;
+  KubeSecretKey?: Array<number>;
+  LogoutURI?: string;
+  OAuthAutoCreateUsers?: boolean;
+  RedirectURI?: string;
+  ResourceURI?: string;
+  SSO?: boolean;
+  Scopes?: string;
+  UserIdentifier?: string;
+};
+
+export type PortainerPair = {
+  name: string;
+  value: string;
+};
+
+export type PortainerPerformanceMetrics = {
+  CPUUsage?: number;
+  DiskUsage?: number;
+  MemoryUsage?: number;
+  NetworkUsage?: number;
+};
+
+export type PortainerQuayRegistryData = {
+  OrganisationName?: string;
+  UseOrganisation?: boolean;
+};
+
+export type PortainerRegistry = {
+  /**
+   * Stores temporary access token
+   */
+  AccessToken?: string;
+  AccessTokenExpiry?: number;
+  /**
+   * Is authentication against this registry enabled
+   */
+  Authentication?: boolean;
+  /**
+   * Deprecated in DBVersion == 18
+   */
+  AuthorizedTeams?: Array<number>;
+  /**
+   * Deprecated in DBVersion == 18
+   */
+  AuthorizedUsers?: Array<number>;
+  /**
+   * Base URL, introduced for ProGet registry
+   */
+  BaseURL?: string;
+  Ecr?: PortainerEcrData;
+  Github?: PortainerGithubRegistryData;
+  Gitlab?: PortainerGitlabRegistryData;
+  /**
+   * Registry Identifier
+   */
+  Id?: number;
+  ManagementConfiguration?: PortainerRegistryManagementConfiguration;
+  /**
+   * Registry Name
+   */
+  Name?: string;
+  /**
+   * Password or SecretAccessKey used to authenticate against this registry
+   */
+  Password?: string;
+  Quay?: PortainerQuayRegistryData;
+  RegistryAccesses?: PortainerRegistryAccesses;
+  /**
+   * Deprecated in DBVersion == 31
+   */
+  TeamAccessPolicies?: PortainerTeamAccessPolicies;
+  /**
+   * Registry Type (1 - Quay, 2 - Azure, 3 - Custom, 4 - Gitlab, 5 - ProGet, 6 - DockerHub, 7 - ECR)
+   */
+  Type?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  /**
+   * URL or IP address of the Docker registry
+   */
+  URL?: string;
+  /**
+   * Deprecated fields
+   * Deprecated in DBVersion == 31
+   */
+  UserAccessPolicies?: PortainerUserAccessPolicies;
+  /**
+   * Username or AccessKeyID used to authenticate against this registry
+   */
+  Username?: string;
+};
+
+export type PortainerRegistryAccessPolicies = {
+  /**
+   * Kubernetes specific fields (with kubernetes, namespaces have access to a registry, if users/teams have access to the same namespace, they have access to the registry)
+   */
+  Namespaces?: Array<string>;
+  TeamAccessPolicies?: PortainerTeamAccessPolicies;
+  /**
+   * Docker specific fields (with docker, users/teams have access to a registry)
+   */
+  UserAccessPolicies?: PortainerUserAccessPolicies;
+};
+
+export type PortainerRegistryAccesses = {
+  [key: string]: PortainerRegistryAccessPolicies;
+};
+
+export type PortainerRegistryManagementConfiguration = {
+  AccessToken?: string;
+  AccessTokenExpiry?: number;
+  Authentication?: boolean;
+  Ecr?: PortainerEcrData;
+  Password?: string;
+  TLSConfig?: PortainerTlsConfiguration;
+  Type?: PortainerRegistryType;
+  Username?: string;
+};
+
+export const PortainerRegistryType = {
+  /**
+   * _
+   */
+  '': 0,
+  /**
+   * QuayRegistry
+   */
+  QUAY_REGISTRY: 1,
+  /**
+   * AzureRegistry
+   */
+  AZURE_REGISTRY: 2,
+  /**
+   * CustomRegistry
+   */
+  CUSTOM_REGISTRY: 3,
+  /**
+   * GitlabRegistry
+   */
+  GITLAB_REGISTRY: 4,
+  /**
+   * ProGetRegistry
+   */
+  PRO_GET_REGISTRY: 5,
+  /**
+   * DockerHubRegistry
+   */
+  DOCKER_HUB_REGISTRY: 6,
+  /**
+   * EcrRegistry
+   */
+  ECR_REGISTRY: 7,
+  /**
+   * GithubRegistry
+   */
+  GITHUB_REGISTRY: 8,
+} as const;
+
+export type PortainerRegistryType =
+  (typeof PortainerRegistryType)[keyof typeof PortainerRegistryType];
+
+export const PortainerResourceAccessLevel = {
+  /**
+   * _
+   */
+  '': 0 /**
+   * ReadWriteAccessLevel
+   */,
+  READ_WRITE_ACCESS_LEVEL: 1,
+} as const;
+
+export type PortainerResourceAccessLevel =
+  (typeof PortainerResourceAccessLevel)[keyof typeof PortainerResourceAccessLevel];
+
+export type PortainerResourceControl = {
+  AccessLevel?: PortainerResourceAccessLevel;
+  /**
+   * Permit access to resource only to admins
+   */
+  AdministratorsOnly?: boolean;
+  /**
+   * ResourceControl Identifier
+   */
+  Id?: number;
+  /**
+   * Deprecated fields
+   * Deprecated in DBVersion == 2
+   */
+  OwnerId?: number;
+  /**
+   * Permit access to the associated resource to any user
+   */
+  Public?: boolean;
+  /**
+   * Docker resource identifier on which access control will be applied.\
+   * In the case of a resource control applied to a stack, use the stack name as identifier
+   */
+  ResourceId?: string;
+  /**
+   * List of Docker resources that will inherit this access control
+   */
+  SubResourceIds?: Array<string>;
+  System?: boolean;
+  TeamAccesses?: Array<PortainerTeamResourceAccess>;
+  /**
+   * Type of Docker resource. Valid values are: 1- container, 2 -service
+   * 3 - volume, 4 - secret, 5 - stack, 6 - config or 7 - custom template
+   */
+  Type?: PortainerResourceControlType;
+  UserAccesses?: Array<PortainerUserResourceAccess>;
+};
+
+export const PortainerResourceControlType = {
+  /**
+   * _
+   */
+  '': 0,
+  /**
+   * ContainerResourceControl
+   */
+  CONTAINER_RESOURCE_CONTROL: 1,
+  /**
+   * ServiceResourceControl
+   */
+  SERVICE_RESOURCE_CONTROL: 2,
+  /**
+   * VolumeResourceControl
+   */
+  VOLUME_RESOURCE_CONTROL: 3,
+  /**
+   * NetworkResourceControl
+   */
+  NETWORK_RESOURCE_CONTROL: 4,
+  /**
+   * SecretResourceControl
+   */
+  SECRET_RESOURCE_CONTROL: 5,
+  /**
+   * StackResourceControl
+   */
+  STACK_RESOURCE_CONTROL: 6,
+  /**
+   * ConfigResourceControl
+   */
+  CONFIG_RESOURCE_CONTROL: 7,
+  /**
+   * CustomTemplateResourceControl
+   */
+  CUSTOM_TEMPLATE_RESOURCE_CONTROL: 8,
+  /**
+   * ContainerGroupResourceControl
+   */
+  CONTAINER_GROUP_RESOURCE_CONTROL: 9,
+} as const;
+
+export type PortainerResourceControlType =
+  (typeof PortainerResourceControlType)[keyof typeof PortainerResourceControlType];
+
+export type PortainerRole = {
+  /**
+   * Authorizations associated to a role
+   */
+  Authorizations?: PortainerAuthorizations;
+  /**
+   * Role description
+   */
+  Description?: string;
+  /**
+   * Role Identifier
+   */
+  Id?: number;
+  /**
+   * Role name
+   */
+  Name?: string;
+  Priority?: number;
+};
+
+export type PortainerSslSettings = {
+  certPath?: string;
+  httpEnabled?: boolean;
+  keyPath?: string;
+  selfSigned?: boolean;
+};
+
+export type PortainerSettings = {
+  /**
+   * Container environment parameter AGENT_SECRET
+   */
+  AgentSecret?: string;
+  AllowBindMountsForRegularUsers?: boolean;
+  AllowContainerCapabilitiesForRegularUsers?: boolean;
+  AllowDeviceMappingForRegularUsers?: boolean;
+  AllowHostNamespaceForRegularUsers?: boolean;
+  AllowPrivilegedModeForRegularUsers?: boolean;
+  AllowStackManagementForRegularUsers?: boolean;
+  AllowVolumeBrowserForRegularUsers?: boolean;
+  /**
+   * Active authentication method for the Portainer instance. Valid values are: 1 for internal, 2 for LDAP, or 3 for oauth
+   */
+  AuthenticationMethod?: PortainerAuthenticationMethod;
+  /**
+   * A list of label name & value that will be used to hide containers when querying containers
+   */
+  BlackListedLabels?: Array<PortainerPair>;
+  /**
+   * Deprecated fields
+   */
+  DisplayDonationHeader?: boolean;
+  DisplayExternalContributors?: boolean;
+  Edge?: PortainerEdge;
+  /**
+   * The default check in interval for edge agent (in seconds)
+   */
+  EdgeAgentCheckinInterval?: number;
+  /**
+   * EdgePortainerURL is the URL that is exposed to edge agents
+   */
+  EdgePortainerUrl?: string;
+  /**
+   * Whether edge compute features are enabled
+   */
+  EnableEdgeComputeFeatures?: boolean;
+  /**
+   * Deprecated fields v26
+   */
+  EnableHostManagementFeatures?: boolean;
+  /**
+   * EnforceEdgeID makes Portainer store the Edge ID instead of accepting anyone
+   */
+  EnforceEdgeID?: boolean;
+  FeatureFlagSettings?: {
+    [key: string]: boolean;
+  };
+  /**
+   * ForceSecureCookies forces the Secure attribute on auth cookies regardless of detected scheme.
+   * Enable when Portainer runs behind a TLS-terminating proxy.
+   */
+  ForceSecureCookies?: boolean;
+  /**
+   * Deployment options for encouraging git ops workflows
+   */
+  GlobalDeploymentOptions?: PortainerGlobalDeploymentOptions;
+  /**
+   * Helm repository URL, defaults to "https://charts.bitnami.com/bitnami"
+   */
+  HelmRepositoryURL?: string;
+  InternalAuthSettings?: PortainerInternalAuthSettings;
+  IsDockerDesktopExtension?: boolean;
+  /**
+   * The expiry of a Kubeconfig
+   */
+  KubeconfigExpiry?: string;
+  /**
+   * KubectlImage, defaults to portainer/kubectl-shell
+   */
+  KubectlShellImage?: string;
+  LDAPSettings?: PortainerLdapSettings;
+  /**
+   * URL to a logo that will be displayed on the login page as well as on top of the sidebar. Will use default Portainer logo when value is empty string
+   */
+  LogoURL?: string;
+  OAuthSettings?: PortainerOAuthSettings;
+  /**
+   * The interval in which environment(endpoint) snapshots are created
+   */
+  SnapshotInterval?: string;
+  /**
+   * URL to the templates that will be displayed in the UI when navigating to App Templates
+   */
+  TemplatesURL?: string;
+  /**
+   * TrustOnFirstConnect makes Portainer accepting edge agent connection by default
+   */
+  TrustOnFirstConnect?: boolean;
+  /**
+   * The duration of a user session
+   */
+  UserSessionTimeout?: string;
+};
+
+export type PortainerSource = {
+  administratorsOnly?: boolean;
+  git?: GittypesGitSource;
+  helm?: PortainerHelmConfig;
+  id?: number;
+  interval?: string;
+  lastSync?: number;
+  name?: string;
+  ownerID?: number;
+  public?: boolean;
+  registry?: PortainerRegistry;
+  status?: PortainerSourceStatus;
+  statusError?: string;
+  teamAccesses?: Array<number>;
+  type?: PortainerSourceType;
+  userAccesses?: Array<number>;
+};
+
+export const PortainerSourceStatus = {
+  /**
+   * SourceStatusUnknown
+   */
+  SOURCE_STATUS_UNKNOWN: 0,
+  /**
+   * SourceStatusHealthy
+   */
+  SOURCE_STATUS_HEALTHY: 1,
+  /**
+   * SourceStatusError
+   */
+  SOURCE_STATUS_ERROR: 2,
+} as const;
+
+export type PortainerSourceStatus =
+  (typeof PortainerSourceStatus)[keyof typeof PortainerSourceStatus];
+
+export const PortainerSourceType = {
+  /**
+   * _
+   */
+  '': 0,
+  /**
+   * SourceTypeGit
+   */
+  SOURCE_TYPE_GIT: 1,
+  /**
+   * SourceTypeRegistry
+   */
+  SOURCE_TYPE_REGISTRY: 2,
+  /**
+   * SourceTypeHelm
+   */
+  SOURCE_TYPE_HELM: 3,
+} as const;
+
+export type PortainerSourceType =
+  (typeof PortainerSourceType)[keyof typeof PortainerSourceType];
+
+export type PortainerStack = {
+  /**
+   * Only applies when deploying stack with multiple files
+   */
+  AdditionalFiles?: Array<string>;
+  /**
+   * The GitOps update settings of a git stack
+   */
+  AutoUpdate?: PortainerAutoUpdateSettings;
+  /**
+   * The username which created this stack
+   */
+  CreatedBy?: string;
+  /**
+   * The date in unix time when stack was created
+   */
+  CreationDate?: number;
+  /**
+   * CurrentDeploymentInfo records the git repository state at the time of the last actual deployment.
+   */
+  CurrentDeploymentInfo?: PortainerStackDeploymentInfo;
+  /**
+   * DeploymentStartStatus is the stack status captured when the current
+   * deployment starts. It is used by deployment logic during the current
+   * deployment attempt and is cleared/replaced when a new deployment begins.
+   */
+  DeploymentStartStatus?: PortainerStackStatus;
+  /**
+   * DeploymentStatus records the status progression of the current deployment.
+   * Cleared when a new deployment starts.
+   */
+  DeploymentStatus?: Array<PortainerStackDeploymentStatus>;
+  /**
+   * Environment(Endpoint) identifier. Reference the environment(endpoint) that will be used for deployment
+   */
+  EndpointId?: number;
+  /**
+   * EntryPoint is the path to the config file relative to the project root.
+   * NOTE: For git stacks this mirrors GitConfig.ConfigFilePath and the two are kept in sync
+   * by stackUpdateGit. The deploy command builder (compose_unpacker_cmd_builder) uses this
+   * field directly; Kubernetes deploy and git clone operations use GitConfig.ConfigFilePath.
+   */
+  EntryPoint?: string;
+  /**
+   * A list of environment(endpoint) variables used during stack deployment
+   */
+  Env?: Array<PortainerPair>;
+  /**
+   * Whether the stack is from a app template
+   */
+  FromAppTemplate?: boolean;
+  /**
+   * GitConfig is the git repository configuration for git-backed stacks.
+   * Deprecated: loaded from Source via WorkflowID; kept for DB backwards-compatibility only.
+   * Non-migration code must not read or write this field; use Source records instead.
+   */
+  GitConfig?: GittypesRepoConfig;
+  /**
+   * Stack Identifier
+   */
+  Id?: number;
+  /**
+   * Stack name
+   */
+  Name?: string;
+  /**
+   * Kubernetes namespace if stack is a kube application
+   */
+  Namespace?: string;
+  /**
+   * The stack deployment option
+   */
+  Option?: PortainerStackOption;
+  /**
+   * Path on disk to the repository hosting the Stack file
+   */
+  ProjectPath?: string;
+  ResourceControl?: PortainerResourceControl;
+  /**
+   * Stack status (1 - active, 2 - inactive, 3 - deploying, 4 - error)
+   */
+  Status?: PortainerStackStatus;
+  /**
+   * Cluster identifier of the Swarm cluster where the stack is deployed
+   */
+  SwarmId?: string;
+  /**
+   * Stack type. 1 for a Swarm stack, 2 for a Compose stack
+   */
+  Type?: PortainerStackType;
+  /**
+   * The date in unix time when stack was last updated
+   */
+  UpdateDate?: number;
+  /**
+   * The username which last updated this stack
+   */
+  UpdatedBy?: string;
+  /**
+   * WorkflowID is the ID of the Workflow that owns the Source for this stack.
+   */
+  WorkflowID?: number;
+};
+
+export type PortainerStackDeploymentInfo = {
+  /**
+   * AdditionalFiles are the additional files used for deploying the stack
+   */
+  AdditionalFiles?: Array<string>;
+  /**
+   * ConfigFilePath is the path to the config file in the git repository used for deploying the stack
+   */
+  ConfigFilePath?: string;
+  /**
+   * ConfigHash is the commit hash of the git repository used for deploying the stack
+   */
+  ConfigHash?: string;
+  /**
+   * FileVersion is the version of the stack file, used to detect changes
+   */
+  FileVersion?: number;
+  /**
+   * ReferenceName is the git reference (branch/tag) used for deploying the stack
+   */
+  ReferenceName?: string;
+  /**
+   * RepositoryURL is the git repository URL used for deploying the stack
+   */
+  RepositoryURL?: string;
+  /**
+   * SourceID is the Source used for deploying the stack
+   */
+  SourceID?: number;
+  /**
+   * Version is the version of the stack and also is the deployed version in edge agent
+   */
+  Version?: number;
+};
+
+export type PortainerStackDeploymentStatus = {
+  /**
+   * populated on Error entries
+   */
+  Message?: string;
+  Status?: PortainerStackStatus;
+  Time?: number;
+};
+
+export type PortainerStackOption = {
+  /**
+   * Enable atomic rollback on failure (Helm --atomic flag for Kubernetes Helm stacks)
+   */
+  HelmAtomic?: boolean;
+  /**
+   * Prune services that are no longer referenced
+   */
+  Prune?: boolean;
+};
+
+export const PortainerStackStatus = {
+  /**
+   * _
+   */
+  '': 0,
+  /**
+   * StackStatusActive
+   *
+   * 1 - deployed and running
+   */
+  STACK_STATUS_ACTIVE: 1,
+  /**
+   * StackStatusInactive
+   *
+   * 2 - intentionally stopped
+   */
+  STACK_STATUS_INACTIVE: 2,
+  /**
+   * StackStatusDeploying
+   *
+   * 3 - deployment in progress
+   */
+  STACK_STATUS_DEPLOYING: 3,
+  /**
+   * StackStatusError
+   *
+   * 4 - deployment failed
+   */
+  STACK_STATUS_ERROR: 4,
+} as const;
+
+export type PortainerStackStatus =
+  (typeof PortainerStackStatus)[keyof typeof PortainerStackStatus];
+
+export const PortainerStackType = {
+  /**
+   * _
+   */
+  '': 0,
+  /**
+   * DockerSwarmStack
+   */
+  DOCKER_SWARM_STACK: 1,
+  /**
+   * DockerComposeStack
+   */
+  DOCKER_COMPOSE_STACK: 2,
+  /**
+   * KubernetesStack
+   */
+  KUBERNETES_STACK: 3,
+} as const;
+
+export type PortainerStackType =
+  (typeof PortainerStackType)[keyof typeof PortainerStackType];
+
+export type PortainerTlsConfiguration = {
+  /**
+   * Use TLS
+   */
+  TLS: boolean;
+  /**
+   * Path to the TLS CA certificate file
+   */
+  TLSCACert?: string;
+  /**
+   * Path to the TLS client certificate file
+   */
+  TLSCert?: string;
+  /**
+   * Path to the TLS client key file
+   */
+  TLSKey?: string;
+  /**
+   * Skip the verification of the server TLS certificate
+   */
+  TLSSkipVerify: boolean;
+};
+
+export type PortainerTag = {
+  /**
+   * A set of environment(endpoint) group ids that have this tag
+   */
+  EndpointGroups?: {
+    [key: string]: boolean;
+  };
+  /**
+   * A set of environment(endpoint) ids that have this tag
+   */
+  Endpoints?: {
+    [key: string]: boolean;
+  };
+  /**
+   * Tag identifier
+   */
+  ID?: number;
+  /**
+   * Tag name
+   */
+  Name?: string;
+};
+
+export type PortainerTeam = {
+  /**
+   * Whether members of this team are denied access to Portainer itself (EE only)
+   */
+  DenyPortainerAccess?: boolean;
+  /**
+   * Team Identifier
+   */
+  Id?: number;
+  /**
+   * Team name
+   */
+  Name?: string;
+};
+
+export type PortainerTeamAccessPolicies = {
+  [key: string]: PortainerAccessPolicy;
+};
+
+export type PortainerTeamMembership = {
+  /**
+   * Membership Identifier
+   */
+  Id?: number;
+  /**
+   * Team role (1 for team leader and 2 for team member)
+   */
+  Role?: PortainerMembershipRole;
+  /**
+   * Team identifier
+   */
+  TeamID?: number;
+  /**
+   * User identifier
+   */
+  UserID?: number;
+};
+
+export type PortainerTeamResourceAccess = {
+  AccessLevel?: PortainerResourceAccessLevel;
+  TeamId?: number;
+};
+
+export type PortainerTemplate = {
+  /**
+   * Whether the template should be available to administrators only
+   */
+  administrator_only?: boolean;
+  /**
+   * A list of categories associated to the template
+   */
+  categories?: Array<string>;
+  /**
+   * The command that will be executed in a container template
+   */
+  command?: string;
+  /**
+   * Description of the template
+   */
+  description?: string;
+  /**
+   * A list of environment(endpoint) variables used during the template deployment
+   */
+  env?: Array<PortainerTemplateEnv>;
+  /**
+   * Container hostname
+   */
+  hostname?: string;
+  /**
+   * Mandatory container/stack fields
+   * Template Identifier
+   */
+  id?: number;
+  /**
+   * Mandatory container fields
+   * Image associated to a container template. Mandatory for a container template
+   */
+  image?: string;
+  /**
+   * Whether the container should be started in
+   * interactive mode (-i -t equivalent on the CLI)
+   */
+  interactive?: boolean;
+  /**
+   * Container labels
+   */
+  labels?: Array<PortainerPair>;
+  /**
+   * URL of the template's logo
+   */
+  logo?: string;
+  /**
+   * Optional stack/container fields
+   * Default name for the stack/container to be used on deployment
+   */
+  name?: string;
+  /**
+   * Name of a network that will be used on container deployment if it exists inside the environment(endpoint)
+   */
+  network?: string;
+  /**
+   * A note that will be displayed in the UI. Supports HTML content
+   */
+  note?: string;
+  /**
+   * Platform associated to the template.
+   * Valid values are: 'linux', 'windows' or leave empty for multi-platform
+   */
+  platform?: string;
+  /**
+   * A list of ports exposed by the container
+   */
+  ports?: Array<string>;
+  /**
+   * Whether the container should be started in privileged mode
+   */
+  privileged?: boolean;
+  /**
+   * Optional container fields
+   * The URL of a registry associated to the image for a container template
+   */
+  registry?: string;
+  /**
+   * Mandatory stack fields
+   */
+  repository?: PortainerTemplateRepository;
+  /**
+   * Container restart policy
+   */
+  restart_policy?: string;
+  /**
+   * Mandatory Edge stack fields
+   * Stack file used for this template
+   */
+  stackFile?: string;
+  /**
+   * Title of the template
+   */
+  title?: string;
+  /**
+   * Template type. Valid values are: 1 (container), 2 (Swarm stack), 3 (Compose stack), 4 (Compose edge stack)
+   */
+  type?: PortainerTemplateType;
+  /**
+   * A list of volumes used during the container template deployment
+   */
+  volumes?: Array<PortainerTemplateVolume>;
+};
+
+export type PortainerTemplateEnv = {
+  /**
+   * Default value that will be set for the variable
+   */
+  default?: string;
+  /**
+   * Content of the tooltip that will be generated in the UI
+   */
+  description?: string;
+  /**
+   * Text for the label that will be generated in the UI
+   */
+  label?: string;
+  /**
+   * name of the environment(endpoint) variable
+   */
+  name?: string;
+  /**
+   * If set to true, will not generate any input for this variable in the UI
+   */
+  preset?: boolean;
+  /**
+   * A list of name/value that will be used to generate a dropdown in the UI
+   */
+  select?: Array<PortainerTemplateEnvSelect>;
+};
+
+export type PortainerTemplateEnvSelect = {
+  /**
+   * Will set this choice as the default choice
+   */
+  default?: boolean;
+  /**
+   * Some text that will displayed as a choice
+   */
+  text?: string;
+  /**
+   * A value that will be associated to the choice
+   */
+  value?: string;
+};
+
+export type PortainerTemplateRepository = {
+  /**
+   * Path to the stack file inside the git repository
+   */
+  stackfile?: string;
+  /**
+   * URL of a git repository used to deploy a stack template. Mandatory for a Swarm/Compose stack template
+   */
+  url?: string;
+};
+
+export const PortainerTemplateType = {
+  /**
+   * _
+   */
+  '': 0,
+  /**
+   * ContainerTemplate
+   */
+  CONTAINER_TEMPLATE: 1,
+  /**
+   * SwarmStackTemplate
+   */
+  SWARM_STACK_TEMPLATE: 2,
+  /**
+   * ComposeStackTemplate
+   */
+  COMPOSE_STACK_TEMPLATE: 3,
+} as const;
+
+export type PortainerTemplateType =
+  (typeof PortainerTemplateType)[keyof typeof PortainerTemplateType];
+
+export type PortainerTemplateVolume = {
+  /**
+   * Path on the host
+   */
+  bind?: string;
+  /**
+   * Path inside the container
+   */
+  container?: string;
+  /**
+   * Whether the volume used should be readonly
+   */
+  readonly?: boolean;
+};
+
+export type PortainerUser = {
+  /**
+   * User Identifier
+   */
+  Id: number;
+  /**
+   * User role (1 for administrator account and 2 for regular account)
+   */
+  Role: PortainerUserRole;
+  ThemeSettings?: PortainerUserThemeSettings;
+  TokenIssueAt?: number;
+  UseCache?: boolean;
+  Username: string;
+};
+
+export type PortainerUserAccessPolicies = {
+  [key: string]: PortainerAccessPolicy;
+};
+
+export type PortainerUserResourceAccess = {
+  AccessLevel?: PortainerResourceAccessLevel;
+  UserId?: number;
+};
+
+export const PortainerUserRole = {
+  /**
+   * _
+   */
+  '': 0,
+  /**
+   * AdministratorRole
+   */
+  ADMINISTRATOR_ROLE: 1,
+  /**
+   * StandardUserRole
+   */
+  STANDARD_USER_ROLE: 2,
+} as const;
+
+export type PortainerUserRole =
+  (typeof PortainerUserRole)[keyof typeof PortainerUserRole];
+
+export type PortainerUserThemeSettings = {
+  /**
+   * Color represents the color theme of the UI
+   */
+  color?: 'dark' | 'light' | 'highcontrast' | 'auto' | '';
+};
+
+export type PortainerWebhook = {
+  EndpointId?: number;
+  /**
+   * Webhook Identifier
+   */
+  Id?: number;
+  RegistryId?: number;
+  ResourceId?: string;
+  Token?: string;
   /**
    * Type of webhook (1 - service)
    */
-  WebhookType?: PortainerWebhookType;
+  Type?: PortainerWebhookType;
 };
 
 export const PortainerWebhookType = {
@@ -187,7 +4055,2692 @@ export const PortainerWebhookType = {
 export type PortainerWebhookType =
   (typeof PortainerWebhookType)[keyof typeof PortainerWebhookType];
 
-export type V1Beta1PodMetricsList = {
+export type RegistriesRegistryConfigurePayload = {
+  /**
+   * Is authentication against this registry enabled
+   */
+  Authentication: boolean;
+  /**
+   * Password used to authenticate against this registry. required when Authentication is true
+   */
+  Password?: string;
+  /**
+   * ECR region
+   */
+  Region?: string;
+  /**
+   * Use TLS
+   */
+  TLS?: boolean;
+  /**
+   * The TLS CA certificate file
+   */
+  TLSCACertFile?: Array<number>;
+  /**
+   * The TLS client certificate file
+   */
+  TLSCertFile?: Array<number>;
+  /**
+   * The TLS client key file
+   */
+  TLSKeyFile?: Array<number>;
+  /**
+   * Skip the verification of the server TLS certificate
+   */
+  TLSSkipVerify?: boolean;
+  /**
+   * Username used to authenticate against this registry. Required when Authentication is true
+   */
+  Username?: string;
+};
+
+export type RegistriesRegistryCreatePayload = {
+  /**
+   * Is authentication against this registry enabled
+   */
+  Authentication: boolean;
+  /**
+   * BaseURL required for ProGet registry
+   */
+  BaseURL?: string;
+  /**
+   * ECR specific details, required when type = 7
+   */
+  Ecr?: PortainerEcrData;
+  /**
+   * Gitlab specific details, required when type = 4
+   */
+  Gitlab?: PortainerGitlabRegistryData;
+  /**
+   * Name that will be used to identify this registry
+   */
+  Name: string;
+  /**
+   * Password used to authenticate against this registry. required when Authentication is true
+   */
+  Password?: string;
+  /**
+   * Quay specific details, required when type = 1
+   */
+  Quay?: PortainerQuayRegistryData;
+  /**
+   * Use TLS
+   */
+  TLS?: boolean;
+  /**
+   * Registry Type. Valid values are:
+   * 1 (Quay.io),
+   * 2 (Azure container registry),
+   * 3 (custom registry),
+   * 4 (Gitlab registry),
+   * 5 (ProGet registry),
+   * 6 (DockerHub)
+   * 7 (ECR)
+   */
+  Type: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  /**
+   * URL or IP address of the Docker registry
+   */
+  URL: string;
+  /**
+   * Username used to authenticate against this registry. Required when Authentication is true
+   */
+  Username?: string;
+};
+
+export type RegistriesRegistryPingPayload = {
+  /**
+   * Password used to authenticate against this registry
+   */
+  Password?: string;
+  /**
+   * Use TLS
+   */
+  TLS?: boolean;
+  /**
+   * Registry Type. Valid values are:
+   * 1 (Quay.io),
+   * 2 (Azure container registry),
+   * 3 (custom registry),
+   * 4 (Gitlab registry),
+   * 5 (ProGet registry),
+   * 6 (DockerHub)
+   * 7 (ECR)
+   * 8 (Github registry)
+   */
+  Type: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  /**
+   * URL or IP address of the Docker registry
+   */
+  URL: string;
+  /**
+   * Username used to authenticate against this registry
+   */
+  Username?: string;
+};
+
+export type RegistriesRegistryPingResponse = {
+  /**
+   * Message provides details about the connection test result
+   */
+  message?: string;
+  /**
+   * Success indicates if the registry connection was successful
+   */
+  success?: boolean;
+};
+
+export type RegistriesRegistryUpdatePayload = {
+  /**
+   * Is authentication against this registry enabled
+   */
+  Authentication: boolean;
+  /**
+   * BaseURL is used for quay registry
+   */
+  BaseURL?: string;
+  /**
+   * ECR data
+   */
+  Ecr?: PortainerEcrData;
+  /**
+   * Name that will be used to identify this registry
+   */
+  Name: string;
+  /**
+   * Password used to authenticate against this registry. required when Authentication is true
+   */
+  Password?: string;
+  /**
+   * Quay data
+   */
+  Quay?: PortainerQuayRegistryData;
+  /**
+   * Registry access control
+   */
+  RegistryAccesses?: PortainerRegistryAccesses;
+  /**
+   * URL or IP address of the Docker registry
+   */
+  URL: string;
+  /**
+   * Username used to authenticate against this registry. Required when Authentication is true
+   */
+  Username?: string;
+};
+
+export type ReleaseChart = {
+  /**
+   * Files are miscellaneous files in a chart archive,
+   * e.g. README, LICENSE, etc.
+   */
+  files?: Array<ReleaseFile>;
+  /**
+   * Lock is the contents of Chart.lock.
+   */
+  lock?: ReleaseLock;
+  /**
+   * Metadata is the contents of the Chartfile.
+   */
+  metadata?: ReleaseMetadata;
+  /**
+   * Schema is an optional JSON schema for imposing structure on Values
+   */
+  schema?: Array<number>;
+  /**
+   * Templates for this chart.
+   */
+  templates?: Array<ReleaseFile>;
+  /**
+   * Values are default config for this chart.
+   */
+  values?: {
+    [key: string]: unknown;
+  };
+};
+
+export type ReleaseChartReference = {
+  chartPath?: string;
+  registryID?: number;
+  repoURL?: string;
+};
+
+export type ReleaseDependency = {
+  /**
+   * Alias usable alias to be used for the chart
+   */
+  alias?: string;
+  /**
+   * A yaml path that resolves to a boolean, used for enabling/disabling charts (e.g. subchart1.enabled )
+   */
+  condition?: string;
+  /**
+   * Enabled bool determines if chart should be loaded
+   */
+  enabled?: boolean;
+  /**
+   * ImportValues holds the mapping of source values to parent key to be imported. Each item can be a
+   * string or pair of child/parent sublist items.
+   */
+  'import-values'?: Array<unknown>;
+  /**
+   * Name is the name of the dependency.
+   *
+   * This must mach the name in the dependency's Chart.yaml.
+   */
+  name?: string;
+  /**
+   * The URL to the repository.
+   *
+   * Appending `index.yaml` to this string should result in a URL that can be
+   * used to fetch the repository index.
+   */
+  repository?: string;
+  /**
+   * Tags can be used to group charts for enabling/disabling together
+   */
+  tags?: Array<string>;
+  /**
+   * Version is the version (range) of this chart.
+   *
+   * A lock file will always produce a single version, while a dependency
+   * may contain a semantic version range.
+   */
+  version?: string;
+};
+
+export type ReleaseFile = {
+  /**
+   * Data is the template as byte data.
+   */
+  data?: Array<number>;
+  /**
+   * Name is the path-like name of the template.
+   */
+  name?: string;
+};
+
+export type ReleaseHookExecution = {
+  /**
+   * CompletedAt indicates the date/time this hook was completed.
+   */
+  completed_at?: string;
+  /**
+   * Phase indicates whether the hook completed successfully
+   */
+  phase?: string;
+  /**
+   * StartedAt indicates the date/time this hook was started
+   */
+  started_at?: string;
+};
+
+export type ReleaseInfo = {
+  /**
+   * Deleted tracks when this object was deleted.
+   */
+  deleted?: string;
+  /**
+   * Description is human-friendly "log entry" about this release.
+   */
+  description?: string;
+  /**
+   * FirstDeployed is when the release was first deployed.
+   */
+  first_deployed?: string;
+  /**
+   * LastDeployed is when the release was last deployed.
+   */
+  last_deployed?: string;
+  /**
+   * Contains the rendered templates/NOTES.txt if available
+   */
+  notes?: string;
+  /**
+   * Resources is the list of resources that are part of the release
+   */
+  resources?: Array<UnstructuredUnstructured>;
+  /**
+   * Status is the current state of the release
+   */
+  status?: string;
+};
+
+export type ReleaseLock = {
+  /**
+   * Dependencies is the list of dependencies that this lock file has locked.
+   */
+  dependencies?: Array<ReleaseDependency>;
+  /**
+   * Digest is a hash of the dependencies in Chart.yaml.
+   */
+  digest?: string;
+  /**
+   * Generated is the date the lock file was last generated.
+   */
+  generated?: string;
+};
+
+export type ReleaseMaintainer = {
+  /**
+   * Email is an optional email address to contact the named maintainer
+   */
+  email?: string;
+  /**
+   * Name is a user name or organization name
+   */
+  name?: string;
+  /**
+   * URL is an optional URL to an address for the named maintainer
+   */
+  url?: string;
+};
+
+export type ReleaseMetadata = {
+  /**
+   * Annotations are additional mappings uninterpreted by Helm,
+   * made available for inspection by other applications.
+   */
+  annotations?: {
+    [key: string]: string;
+  };
+  /**
+   * The API Version of this chart. Required.
+   */
+  apiVersion?: string;
+  /**
+   * The version of the application enclosed inside of this chart.
+   */
+  appVersion?: string;
+  /**
+   * The condition to check to enable chart
+   */
+  condition?: string;
+  /**
+   * Dependencies are a list of dependencies for a chart.
+   */
+  dependencies?: Array<ReleaseDependency>;
+  /**
+   * Whether or not this chart is deprecated
+   */
+  deprecated?: boolean;
+  /**
+   * A one-sentence description of the chart
+   */
+  description?: string;
+  /**
+   * The URL to a relevant project page, git repo, or contact person
+   */
+  home?: string;
+  /**
+   * The URL to an icon file.
+   */
+  icon?: string;
+  /**
+   * A list of string keywords
+   */
+  keywords?: Array<string>;
+  /**
+   * KubeVersion is a SemVer constraint specifying the version of Kubernetes required.
+   */
+  kubeVersion?: string;
+  /**
+   * A list of name and URL/email address combinations for the maintainer(s)
+   */
+  maintainers?: Array<ReleaseMaintainer>;
+  /**
+   * The name of the chart. Required.
+   */
+  name?: string;
+  /**
+   * Source is the URL to the source code of this chart
+   */
+  sources?: Array<string>;
+  /**
+   * The tags to check to enable chart
+   */
+  tags?: string;
+  /**
+   * Specifies the chart type: application or library
+   */
+  type?: string;
+  /**
+   * A SemVer 2 conformant version string of the chart. Required.
+   */
+  version?: string;
+};
+
+export type ReleaseRelease = {
+  /**
+   * AppVersion is the app version of the release.
+   */
+  appVersion?: string;
+  /**
+   * Chart is the chart that was released.
+   */
+  chart?: ReleaseChart;
+  /**
+   * ChartReference are the labels that are used to identify the chart source.
+   */
+  chartReference?: ReleaseChartReference;
+  /**
+   * Config is the set of extra Values added to the chart.
+   * These values override the default values inside of the chart.
+   */
+  config?: {
+    [key: string]: unknown;
+  };
+  /**
+   * Hooks are all of the hooks declared for this release.
+   */
+  hooks?: Array<GithubComPortainerPortainerPkgLibhelmReleaseHook>;
+  /**
+   * Info provides information about a release
+   */
+  info?: ReleaseInfo;
+  /**
+   * Manifest is the string representation of the rendered template.
+   */
+  manifest?: string;
+  /**
+   * Name is the name of the release
+   */
+  name?: string;
+  /**
+   * Namespace is the kubernetes namespace of the release.
+   */
+  namespace?: string;
+  /**
+   * StackID is the ID of the Portainer stack associated with this release (if using GitOps)
+   */
+  stackID?: number;
+  /**
+   * Values are the values used to deploy the chart.
+   */
+  values?: ReleaseValues;
+  /**
+   * Version is an int which represents the revision of the release.
+   */
+  version?: number;
+};
+
+export type ReleaseReleaseElement = {
+  appVersion?: string;
+  chart?: string;
+  name?: string;
+  namespace?: string;
+  revision?: string;
+  status?: string;
+  updated?: string;
+};
+
+export type ReleaseValues = {
+  computedValues?: string;
+  userSuppliedValues?: string;
+};
+
+export type ResourceQuantity = {
+  Format?: 'DecimalExponent' | 'BinarySI' | 'DecimalSI';
+};
+
+export type ResourcecontrolsResourceControlCreatePayload = {
+  /**
+   * Permit access to resource only to admins
+   */
+  AdministratorsOnly?: boolean;
+  /**
+   * Permit access to the associated resource to any user
+   */
+  Public?: boolean;
+  ResourceID: string;
+  /**
+   * List of Docker resources that will inherit this access control
+   */
+  SubResourceIDs?: Array<string>;
+  /**
+   * List of team identifiers with access to the associated resource
+   */
+  Teams?: Array<number>;
+  /**
+   * Type of Resource. Valid values are: 1 - container, 2 - service
+   * 3 - volume, 4 - network, 5 - secret, 6 - stack, 7 - config, 8 - custom template, 9 - azure-container-group
+   */
+  Type: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+  /**
+   * List of user identifiers with access to the associated resource
+   */
+  Users?: Array<number>;
+};
+
+export type ResourcecontrolsResourceControlUpdatePayload = {
+  /**
+   * Permit access to resource only to admins
+   */
+  AdministratorsOnly?: boolean;
+  /**
+   * Permit access to the associated resource to any user
+   */
+  Public?: boolean;
+  /**
+   * List of team identifiers with access to the associated resource
+   */
+  Teams?: Array<number>;
+  /**
+   * List of user identifiers with access to the associated resource
+   */
+  Users?: Array<number>;
+};
+
+export type RoarRoarPortainerEndpointId = {
+  [key: string]: unknown;
+};
+
+export type SettingsPublicSettingsResponse = {
+  /**
+   * Active authentication method for the Portainer instance. Valid values are: 1 for internal, 2 for LDAP, or 3 for oauth
+   */
+  AuthenticationMethod?: PortainerAuthenticationMethod;
+  Edge?: {
+    /**
+     * The check in interval for edge agent (in seconds) - used in non async mode [seconds]
+     */
+    CheckinInterval?: number;
+    /**
+     * The command list interval for edge agent - used in edge async mode [seconds]
+     */
+    CommandInterval?: number;
+    /**
+     * The ping interval for edge agent - used in edge async mode [seconds]
+     */
+    PingInterval?: number;
+    /**
+     * The snapshot interval for edge agent - used in edge async mode [seconds]
+     */
+    SnapshotInterval?: number;
+  };
+  /**
+   * Whether edge compute features are enabled
+   */
+  EnableEdgeComputeFeatures?: boolean;
+  /**
+   * Supported feature flags
+   */
+  Features?: {
+    [key: string]: boolean;
+  };
+  /**
+   * Deployment options for encouraging deployment as code
+   */
+  GlobalDeploymentOptions?: PortainerGlobalDeploymentOptions;
+  IsDockerDesktopExtension?: boolean;
+  /**
+   * The expiry of a Kubeconfig
+   */
+  KubeconfigExpiry?: string;
+  /**
+   * URL to a logo that will be displayed on the login page as well as on top of the sidebar. Will use default Portainer logo when value is empty string
+   */
+  LogoURL?: string;
+  /**
+   * The URL used for oauth login
+   */
+  OAuthLoginURI?: string;
+  /**
+   * The URL used for oauth logout
+   */
+  OAuthLogoutURI?: string;
+  /**
+   * The minimum required length for a password of any user when using internal auth mode
+   */
+  RequiredPasswordLength?: number;
+  /**
+   * Whether the setup wizard must send the X-Setup-Token header for admin init / restore
+   */
+  RequiresSetupToken?: boolean;
+  /**
+   * Whether team sync is enabled
+   */
+  TeamSync?: boolean;
+};
+
+export type SettingsSettingsUpdatePayload = {
+  /**
+   * Active authentication method for the Portainer instance. Valid values are: 1 for internal, 2 for LDAP, or 3 for oauth
+   */
+  AuthenticationMethod?: number;
+  /**
+   * A list of label name & value that will be used to hide containers when querying containers
+   */
+  BlackListedLabels?: Array<PortainerPair>;
+  EdgeAgentCheckinInterval?: number;
+  /**
+   * EdgePortainerURL is the URL that is exposed to edge agents
+   */
+  EdgePortainerURL?: string;
+  /**
+   * Whether edge compute features are enabled
+   */
+  EnableEdgeComputeFeatures?: boolean;
+  /**
+   * EnforceEdgeID makes Portainer store the Edge ID instead of accepting anyone
+   */
+  EnforceEdgeID?: boolean;
+  /**
+   * ForceSecureCookies forces the Secure attribute on auth cookies regardless of the detected scheme
+   */
+  ForceSecureCookies?: boolean;
+  /**
+   * Deployment options for encouraging deployment as code
+   */
+  GlobalDeploymentOptions?: PortainerGlobalDeploymentOptions;
+  /**
+   * Helm repository URL
+   */
+  HelmRepositoryURL?: string;
+  InternalAuthSettings?: PortainerInternalAuthSettings;
+  /**
+   * The expiry of a Kubeconfig
+   */
+  KubeconfigExpiry?: string;
+  /**
+   * Kubectl Shell Image
+   */
+  KubectlShellImage?: string;
+  LDAPSettings?: PortainerLdapSettings;
+  /**
+   * URL to a logo that will be displayed on the login page as well as on top of the sidebar. Will use default Portainer logo when value is empty string
+   */
+  LogoURL?: string;
+  OAuthSettings?: PortainerOAuthSettings;
+  /**
+   * The interval in which environment(endpoint) snapshots are created
+   */
+  SnapshotInterval?: string;
+  /**
+   * URL to the templates that will be displayed in the UI when navigating to App Templates
+   */
+  TemplatesURL?: string;
+  /**
+   * TrustOnFirstConnect makes Portainer accepting edge agent connection by default
+   */
+  TrustOnFirstConnect?: boolean;
+  /**
+   * The duration of a user session
+   */
+  UserSessionTimeout?: string;
+};
+
+export type SourcesConnectionTestResult = {
+  error?: string;
+  success?: boolean;
+};
+
+export type SourcesGitAuthenticationPayload = {
+  password?: string;
+  username?: string;
+};
+
+export type SourcesGitAuthenticationUpdatePayload = {
+  password?: string;
+  username?: string;
+};
+
+export type SourcesGitSourceCreatePayload = {
+  administratorsOnly?: boolean;
+  authentication?: SourcesGitAuthenticationPayload;
+  interval?: string;
+  name?: string;
+  public?: boolean;
+  teamAccesses?: Array<number>;
+  tlsSkipVerify?: boolean;
+  url: string;
+  userAccesses?: Array<number>;
+};
+
+export type SourcesGitSourceUpdatePayload = {
+  authentication?: SourcesGitAuthenticationUpdatePayload;
+  interval?: string;
+  name?: string;
+  tlsSkipVerify?: boolean;
+  url?: string;
+};
+
+export type SourcesSource = {
+  environments?: number;
+  error?: string;
+  id: number;
+  interval?: string;
+  lastSync?: number;
+  name: string;
+  status: WorkflowsStatus;
+  type: SourcesSourceType;
+  url: string;
+  usedBy?: number;
+};
+
+export type SourcesSourceAccess = {
+  public?: boolean;
+  teams?: Array<number>;
+  users?: Array<number>;
+};
+
+export type SourcesSourceAccessUpdatePayload = {
+  public?: boolean;
+  teams?: Array<number>;
+  users?: Array<number>;
+};
+
+export type SourcesSourceDetail = {
+  access?: SourcesSourceAccess;
+  connection: SourcesConnectionInfo;
+  error?: string;
+  id: number;
+  interval?: string;
+  lastSync?: number;
+  name: string;
+  status: WorkflowsStatus;
+  type: SourcesSourceType;
+  url: string;
+};
+
+export const SourcesSourceType = {
+  /**
+   * SourceTypeGit
+   */
+  SOURCE_TYPE_GIT: 'git',
+  /**
+   * SourceTypeHelm
+   */
+  SOURCE_TYPE_HELM: 'helm',
+  /**
+   * SourceTypeOCI
+   */
+  SOURCE_TYPE_OCI: 'oci',
+} as const;
+
+export type SourcesSourceType =
+  (typeof SourcesSourceType)[keyof typeof SourcesSourceType];
+
+export const SourcesStatus = {
+  /**
+   * SourceStatusUnknown
+   */
+  SOURCE_STATUS_UNKNOWN: 'unknown',
+  /**
+   * SourceStatusHealthy
+   */
+  SOURCE_STATUS_HEALTHY: 'healthy',
+  /**
+   * SourceStatusError
+   */
+  SOURCE_STATUS_ERROR: 'error',
+} as const;
+
+export type SourcesStatus = (typeof SourcesStatus)[keyof typeof SourcesStatus];
+
+export type SourcesWorkflow = {
+  creationDate?: number;
+  gitConfig?: GittypesRepoConfig;
+  id: number;
+  lastSyncDate?: number;
+  name: string;
+  platform: WorkflowsDeploymentPlatform;
+  sourceId?: number;
+  status: WorkflowsWorkflowStatusObject;
+  target: WorkflowsTarget;
+  type: WorkflowsType;
+};
+
+export type SourcesConnectionInfo = {
+  authentication?: SourcesGitAuthInfo;
+  tlsSkipVerify?: boolean;
+};
+
+export type SourcesGitAuthInfo = {
+  username?: string;
+};
+
+export type SslSslUpdatePayload = {
+  /**
+   * SSL Certificates
+   */
+  Cert?: string;
+  HTTPEnabled?: boolean;
+  Key?: string;
+};
+
+export type StacksComposeStackFromFileContentPayload = {
+  /**
+   * A list of environment variables used during stack deployment
+   */
+  Env?: Array<PortainerPair>;
+  /**
+   * Whether the stack is from a app template
+   */
+  FromAppTemplate?: boolean;
+  /**
+   * Name of the stack
+   */
+  Name: string;
+  /**
+   * Content of the Stack file
+   */
+  StackFileContent: string;
+};
+
+export type StacksComposeStackFromGitRepositoryPayload = {
+  /**
+   * Applicable when deploying with multiple stack files
+   */
+  AdditionalFiles?: Array<string>;
+  /**
+   * Optional GitOps update configuration
+   */
+  AutoUpdate?: PortainerAutoUpdateSettings;
+  /**
+   * Path to the Stack file inside the Git repository
+   */
+  ComposeFile?: string;
+  /**
+   * A list of environment variables used during stack deployment
+   */
+  Env?: Array<PortainerPair>;
+  /**
+   * Whether the stack is from a app template
+   */
+  FromAppTemplate?: boolean;
+  /**
+   * Name of the stack
+   */
+  Name: string;
+  /**
+   * Deprecated: use SourceID instead. Use basic authentication to clone the Git repository.
+   */
+  RepositoryAuthentication?: boolean;
+  /**
+   * Deprecated: use SourceID instead. Password used in basic authentication.
+   */
+  RepositoryPassword?: string;
+  /**
+   * Reference name of a Git repository hosting the Stack file
+   */
+  RepositoryReferenceName?: string;
+  /**
+   * Deprecated: use SourceID instead. URL of a Git repository hosting the Stack file.
+   */
+  RepositoryURL?: string;
+  /**
+   * Deprecated: use SourceID instead. Username used in basic authentication.
+   */
+  RepositoryUsername?: string;
+  /**
+   * SourceID references an existing Source for git credentials/URL.
+   * When set, the inline URL and authentication fields are ignored.
+   */
+  SourceID?: number;
+  /**
+   * Deprecated: use SourceID instead. TLSSkipVerify skips SSL verification when cloning the Git repository.
+   */
+  TLSSkipVerify?: boolean;
+};
+
+export type StacksCreateKubernetesStackResponse = {
+  Output?: string;
+};
+
+export type StacksKubernetesGitDeploymentPayload = {
+  AdditionalFiles?: Array<string>;
+  AutoUpdate?: PortainerAutoUpdateSettings;
+  ComposeFormat?: boolean;
+  ManifestFile?: string;
+  Namespace?: string;
+  /**
+   * Deprecated: use SourceID instead. Use basic authentication to clone the Git repository.
+   */
+  RepositoryAuthentication?: boolean;
+  /**
+   * Deprecated: use SourceID instead. Password used in basic authentication.
+   */
+  RepositoryPassword?: string;
+  /**
+   * Deprecated: use SourceID instead. Reference name of a Git repository hosting the Stack file.
+   */
+  RepositoryReferenceName?: string;
+  /**
+   * Deprecated: use SourceID instead. URL of a Git repository hosting the Stack file.
+   */
+  RepositoryURL?: string;
+  /**
+   * Deprecated: use SourceID instead. Username used in basic authentication.
+   */
+  RepositoryUsername?: string;
+  /**
+   * SourceID references an existing Source for git credentials/URL.
+   * When set, the inline URL and authentication fields are ignored.
+   */
+  SourceID?: number;
+  StackName?: string;
+  /**
+   * Deprecated: use SourceID instead. TLSSkipVerify skips SSL verification when cloning the Git repository.
+   */
+  TLSSkipVerify?: boolean;
+};
+
+export type StacksKubernetesManifestUrlDeploymentPayload = {
+  ComposeFormat?: boolean;
+  ManifestURL?: string;
+  Namespace?: string;
+  StackName?: string;
+};
+
+export type StacksKubernetesStringDeploymentPayload = {
+  ComposeFormat?: boolean;
+  /**
+   * Whether the stack is from a app template
+   */
+  FromAppTemplate?: boolean;
+  Namespace?: string;
+  StackFileContent?: string;
+  StackName?: string;
+};
+
+export type StacksStackFileResponse = {
+  /**
+   * Content of the Stack file
+   */
+  StackFileContent?: string;
+};
+
+export type StacksStackGitRedeployPayload = {
+  Env?: Array<PortainerPair>;
+  Prune?: boolean;
+  /**
+   * Deprecated(2.36): use RepullImageAndRedeploy instead for cleaner responsibility
+   * Force a pulling to current image with the original tag though the image is already the latest
+   */
+  PullImage?: boolean;
+  /**
+   * When true and RepositoryPassword is non-empty, stored credentials are replaced.
+   */
+  RepositoryAuthentication?: boolean;
+  /**
+   * Non-empty value (with RepositoryAuthentication=true) replaces stored credentials; leave blank to keep them.
+   */
+  RepositoryPassword?: string;
+  RepositoryReferenceName?: string;
+  RepositoryUsername?: string;
+  /**
+   * RepullImageAndRedeploy indicates whether to force repulling images and redeploying the stack
+   */
+  RepullImageAndRedeploy?: boolean;
+  StackName?: string;
+};
+
+export type StacksStackGitUpdatePayload = {
+  AdditionalFiles?: Array<string>;
+  AutoUpdate?: PortainerAutoUpdateSettings;
+  ConfigFilePath?: string;
+  Env?: Array<PortainerPair>;
+  Prune?: boolean;
+  /**
+   * Deprecated: use SourceID instead. Use basic authentication to clone the Git repository.
+   */
+  RepositoryAuthentication?: boolean;
+  /**
+   * Deprecated: use SourceID instead. Password used in basic authentication.
+   */
+  RepositoryPassword?: string;
+  RepositoryReferenceName?: string;
+  /**
+   * Deprecated: use SourceID instead. URL of a Git repository hosting the Stack file.
+   */
+  RepositoryURL?: string;
+  /**
+   * Deprecated: use SourceID instead. Username used in basic authentication.
+   */
+  RepositoryUsername?: string;
+  /**
+   * SourceID references an existing Source for git credentials/URL.
+   * When set, the inline URL and authentication fields are ignored.
+   */
+  SourceID?: number;
+  /**
+   * Deprecated: use SourceID instead. Skip TLS verification when cloning the Git repository.
+   */
+  TLSSkipVerify?: boolean;
+};
+
+export type StacksStackMigratePayload = {
+  /**
+   * Environment(Endpoint) identifier of the target environment(endpoint) where the stack will be relocated
+   */
+  EndpointID: number;
+  /**
+   * If provided will rename the migrated stack
+   */
+  Name?: string;
+  /**
+   * Swarm cluster identifier, must match the identifier of the cluster where the stack will be relocated
+   */
+  SwarmID?: string;
+};
+
+export type StacksStackResponse = {
+  /**
+   * Only applies when deploying stack with multiple files
+   */
+  AdditionalFiles?: Array<string>;
+  /**
+   * The GitOps update settings of a git stack
+   */
+  AutoUpdate?: PortainerAutoUpdateSettings;
+  /**
+   * The username which created this stack
+   */
+  CreatedBy?: string;
+  /**
+   * The date in unix time when stack was created
+   */
+  CreationDate?: number;
+  /**
+   * CurrentDeploymentInfo records the git repository state at the time of the last actual deployment.
+   */
+  CurrentDeploymentInfo?: PortainerStackDeploymentInfo;
+  /**
+   * DeploymentStartStatus is the stack status captured when the current
+   * deployment starts. It is used by deployment logic during the current
+   * deployment attempt and is cleared/replaced when a new deployment begins.
+   */
+  DeploymentStartStatus?: PortainerStackStatus;
+  /**
+   * DeploymentStatus records the status progression of the current deployment.
+   * Cleared when a new deployment starts.
+   */
+  DeploymentStatus?: Array<PortainerStackDeploymentStatus>;
+  /**
+   * Environment(Endpoint) identifier. Reference the environment(endpoint) that will be used for deployment
+   */
+  EndpointId?: number;
+  /**
+   * EntryPoint is the path to the config file relative to the project root.
+   * NOTE: For git stacks this mirrors GitConfig.ConfigFilePath and the two are kept in sync
+   * by stackUpdateGit. The deploy command builder (compose_unpacker_cmd_builder) uses this
+   * field directly; Kubernetes deploy and git clone operations use GitConfig.ConfigFilePath.
+   */
+  EntryPoint?: string;
+  /**
+   * A list of environment(endpoint) variables used during stack deployment
+   */
+  Env?: Array<PortainerPair>;
+  /**
+   * Whether the stack is from a app template
+   */
+  FromAppTemplate?: boolean;
+  /**
+   * GitConfig is the git repository configuration for git-backed stacks.
+   * Deprecated: loaded from Source via WorkflowID; kept for DB backwards-compatibility only.
+   * Non-migration code must not read or write this field; use Source records instead.
+   */
+  GitConfig?: GittypesRepoConfig;
+  GitSourceId?: number;
+  /**
+   * Stack Identifier
+   */
+  Id?: number;
+  /**
+   * Stack name
+   */
+  Name?: string;
+  /**
+   * Kubernetes namespace if stack is a kube application
+   */
+  Namespace?: string;
+  /**
+   * The stack deployment option
+   */
+  Option?: PortainerStackOption;
+  /**
+   * Path on disk to the repository hosting the Stack file
+   */
+  ProjectPath?: string;
+  ResourceControl?: PortainerResourceControl;
+  /**
+   * Stack status (1 - active, 2 - inactive, 3 - deploying, 4 - error)
+   */
+  Status?: PortainerStackStatus;
+  /**
+   * Cluster identifier of the Swarm cluster where the stack is deployed
+   */
+  SwarmId?: string;
+  /**
+   * Stack type. 1 for a Swarm stack, 2 for a Compose stack
+   */
+  Type?: PortainerStackType;
+  /**
+   * The date in unix time when stack was last updated
+   */
+  UpdateDate?: number;
+  /**
+   * The username which last updated this stack
+   */
+  UpdatedBy?: string;
+  /**
+   * WorkflowID is the ID of the Workflow that owns the Source for this stack.
+   */
+  WorkflowID?: number;
+};
+
+export type StacksSwarmStackFromFileContentPayload = {
+  /**
+   * A list of environment variables used during stack deployment
+   */
+  Env?: Array<PortainerPair>;
+  /**
+   * Whether the stack is from a app template
+   */
+  FromAppTemplate?: boolean;
+  /**
+   * Name of the stack
+   */
+  Name: string;
+  /**
+   * Content of the Stack file
+   */
+  StackFileContent: string;
+  /**
+   * Swarm cluster identifier
+   */
+  SwarmID: string;
+};
+
+export type StacksSwarmStackFromGitRepositoryPayload = {
+  /**
+   * Applicable when deploying with multiple stack files
+   */
+  AdditionalFiles?: Array<string>;
+  /**
+   * Optional GitOps update configuration
+   */
+  AutoUpdate?: PortainerAutoUpdateSettings;
+  /**
+   * Path to the Stack file inside the Git repository
+   */
+  ComposeFile?: string;
+  /**
+   * A list of environment variables used during stack deployment
+   */
+  Env?: Array<PortainerPair>;
+  /**
+   * Whether the stack is from a app template
+   */
+  FromAppTemplate?: boolean;
+  /**
+   * Name of the stack
+   */
+  Name: string;
+  /**
+   * Deprecated: use SourceID instead. Use basic authentication to clone the Git repository.
+   */
+  RepositoryAuthentication?: boolean;
+  /**
+   * Deprecated: use SourceID instead. Password used in basic authentication.
+   */
+  RepositoryPassword?: string;
+  /**
+   * Reference name of a Git repository hosting the Stack file
+   */
+  RepositoryReferenceName?: string;
+  /**
+   * Deprecated: use SourceID instead. URL of a Git repository hosting the Stack file.
+   */
+  RepositoryURL?: string;
+  /**
+   * Deprecated: use SourceID instead. Username used in basic authentication.
+   */
+  RepositoryUsername?: string;
+  /**
+   * SourceID references an existing Source for git credentials/URL.
+   * When set, the inline URL and authentication fields are ignored.
+   */
+  SourceID?: number;
+  /**
+   * Swarm cluster identifier
+   */
+  SwarmID: string;
+  /**
+   * Deprecated: use SourceID instead. TLSSkipVerify skips SSL verification when cloning the Git repository.
+   */
+  TLSSkipVerify?: boolean;
+};
+
+export type StacksUpdateSwarmStackPayload = {
+  /**
+   * A list of environment(endpoint) variables used during stack deployment
+   */
+  Env?: Array<PortainerPair>;
+  /**
+   * Prune services that are no longer referenced
+   */
+  Prune?: boolean;
+  /**
+   * Deprecated(2.36): use RepullImageAndRedeploy instead for cleaner responsibility
+   * Force a pulling to current image with the original tag though the image is already the latest
+   */
+  PullImage?: boolean;
+  /**
+   * RepullImageAndRedeploy indicates whether to force repulling images and redeploying the stack
+   */
+  RepullImageAndRedeploy?: boolean;
+  /**
+   * New content of the Stack file
+   */
+  StackFileContent?: string;
+};
+
+export type StacksWebhookInvokeResponse = {
+  message?: string;
+  stackId?: number;
+};
+
+export type StatsContainerStats = {
+  healthy?: number;
+  running?: number;
+  stopped?: number;
+  total?: number;
+  unhealthy?: number;
+};
+
+export type SwarmServiceUpdateResponse = {
+  /**
+   * Optional warning messages
+   */
+  Warnings?: Array<string>;
+};
+
+export type SystemNodesCountResponse = {
+  nodes?: number;
+};
+
+export type SystemStatus = {
+  /**
+   * Server Instance ID
+   */
+  InstanceID?: string;
+  /**
+   * Portainer API version
+   */
+  Version?: string;
+};
+
+export type SystemSystemInfoResponse = {
+  agents?: number;
+  edgeAgents?: number;
+  platform?: PlatformContainerPlatform;
+};
+
+export type SystemVersionResponse = {
+  Build?: BuildBuildInfo;
+  DatabaseVersion?: string;
+  Dependencies?: BuildDependenciesInfo;
+  /**
+   * The latest version available
+   */
+  LatestVersion?: string;
+  Runtime?: BuildRuntimeInfo;
+  ServerEdition?: string;
+  ServerVersion?: string;
+  /**
+   * Whether portainer has an update available
+   */
+  UpdateAvailable?: boolean;
+  VersionSupport?: string;
+};
+
+export type TagsTagCreatePayload = {
+  Name: string;
+};
+
+export type TeammembershipsTeamMembershipCreatePayload = {
+  /**
+   * Role for the user inside the team (1 for leader and 2 for regular member)
+   */
+  Role: 1 | 2;
+  /**
+   * Team identifier
+   */
+  TeamID: number;
+  /**
+   * User identifier
+   */
+  UserID: number;
+};
+
+export type TeammembershipsTeamMembershipUpdatePayload = {
+  /**
+   * Role for the user inside the team (1 for leader and 2 for regular member)
+   */
+  Role: 1 | 2;
+  /**
+   * Team identifier
+   */
+  TeamID: number;
+  /**
+   * User identifier
+   */
+  UserID: number;
+};
+
+export type TeamsTeamCreatePayload = {
+  /**
+   * Name
+   */
+  Name: string;
+  /**
+   * TeamLeaders
+   */
+  TeamLeaders?: Array<number>;
+};
+
+export type TeamsTeamUpdatePayload = {
+  /**
+   * Name
+   */
+  Name?: string;
+};
+
+export type TemplatesFileResponse = {
+  /**
+   * The requested file content
+   */
+  FileContent?: string;
+};
+
+export type TemplatesListResponse = {
+  templates?: Array<PortainerTemplate>;
+  version?: string;
+};
+
+export type UnstructuredUnstructured = {
+  /**
+   * Object is a JSON compatible map with string, float, int, bool, []interface{}, or
+   * map[string]interface{}
+   * children.
+   */
+  Object?: {
+    [key: string]: unknown;
+  };
+};
+
+export const UsersAccessLocation = {
+  /**
+   * AccessLocationEnvironment
+   */
+  ACCESS_LOCATION_ENVIRONMENT: 'environment' /**
+   * AccessLocationEnvironmentGroup
+   */,
+  ACCESS_LOCATION_ENVIRONMENT_GROUP: 'environmentGroup',
+} as const;
+
+export type UsersAccessLocation =
+  (typeof UsersAccessLocation)[keyof typeof UsersAccessLocation];
+
+export type UsersEffectiveAccessEntry = {
+  accessLocation?: UsersAccessLocation;
+  endpointId?: number;
+  endpointName?: string;
+  groupId?: number;
+  groupName?: string;
+  roleId?: number;
+  roleName?: string;
+  rolePriority?: number;
+  teamId?: number;
+  teamName?: string;
+};
+
+export type UsersAccessTokenResponse = {
+  apiKey?: PortainerApiKey;
+  rawAPIKey?: string;
+};
+
+export type UsersAddHelmRepoUrlPayload = {
+  url?: string;
+};
+
+export type UsersAdminInitPayload = {
+  /**
+   * Password for the admin user
+   */
+  Password: string;
+  /**
+   * Username for the admin user
+   */
+  Username: string;
+};
+
+export type UsersHelmUserRepositoryResponse = {
+  GlobalRepository?: string;
+  UserRepositories?: Array<PortainerHelmUserRepository>;
+};
+
+export type UsersThemePayload = {
+  /**
+   * Color represents the color theme of the UI
+   */
+  color?: 'dark' | 'light' | 'highcontrast' | 'auto';
+};
+
+export type UsersUserAccessTokenCreatePayload = {
+  description: string;
+  password: string;
+};
+
+export type UsersUserCreatePayload = {
+  Password: string;
+  /**
+   * User role (1 for administrator account and 2 for regular account)
+   */
+  Role: 1 | 2;
+  Username: string;
+};
+
+export type UsersUserUpdatePasswordPayload = {
+  /**
+   * New Password
+   */
+  NewPassword: string;
+  /**
+   * Current Password
+   */
+  Password: string;
+};
+
+export type UsersUserUpdatePayload = {
+  NewPassword: string;
+  Password: string;
+  /**
+   * User role (1 for administrator account and 2 for regular account)
+   */
+  Role: 1 | 2;
+  Theme?: UsersThemePayload;
+  UseCache: boolean;
+  Username: string;
+};
+
+export type V1AwsElasticBlockStoreVolumeSource = {
+  /**
+   * fsType is the filesystem type of the volume that you want to mount.
+   * Tip: Ensure that the filesystem type is supported by the host operating system.
+   * Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
+   * TODO: how do we prevent errors in the filesystem from compromising the machine
+   * +optional
+   */
+  fsType?: string;
+  /**
+   * partition is the partition in the volume that you want to mount.
+   * If omitted, the default is to mount by volume name.
+   * Examples: For volume /dev/sda1, you specify the partition as "1".
+   * Similarly, the volume partition for /dev/sda is "0" (or you can leave the property empty).
+   * +optional
+   */
+  partition?: number;
+  /**
+   * readOnly value true will force the readOnly setting in VolumeMounts.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * volumeID is unique ID of the persistent disk resource in AWS (Amazon EBS volume).
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
+   */
+  volumeID?: string;
+};
+
+export type V1Affinity = {
+  /**
+   * Describes node affinity scheduling rules for the pod.
+   * +optional
+   */
+  nodeAffinity?: V1NodeAffinity;
+  /**
+   * Describes pod affinity scheduling rules (e.g. co-locate this pod in the same node, zone, etc. as some other pod(s)).
+   * +optional
+   */
+  podAffinity?: V1PodAffinity;
+  /**
+   * Describes pod anti-affinity scheduling rules (e.g. avoid putting this pod in the same node, zone, etc. as some other pod(s)).
+   * +optional
+   */
+  podAntiAffinity?: V1PodAntiAffinity;
+};
+
+export type V1AppArmorProfile = {
+  /**
+   * localhostProfile indicates a profile loaded on the node that should be used.
+   * The profile must be preconfigured on the node to work.
+   * Must match the loaded name of the profile.
+   * Must be set if and only if type is "Localhost".
+   * +optional
+   */
+  localhostProfile?: string;
+  /**
+   * type indicates which kind of AppArmor profile will be applied.
+   * Valid options are:
+   * Localhost - a profile pre-loaded on the node.
+   * RuntimeDefault - the container runtime's default profile.
+   * Unconfined - no AppArmor enforcement.
+   * +unionDiscriminator
+   */
+  type?: V1AppArmorProfileType;
+};
+
+export const V1AppArmorProfileType = {
+  /**
+   * AppArmorProfileTypeUnconfined
+   */
+  APP_ARMOR_PROFILE_TYPE_UNCONFINED: 'Unconfined',
+  /**
+   * AppArmorProfileTypeRuntimeDefault
+   */
+  APP_ARMOR_PROFILE_TYPE_RUNTIME_DEFAULT: 'RuntimeDefault',
+  /**
+   * AppArmorProfileTypeLocalhost
+   */
+  APP_ARMOR_PROFILE_TYPE_LOCALHOST: 'Localhost',
+} as const;
+
+export type V1AppArmorProfileType =
+  (typeof V1AppArmorProfileType)[keyof typeof V1AppArmorProfileType];
+
+export type V1AttachedVolume = {
+  /**
+   * DevicePath represents the device path where the volume should be available
+   */
+  devicePath?: string;
+  /**
+   * Name of the attached volume
+   */
+  name?: string;
+};
+
+export const V1AzureDataDiskCachingMode = {
+  /**
+   * AzureDataDiskCachingNone
+   */
+  AZURE_DATA_DISK_CACHING_NONE: 'None',
+  /**
+   * AzureDataDiskCachingReadOnly
+   */
+  AZURE_DATA_DISK_CACHING_READ_ONLY: 'ReadOnly',
+  /**
+   * AzureDataDiskCachingReadWrite
+   */
+  AZURE_DATA_DISK_CACHING_READ_WRITE: 'ReadWrite',
+} as const;
+
+export type V1AzureDataDiskCachingMode =
+  (typeof V1AzureDataDiskCachingMode)[keyof typeof V1AzureDataDiskCachingMode];
+
+export const V1AzureDataDiskKind = {
+  /**
+   * AzureSharedBlobDisk
+   */
+  AZURE_SHARED_BLOB_DISK: 'Shared',
+  /**
+   * AzureDedicatedBlobDisk
+   */
+  AZURE_DEDICATED_BLOB_DISK: 'Dedicated',
+  /**
+   * AzureManagedDisk
+   */
+  AZURE_MANAGED_DISK: 'Managed',
+} as const;
+
+export type V1AzureDataDiskKind =
+  (typeof V1AzureDataDiskKind)[keyof typeof V1AzureDataDiskKind];
+
+export type V1AzureDiskVolumeSource = {
+  /**
+   * cachingMode is the Host Caching mode: None, Read Only, Read Write.
+   * +optional
+   * +default=ref(AzureDataDiskCachingReadWrite)
+   */
+  cachingMode?: V1AzureDataDiskCachingMode;
+  /**
+   * diskName is the Name of the data disk in the blob storage
+   */
+  diskName?: string;
+  /**
+   * diskURI is the URI of data disk in the blob storage
+   */
+  diskURI?: string;
+  /**
+   * fsType is Filesystem type to mount.
+   * Must be a filesystem type supported by the host operating system.
+   * Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+   * +optional
+   * +default="ext4"
+   */
+  fsType?: string;
+  /**
+   * kind expected values are Shared: multiple blob disks per storage account  Dedicated: single blob disk per storage account  Managed: azure managed data disk (only in managed availability set). defaults to shared
+   * +default=ref(AzureSharedBlobDisk)
+   */
+  kind?: V1AzureDataDiskKind;
+  /**
+   * readOnly Defaults to false (read/write). ReadOnly here will force
+   * the ReadOnly setting in VolumeMounts.
+   * +optional
+   * +default=false
+   */
+  readOnly?: boolean;
+};
+
+export type V1AzureFileVolumeSource = {
+  /**
+   * readOnly defaults to false (read/write). ReadOnly here will force
+   * the ReadOnly setting in VolumeMounts.
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * secretName is the  name of secret that contains Azure Storage Account Name and Key
+   */
+  secretName?: string;
+  /**
+   * shareName is the azure share Name
+   */
+  shareName?: string;
+};
+
+export type V1CsiPersistentVolumeSource = {
+  /**
+   * controllerExpandSecretRef is a reference to the secret object containing
+   * sensitive information to pass to the CSI driver to complete the CSI
+   * ControllerExpandVolume call.
+   * This field is optional, and may be empty if no secret is required. If the
+   * secret object contains more than one secret, all secrets are passed.
+   * +optional
+   */
+  controllerExpandSecretRef?: V1SecretReference;
+  /**
+   * controllerPublishSecretRef is a reference to the secret object containing
+   * sensitive information to pass to the CSI driver to complete the CSI
+   * ControllerPublishVolume and ControllerUnpublishVolume calls.
+   * This field is optional, and may be empty if no secret is required. If the
+   * secret object contains more than one secret, all secrets are passed.
+   * +optional
+   */
+  controllerPublishSecretRef?: V1SecretReference;
+  /**
+   * driver is the name of the driver to use for this volume.
+   * Required.
+   */
+  driver?: string;
+  /**
+   * fsType to mount. Must be a filesystem type supported by the host operating system.
+   * Ex. "ext4", "xfs", "ntfs".
+   * +optional
+   */
+  fsType?: string;
+  /**
+   * nodeExpandSecretRef is a reference to the secret object containing
+   * sensitive information to pass to the CSI driver to complete the CSI
+   * NodeExpandVolume call.
+   * This field is optional, may be omitted if no secret is required. If the
+   * secret object contains more than one secret, all secrets are passed.
+   * +optional
+   */
+  nodeExpandSecretRef?: V1SecretReference;
+  /**
+   * nodePublishSecretRef is a reference to the secret object containing
+   * sensitive information to pass to the CSI driver to complete the CSI
+   * NodePublishVolume and NodeUnpublishVolume calls.
+   * This field is optional, and may be empty if no secret is required. If the
+   * secret object contains more than one secret, all secrets are passed.
+   * +optional
+   */
+  nodePublishSecretRef?: V1SecretReference;
+  /**
+   * nodeStageSecretRef is a reference to the secret object containing sensitive
+   * information to pass to the CSI driver to complete the CSI NodeStageVolume
+   * and NodeStageVolume and NodeUnstageVolume calls.
+   * This field is optional, and may be empty if no secret is required. If the
+   * secret object contains more than one secret, all secrets are passed.
+   * +optional
+   */
+  nodeStageSecretRef?: V1SecretReference;
+  /**
+   * readOnly value to pass to ControllerPublishVolumeRequest.
+   * Defaults to false (read/write).
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * volumeAttributes of the volume to publish.
+   * +optional
+   */
+  volumeAttributes?: {
+    [key: string]: string;
+  };
+  /**
+   * volumeHandle is the unique volume name returned by the CSI volume
+   * plugin’s CreateVolume to refer to the volume on all subsequent calls.
+   * Required.
+   */
+  volumeHandle?: string;
+};
+
+export type V1CsiVolumeSource = {
+  /**
+   * driver is the name of the CSI driver that handles this volume.
+   * Consult with your admin for the correct name as registered in the cluster.
+   */
+  driver?: string;
+  /**
+   * fsType to mount. Ex. "ext4", "xfs", "ntfs".
+   * If not provided, the empty value is passed to the associated CSI driver
+   * which will determine the default filesystem to apply.
+   * +optional
+   */
+  fsType?: string;
+  /**
+   * nodePublishSecretRef is a reference to the secret object containing
+   * sensitive information to pass to the CSI driver to complete the CSI
+   * NodePublishVolume and NodeUnpublishVolume calls.
+   * This field is optional, and  may be empty if no secret is required. If the
+   * secret object contains more than one secret, all secret references are passed.
+   * +optional
+   */
+  nodePublishSecretRef?: K8sIoApiCoreV1LocalObjectReference;
+  /**
+   * readOnly specifies a read-only configuration for the volume.
+   * Defaults to false (read/write).
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * volumeAttributes stores driver-specific properties that are passed to the CSI
+   * driver. Consult your driver's documentation for supported values.
+   * +optional
+   */
+  volumeAttributes?: {
+    [key: string]: string;
+  };
+};
+
+export type V1Capabilities = {
+  /**
+   * Added capabilities
+   * +optional
+   * +listType=atomic
+   */
+  add?: Array<string>;
+  /**
+   * Removed capabilities
+   * +optional
+   * +listType=atomic
+   */
+  drop?: Array<string>;
+};
+
+export type V1CephFsVolumeSource = {
+  /**
+   * monitors is Required: Monitors is a collection of Ceph monitors
+   * More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+   * +listType=atomic
+   */
+  monitors?: Array<string>;
+  /**
+   * path is Optional: Used as the mounted root, rather than the full Ceph tree, default is /
+   * +optional
+   */
+  path?: string;
+  /**
+   * readOnly is Optional: Defaults to false (read/write). ReadOnly here will force
+   * the ReadOnly setting in VolumeMounts.
+   * More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * secretFile is Optional: SecretFile is the path to key ring for User, default is /etc/ceph/user.secret
+   * More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+   * +optional
+   */
+  secretFile?: string;
+  /**
+   * secretRef is Optional: SecretRef is reference to the authentication secret for User, default is empty.
+   * More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+   * +optional
+   */
+  secretRef?: K8sIoApiCoreV1LocalObjectReference;
+  /**
+   * user is optional: User is the rados user name, default is admin
+   * More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+   * +optional
+   */
+  user?: string;
+};
+
+export type V1CinderVolumeSource = {
+  /**
+   * fsType is the filesystem type to mount.
+   * Must be a filesystem type supported by the host operating system.
+   * Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+   * More info: https://examples.k8s.io/mysql-cinder-pd/README.md
+   * +optional
+   */
+  fsType?: string;
+  /**
+   * readOnly defaults to false (read/write). ReadOnly here will force
+   * the ReadOnly setting in VolumeMounts.
+   * More info: https://examples.k8s.io/mysql-cinder-pd/README.md
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * secretRef is optional: points to a secret object containing parameters used to connect
+   * to OpenStack.
+   * +optional
+   */
+  secretRef?: K8sIoApiCoreV1LocalObjectReference;
+  /**
+   * volumeID used to identify the volume in cinder.
+   * More info: https://examples.k8s.io/mysql-cinder-pd/README.md
+   */
+  volumeID?: string;
+};
+
+export type V1ClusterTrustBundleProjection = {
+  /**
+   * Select all ClusterTrustBundles that match this label selector.  Only has
+   * effect if signerName is set.  Mutually-exclusive with name.  If unset,
+   * interpreted as "match nothing".  If set but empty, interpreted as "match
+   * everything".
+   * +optional
+   */
+  labelSelector?: V1LabelSelector;
+  /**
+   * Select a single ClusterTrustBundle by object name.  Mutually-exclusive
+   * with signerName and labelSelector.
+   * +optional
+   */
+  name?: string;
+  /**
+   * If true, don't block pod startup if the referenced ClusterTrustBundle(s)
+   * aren't available.  If using name, then the named ClusterTrustBundle is
+   * allowed not to exist.  If using signerName, then the combination of
+   * signerName and labelSelector is allowed to match zero
+   * ClusterTrustBundles.
+   * +optional
+   */
+  optional?: boolean;
+  /**
+   * Relative path from the volume root to write the bundle.
+   */
+  path?: string;
+  /**
+   * Select all ClusterTrustBundles that match this signer name.
+   * Mutually-exclusive with name.  The contents of all selected
+   * ClusterTrustBundles will be unified and deduplicated.
+   * +optional
+   */
+  signerName?: string;
+};
+
+export type V1ConfigMapEnvSource = {
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   * +optional
+   * +default=""
+   * +kubebuilder:default=""
+   * TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
+   */
+  name?: string;
+  /**
+   * Specify whether the ConfigMap must be defined
+   * +optional
+   */
+  optional?: boolean;
+};
+
+export type V1ConfigMapKeySelector = {
+  /**
+   * The key to select.
+   */
+  key?: string;
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   * +optional
+   * +default=""
+   * +kubebuilder:default=""
+   * TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
+   */
+  name?: string;
+  /**
+   * Specify whether the ConfigMap or its key must be defined
+   * +optional
+   */
+  optional?: boolean;
+};
+
+export type V1ConfigMapNodeConfigSource = {
+  /**
+   * KubeletConfigKey declares which key of the referenced ConfigMap corresponds to the KubeletConfiguration structure
+   * This field is required in all cases.
+   */
+  kubeletConfigKey?: string;
+  /**
+   * Name is the metadata.name of the referenced ConfigMap.
+   * This field is required in all cases.
+   */
+  name?: string;
+  /**
+   * Namespace is the metadata.namespace of the referenced ConfigMap.
+   * This field is required in all cases.
+   */
+  namespace?: string;
+  /**
+   * ResourceVersion is the metadata.ResourceVersion of the referenced ConfigMap.
+   * This field is forbidden in Node.Spec, and required in Node.Status.
+   * +optional
+   */
+  resourceVersion?: string;
+  /**
+   * UID is the metadata.UID of the referenced ConfigMap.
+   * This field is forbidden in Node.Spec, and required in Node.Status.
+   * +optional
+   */
+  uid?: string;
+};
+
+export type V1ConfigMapProjection = {
+  /**
+   * items if unspecified, each key-value pair in the Data field of the referenced
+   * ConfigMap will be projected into the volume as a file whose name is the
+   * key and content is the value. If specified, the listed keys will be
+   * projected into the specified paths, and unlisted keys will not be
+   * present. If a key is specified which is not present in the ConfigMap,
+   * the volume setup will error unless it is marked optional. Paths must be
+   * relative and may not contain the '..' path or start with '..'.
+   * +optional
+   * +listType=atomic
+   */
+  items?: Array<V1KeyToPath>;
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   * +optional
+   * +default=""
+   * +kubebuilder:default=""
+   * TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
+   */
+  name?: string;
+  /**
+   * optional specify whether the ConfigMap or its keys must be defined
+   * +optional
+   */
+  optional?: boolean;
+};
+
+export type V1ConfigMapVolumeSource = {
+  /**
+   * defaultMode is optional: mode bits used to set permissions on created files by default.
+   * Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511.
+   * YAML accepts both octal and decimal values, JSON requires decimal values for mode bits.
+   * Defaults to 0644.
+   * Directories within the path are not affected by this setting.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup, and the result can be other mode bits set.
+   * +optional
+   */
+  defaultMode?: number;
+  /**
+   * items if unspecified, each key-value pair in the Data field of the referenced
+   * ConfigMap will be projected into the volume as a file whose name is the
+   * key and content is the value. If specified, the listed keys will be
+   * projected into the specified paths, and unlisted keys will not be
+   * present. If a key is specified which is not present in the ConfigMap,
+   * the volume setup will error unless it is marked optional. Paths must be
+   * relative and may not contain the '..' path or start with '..'.
+   * +optional
+   * +listType=atomic
+   */
+  items?: Array<V1KeyToPath>;
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   * +optional
+   * +default=""
+   * +kubebuilder:default=""
+   * TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
+   */
+  name?: string;
+  /**
+   * optional specify whether the ConfigMap or its keys must be defined
+   * +optional
+   */
+  optional?: boolean;
+};
+
+export type V1Container = {
+  /**
+   * Arguments to the entrypoint.
+   * The container image's CMD is used if this is not provided.
+   * Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+   * cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+   * produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+   * of whether the variable exists or not. Cannot be updated.
+   * More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
+   * +optional
+   * +listType=atomic
+   */
+  args?: Array<string>;
+  /**
+   * Entrypoint array. Not executed within a shell.
+   * The container image's ENTRYPOINT is used if this is not provided.
+   * Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+   * cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+   * produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+   * of whether the variable exists or not. Cannot be updated.
+   * More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
+   * +optional
+   * +listType=atomic
+   */
+  command?: Array<string>;
+  /**
+   * List of environment variables to set in the container.
+   * Cannot be updated.
+   * +optional
+   * +patchMergeKey=name
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=name
+   */
+  env?: Array<V1EnvVar>;
+  /**
+   * List of sources to populate environment variables in the container.
+   * The keys defined within a source may consist of any printable ASCII characters except '='.
+   * When a key exists in multiple
+   * sources, the value associated with the last source will take precedence.
+   * Values defined by an Env with a duplicate key will take precedence.
+   * Cannot be updated.
+   * +optional
+   * +listType=atomic
+   */
+  envFrom?: Array<V1EnvFromSource>;
+  /**
+   * Container image name.
+   * More info: https://kubernetes.io/docs/concepts/containers/images
+   * This field is optional to allow higher level config management to default or override
+   * container images in workload controllers like Deployments and StatefulSets.
+   * +optional
+   */
+  image?: string;
+  /**
+   * Image pull policy.
+   * One of Always, Never, IfNotPresent.
+   * Defaults to Always if :latest tag is specified, or IfNotPresent otherwise.
+   * Cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/containers/images#updating-images
+   * +optional
+   */
+  imagePullPolicy?: V1PullPolicy;
+  /**
+   * Actions that the management system should take in response to container lifecycle events.
+   * Cannot be updated.
+   * +optional
+   */
+  lifecycle?: V1Lifecycle;
+  /**
+   * Periodic probe of container liveness.
+   * Container will be restarted if the probe fails.
+   * Cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   * +optional
+   */
+  livenessProbe?: V1Probe;
+  /**
+   * Name of the container specified as a DNS_LABEL.
+   * Each container in a pod must have a unique name (DNS_LABEL).
+   * Cannot be updated.
+   */
+  name?: string;
+  /**
+   * List of ports to expose from the container. Not specifying a port here
+   * DOES NOT prevent that port from being exposed. Any port which is
+   * listening on the default "0.0.0.0" address inside a container will be
+   * accessible from the network.
+   * Modifying this array with strategic merge patch may corrupt the data.
+   * For more information See https://github.com/kubernetes/kubernetes/issues/108255.
+   * Cannot be updated.
+   * +optional
+   * +patchMergeKey=containerPort
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=containerPort
+   * +listMapKey=protocol
+   */
+  ports?: Array<V1ContainerPort>;
+  /**
+   * Periodic probe of container service readiness.
+   * Container will be removed from service endpoints if the probe fails.
+   * Cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   * +optional
+   */
+  readinessProbe?: V1Probe;
+  /**
+   * Resources resize policy for the container.
+   * This field cannot be set on ephemeral containers.
+   * +featureGate=InPlacePodVerticalScaling
+   * +optional
+   * +listType=atomic
+   */
+  resizePolicy?: Array<V1ContainerResizePolicy>;
+  /**
+   * Compute Resources required by this container.
+   * Cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+   * +optional
+   */
+  resources?: V1ResourceRequirements;
+  /**
+   * RestartPolicy defines the restart behavior of individual containers in a pod.
+   * This overrides the pod-level restart policy. When this field is not specified,
+   * the restart behavior is defined by the Pod's restart policy and the container type.
+   * Additionally, setting the RestartPolicy as "Always" for the init container will
+   * have the following effect:
+   * this init container will be continually restarted on
+   * exit until all regular containers have terminated. Once all regular
+   * containers have completed, all init containers with restartPolicy "Always"
+   * will be shut down. This lifecycle differs from normal init containers and
+   * is often referred to as a "sidecar" container. Although this init
+   * container still starts in the init container sequence, it does not wait
+   * for the container to complete before proceeding to the next init
+   * container. Instead, the next init container starts immediately after this
+   * init container is started, or after any startupProbe has successfully
+   * completed.
+   * +optional
+   */
+  restartPolicy?: V1ContainerRestartPolicy;
+  /**
+   * Represents a list of rules to be checked to determine if the
+   * container should be restarted on exit. The rules are evaluated in
+   * order. Once a rule matches a container exit condition, the remaining
+   * rules are ignored. If no rule matches the container exit condition,
+   * the Container-level restart policy determines the whether the container
+   * is restarted or not. Constraints on the rules:
+   * - At most 20 rules are allowed.
+   * - Rules can have the same action.
+   * - Identical rules are not forbidden in validations.
+   * When rules are specified, container MUST set RestartPolicy explicitly
+   * even it if matches the Pod's RestartPolicy.
+   * +featureGate=ContainerRestartRules
+   * +optional
+   * +listType=atomic
+   */
+  restartPolicyRules?: Array<V1ContainerRestartRule>;
+  /**
+   * SecurityContext defines the security options the container should be run with.
+   * If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext.
+   * More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+   * +optional
+   */
+  securityContext?: V1SecurityContext;
+  /**
+   * StartupProbe indicates that the Pod has successfully initialized.
+   * If specified, no other probes are executed until this completes successfully.
+   * If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+   * This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+   * when it might take a long time to load data or warm a cache, than during steady-state operation.
+   * This cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   * +optional
+   */
+  startupProbe?: V1Probe;
+  /**
+   * Whether this container should allocate a buffer for stdin in the container runtime. If this
+   * is not set, reads from stdin in the container will always result in EOF.
+   * Default is false.
+   * +optional
+   */
+  stdin?: boolean;
+  /**
+   * Whether the container runtime should close the stdin channel after it has been opened by
+   * a single attach. When stdin is true the stdin stream will remain open across multiple attach
+   * sessions. If stdinOnce is set to true, stdin is opened on container start, is empty until the
+   * first client attaches to stdin, and then remains open and accepts data until the client disconnects,
+   * at which time stdin is closed and remains closed until the container is restarted. If this
+   * flag is false, a container processes that reads from stdin will never receive an EOF.
+   * Default is false
+   * +optional
+   */
+  stdinOnce?: boolean;
+  /**
+   * Optional: Path at which the file to which the container's termination message
+   * will be written is mounted into the container's filesystem.
+   * Message written is intended to be brief final status, such as an assertion failure message.
+   * Will be truncated by the node if greater than 4096 bytes. The total message length across
+   * all containers will be limited to 12kb.
+   * Defaults to /dev/termination-log.
+   * Cannot be updated.
+   * +optional
+   */
+  terminationMessagePath?: string;
+  /**
+   * Indicate how the termination message should be populated. File will use the contents of
+   * terminationMessagePath to populate the container status message on both success and failure.
+   * FallbackToLogsOnError will use the last chunk of container log output if the termination
+   * message file is empty and the container exited with an error.
+   * The log output is limited to 2048 bytes or 80 lines, whichever is smaller.
+   * Defaults to File.
+   * Cannot be updated.
+   * +optional
+   */
+  terminationMessagePolicy?: V1TerminationMessagePolicy;
+  /**
+   * Whether this container should allocate a TTY for itself, also requires 'stdin' to be true.
+   * Default is false.
+   * +optional
+   */
+  tty?: boolean;
+  /**
+   * volumeDevices is the list of block devices to be used by the container.
+   * +patchMergeKey=devicePath
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=devicePath
+   * +optional
+   */
+  volumeDevices?: Array<V1VolumeDevice>;
+  /**
+   * Pod volumes to mount into the container's filesystem.
+   * Cannot be updated.
+   * +optional
+   * +patchMergeKey=mountPath
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=mountPath
+   */
+  volumeMounts?: Array<V1VolumeMount>;
+  /**
+   * Container's working directory.
+   * If not specified, the container runtime's default will be used, which
+   * might be configured in the container image.
+   * Cannot be updated.
+   * +optional
+   */
+  workingDir?: string;
+};
+
+export type V1ContainerExtendedResourceRequest = {
+  /**
+   * The name of the container requesting resources.
+   */
+  containerName?: string;
+  /**
+   * The name of the request in the special ResourceClaim which corresponds to the extended resource.
+   */
+  requestName?: string;
+  /**
+   * The name of the extended resource in that container which gets backed by DRA.
+   */
+  resourceName?: string;
+};
+
+export type V1ContainerImage = {
+  /**
+   * Names by which this image is known.
+   * e.g. ["kubernetes.example/hyperkube:v1.0.7", "cloud-vendor.registry.example/cloud-vendor/hyperkube:v1.0.7"]
+   * +optional
+   * +listType=atomic
+   */
+  names?: Array<string>;
+  /**
+   * The size of the image in bytes.
+   * +optional
+   */
+  sizeBytes?: number;
+};
+
+export type V1ContainerPort = {
+  /**
+   * Number of port to expose on the pod's IP address.
+   * This must be a valid port number, 0 < x < 65536.
+   */
+  containerPort?: number;
+  /**
+   * What host IP to bind the external port to.
+   * +optional
+   */
+  hostIP?: string;
+  /**
+   * Number of port to expose on the host.
+   * If specified, this must be a valid port number, 0 < x < 65536.
+   * If HostNetwork is specified, this must match ContainerPort.
+   * Most containers do not need this.
+   * +optional
+   */
+  hostPort?: number;
+  /**
+   * If specified, this must be an IANA_SVC_NAME and unique within the pod. Each
+   * named port in a pod must have a unique name. Name for the port that can be
+   * referred to by services.
+   * +optional
+   */
+  name?: string;
+  /**
+   * Protocol for port. Must be UDP, TCP, or SCTP.
+   * Defaults to "TCP".
+   * +optional
+   * +default="TCP"
+   */
+  protocol?: V1Protocol;
+};
+
+export type V1ContainerResizePolicy = {
+  /**
+   * Name of the resource to which this resource resize policy applies.
+   * Supported values: cpu, memory.
+   */
+  resourceName?: V1ResourceName;
+  /**
+   * Restart policy to apply when specified resource is resized.
+   * If not specified, it defaults to NotRequired.
+   */
+  restartPolicy?: V1ResourceResizeRestartPolicy;
+};
+
+export const V1ContainerRestartPolicy = {
+  /**
+   * ContainerRestartPolicyAlways
+   */
+  CONTAINER_RESTART_POLICY_ALWAYS: 'Always',
+  /**
+   * ContainerRestartPolicyNever
+   */
+  CONTAINER_RESTART_POLICY_NEVER: 'Never',
+  /**
+   * ContainerRestartPolicyOnFailure
+   */
+  CONTAINER_RESTART_POLICY_ON_FAILURE: 'OnFailure',
+} as const;
+
+export type V1ContainerRestartPolicy =
+  (typeof V1ContainerRestartPolicy)[keyof typeof V1ContainerRestartPolicy];
+
+export type V1ContainerRestartRule = {
+  /**
+   * Specifies the action taken on a container exit if the requirements
+   * are satisfied. The only possible value is "Restart" to restart the
+   * container.
+   * +required
+   */
+  action?: V1ContainerRestartRuleAction;
+  /**
+   * Represents the exit codes to check on container exits.
+   * +optional
+   * +oneOf=when
+   */
+  exitCodes?: V1ContainerRestartRuleOnExitCodes;
+};
+
+export const V1ContainerRestartRuleAction = {
+  /**
+   * ContainerRestartRuleActionRestart
+   */
+  CONTAINER_RESTART_RULE_ACTION_RESTART: 'Restart' /**
+   * ContainerRestartRuleActionRestartAllContainers
+   */,
+  CONTAINER_RESTART_RULE_ACTION_RESTART_ALL_CONTAINERS: 'RestartAllContainers',
+} as const;
+
+export type V1ContainerRestartRuleAction =
+  (typeof V1ContainerRestartRuleAction)[keyof typeof V1ContainerRestartRuleAction];
+
+export type V1ContainerRestartRuleOnExitCodes = {
+  /**
+   * Represents the relationship between the container exit code(s) and the
+   * specified values. Possible values are:
+   * - In: the requirement is satisfied if the container exit code is in the
+   * set of specified values.
+   * - NotIn: the requirement is satisfied if the container exit code is
+   * not in the set of specified values.
+   * +required
+   */
+  operator?: V1ContainerRestartRuleOnExitCodesOperator;
+  /**
+   * Specifies the set of values to check for container exit codes.
+   * At most 255 elements are allowed.
+   * +optional
+   * +listType=set
+   */
+  values?: Array<number>;
+};
+
+export const V1ContainerRestartRuleOnExitCodesOperator = {
+  /**
+   * ContainerRestartRuleOnExitCodesOpIn
+   */
+  CONTAINER_RESTART_RULE_ON_EXIT_CODES_OP_IN: 'In' /**
+   * ContainerRestartRuleOnExitCodesOpNotIn
+   */,
+  CONTAINER_RESTART_RULE_ON_EXIT_CODES_OP_NOT_IN: 'NotIn',
+} as const;
+
+export type V1ContainerRestartRuleOnExitCodesOperator =
+  (typeof V1ContainerRestartRuleOnExitCodesOperator)[keyof typeof V1ContainerRestartRuleOnExitCodesOperator];
+
+export type V1ContainerState = {
+  /**
+   * Details about a running container
+   * +optional
+   */
+  running?: V1ContainerStateRunning;
+  /**
+   * Details about a terminated container
+   * +optional
+   */
+  terminated?: V1ContainerStateTerminated;
+  /**
+   * Details about a waiting container
+   * +optional
+   */
+  waiting?: V1ContainerStateWaiting;
+};
+
+export type V1ContainerStateRunning = {
+  /**
+   * Time at which the container was last (re-)started
+   * +optional
+   */
+  startedAt?: string;
+};
+
+export type V1ContainerStateTerminated = {
+  /**
+   * Container's ID in the format '<type>://<container_id>'
+   * +optional
+   */
+  containerID?: string;
+  /**
+   * Exit status from the last termination of the container
+   */
+  exitCode?: number;
+  /**
+   * Time at which the container last terminated
+   * +optional
+   */
+  finishedAt?: string;
+  /**
+   * Message regarding the last termination of the container
+   * +optional
+   */
+  message?: string;
+  /**
+   * (brief) reason from the last termination of the container
+   * +optional
+   */
+  reason?: string;
+  /**
+   * Signal from the last termination of the container
+   * +optional
+   */
+  signal?: number;
+  /**
+   * Time at which previous execution of the container started
+   * +optional
+   */
+  startedAt?: string;
+};
+
+export type V1ContainerStateWaiting = {
+  /**
+   * Message regarding why the container is not yet running.
+   * +optional
+   */
+  message?: string;
+  /**
+   * (brief) reason the container is not yet running.
+   * +optional
+   */
+  reason?: string;
+};
+
+export type V1ContainerStatus = {
+  /**
+   * AllocatedResources represents the compute resources allocated for this container by the
+   * node. Kubelet sets this value to Container.Resources.Requests upon successful pod admission
+   * and after successfully admitting desired pod resize.
+   * +featureGate=InPlacePodVerticalScalingAllocatedStatus
+   * +optional
+   */
+  allocatedResources?: V1ResourceList;
+  /**
+   * AllocatedResourcesStatus represents the status of various resources
+   * allocated for this Pod.
+   * +featureGate=ResourceHealthStatus
+   * +optional
+   * +patchMergeKey=name
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=name
+   */
+  allocatedResourcesStatus?: Array<V1ResourceStatus>;
+  /**
+   * ContainerID is the ID of the container in the format '<type>://<container_id>'.
+   * Where type is a container runtime identifier, returned from Version call of CRI API
+   * (for example "containerd").
+   * +optional
+   */
+  containerID?: string;
+  /**
+   * Image is the name of container image that the container is running.
+   * The container image may not match the image used in the PodSpec,
+   * as it may have been resolved by the runtime.
+   * More info: https://kubernetes.io/docs/concepts/containers/images.
+   */
+  image?: string;
+  /**
+   * ImageID is the image ID of the container's image. The image ID may not
+   * match the image ID of the image used in the PodSpec, as it may have been
+   * resolved by the runtime.
+   */
+  imageID?: string;
+  /**
+   * LastTerminationState holds the last termination state of the container to
+   * help debug container crashes and restarts. This field is not
+   * populated if the container is still running and RestartCount is 0.
+   * +optional
+   */
+  lastState?: V1ContainerState;
+  /**
+   * Name is a DNS_LABEL representing the unique name of the container.
+   * Each container in a pod must have a unique name across all container types.
+   * Cannot be updated.
+   */
+  name?: string;
+  /**
+   * Ready specifies whether the container is currently passing its readiness check.
+   * The value will change as readiness probes keep executing. If no readiness
+   * probes are specified, this field defaults to true once the container is
+   * fully started (see Started field).
+   *
+   * The value is typically used to determine whether a container is ready to
+   * accept traffic.
+   */
+  ready?: boolean;
+  /**
+   * Resources represents the compute resource requests and limits that have been successfully
+   * enacted on the running container after it has been started or has been successfully resized.
+   * +featureGate=InPlacePodVerticalScaling
+   * +optional
+   */
+  resources?: V1ResourceRequirements;
+  /**
+   * RestartCount holds the number of times the container has been restarted.
+   * Kubelet makes an effort to always increment the value, but there
+   * are cases when the state may be lost due to node restarts and then the value
+   * may be reset to 0. The value is never negative.
+   */
+  restartCount?: number;
+  /**
+   * Started indicates whether the container has finished its postStart lifecycle hook
+   * and passed its startup probe.
+   * Initialized as false, becomes true after startupProbe is considered
+   * successful. Resets to false when the container is restarted, or if kubelet
+   * loses state temporarily. In both cases, startup probes will run again.
+   * Is always true when no startupProbe is defined and container is running and
+   * has passed the postStart lifecycle hook. The null value must be treated the
+   * same as false.
+   * +optional
+   */
+  started?: boolean;
+  /**
+   * State holds details about the container's current condition.
+   * +optional
+   */
+  state?: V1ContainerState;
+  /**
+   * StopSignal reports the effective stop signal for this container
+   * +featureGate=ContainerStopSignals
+   * +optional
+   */
+  stopSignal?: V1Signal;
+  /**
+   * User represents user identity information initially attached to the first process of the container
+   * +featureGate=SupplementalGroupsPolicy
+   * +optional
+   */
+  user?: V1ContainerUser;
+  /**
+   * Status of volume mounts.
+   * +optional
+   * +patchMergeKey=mountPath
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=mountPath
+   */
+  volumeMounts?: Array<V1VolumeMountStatus>;
+};
+
+export type V1ContainerUser = {
+  /**
+   * Linux holds user identity information initially attached to the first process of the containers in Linux.
+   * Note that the actual running identity can be changed if the process has enough privilege to do so.
+   * +optional
+   */
+  linux?: V1LinuxContainerUser;
+};
+
+export const V1DnsPolicy = {
+  /**
+   * DNSClusterFirstWithHostNet
+   */
+  DNS_CLUSTER_FIRST_WITH_HOST_NET: 'ClusterFirstWithHostNet',
+  /**
+   * DNSClusterFirst
+   */
+  DNS_CLUSTER_FIRST: 'ClusterFirst',
+  /**
+   * DNSDefault
+   */
+  DNS_DEFAULT: 'Default',
+  /**
+   * DNSNone
+   */
+  DNS_NONE: 'None',
+} as const;
+
+export type V1DnsPolicy = (typeof V1DnsPolicy)[keyof typeof V1DnsPolicy];
+
+export type V1DaemonEndpoint = {
+  /**
+   * Port number of the given endpoint.
+   */
+  Port?: number;
+};
+
+export type V1Deployment = {
   /**
    * APIVersion defines the versioned schema of this representation of an object.
    * Servers should convert recognized schemas to the latest internal value, and
@@ -196,10 +6749,6 @@ export type V1Beta1PodMetricsList = {
    * +optional
    */
   apiVersion?: string;
-  /**
-   * List of pod metrics.
-   */
-  items?: Array<V1Beta1PodMetrics>;
   /**
    * Kind is a string value representing the REST resource this object represents.
    * Servers may infer this from the endpoint the client submits requests to.
@@ -210,10 +6759,1195 @@ export type V1Beta1PodMetricsList = {
    */
   kind?: string;
   /**
-   * Standard list metadata.
-   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * Standard object's metadata.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+   * +optional
    */
-  metadata?: V1ListMeta;
+  metadata?: V1ObjectMeta;
+  /**
+   * Specification of the desired behavior of the Deployment.
+   * +optional
+   */
+  spec?: V1DeploymentSpec;
+  /**
+   * Most recently observed status of the Deployment.
+   * +optional
+   */
+  status?: V1DeploymentStatus;
+};
+
+export type V1DeploymentCondition = {
+  /**
+   * Last time the condition transitioned from one status to another.
+   */
+  lastTransitionTime?: string;
+  /**
+   * The last time this condition was updated.
+   */
+  lastUpdateTime?: string;
+  /**
+   * A human readable message indicating details about the transition.
+   */
+  message?: string;
+  /**
+   * The reason for the condition's last transition.
+   */
+  reason?: string;
+  /**
+   * Status of the condition, one of True, False, Unknown.
+   */
+  status?: K8sIoApiCoreV1ConditionStatus;
+  /**
+   * Type of deployment condition.
+   */
+  type?: V1DeploymentConditionType;
+};
+
+export const V1DeploymentConditionType = {
+  /**
+   * DeploymentAvailable
+   */
+  DEPLOYMENT_AVAILABLE: 'Available',
+  /**
+   * DeploymentProgressing
+   */
+  DEPLOYMENT_PROGRESSING: 'Progressing',
+  /**
+   * DeploymentReplicaFailure
+   */
+  DEPLOYMENT_REPLICA_FAILURE: 'ReplicaFailure',
+} as const;
+
+export type V1DeploymentConditionType =
+  (typeof V1DeploymentConditionType)[keyof typeof V1DeploymentConditionType];
+
+export type V1DeploymentSpec = {
+  /**
+   * Minimum number of seconds for which a newly created pod should be ready
+   * without any of its container crashing, for it to be considered available.
+   * Defaults to 0 (pod will be considered available as soon as it is ready)
+   * +optional
+   */
+  minReadySeconds?: number;
+  /**
+   * Indicates that the deployment is paused.
+   * +optional
+   */
+  paused?: boolean;
+  /**
+   * The maximum time in seconds for a deployment to make progress before it
+   * is considered to be failed. The deployment controller will continue to
+   * process failed deployments and a condition with a ProgressDeadlineExceeded
+   * reason will be surfaced in the deployment status. Note that progress will
+   * not be estimated during the time a deployment is paused. Defaults to 600s.
+   */
+  progressDeadlineSeconds?: number;
+  /**
+   * Number of desired pods. This is a pointer to distinguish between explicit
+   * zero and not specified. Defaults to 1.
+   * +optional
+   */
+  replicas?: number;
+  /**
+   * The number of old ReplicaSets to retain to allow rollback.
+   * This is a pointer to distinguish between explicit zero and not specified.
+   * Defaults to 10.
+   * +optional
+   */
+  revisionHistoryLimit?: number;
+  /**
+   * Label selector for pods. Existing ReplicaSets whose pods are
+   * selected by this will be the ones affected by this deployment.
+   * It must match the pod template's labels.
+   */
+  selector?: V1LabelSelector;
+  /**
+   * The deployment strategy to use to replace existing pods with new ones.
+   * +optional
+   * +patchStrategy=retainKeys
+   */
+  strategy?: V1DeploymentStrategy;
+  /**
+   * Template describes the pods that will be created.
+   * The only allowed template.spec.restartPolicy value is "Always".
+   */
+  template?: V1PodTemplateSpec;
+};
+
+export type V1DeploymentStatus = {
+  /**
+   * Total number of available non-terminating pods (ready for at least minReadySeconds) targeted by this deployment.
+   * +optional
+   */
+  availableReplicas?: number;
+  /**
+   * Count of hash collisions for the Deployment. The Deployment controller uses this
+   * field as a collision avoidance mechanism when it needs to create the name for the
+   * newest ReplicaSet.
+   * +optional
+   */
+  collisionCount?: number;
+  /**
+   * Represents the latest available observations of a deployment's current state.
+   * +patchMergeKey=type
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=type
+   */
+  conditions?: Array<V1DeploymentCondition>;
+  /**
+   * The generation observed by the deployment controller.
+   * +optional
+   */
+  observedGeneration?: number;
+  /**
+   * Total number of non-terminating pods targeted by this Deployment with a Ready Condition.
+   * +optional
+   */
+  readyReplicas?: number;
+  /**
+   * Total number of non-terminating pods targeted by this deployment (their labels match the selector).
+   * +optional
+   */
+  replicas?: number;
+  /**
+   * Total number of terminating pods targeted by this deployment. Terminating pods have a non-null
+   * .metadata.deletionTimestamp and have not yet reached the Failed or Succeeded .status.phase.
+   *
+   * This is a beta field and requires enabling DeploymentReplicaSetTerminatingReplicas feature (enabled by default).
+   * +optional
+   */
+  terminatingReplicas?: number;
+  /**
+   * Total number of unavailable pods targeted by this deployment. This is the total number of
+   * pods that are still required for the deployment to have 100% available capacity. They may
+   * either be pods that are running but not yet available or pods that still have not been created.
+   * +optional
+   */
+  unavailableReplicas?: number;
+  /**
+   * Total number of non-terminating pods targeted by this deployment that have the desired template spec.
+   * +optional
+   */
+  updatedReplicas?: number;
+};
+
+export type V1DeploymentStrategy = {
+  /**
+   * Rolling update config params. Present only if DeploymentStrategyType =
+   * RollingUpdate.
+   * ---
+   * TODO: Update this to follow our convention for oneOf, whatever we decide it
+   * to be.
+   * +optional
+   */
+  rollingUpdate?: V1RollingUpdateDeployment;
+  /**
+   * Type of deployment. Can be "Recreate" or "RollingUpdate". Default is RollingUpdate.
+   * +optional
+   */
+  type?: V1DeploymentStrategyType;
+};
+
+export const V1DeploymentStrategyType = {
+  /**
+   * RecreateDeploymentStrategyType
+   */
+  RECREATE_DEPLOYMENT_STRATEGY_TYPE: 'Recreate' /**
+   * RollingUpdateDeploymentStrategyType
+   */,
+  ROLLING_UPDATE_DEPLOYMENT_STRATEGY_TYPE: 'RollingUpdate',
+} as const;
+
+export type V1DeploymentStrategyType =
+  (typeof V1DeploymentStrategyType)[keyof typeof V1DeploymentStrategyType];
+
+export type V1DownwardApiProjection = {
+  /**
+   * Items is a list of DownwardAPIVolume file
+   * +optional
+   * +listType=atomic
+   */
+  items?: Array<V1DownwardApiVolumeFile>;
+};
+
+export type V1DownwardApiVolumeFile = {
+  /**
+   * Required: Selects a field of the pod: only annotations, labels, name, namespace and uid are supported.
+   * +optional
+   */
+  fieldRef?: V1ObjectFieldSelector;
+  /**
+   * Optional: mode bits used to set permissions on this file, must be an octal value
+   * between 0000 and 0777 or a decimal value between 0 and 511.
+   * YAML accepts both octal and decimal values, JSON requires decimal values for mode bits.
+   * If not specified, the volume defaultMode will be used.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup, and the result can be other mode bits set.
+   * +optional
+   */
+  mode?: number;
+  /**
+   * Required: Path is  the relative path name of the file to be created. Must not be absolute or contain the '..' path. Must be utf-8 encoded. The first item of the relative path must not start with '..'
+   */
+  path?: string;
+  /**
+   * Selects a resource of the container: only resources limits and requests
+   * (limits.cpu, limits.memory, requests.cpu and requests.memory) are currently supported.
+   * +optional
+   */
+  resourceFieldRef?: V1ResourceFieldSelector;
+};
+
+export type V1DownwardApiVolumeSource = {
+  /**
+   * Optional: mode bits to use on created files by default. Must be a
+   * Optional: mode bits used to set permissions on created files by default.
+   * Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511.
+   * YAML accepts both octal and decimal values, JSON requires decimal values for mode bits.
+   * Defaults to 0644.
+   * Directories within the path are not affected by this setting.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup, and the result can be other mode bits set.
+   * +optional
+   */
+  defaultMode?: number;
+  /**
+   * Items is a list of downward API volume file
+   * +optional
+   * +listType=atomic
+   */
+  items?: Array<V1DownwardApiVolumeFile>;
+};
+
+export type V1EmptyDirVolumeSource = {
+  /**
+   * medium represents what type of storage medium should back this directory.
+   * The default is "" which means to use the node's default medium.
+   * Must be an empty string (default) or Memory.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir
+   * +optional
+   */
+  medium?: V1StorageMedium;
+  /**
+   * sizeLimit is the total amount of local storage required for this EmptyDir volume.
+   * The size limit is also applicable for memory medium.
+   * The maximum usage on memory medium EmptyDir would be the minimum value between
+   * the SizeLimit specified here and the sum of memory limits of all containers in a pod.
+   * The default is nil which means that the limit is undefined.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir
+   * +optional
+   */
+  sizeLimit?: ResourceQuantity;
+};
+
+export type V1EnvFromSource = {
+  /**
+   * The ConfigMap to select from
+   * +optional
+   */
+  configMapRef?: V1ConfigMapEnvSource;
+  /**
+   * Optional text to prepend to the name of each environment variable.
+   * May consist of any printable ASCII characters except '='.
+   * +optional
+   */
+  prefix?: string;
+  /**
+   * The Secret to select from
+   * +optional
+   */
+  secretRef?: V1SecretEnvSource;
+};
+
+export type V1EnvVar = {
+  /**
+   * Name of the environment variable.
+   * May consist of any printable ASCII characters except '='.
+   */
+  name?: string;
+  /**
+   * Variable references $(VAR_NAME) are expanded
+   * using the previously defined environment variables in the container and
+   * any service environment variables. If a variable cannot be resolved,
+   * the reference in the input string will be unchanged. Double $$ are reduced
+   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e.
+   * "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)".
+   * Escaped references will never be expanded, regardless of whether the variable
+   * exists or not.
+   * Defaults to "".
+   * +optional
+   */
+  value?: string;
+  /**
+   * Source for the environment variable's value. Cannot be used if value is not empty.
+   * +optional
+   */
+  valueFrom?: V1EnvVarSource;
+};
+
+export type V1EnvVarSource = {
+  /**
+   * Selects a key of a ConfigMap.
+   * +optional
+   */
+  configMapKeyRef?: V1ConfigMapKeySelector;
+  /**
+   * Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`,
+   * spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
+   * +optional
+   */
+  fieldRef?: V1ObjectFieldSelector;
+  /**
+   * FileKeyRef selects a key of the env file.
+   * Requires the EnvFiles feature gate to be enabled.
+   *
+   * +featureGate=EnvFiles
+   * +optional
+   */
+  fileKeyRef?: V1FileKeySelector;
+  /**
+   * Selects a resource of the container: only resources limits and requests
+   * (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
+   * +optional
+   */
+  resourceFieldRef?: V1ResourceFieldSelector;
+  /**
+   * Selects a key of a secret in the pod's namespace
+   * +optional
+   */
+  secretKeyRef?: V1SecretKeySelector;
+};
+
+export type V1EphemeralContainer = {
+  /**
+   * Arguments to the entrypoint.
+   * The image's CMD is used if this is not provided.
+   * Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+   * cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+   * produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+   * of whether the variable exists or not. Cannot be updated.
+   * More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
+   * +optional
+   * +listType=atomic
+   */
+  args?: Array<string>;
+  /**
+   * Entrypoint array. Not executed within a shell.
+   * The image's ENTRYPOINT is used if this is not provided.
+   * Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+   * cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+   * produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+   * of whether the variable exists or not. Cannot be updated.
+   * More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
+   * +optional
+   * +listType=atomic
+   */
+  command?: Array<string>;
+  /**
+   * List of environment variables to set in the container.
+   * Cannot be updated.
+   * +optional
+   * +patchMergeKey=name
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=name
+   */
+  env?: Array<V1EnvVar>;
+  /**
+   * List of sources to populate environment variables in the container.
+   * The keys defined within a source may consist of any printable ASCII characters except '='.
+   * When a key exists in multiple
+   * sources, the value associated with the last source will take precedence.
+   * Values defined by an Env with a duplicate key will take precedence.
+   * Cannot be updated.
+   * +optional
+   * +listType=atomic
+   */
+  envFrom?: Array<V1EnvFromSource>;
+  /**
+   * Container image name.
+   * More info: https://kubernetes.io/docs/concepts/containers/images
+   */
+  image?: string;
+  /**
+   * Image pull policy.
+   * One of Always, Never, IfNotPresent.
+   * Defaults to Always if :latest tag is specified, or IfNotPresent otherwise.
+   * Cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/containers/images#updating-images
+   * +optional
+   */
+  imagePullPolicy?: V1PullPolicy;
+  /**
+   * Lifecycle is not allowed for ephemeral containers.
+   * +optional
+   */
+  lifecycle?: V1Lifecycle;
+  /**
+   * Probes are not allowed for ephemeral containers.
+   * +optional
+   */
+  livenessProbe?: V1Probe;
+  /**
+   * Name of the ephemeral container specified as a DNS_LABEL.
+   * This name must be unique among all containers, init containers and ephemeral containers.
+   */
+  name?: string;
+  /**
+   * Ports are not allowed for ephemeral containers.
+   * +optional
+   * +patchMergeKey=containerPort
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=containerPort
+   * +listMapKey=protocol
+   */
+  ports?: Array<V1ContainerPort>;
+  /**
+   * Probes are not allowed for ephemeral containers.
+   * +optional
+   */
+  readinessProbe?: V1Probe;
+  /**
+   * Resources resize policy for the container.
+   * +featureGate=InPlacePodVerticalScaling
+   * +optional
+   * +listType=atomic
+   */
+  resizePolicy?: Array<V1ContainerResizePolicy>;
+  /**
+   * Resources are not allowed for ephemeral containers. Ephemeral containers use spare resources
+   * already allocated to the pod.
+   * +optional
+   */
+  resources?: V1ResourceRequirements;
+  /**
+   * Restart policy for the container to manage the restart behavior of each
+   * container within a pod.
+   * You cannot set this field on ephemeral containers.
+   * +optional
+   */
+  restartPolicy?: V1ContainerRestartPolicy;
+  /**
+   * Represents a list of rules to be checked to determine if the
+   * container should be restarted on exit. You cannot set this field on
+   * ephemeral containers.
+   * +featureGate=ContainerRestartRules
+   * +optional
+   * +listType=atomic
+   */
+  restartPolicyRules?: Array<V1ContainerRestartRule>;
+  /**
+   * Optional: SecurityContext defines the security options the ephemeral container should be run with.
+   * If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext.
+   * +optional
+   */
+  securityContext?: V1SecurityContext;
+  /**
+   * Probes are not allowed for ephemeral containers.
+   * +optional
+   */
+  startupProbe?: V1Probe;
+  /**
+   * Whether this container should allocate a buffer for stdin in the container runtime. If this
+   * is not set, reads from stdin in the container will always result in EOF.
+   * Default is false.
+   * +optional
+   */
+  stdin?: boolean;
+  /**
+   * Whether the container runtime should close the stdin channel after it has been opened by
+   * a single attach. When stdin is true the stdin stream will remain open across multiple attach
+   * sessions. If stdinOnce is set to true, stdin is opened on container start, is empty until the
+   * first client attaches to stdin, and then remains open and accepts data until the client disconnects,
+   * at which time stdin is closed and remains closed until the container is restarted. If this
+   * flag is false, a container processes that reads from stdin will never receive an EOF.
+   * Default is false
+   * +optional
+   */
+  stdinOnce?: boolean;
+  /**
+   * If set, the name of the container from PodSpec that this ephemeral container targets.
+   * The ephemeral container will be run in the namespaces (IPC, PID, etc) of this container.
+   * If not set then the ephemeral container uses the namespaces configured in the Pod spec.
+   *
+   * The container runtime must implement support for this feature. If the runtime does not
+   * support namespace targeting then the result of setting this field is undefined.
+   * +optional
+   */
+  targetContainerName?: string;
+  /**
+   * Optional: Path at which the file to which the container's termination message
+   * will be written is mounted into the container's filesystem.
+   * Message written is intended to be brief final status, such as an assertion failure message.
+   * Will be truncated by the node if greater than 4096 bytes. The total message length across
+   * all containers will be limited to 12kb.
+   * Defaults to /dev/termination-log.
+   * Cannot be updated.
+   * +optional
+   */
+  terminationMessagePath?: string;
+  /**
+   * Indicate how the termination message should be populated. File will use the contents of
+   * terminationMessagePath to populate the container status message on both success and failure.
+   * FallbackToLogsOnError will use the last chunk of container log output if the termination
+   * message file is empty and the container exited with an error.
+   * The log output is limited to 2048 bytes or 80 lines, whichever is smaller.
+   * Defaults to File.
+   * Cannot be updated.
+   * +optional
+   */
+  terminationMessagePolicy?: V1TerminationMessagePolicy;
+  /**
+   * Whether this container should allocate a TTY for itself, also requires 'stdin' to be true.
+   * Default is false.
+   * +optional
+   */
+  tty?: boolean;
+  /**
+   * volumeDevices is the list of block devices to be used by the container.
+   * +patchMergeKey=devicePath
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=devicePath
+   * +optional
+   */
+  volumeDevices?: Array<V1VolumeDevice>;
+  /**
+   * Pod volumes to mount into the container's filesystem. Subpath mounts are not allowed for ephemeral containers.
+   * Cannot be updated.
+   * +optional
+   * +patchMergeKey=mountPath
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=mountPath
+   */
+  volumeMounts?: Array<V1VolumeMount>;
+  /**
+   * Container's working directory.
+   * If not specified, the container runtime's default will be used, which
+   * might be configured in the container image.
+   * Cannot be updated.
+   * +optional
+   */
+  workingDir?: string;
+};
+
+export type V1EphemeralVolumeSource = {
+  /**
+   * Will be used to create a stand-alone PVC to provision the volume.
+   * The pod in which this EphemeralVolumeSource is embedded will be the
+   * owner of the PVC, i.e. the PVC will be deleted together with the
+   * pod.  The name of the PVC will be `<pod name>-<volume name>` where
+   * `<volume name>` is the name from the `PodSpec.Volumes` array
+   * entry. Pod validation will reject the pod if the concatenated name
+   * is not valid for a PVC (for example, too long).
+   *
+   * An existing PVC with that name that is not owned by the pod
+   * will *not* be used for the pod to avoid using an unrelated
+   * volume by mistake. Starting the pod is then blocked until
+   * the unrelated PVC is removed. If such a pre-created PVC is
+   * meant to be used by the pod, the PVC has to updated with an
+   * owner reference to the pod once the pod exists. Normally
+   * this should not be necessary, but it may be useful when
+   * manually reconstructing a broken cluster.
+   *
+   * This field is read-only and no changes will be made by Kubernetes
+   * to the PVC after it has been created.
+   *
+   * Required, must not be nil.
+   */
+  volumeClaimTemplate?: V1PersistentVolumeClaimTemplate;
+};
+
+export type V1ExecAction = {
+  /**
+   * Command is the command line to execute inside the container, the working directory for the
+   * command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
+   * not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
+   * a shell, you need to explicitly call out to that shell.
+   * Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+   * +optional
+   * +listType=atomic
+   */
+  command?: Array<string>;
+};
+
+export type V1FcVolumeSource = {
+  /**
+   * fsType is the filesystem type to mount.
+   * Must be a filesystem type supported by the host operating system.
+   * Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+   * TODO: how do we prevent errors in the filesystem from compromising the machine
+   * +optional
+   */
+  fsType?: string;
+  /**
+   * lun is Optional: FC target lun number
+   * +optional
+   */
+  lun?: number;
+  /**
+   * readOnly is Optional: Defaults to false (read/write). ReadOnly here will force
+   * the ReadOnly setting in VolumeMounts.
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * targetWWNs is Optional: FC target worldwide names (WWNs)
+   * +optional
+   * +listType=atomic
+   */
+  targetWWNs?: Array<string>;
+  /**
+   * wwids Optional: FC volume world wide identifiers (wwids)
+   * Either wwids or combination of targetWWNs and lun must be set, but not both simultaneously.
+   * +optional
+   * +listType=atomic
+   */
+  wwids?: Array<string>;
+};
+
+export type V1FieldsV1 = {
+  [key: string]: unknown;
+};
+
+export type V1FileKeySelector = {
+  /**
+   * The key within the env file. An invalid key will prevent the pod from starting.
+   * The keys defined within a source may consist of any printable ASCII characters except '='.
+   * During Alpha stage of the EnvFiles feature gate, the key size is limited to 128 characters.
+   * +required
+   */
+  key?: string;
+  /**
+   * Specify whether the file or its key must be defined. If the file or key
+   * does not exist, then the env var is not published.
+   * If optional is set to true and the specified key does not exist,
+   * the environment variable will not be set in the Pod's containers.
+   *
+   * If optional is set to false and the specified key does not exist,
+   * an error will be returned during Pod creation.
+   * +optional
+   * +default=false
+   */
+  optional?: boolean;
+  /**
+   * The path within the volume from which to select the file.
+   * Must be relative and may not contain the '..' path or start with '..'.
+   * +required
+   */
+  path?: string;
+  /**
+   * The name of the volume mount containing the env file.
+   * +required
+   */
+  volumeName?: string;
+};
+
+export const V1FinalizerName = {
+  /**
+   * FinalizerKubernetes
+   */
+  FINALIZER_KUBERNETES: 'kubernetes',
+} as const;
+
+export type V1FinalizerName =
+  (typeof V1FinalizerName)[keyof typeof V1FinalizerName];
+
+export type V1FlexVolumeSource = {
+  /**
+   * driver is the name of the driver to use for this volume.
+   */
+  driver?: string;
+  /**
+   * fsType is the filesystem type to mount.
+   * Must be a filesystem type supported by the host operating system.
+   * Ex. "ext4", "xfs", "ntfs". The default filesystem depends on FlexVolume script.
+   * +optional
+   */
+  fsType?: string;
+  /**
+   * options is Optional: this field holds extra command options if any.
+   * +optional
+   */
+  options?: {
+    [key: string]: string;
+  };
+  /**
+   * readOnly is Optional: defaults to false (read/write). ReadOnly here will force
+   * the ReadOnly setting in VolumeMounts.
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * secretRef is Optional: secretRef is reference to the secret object containing
+   * sensitive information to pass to the plugin scripts. This may be
+   * empty if no secret object is specified. If the secret object
+   * contains more than one secret, all secrets are passed to the plugin
+   * scripts.
+   * +optional
+   */
+  secretRef?: K8sIoApiCoreV1LocalObjectReference;
+};
+
+export type V1FlockerVolumeSource = {
+  /**
+   * datasetName is Name of the dataset stored as metadata -> name on the dataset for Flocker
+   * should be considered as deprecated
+   * +optional
+   */
+  datasetName?: string;
+  /**
+   * datasetUUID is the UUID of the dataset. This is unique identifier of a Flocker dataset
+   * +optional
+   */
+  datasetUUID?: string;
+};
+
+export type V1GcePersistentDiskVolumeSource = {
+  /**
+   * fsType is filesystem type of the volume that you want to mount.
+   * Tip: Ensure that the filesystem type is supported by the host operating system.
+   * Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
+   * TODO: how do we prevent errors in the filesystem from compromising the machine
+   * +optional
+   */
+  fsType?: string;
+  /**
+   * partition is the partition in the volume that you want to mount.
+   * If omitted, the default is to mount by volume name.
+   * Examples: For volume /dev/sda1, you specify the partition as "1".
+   * Similarly, the volume partition for /dev/sda is "0" (or you can leave the property empty).
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
+   * +optional
+   */
+  partition?: number;
+  /**
+   * pdName is unique name of the PD resource in GCE. Used to identify the disk in GCE.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
+   */
+  pdName?: string;
+  /**
+   * readOnly here will force the ReadOnly setting in VolumeMounts.
+   * Defaults to false.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
+   * +optional
+   */
+  readOnly?: boolean;
+};
+
+export type V1GrpcAction = {
+  /**
+   * Port number of the gRPC service. Number must be in the range 1 to 65535.
+   */
+  port?: number;
+  /**
+   * Service is the name of the service to place in the gRPC HealthCheckRequest
+   * (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+   *
+   * If this is not specified, the default behavior is defined by gRPC.
+   * +optional
+   * +default=""
+   */
+  service?: string;
+};
+
+export type V1GitRepoVolumeSource = {
+  /**
+   * directory is the target directory name.
+   * Must not contain or start with '..'.  If '.' is supplied, the volume directory will be the
+   * git repository.  Otherwise, if specified, the volume will contain the git repository in
+   * the subdirectory with the given name.
+   * +optional
+   */
+  directory?: string;
+  /**
+   * repository is the URL
+   */
+  repository?: string;
+  /**
+   * revision is the commit hash for the specified revision.
+   * +optional
+   */
+  revision?: string;
+};
+
+export type V1GlusterfsVolumeSource = {
+  /**
+   * endpoints is the endpoint name that details Glusterfs topology.
+   */
+  endpoints?: string;
+  /**
+   * path is the Glusterfs volume path.
+   * More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
+   */
+  path?: string;
+  /**
+   * readOnly here will force the Glusterfs volume to be mounted with read-only permissions.
+   * Defaults to false.
+   * More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
+   * +optional
+   */
+  readOnly?: boolean;
+};
+
+export type V1HttpGetAction = {
+  /**
+   * Host name to connect to, defaults to the pod IP. You probably want to set
+   * "Host" in httpHeaders instead.
+   * +optional
+   */
+  host?: string;
+  /**
+   * Custom headers to set in the request. HTTP allows repeated headers.
+   * +optional
+   * +listType=atomic
+   */
+  httpHeaders?: Array<K8sIoApiCoreV1HttpHeader>;
+  /**
+   * Path to access on the HTTP server.
+   * +optional
+   */
+  path?: string;
+  /**
+   * Name or number of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   */
+  port?: IntstrIntOrString;
+  /**
+   * Scheme to use for connecting to the host.
+   * Defaults to HTTP.
+   * +optional
+   */
+  scheme?: V1UriScheme;
+};
+
+export type V1HostAlias = {
+  /**
+   * Hostnames for the above IP address.
+   * +listType=atomic
+   */
+  hostnames?: Array<string>;
+  /**
+   * IP address of the host file entry.
+   * +required
+   */
+  ip?: string;
+};
+
+export type V1HostIp = {
+  /**
+   * IP is the IP address assigned to the host
+   * +required
+   */
+  ip?: string;
+};
+
+export const V1HostPathType = {
+  /**
+   * HostPathUnset
+   */
+  HOST_PATH_UNSET: '',
+  /**
+   * HostPathDirectoryOrCreate
+   */
+  HOST_PATH_DIRECTORY_OR_CREATE: 'DirectoryOrCreate',
+  /**
+   * HostPathDirectory
+   */
+  HOST_PATH_DIRECTORY: 'Directory',
+  /**
+   * HostPathFileOrCreate
+   */
+  HOST_PATH_FILE_OR_CREATE: 'FileOrCreate',
+  /**
+   * HostPathFile
+   */
+  HOST_PATH_FILE: 'File',
+  /**
+   * HostPathSocket
+   */
+  HOST_PATH_SOCKET: 'Socket',
+  /**
+   * HostPathCharDev
+   */
+  HOST_PATH_CHAR_DEV: 'CharDevice',
+  /**
+   * HostPathBlockDev
+   */
+  HOST_PATH_BLOCK_DEV: 'BlockDevice',
+} as const;
+
+export type V1HostPathType =
+  (typeof V1HostPathType)[keyof typeof V1HostPathType];
+
+export type V1HostPathVolumeSource = {
+  /**
+   * path of the directory on the host.
+   * If the path is a symlink, it will follow the link to the real path.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath
+   */
+  path?: string;
+  /**
+   * type for HostPath Volume
+   * Defaults to ""
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath
+   * +optional
+   */
+  type?: V1HostPathType;
+};
+
+export type V1IscsiVolumeSource = {
+  /**
+   * chapAuthDiscovery defines whether support iSCSI Discovery CHAP authentication
+   * +optional
+   */
+  chapAuthDiscovery?: boolean;
+  /**
+   * chapAuthSession defines whether support iSCSI Session CHAP authentication
+   * +optional
+   */
+  chapAuthSession?: boolean;
+  /**
+   * fsType is the filesystem type of the volume that you want to mount.
+   * Tip: Ensure that the filesystem type is supported by the host operating system.
+   * Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#iscsi
+   * TODO: how do we prevent errors in the filesystem from compromising the machine
+   * +optional
+   */
+  fsType?: string;
+  /**
+   * initiatorName is the custom iSCSI Initiator Name.
+   * If initiatorName is specified with iscsiInterface simultaneously, new iSCSI interface
+   * <target portal>:<volume name> will be created for the connection.
+   * +optional
+   */
+  initiatorName?: string;
+  /**
+   * iqn is the target iSCSI Qualified Name.
+   */
+  iqn?: string;
+  /**
+   * iscsiInterface is the interface Name that uses an iSCSI transport.
+   * Defaults to 'default' (tcp).
+   * +optional
+   * +default="default"
+   */
+  iscsiInterface?: string;
+  /**
+   * lun represents iSCSI Target Lun number.
+   */
+  lun?: number;
+  /**
+   * portals is the iSCSI Target Portal List. The portal is either an IP or ip_addr:port if the port
+   * is other than default (typically TCP ports 860 and 3260).
+   * +optional
+   * +listType=atomic
+   */
+  portals?: Array<string>;
+  /**
+   * readOnly here will force the ReadOnly setting in VolumeMounts.
+   * Defaults to false.
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * secretRef is the CHAP Secret for iSCSI target and initiator authentication
+   * +optional
+   */
+  secretRef?: K8sIoApiCoreV1LocalObjectReference;
+  /**
+   * targetPortal is iSCSI Target Portal. The Portal is either an IP or ip_addr:port if the port
+   * is other than default (typically TCP ports 860 and 3260).
+   */
+  targetPortal?: string;
+};
+
+export type V1ImageVolumeSource = {
+  /**
+   * Policy for pulling OCI objects. Possible values are:
+   * Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.
+   * Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.
+   * IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.
+   * Defaults to Always if :latest tag is specified, or IfNotPresent otherwise.
+   * +optional
+   */
+  pullPolicy?: V1PullPolicy;
+  /**
+   * Required: Image or artifact reference to be used.
+   * Behaves in the same way as pod.spec.containers[*].image.
+   * Pull secrets will be assembled in the same way as for the container image by looking up node credentials, SA image pull secrets, and pod spec image pull secrets.
+   * More info: https://kubernetes.io/docs/concepts/containers/images
+   * This field is optional to allow higher level config management to default or override
+   * container images in workload controllers like Deployments and StatefulSets.
+   * +optional
+   */
+  reference?: string;
+};
+
+export type V1KeyToPath = {
+  /**
+   * key is the key to project.
+   */
+  key?: string;
+  /**
+   * mode is Optional: mode bits used to set permissions on this file.
+   * Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511.
+   * YAML accepts both octal and decimal values, JSON requires decimal values for mode bits.
+   * If not specified, the volume defaultMode will be used.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup, and the result can be other mode bits set.
+   * +optional
+   */
+  mode?: number;
+  /**
+   * path is the relative path of the file to map the key to.
+   * May not be an absolute path.
+   * May not contain the path element '..'.
+   * May not start with the string '..'.
+   */
+  path?: string;
+};
+
+export type V1LabelSelector = {
+  /**
+   * matchExpressions is a list of label selector requirements. The requirements are ANDed.
+   * +optional
+   * +listType=atomic
+   */
+  matchExpressions?: Array<V1LabelSelectorRequirement>;
+  /**
+   * matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+   * map is equivalent to an element of matchExpressions, whose key field is "key", the
+   * operator is "In", and the values array contains only "value". The requirements are ANDed.
+   * +optional
+   */
+  matchLabels?: {
+    [key: string]: string;
+  };
+};
+
+export const V1LabelSelectorOperator = {
+  /**
+   * LabelSelectorOpIn
+   */
+  LABEL_SELECTOR_OP_IN: 'In',
+  /**
+   * LabelSelectorOpNotIn
+   */
+  LABEL_SELECTOR_OP_NOT_IN: 'NotIn',
+  /**
+   * LabelSelectorOpExists
+   */
+  LABEL_SELECTOR_OP_EXISTS: 'Exists',
+  /**
+   * LabelSelectorOpDoesNotExist
+   */
+  LABEL_SELECTOR_OP_DOES_NOT_EXIST: 'DoesNotExist',
+} as const;
+
+export type V1LabelSelectorOperator =
+  (typeof V1LabelSelectorOperator)[keyof typeof V1LabelSelectorOperator];
+
+export type V1LabelSelectorRequirement = {
+  /**
+   * key is the label key that the selector applies to.
+   */
+  key?: string;
+  /**
+   * operator represents a key's relationship to a set of values.
+   * Valid operators are In, NotIn, Exists and DoesNotExist.
+   */
+  operator?: V1LabelSelectorOperator;
+  /**
+   * values is an array of string values. If the operator is In or NotIn,
+   * the values array must be non-empty. If the operator is Exists or DoesNotExist,
+   * the values array must be empty. This array is replaced during a strategic
+   * merge patch.
+   * +optional
+   * +listType=atomic
+   */
+  values?: Array<string>;
+};
+
+export type V1Lifecycle = {
+  /**
+   * PostStart is called immediately after a container is created. If the handler fails,
+   * the container is terminated and restarted according to its restart policy.
+   * Other management of the container blocks until the hook completes.
+   * More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+   * +optional
+   */
+  postStart?: V1LifecycleHandler;
+  /**
+   * PreStop is called immediately before a container is terminated due to an
+   * API request or management event such as liveness/startup probe failure,
+   * preemption, resource contention, etc. The handler is not called if the
+   * container crashes or exits. The Pod's termination grace period countdown begins before the
+   * PreStop hook is executed. Regardless of the outcome of the handler, the
+   * container will eventually terminate within the Pod's termination grace
+   * period (unless delayed by finalizers). Other management of the container blocks until the hook completes
+   * or until the termination grace period is reached.
+   * More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+   * +optional
+   */
+  preStop?: V1LifecycleHandler;
+  /**
+   * StopSignal defines which signal will be sent to a container when it is being stopped.
+   * If not specified, the default is defined by the container runtime in use.
+   * StopSignal can only be set for Pods with a non-empty .spec.os.name
+   * +optional
+   */
+  stopSignal?: V1Signal;
+};
+
+export type V1LifecycleHandler = {
+  /**
+   * Exec specifies a command to execute in the container.
+   * +optional
+   */
+  exec?: V1ExecAction;
+  /**
+   * HTTPGet specifies an HTTP GET request to perform.
+   * +optional
+   */
+  httpGet?: V1HttpGetAction;
+  /**
+   * Sleep represents a duration that the container should sleep.
+   * +optional
+   */
+  sleep?: V1SleepAction;
+  /**
+   * Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
+   * for backward compatibility. There is no validation of this field and
+   * lifecycle hooks will fail at runtime when it is specified.
+   * +optional
+   */
+  tcpSocket?: V1TcpSocketAction;
+};
+
+export type V1LinuxContainerUser = {
+  /**
+   * GID is the primary gid initially attached to the first process in the container
+   */
+  gid?: number;
+  /**
+   * SupplementalGroups are the supplemental groups initially attached to the first process in the container
+   * +optional
+   * +listType=atomic
+   */
+  supplementalGroups?: Array<number>;
+  /**
+   * UID is the primary uid initially attached to the first process in the container
+   */
+  uid?: number;
 };
 
 export type V1ListMeta = {
@@ -255,62 +7989,6 @@ export type V1ListMeta = {
    * +optional
    */
   selfLink?: string;
-};
-
-export type V1OwnerReference = {
-  /**
-   * API version of the referent.
-   */
-  apiVersion?: string;
-  /**
-   * If true, AND if the owner has the "foregroundDeletion" finalizer, then
-   * the owner cannot be deleted from the key-value store until this
-   * reference is removed.
-   * See https://kubernetes.io/docs/concepts/architecture/garbage-collection/#foreground-deletion
-   * for how the garbage collector interacts with this field and enforces the foreground deletion.
-   * Defaults to false.
-   * To set this field, a user needs "delete" permission of the owner,
-   * otherwise 422 (Unprocessable Entity) will be returned.
-   * +optional
-   */
-  blockOwnerDeletion?: boolean;
-  /**
-   * If true, this reference points to the managing controller.
-   * +optional
-   */
-  controller?: boolean;
-  /**
-   * Kind of the referent.
-   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-   */
-  kind?: string;
-  /**
-   * Name of the referent.
-   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names#names
-   */
-  name?: string;
-  /**
-   * UID of the referent.
-   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names#uids
-   */
-  uid?: string;
-};
-
-export const V1ManagedFieldsOperationType = {
-  /**
-   * ManagedFieldsOperationApply
-   */
-  MANAGED_FIELDS_OPERATION_APPLY: 'Apply' /**
-   * ManagedFieldsOperationUpdate
-   */,
-  MANAGED_FIELDS_OPERATION_UPDATE: 'Update',
-} as const;
-
-export type V1ManagedFieldsOperationType =
-  (typeof V1ManagedFieldsOperationType)[keyof typeof V1ManagedFieldsOperationType];
-
-export type V1FieldsV1 = {
-  [key: string]: unknown;
 };
 
 export type V1ManagedFieldsEntry = {
@@ -359,6 +8037,713 @@ export type V1ManagedFieldsEntry = {
    * +optional
    */
   time?: string;
+};
+
+export const V1ManagedFieldsOperationType = {
+  /**
+   * ManagedFieldsOperationApply
+   */
+  MANAGED_FIELDS_OPERATION_APPLY: 'Apply' /**
+   * ManagedFieldsOperationUpdate
+   */,
+  MANAGED_FIELDS_OPERATION_UPDATE: 'Update',
+} as const;
+
+export type V1ManagedFieldsOperationType =
+  (typeof V1ManagedFieldsOperationType)[keyof typeof V1ManagedFieldsOperationType];
+
+export const V1MountPropagationMode = {
+  /**
+   * MountPropagationNone
+   */
+  MOUNT_PROPAGATION_NONE: 'None',
+  /**
+   * MountPropagationHostToContainer
+   */
+  MOUNT_PROPAGATION_HOST_TO_CONTAINER: 'HostToContainer',
+  /**
+   * MountPropagationBidirectional
+   */
+  MOUNT_PROPAGATION_BIDIRECTIONAL: 'Bidirectional',
+} as const;
+
+export type V1MountPropagationMode =
+  (typeof V1MountPropagationMode)[keyof typeof V1MountPropagationMode];
+
+export type V1NfsVolumeSource = {
+  /**
+   * path that is exported by the NFS server.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs
+   */
+  path?: string;
+  /**
+   * readOnly here will force the NFS export to be mounted with read-only permissions.
+   * Defaults to false.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * server is the hostname or IP address of the NFS server.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs
+   */
+  server?: string;
+};
+
+export type V1NamespaceCondition = {
+  /**
+   * Last time the condition transitioned from one status to another.
+   * +optional
+   */
+  lastTransitionTime?: string;
+  /**
+   * Human-readable message indicating details about last transition.
+   * +optional
+   */
+  message?: string;
+  /**
+   * Unique, one-word, CamelCase reason for the condition's last transition.
+   * +optional
+   */
+  reason?: string;
+  /**
+   * Status of the condition, one of True, False, Unknown.
+   */
+  status?: K8sIoApiCoreV1ConditionStatus;
+  /**
+   * Type of namespace controller condition.
+   */
+  type?: V1NamespaceConditionType;
+};
+
+export const V1NamespaceConditionType = {
+  /**
+   * NamespaceDeletionDiscoveryFailure
+   */
+  NAMESPACE_DELETION_DISCOVERY_FAILURE: 'NamespaceDeletionDiscoveryFailure',
+  /**
+   * NamespaceDeletionContentFailure
+   */
+  NAMESPACE_DELETION_CONTENT_FAILURE: 'NamespaceDeletionContentFailure',
+  /**
+   * NamespaceDeletionGVParsingFailure
+   */
+  NAMESPACE_DELETION_GV_PARSING_FAILURE:
+    'NamespaceDeletionGroupVersionParsingFailure',
+  /**
+   * NamespaceContentRemaining
+   */
+  NAMESPACE_CONTENT_REMAINING: 'NamespaceContentRemaining',
+  /**
+   * NamespaceFinalizersRemaining
+   */
+  NAMESPACE_FINALIZERS_REMAINING: 'NamespaceFinalizersRemaining',
+} as const;
+
+export type V1NamespaceConditionType =
+  (typeof V1NamespaceConditionType)[keyof typeof V1NamespaceConditionType];
+
+export const V1NamespacePhase = {
+  /**
+   * NamespaceActive
+   */
+  NAMESPACE_ACTIVE: 'Active' /**
+   * NamespaceTerminating
+   */,
+  NAMESPACE_TERMINATING: 'Terminating',
+} as const;
+
+export type V1NamespacePhase =
+  (typeof V1NamespacePhase)[keyof typeof V1NamespacePhase];
+
+export type V1NamespaceSpec = {
+  /**
+   * Finalizers is an opaque list of values that must be empty to permanently remove object from storage.
+   * More info: https://kubernetes.io/docs/tasks/administer-cluster/namespaces/
+   * +optional
+   * +listType=atomic
+   */
+  finalizers?: Array<V1FinalizerName>;
+};
+
+export type V1NamespaceStatus = {
+  /**
+   * Represents the latest available observations of a namespace's current state.
+   * +optional
+   * +patchMergeKey=type
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=type
+   */
+  conditions?: Array<V1NamespaceCondition>;
+  /**
+   * Phase is the current lifecycle phase of the namespace.
+   * More info: https://kubernetes.io/docs/tasks/administer-cluster/namespaces/
+   * +optional
+   */
+  phase?: V1NamespacePhase;
+};
+
+export type V1NodeAddress = {
+  /**
+   * The node address.
+   */
+  address?: string;
+  /**
+   * Node address type, one of Hostname, ExternalIP or InternalIP.
+   */
+  type?: V1NodeAddressType;
+};
+
+export const V1NodeAddressType = {
+  /**
+   * NodeHostName
+   */
+  NODE_HOST_NAME: 'Hostname',
+  /**
+   * NodeInternalIP
+   */
+  NODE_INTERNAL_IP: 'InternalIP',
+  /**
+   * NodeExternalIP
+   */
+  NODE_EXTERNAL_IP: 'ExternalIP',
+  /**
+   * NodeInternalDNS
+   */
+  NODE_INTERNAL_DNS: 'InternalDNS',
+  /**
+   * NodeExternalDNS
+   */
+  NODE_EXTERNAL_DNS: 'ExternalDNS',
+} as const;
+
+export type V1NodeAddressType =
+  (typeof V1NodeAddressType)[keyof typeof V1NodeAddressType];
+
+export type V1NodeAffinity = {
+  /**
+   * The scheduler will prefer to schedule pods to nodes that satisfy
+   * the affinity expressions specified by this field, but it may choose
+   * a node that violates one or more of the expressions. The node that is
+   * most preferred is the one with the greatest sum of weights, i.e.
+   * for each node that meets all of the scheduling requirements (resource
+   * request, requiredDuringScheduling affinity expressions, etc.),
+   * compute a sum by iterating through the elements of this field and adding
+   * "weight" to the sum if the node matches the corresponding matchExpressions; the
+   * node(s) with the highest sum are the most preferred.
+   * +optional
+   * +listType=atomic
+   */
+  preferredDuringSchedulingIgnoredDuringExecution?: Array<V1PreferredSchedulingTerm>;
+  /**
+   * If the affinity requirements specified by this field are not met at
+   * scheduling time, the pod will not be scheduled onto the node.
+   * If the affinity requirements specified by this field cease to be met
+   * at some point during pod execution (e.g. due to an update), the system
+   * may or may not try to eventually evict the pod from its node.
+   * +optional
+   */
+  requiredDuringSchedulingIgnoredDuringExecution?: V1NodeSelector;
+};
+
+export type V1NodeCondition = {
+  /**
+   * Last time we got an update on a given condition.
+   * +optional
+   */
+  lastHeartbeatTime?: string;
+  /**
+   * Last time the condition transit from one status to another.
+   * +optional
+   */
+  lastTransitionTime?: string;
+  /**
+   * Human readable message indicating details about last transition.
+   * +optional
+   */
+  message?: string;
+  /**
+   * (brief) reason for the condition's last transition.
+   * +optional
+   */
+  reason?: string;
+  /**
+   * Status of the condition, one of True, False, Unknown.
+   */
+  status?: K8sIoApiCoreV1ConditionStatus;
+  /**
+   * Type of node condition.
+   */
+  type?: V1NodeConditionType;
+};
+
+export const V1NodeConditionType = {
+  /**
+   * NodeReady
+   */
+  NODE_READY: 'Ready',
+  /**
+   * NodeMemoryPressure
+   */
+  NODE_MEMORY_PRESSURE: 'MemoryPressure',
+  /**
+   * NodeDiskPressure
+   */
+  NODE_DISK_PRESSURE: 'DiskPressure',
+  /**
+   * NodePIDPressure
+   */
+  NODE_PID_PRESSURE: 'PIDPressure',
+  /**
+   * NodeNetworkUnavailable
+   */
+  NODE_NETWORK_UNAVAILABLE: 'NetworkUnavailable',
+} as const;
+
+export type V1NodeConditionType =
+  (typeof V1NodeConditionType)[keyof typeof V1NodeConditionType];
+
+export type V1NodeConfigSource = {
+  /**
+   * ConfigMap is a reference to a Node's ConfigMap
+   */
+  configMap?: V1ConfigMapNodeConfigSource;
+};
+
+export type V1NodeConfigStatus = {
+  /**
+   * Active reports the checkpointed config the node is actively using.
+   * Active will represent either the current version of the Assigned config,
+   * or the current LastKnownGood config, depending on whether attempting to use the
+   * Assigned config results in an error.
+   * +optional
+   */
+  active?: V1NodeConfigSource;
+  /**
+   * Assigned reports the checkpointed config the node will try to use.
+   * When Node.Spec.ConfigSource is updated, the node checkpoints the associated
+   * config payload to local disk, along with a record indicating intended
+   * config. The node refers to this record to choose its config checkpoint, and
+   * reports this record in Assigned. Assigned only updates in the status after
+   * the record has been checkpointed to disk. When the Kubelet is restarted,
+   * it tries to make the Assigned config the Active config by loading and
+   * validating the checkpointed payload identified by Assigned.
+   * +optional
+   */
+  assigned?: V1NodeConfigSource;
+  /**
+   * Error describes any problems reconciling the Spec.ConfigSource to the Active config.
+   * Errors may occur, for example, attempting to checkpoint Spec.ConfigSource to the local Assigned
+   * record, attempting to checkpoint the payload associated with Spec.ConfigSource, attempting
+   * to load or validate the Assigned config, etc.
+   * Errors may occur at different points while syncing config. Earlier errors (e.g. download or
+   * checkpointing errors) will not result in a rollback to LastKnownGood, and may resolve across
+   * Kubelet retries. Later errors (e.g. loading or validating a checkpointed config) will result in
+   * a rollback to LastKnownGood. In the latter case, it is usually possible to resolve the error
+   * by fixing the config assigned in Spec.ConfigSource.
+   * You can find additional information for debugging by searching the error message in the Kubelet log.
+   * Error is a human-readable description of the error state; machines can check whether or not Error
+   * is empty, but should not rely on the stability of the Error text across Kubelet versions.
+   * +optional
+   */
+  error?: string;
+  /**
+   * LastKnownGood reports the checkpointed config the node will fall back to
+   * when it encounters an error attempting to use the Assigned config.
+   * The Assigned config becomes the LastKnownGood config when the node determines
+   * that the Assigned config is stable and correct.
+   * This is currently implemented as a 10-minute soak period starting when the local
+   * record of Assigned config is updated. If the Assigned config is Active at the end
+   * of this period, it becomes the LastKnownGood. Note that if Spec.ConfigSource is
+   * reset to nil (use local defaults), the LastKnownGood is also immediately reset to nil,
+   * because the local default config is always assumed good.
+   * You should not make assumptions about the node's method of determining config stability
+   * and correctness, as this may change or become configurable in the future.
+   * +optional
+   */
+  lastKnownGood?: V1NodeConfigSource;
+};
+
+export type V1NodeDaemonEndpoints = {
+  /**
+   * Endpoint on which Kubelet is listening.
+   * +optional
+   */
+  kubeletEndpoint?: V1DaemonEndpoint;
+};
+
+export type V1NodeFeatures = {
+  /**
+   * SupplementalGroupsPolicy is set to true if the runtime supports SupplementalGroupsPolicy and ContainerUser.
+   * +optional
+   */
+  supplementalGroupsPolicy?: boolean;
+};
+
+export const V1NodeInclusionPolicy = {
+  /**
+   * NodeInclusionPolicyIgnore
+   */
+  NODE_INCLUSION_POLICY_IGNORE: 'Ignore' /**
+   * NodeInclusionPolicyHonor
+   */,
+  NODE_INCLUSION_POLICY_HONOR: 'Honor',
+} as const;
+
+export type V1NodeInclusionPolicy =
+  (typeof V1NodeInclusionPolicy)[keyof typeof V1NodeInclusionPolicy];
+
+export const V1NodePhase = {
+  /**
+   * NodePending
+   */
+  NODE_PENDING: 'Pending',
+  /**
+   * NodeRunning
+   */
+  NODE_RUNNING: 'Running',
+  /**
+   * NodeTerminated
+   */
+  NODE_TERMINATED: 'Terminated',
+} as const;
+
+export type V1NodePhase = (typeof V1NodePhase)[keyof typeof V1NodePhase];
+
+export type V1NodeRuntimeHandler = {
+  /**
+   * Supported features.
+   * +optional
+   */
+  features?: V1NodeRuntimeHandlerFeatures;
+  /**
+   * Runtime handler name.
+   * Empty for the default runtime handler.
+   * +optional
+   */
+  name?: string;
+};
+
+export type V1NodeRuntimeHandlerFeatures = {
+  /**
+   * RecursiveReadOnlyMounts is set to true if the runtime handler supports RecursiveReadOnlyMounts.
+   * +optional
+   */
+  recursiveReadOnlyMounts?: boolean;
+  /**
+   * UserNamespaces is set to true if the runtime handler supports UserNamespaces, including for volumes.
+   * +featureGate=UserNamespacesSupport
+   * +optional
+   */
+  userNamespaces?: boolean;
+};
+
+export type V1NodeSelector = {
+  /**
+   * Required. A list of node selector terms. The terms are ORed.
+   * +listType=atomic
+   */
+  nodeSelectorTerms?: Array<V1NodeSelectorTerm>;
+};
+
+export const V1NodeSelectorOperator = {
+  /**
+   * NodeSelectorOpIn
+   */
+  NODE_SELECTOR_OP_IN: 'In',
+  /**
+   * NodeSelectorOpNotIn
+   */
+  NODE_SELECTOR_OP_NOT_IN: 'NotIn',
+  /**
+   * NodeSelectorOpExists
+   */
+  NODE_SELECTOR_OP_EXISTS: 'Exists',
+  /**
+   * NodeSelectorOpDoesNotExist
+   */
+  NODE_SELECTOR_OP_DOES_NOT_EXIST: 'DoesNotExist',
+  /**
+   * NodeSelectorOpGt
+   */
+  NODE_SELECTOR_OP_GT: 'Gt',
+  /**
+   * NodeSelectorOpLt
+   */
+  NODE_SELECTOR_OP_LT: 'Lt',
+} as const;
+
+export type V1NodeSelectorOperator =
+  (typeof V1NodeSelectorOperator)[keyof typeof V1NodeSelectorOperator];
+
+export type V1NodeSelectorRequirement = {
+  /**
+   * The label key that the selector applies to.
+   */
+  key?: string;
+  /**
+   * Represents a key's relationship to a set of values.
+   * Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+   */
+  operator?: V1NodeSelectorOperator;
+  /**
+   * An array of string values. If the operator is In or NotIn,
+   * the values array must be non-empty. If the operator is Exists or DoesNotExist,
+   * the values array must be empty. If the operator is Gt or Lt, the values
+   * array must have a single element, which will be interpreted as an integer.
+   * This array is replaced during a strategic merge patch.
+   * +optional
+   * +listType=atomic
+   */
+  values?: Array<string>;
+};
+
+export type V1NodeSelectorTerm = {
+  /**
+   * A list of node selector requirements by node's labels.
+   * +optional
+   * +listType=atomic
+   */
+  matchExpressions?: Array<V1NodeSelectorRequirement>;
+  /**
+   * A list of node selector requirements by node's fields.
+   * +optional
+   * +listType=atomic
+   */
+  matchFields?: Array<V1NodeSelectorRequirement>;
+};
+
+export type V1NodeSpec = {
+  /**
+   * Deprecated: Previously used to specify the source of the node's configuration for the DynamicKubeletConfig feature. This feature is removed.
+   * +optional
+   */
+  configSource?: V1NodeConfigSource;
+  /**
+   * Deprecated. Not all kubelets will set this field. Remove field after 1.13.
+   * see: https://issues.k8s.io/61966
+   * +optional
+   */
+  externalID?: string;
+  /**
+   * PodCIDR represents the pod IP range assigned to the node.
+   * +optional
+   */
+  podCIDR?: string;
+  /**
+   * podCIDRs represents the IP ranges assigned to the node for usage by Pods on that node. If this
+   * field is specified, the 0th entry must match the podCIDR field. It may contain at most 1 value for
+   * each of IPv4 and IPv6.
+   * +optional
+   * +patchStrategy=merge
+   * +listType=set
+   */
+  podCIDRs?: Array<string>;
+  /**
+   * ID of the node assigned by the cloud provider in the format: <ProviderName>://<ProviderSpecificNodeID>
+   * +optional
+   */
+  providerID?: string;
+  /**
+   * If specified, the node's taints.
+   * +optional
+   * +listType=atomic
+   */
+  taints?: Array<V1Taint>;
+  /**
+   * Unschedulable controls node schedulability of new pods. By default, node is schedulable.
+   * More info: https://kubernetes.io/docs/concepts/nodes/node/#manual-node-administration
+   * +optional
+   */
+  unschedulable?: boolean;
+};
+
+export type V1NodeStatus = {
+  /**
+   * List of addresses reachable to the node.
+   * Queried from cloud provider, if available.
+   * More info: https://kubernetes.io/docs/reference/node/node-status/#addresses
+   * Note: This field is declared as mergeable, but the merge key is not sufficiently
+   * unique, which can cause data corruption when it is merged. Callers should instead
+   * use a full-replacement patch. See https://pr.k8s.io/79391 for an example.
+   * Consumers should assume that addresses can change during the
+   * lifetime of a Node. However, there are some exceptions where this may not
+   * be possible, such as Pods that inherit a Node's address in its own status or
+   * consumers of the downward API (status.hostIP).
+   * +optional
+   * +patchMergeKey=type
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=type
+   */
+  addresses?: Array<V1NodeAddress>;
+  /**
+   * Allocatable represents the resources of a node that are available for scheduling.
+   * Defaults to Capacity.
+   * +optional
+   */
+  allocatable?: V1ResourceList;
+  /**
+   * Capacity represents the total resources of a node.
+   * More info: https://kubernetes.io/docs/reference/node/node-status/#capacity
+   * +optional
+   */
+  capacity?: V1ResourceList;
+  /**
+   * Conditions is an array of current observed node conditions.
+   * More info: https://kubernetes.io/docs/reference/node/node-status/#condition
+   * +optional
+   * +patchMergeKey=type
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=type
+   */
+  conditions?: Array<V1NodeCondition>;
+  /**
+   * Status of the config assigned to the node via the dynamic Kubelet config feature.
+   * +optional
+   */
+  config?: V1NodeConfigStatus;
+  /**
+   * Endpoints of daemons running on the Node.
+   * +optional
+   */
+  daemonEndpoints?: V1NodeDaemonEndpoints;
+  /**
+   * DeclaredFeatures represents the features related to feature gates that are declared by the node.
+   * +featureGate=NodeDeclaredFeatures
+   * +optional
+   * +listType=atomic
+   */
+  declaredFeatures?: Array<string>;
+  /**
+   * Features describes the set of features implemented by the CRI implementation.
+   * +featureGate=SupplementalGroupsPolicy
+   * +optional
+   */
+  features?: V1NodeFeatures;
+  /**
+   * List of container images on this node
+   * +optional
+   * +listType=atomic
+   */
+  images?: Array<V1ContainerImage>;
+  /**
+   * Set of ids/uuids to uniquely identify the node.
+   * More info: https://kubernetes.io/docs/reference/node/node-status/#info
+   * +optional
+   */
+  nodeInfo?: V1NodeSystemInfo;
+  /**
+   * NodePhase is the recently observed lifecycle phase of the node.
+   * More info: https://kubernetes.io/docs/concepts/nodes/node/#phase
+   * The field is never populated, and now is deprecated.
+   * +optional
+   */
+  phase?: V1NodePhase;
+  /**
+   * The available runtime handlers.
+   * +featureGate=UserNamespacesSupport
+   * +optional
+   * +listType=atomic
+   */
+  runtimeHandlers?: Array<V1NodeRuntimeHandler>;
+  /**
+   * List of volumes that are attached to the node.
+   * +optional
+   * +listType=atomic
+   */
+  volumesAttached?: Array<V1AttachedVolume>;
+  /**
+   * List of attachable volumes in use (mounted) by the node.
+   * +optional
+   * +listType=atomic
+   */
+  volumesInUse?: Array<string>;
+};
+
+export type V1NodeSwapStatus = {
+  /**
+   * Total amount of swap memory in bytes.
+   * +optional
+   */
+  capacity?: number;
+};
+
+export type V1NodeSystemInfo = {
+  /**
+   * The Architecture reported by the node
+   */
+  architecture?: string;
+  /**
+   * Boot ID reported by the node.
+   */
+  bootID?: string;
+  /**
+   * ContainerRuntime Version reported by the node through runtime remote API (e.g. containerd://1.4.2).
+   */
+  containerRuntimeVersion?: string;
+  /**
+   * Kernel Version reported by the node from 'uname -r' (e.g. 3.16.0-0.bpo.4-amd64).
+   */
+  kernelVersion?: string;
+  /**
+   * Deprecated: KubeProxy Version reported by the node.
+   */
+  kubeProxyVersion?: string;
+  /**
+   * Kubelet Version reported by the node.
+   */
+  kubeletVersion?: string;
+  /**
+   * MachineID reported by the node. For unique machine identification
+   * in the cluster this field is preferred. Learn more from man(5)
+   * machine-id: http://man7.org/linux/man-pages/man5/machine-id.5.html
+   */
+  machineID?: string;
+  /**
+   * The Operating System reported by the node
+   */
+  operatingSystem?: string;
+  /**
+   * OS Image reported by the node from /etc/os-release (e.g. Debian GNU/Linux 7 (wheezy)).
+   */
+  osImage?: string;
+  /**
+   * Swap Info reported by the node.
+   */
+  swap?: V1NodeSwapStatus;
+  /**
+   * SystemUUID reported by the node. For unique machine identification
+   * MachineID is preferred. This field is specific to Red Hat hosts
+   * https://access.redhat.com/documentation/en-us/red_hat_subscription_management/1/html/rhsm/uuid
+   */
+  systemUUID?: string;
+};
+
+export const V1OsName = {
+  /**
+   * Linux
+   */
+  LINUX: 'linux' /**
+   * Windows
+   */,
+  WINDOWS: 'windows',
+} as const;
+
+export type V1OsName = (typeof V1OsName)[keyof typeof V1OsName];
+
+export type V1ObjectFieldSelector = {
+  /**
+   * Version of the schema the FieldPath is written in terms of, defaults to "v1".
+   * +optional
+   */
+  apiVersion?: string;
+  /**
+   * Path of the field to select in the specified API version.
+   */
+  fieldPath?: string;
 };
 
 export type V1ObjectMeta = {
@@ -544,39 +8929,291 @@ export type V1ObjectMeta = {
   uid?: string;
 };
 
-export type ResourceQuantity = {
-  Format?: 'DecimalExponent' | 'BinarySI' | 'DecimalSI';
-};
-
-export type V1ResourceList = {
-  [key: string]: ResourceQuantity;
-};
-
-export type V1Beta1ContainerMetrics = {
+export type V1OwnerReference = {
   /**
-   * Container name corresponding to the one from pod.spec.containers.
+   * API version of the referent.
+   */
+  apiVersion?: string;
+  /**
+   * If true, AND if the owner has the "foregroundDeletion" finalizer, then
+   * the owner cannot be deleted from the key-value store until this
+   * reference is removed.
+   * See https://kubernetes.io/docs/concepts/architecture/garbage-collection/#foreground-deletion
+   * for how the garbage collector interacts with this field and enforces the foreground deletion.
+   * Defaults to false.
+   * To set this field, a user needs "delete" permission of the owner,
+   * otherwise 422 (Unprocessable Entity) will be returned.
+   * +optional
+   */
+  blockOwnerDeletion?: boolean;
+  /**
+   * If true, this reference points to the managing controller.
+   * +optional
+   */
+  controller?: boolean;
+  /**
+   * Kind of the referent.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   */
+  kind?: string;
+  /**
+   * Name of the referent.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names#names
    */
   name?: string;
   /**
-   * The memory usage is the memory working set.
+   * UID of the referent.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names#uids
    */
-  usage?: V1ResourceList;
+  uid?: string;
 };
 
-export type V1Beta1PodMetrics = {
+export const V1PersistentVolumeAccessMode = {
   /**
-   * APIVersion defines the versioned schema of this representation of an object.
-   * Servers should convert recognized schemas to the latest internal value, and
-   * may reject unrecognized values.
-   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
-   * +optional
+   * ReadWriteOnce
    */
-  apiVersion?: string;
+  READ_WRITE_ONCE: 'ReadWriteOnce',
   /**
-   * Metrics for all containers are collected within the same time window.
+   * ReadOnlyMany
+   */
+  READ_ONLY_MANY: 'ReadOnlyMany',
+  /**
+   * ReadWriteMany
+   */
+  READ_WRITE_MANY: 'ReadWriteMany',
+  /**
+   * ReadWriteOncePod
+   */
+  READ_WRITE_ONCE_POD: 'ReadWriteOncePod',
+} as const;
+
+export type V1PersistentVolumeAccessMode =
+  (typeof V1PersistentVolumeAccessMode)[keyof typeof V1PersistentVolumeAccessMode];
+
+export const V1PersistentVolumeClaimPhase = {
+  /**
+   * ClaimPending
+   */
+  CLAIM_PENDING: 'Pending',
+  /**
+   * ClaimBound
+   */
+  CLAIM_BOUND: 'Bound',
+  /**
+   * ClaimLost
+   */
+  CLAIM_LOST: 'Lost',
+} as const;
+
+export type V1PersistentVolumeClaimPhase =
+  (typeof V1PersistentVolumeClaimPhase)[keyof typeof V1PersistentVolumeClaimPhase];
+
+export type V1PersistentVolumeClaimSpec = {
+  /**
+   * accessModes contains the desired access modes the volume should have.
+   * More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1
+   * +optional
    * +listType=atomic
    */
-  containers?: Array<V1Beta1ContainerMetrics>;
+  accessModes?: Array<V1PersistentVolumeAccessMode>;
+  /**
+   * dataSource field can be used to specify either:
+   * * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)
+   * * An existing PVC (PersistentVolumeClaim)
+   * If the provisioner or an external controller can support the specified data source,
+   * it will create a new volume based on the contents of the specified data source.
+   * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
+   * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+   * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
+   * +optional
+   */
+  dataSource?: V1TypedLocalObjectReference;
+  /**
+   * dataSourceRef specifies the object from which to populate the volume with data, if a non-empty
+   * volume is desired. This may be any object from a non-empty API group (non
+   * core object) or a PersistentVolumeClaim object.
+   * When this field is specified, volume binding will only succeed if the type of
+   * the specified object matches some installed volume populator or dynamic
+   * provisioner.
+   * This field will replace the functionality of the dataSource field and as such
+   * if both fields are non-empty, they must have the same value. For backwards
+   * compatibility, when namespace isn't specified in dataSourceRef,
+   * both fields (dataSource and dataSourceRef) will be set to the same
+   * value automatically if one of them is empty and the other is non-empty.
+   * When namespace is specified in dataSourceRef,
+   * dataSource isn't set to the same value and must be empty.
+   * There are three important differences between dataSource and dataSourceRef:
+   * * While dataSource only allows two specific types of objects, dataSourceRef
+   * allows any non-core object, as well as PersistentVolumeClaim objects.
+   * * While dataSource ignores disallowed values (dropping them), dataSourceRef
+   * preserves all values, and generates an error if a disallowed value is
+   * specified.
+   * * While dataSource only allows local objects, dataSourceRef allows objects
+   * in any namespaces.
+   * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
+   * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
+   * +optional
+   */
+  dataSourceRef?: V1TypedObjectReference;
+  /**
+   * resources represents the minimum resources the volume should have.
+   * Users are allowed to specify resource requirements
+   * that are lower than previous value but must still be higher than capacity recorded in the
+   * status field of the claim.
+   * More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
+   * +optional
+   */
+  resources?: V1VolumeResourceRequirements;
+  /**
+   * selector is a label query over volumes to consider for binding.
+   * +optional
+   */
+  selector?: V1LabelSelector;
+  /**
+   * storageClassName is the name of the StorageClass required by the claim.
+   * More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#class-1
+   * +optional
+   */
+  storageClassName?: string;
+  /**
+   * volumeAttributesClassName may be used to set the VolumeAttributesClass used by this claim.
+   * If specified, the CSI driver will create or update the volume with the attributes defined
+   * in the corresponding VolumeAttributesClass. This has a different purpose than storageClassName,
+   * it can be changed after the claim is created. An empty string or nil value indicates that no
+   * VolumeAttributesClass will be applied to the claim. If the claim enters an Infeasible error state,
+   * this field can be reset to its previous value (including nil) to cancel the modification.
+   * If the resource referred to by volumeAttributesClass does not exist, this PersistentVolumeClaim will be
+   * set to a Pending state, as reflected by the modifyVolumeStatus field, until such as a resource
+   * exists.
+   * More info: https://kubernetes.io/docs/concepts/storage/volume-attributes-classes/
+   * +featureGate=VolumeAttributesClass
+   * +optional
+   */
+  volumeAttributesClassName?: string;
+  /**
+   * volumeMode defines what type of volume is required by the claim.
+   * Value of Filesystem is implied when not included in claim spec.
+   * +optional
+   */
+  volumeMode?: V1PersistentVolumeMode;
+  /**
+   * volumeName is the binding reference to the PersistentVolume backing this claim.
+   * +optional
+   */
+  volumeName?: string;
+};
+
+export type V1PersistentVolumeClaimTemplate = {
+  /**
+   * May contain labels and annotations that will be copied into the PVC
+   * when creating it. No other fields are allowed and will be rejected during
+   * validation.
+   *
+   * +optional
+   */
+  metadata?: V1ObjectMeta;
+  /**
+   * The specification for the PersistentVolumeClaim. The entire content is
+   * copied unchanged into the PVC that gets created from this
+   * template. The same fields as in a PersistentVolumeClaim
+   * are also valid here.
+   */
+  spec?: V1PersistentVolumeClaimSpec;
+};
+
+export type V1PersistentVolumeClaimVolumeSource = {
+  /**
+   * claimName is the name of a PersistentVolumeClaim in the same namespace as the pod using this volume.
+   * More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
+   */
+  claimName?: string;
+  /**
+   * readOnly Will force the ReadOnly setting in VolumeMounts.
+   * Default false.
+   * +optional
+   */
+  readOnly?: boolean;
+};
+
+export const V1PersistentVolumeMode = {
+  /**
+   * PersistentVolumeBlock
+   */
+  PERSISTENT_VOLUME_BLOCK: 'Block' /**
+   * PersistentVolumeFilesystem
+   */,
+  PERSISTENT_VOLUME_FILESYSTEM: 'Filesystem',
+} as const;
+
+export type V1PersistentVolumeMode =
+  (typeof V1PersistentVolumeMode)[keyof typeof V1PersistentVolumeMode];
+
+export const V1PersistentVolumePhase = {
+  /**
+   * VolumePending
+   */
+  VOLUME_PENDING: 'Pending',
+  /**
+   * VolumeAvailable
+   */
+  VOLUME_AVAILABLE: 'Available',
+  /**
+   * VolumeBound
+   */
+  VOLUME_BOUND: 'Bound',
+  /**
+   * VolumeReleased
+   */
+  VOLUME_RELEASED: 'Released',
+  /**
+   * VolumeFailed
+   */
+  VOLUME_FAILED: 'Failed',
+} as const;
+
+export type V1PersistentVolumePhase =
+  (typeof V1PersistentVolumePhase)[keyof typeof V1PersistentVolumePhase];
+
+export const V1PersistentVolumeReclaimPolicy = {
+  /**
+   * PersistentVolumeReclaimRecycle
+   */
+  PERSISTENT_VOLUME_RECLAIM_RECYCLE: 'Recycle',
+  /**
+   * PersistentVolumeReclaimDelete
+   */
+  PERSISTENT_VOLUME_RECLAIM_DELETE: 'Delete',
+  /**
+   * PersistentVolumeReclaimRetain
+   */
+  PERSISTENT_VOLUME_RECLAIM_RETAIN: 'Retain',
+} as const;
+
+export type V1PersistentVolumeReclaimPolicy =
+  (typeof V1PersistentVolumeReclaimPolicy)[keyof typeof V1PersistentVolumeReclaimPolicy];
+
+export type V1PhotonPersistentDiskVolumeSource = {
+  /**
+   * fsType is the filesystem type to mount.
+   * Must be a filesystem type supported by the host operating system.
+   * Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+   */
+  fsType?: string;
+  /**
+   * pdID is the ID that identifies Photon Controller persistent disk
+   */
+  pdID?: string;
+};
+
+export type V1Pod = {
+  /**
+   * APIVersion defines the versioned schema of this representation of an object.
+   * Servers should convert recognized schemas to the latest internal value, and
+   * may reject unrecognized values.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+   * +optional
+   */
+  apiVersion?: string;
   /**
    * Kind is a string value representing the REST resource this object represents.
    * Servers may infer this from the endpoint the client submits requests to.
@@ -593,169 +9230,1620 @@ export type V1Beta1PodMetrics = {
    */
   metadata?: V1ObjectMeta;
   /**
-   * The following fields define time interval from which metrics were
-   * collected from the interval [Timestamp-Window, Timestamp].
+   * Specification of the desired behavior of the pod.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+   * +optional
    */
-  timestamp?: string;
-  window?: string;
+  spec?: V1PodSpec;
+  /**
+   * Most recently observed status of the pod.
+   * This data may not be up to date.
+   * Populated by the system.
+   * Read-only.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+   * +optional
+   */
+  status?: V1PodStatus;
 };
 
-export type V1Beta1NodeMetricsList = {
+export type V1PodAffinity = {
   /**
-   * APIVersion defines the versioned schema of this representation of an object.
-   * Servers should convert recognized schemas to the latest internal value, and
-   * may reject unrecognized values.
-   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+   * The scheduler will prefer to schedule pods to nodes that satisfy
+   * the affinity expressions specified by this field, but it may choose
+   * a node that violates one or more of the expressions. The node that is
+   * most preferred is the one with the greatest sum of weights, i.e.
+   * for each node that meets all of the scheduling requirements (resource
+   * request, requiredDuringScheduling affinity expressions, etc.),
+   * compute a sum by iterating through the elements of this field and adding
+   * "weight" to the sum if the node has pods which matches the corresponding podAffinityTerm; the
+   * node(s) with the highest sum are the most preferred.
    * +optional
+   * +listType=atomic
    */
-  apiVersion?: string;
+  preferredDuringSchedulingIgnoredDuringExecution?: Array<V1WeightedPodAffinityTerm>;
   /**
-   * List of node metrics.
-   */
-  items?: Array<V1Beta1NodeMetrics>;
-  /**
-   * Kind is a string value representing the REST resource this object represents.
-   * Servers may infer this from the endpoint the client submits requests to.
-   * Cannot be updated.
-   * In CamelCase.
-   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * If the affinity requirements specified by this field are not met at
+   * scheduling time, the pod will not be scheduled onto the node.
+   * If the affinity requirements specified by this field cease to be met
+   * at some point during pod execution (e.g. due to a pod label update), the
+   * system may or may not try to eventually evict the pod from its node.
+   * When there are multiple elements, the lists of nodes corresponding to each
+   * podAffinityTerm are intersected, i.e. all terms must be satisfied.
    * +optional
+   * +listType=atomic
    */
-  kind?: string;
-  /**
-   * Standard list metadata.
-   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-   */
-  metadata?: V1ListMeta;
+  requiredDuringSchedulingIgnoredDuringExecution?: Array<V1PodAffinityTerm>;
 };
 
-export type V1Beta1NodeMetrics = {
+export type V1PodAffinityTerm = {
   /**
-   * APIVersion defines the versioned schema of this representation of an object.
-   * Servers should convert recognized schemas to the latest internal value, and
-   * may reject unrecognized values.
-   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+   * A label query over a set of resources, in this case pods.
+   * If it's null, this PodAffinityTerm matches with no Pods.
    * +optional
    */
-  apiVersion?: string;
+  labelSelector?: V1LabelSelector;
   /**
-   * Kind is a string value representing the REST resource this object represents.
-   * Servers may infer this from the endpoint the client submits requests to.
-   * Cannot be updated.
-   * In CamelCase.
-   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * MatchLabelKeys is a set of pod label keys to select which pods will
+   * be taken into consideration. The keys are used to lookup values from the
+   * incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)`
+   * to select the group of existing pods which pods will be taken into consideration
+   * for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming
+   * pod labels will be ignored. The default value is empty.
+   * The same key is forbidden to exist in both matchLabelKeys and labelSelector.
+   * Also, matchLabelKeys cannot be set when labelSelector isn't set.
+   *
+   * +listType=atomic
    * +optional
    */
-  kind?: string;
+  matchLabelKeys?: Array<string>;
   /**
-   * Standard object's metadata.
-   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+   * MismatchLabelKeys is a set of pod label keys to select which pods will
+   * be taken into consideration. The keys are used to lookup values from the
+   * incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)`
+   * to select the group of existing pods which pods will be taken into consideration
+   * for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming
+   * pod labels will be ignored. The default value is empty.
+   * The same key is forbidden to exist in both mismatchLabelKeys and labelSelector.
+   * Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
+   *
+   * +listType=atomic
    * +optional
    */
-  metadata?: V1ObjectMeta;
+  mismatchLabelKeys?: Array<string>;
   /**
-   * The following fields define time interval from which metrics were
-   * collected from the interval [Timestamp-Window, Timestamp].
+   * A label query over the set of namespaces that the term applies to.
+   * The term is applied to the union of the namespaces selected by this field
+   * and the ones listed in the namespaces field.
+   * null selector and null or empty namespaces list means "this pod's namespace".
+   * An empty selector ({}) matches all namespaces.
+   * +optional
    */
-  timestamp?: string;
+  namespaceSelector?: V1LabelSelector;
   /**
-   * The memory usage is the memory working set.
+   * namespaces specifies a static list of namespace names that the term applies to.
+   * The term is applied to the union of the namespaces listed in this field
+   * and the ones selected by namespaceSelector.
+   * null or empty namespaces list and null namespaceSelector means "this pod's namespace".
+   * +optional
+   * +listType=atomic
    */
-  usage?: V1ResourceList;
-  window?: string;
+  namespaces?: Array<string>;
+  /**
+   * This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching
+   * the labelSelector in the specified namespaces, where co-located is defined as running on a node
+   * whose value of the label with key topologyKey matches that of any node on which any of the
+   * selected pods is running.
+   * Empty topologyKey is not allowed.
+   */
+  topologyKey?: string;
 };
 
-export type V1WindowsSecurityContextOptions = {
+export type V1PodAntiAffinity = {
   /**
-   * GMSACredentialSpec is where the GMSA admission webhook
-   * (https://github.com/kubernetes-sigs/windows-gmsa) inlines the contents of the
-   * GMSA credential spec named by the GMSACredentialSpecName field.
+   * The scheduler will prefer to schedule pods to nodes that satisfy
+   * the anti-affinity expressions specified by this field, but it may choose
+   * a node that violates one or more of the expressions. The node that is
+   * most preferred is the one with the greatest sum of weights, i.e.
+   * for each node that meets all of the scheduling requirements (resource
+   * request, requiredDuringScheduling anti-affinity expressions, etc.),
+   * compute a sum by iterating through the elements of this field and subtracting
+   * "weight" from the sum if the node has pods which matches the corresponding podAffinityTerm; the
+   * node(s) with the highest sum are the most preferred.
+   * +optional
+   * +listType=atomic
+   */
+  preferredDuringSchedulingIgnoredDuringExecution?: Array<V1WeightedPodAffinityTerm>;
+  /**
+   * If the anti-affinity requirements specified by this field are not met at
+   * scheduling time, the pod will not be scheduled onto the node.
+   * If the anti-affinity requirements specified by this field cease to be met
+   * at some point during pod execution (e.g. due to a pod label update), the
+   * system may or may not try to eventually evict the pod from its node.
+   * When there are multiple elements, the lists of nodes corresponding to each
+   * podAffinityTerm are intersected, i.e. all terms must be satisfied.
+   * +optional
+   * +listType=atomic
+   */
+  requiredDuringSchedulingIgnoredDuringExecution?: Array<V1PodAffinityTerm>;
+};
+
+export type V1PodCertificateProjection = {
+  /**
+   * Write the certificate chain at this path in the projected volume.
+   *
+   * Most applications should use credentialBundlePath.  When using keyPath
+   * and certificateChainPath, your application needs to check that the key
+   * and leaf certificate are consistent, because it is possible to read the
+   * files mid-rotation.
+   *
    * +optional
    */
-  gmsaCredentialSpec?: string;
+  certificateChainPath?: string;
   /**
-   * GMSACredentialSpecName is the name of the GMSA credential spec to use.
+   * Write the credential bundle at this path in the projected volume.
+   *
+   * The credential bundle is a single file that contains multiple PEM blocks.
+   * The first PEM block is a PRIVATE KEY block, containing a PKCS#8 private
+   * key.
+   *
+   * The remaining blocks are CERTIFICATE blocks, containing the issued
+   * certificate chain from the signer (leaf and any intermediates).
+   *
+   * Using credentialBundlePath lets your Pod's application code make a single
+   * atomic read that retrieves a consistent key and certificate chain.  If you
+   * project them to separate files, your application code will need to
+   * additionally check that the leaf certificate was issued to the key.
+   *
    * +optional
    */
-  gmsaCredentialSpecName?: string;
+  credentialBundlePath?: string;
   /**
-   * HostProcess determines if a container should be run as a 'Host Process' container.
-   * All of a Pod's containers must have the same effective HostProcess value
-   * (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).
-   * In addition, if HostProcess is true then HostNetwork must also be set to true.
+   * Write the key at this path in the projected volume.
+   *
+   * Most applications should use credentialBundlePath.  When using keyPath
+   * and certificateChainPath, your application needs to check that the key
+   * and leaf certificate are consistent, because it is possible to read the
+   * files mid-rotation.
+   *
    * +optional
    */
-  hostProcess?: boolean;
+  keyPath?: string;
   /**
-   * The UserName in Windows to run the entrypoint of the container process.
-   * Defaults to the user specified in image metadata if unspecified.
-   * May also be set in PodSecurityContext. If set in both SecurityContext and
+   * The type of keypair Kubelet will generate for the pod.
+   *
+   * Valid values are "RSA3072", "RSA4096", "ECDSAP256", "ECDSAP384",
+   * "ECDSAP521", and "ED25519".
+   *
+   * +required
+   */
+  keyType?: string;
+  /**
+   * maxExpirationSeconds is the maximum lifetime permitted for the
+   * certificate.
+   *
+   * Kubelet copies this value verbatim into the PodCertificateRequests it
+   * generates for this projection.
+   *
+   * If omitted, kube-apiserver will set it to 86400(24 hours). kube-apiserver
+   * will reject values shorter than 3600 (1 hour).  The maximum allowable
+   * value is 7862400 (91 days).
+   *
+   * The signer implementation is then free to issue a certificate with any
+   * lifetime *shorter* than MaxExpirationSeconds, but no shorter than 3600
+   * seconds (1 hour).  This constraint is enforced by kube-apiserver.
+   * `kubernetes.io` signers will never issue certificates with a lifetime
+   * longer than 24 hours.
+   *
+   * +optional
+   */
+  maxExpirationSeconds?: number;
+  /**
+   * Kubelet's generated CSRs will be addressed to this signer.
+   *
+   * +required
+   */
+  signerName?: string;
+  /**
+   * userAnnotations allow pod authors to pass additional information to
+   * the signer implementation.  Kubernetes does not restrict or validate this
+   * metadata in any way.
+   *
+   * These values are copied verbatim into the `spec.unverifiedUserAnnotations` field of
+   * the PodCertificateRequest objects that Kubelet creates.
+   *
+   * Entries are subject to the same validation as object metadata annotations,
+   * with the addition that all keys must be domain-prefixed. No restrictions
+   * are placed on values, except an overall size limitation on the entire field.
+   *
+   * Signers should document the keys and values they support. Signers should
+   * deny requests that contain keys they do not recognize.
+   */
+  userAnnotations?: {
+    [key: string]: string;
+  };
+};
+
+export type V1PodCondition = {
+  /**
+   * Last time we probed the condition.
+   * +optional
+   */
+  lastProbeTime?: string;
+  /**
+   * Last time the condition transitioned from one status to another.
+   * +optional
+   */
+  lastTransitionTime?: string;
+  /**
+   * Human-readable message indicating details about last transition.
+   * +optional
+   */
+  message?: string;
+  /**
+   * If set, this represents the .metadata.generation that the pod condition was set based upon.
+   * The PodObservedGenerationTracking feature gate must be enabled to use this field.
+   * +featureGate=PodObservedGenerationTracking
+   * +optional
+   */
+  observedGeneration?: number;
+  /**
+   * Unique, one-word, CamelCase reason for the condition's last transition.
+   * +optional
+   */
+  reason?: string;
+  /**
+   * Status is the status of the condition.
+   * Can be True, False, Unknown.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-conditions
+   */
+  status?: K8sIoApiCoreV1ConditionStatus;
+  /**
+   * Type is the type of the condition.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-conditions
+   */
+  type?: V1PodConditionType;
+};
+
+export const V1PodConditionType = {
+  /**
+   * ContainersReady
+   */
+  CONTAINERS_READY: 'ContainersReady',
+  /**
+   * PodInitialized
+   */
+  POD_INITIALIZED: 'Initialized',
+  /**
+   * PodReady
+   */
+  POD_READY: 'Ready',
+  /**
+   * PodScheduled
+   */
+  POD_SCHEDULED: 'PodScheduled',
+  /**
+   * DisruptionTarget
+   */
+  DISRUPTION_TARGET: 'DisruptionTarget',
+  /**
+   * PodReadyToStartContainers
+   */
+  POD_READY_TO_START_CONTAINERS: 'PodReadyToStartContainers',
+  /**
+   * PodResizePending
+   */
+  POD_RESIZE_PENDING: 'PodResizePending',
+  /**
+   * PodResizeInProgress
+   */
+  POD_RESIZE_IN_PROGRESS: 'PodResizeInProgress',
+  /**
+   * AllContainersRestarting
+   */
+  ALL_CONTAINERS_RESTARTING: 'AllContainersRestarting',
+} as const;
+
+export type V1PodConditionType =
+  (typeof V1PodConditionType)[keyof typeof V1PodConditionType];
+
+export type V1PodDnsConfig = {
+  /**
+   * A list of DNS name server IP addresses.
+   * This will be appended to the base nameservers generated from DNSPolicy.
+   * Duplicated nameservers will be removed.
+   * +optional
+   * +listType=atomic
+   */
+  nameservers?: Array<string>;
+  /**
+   * A list of DNS resolver options.
+   * This will be merged with the base options generated from DNSPolicy.
+   * Duplicated entries will be removed. Resolution options given in Options
+   * will override those that appear in the base DNSPolicy.
+   * +optional
+   * +listType=atomic
+   */
+  options?: Array<V1PodDnsConfigOption>;
+  /**
+   * A list of DNS search domains for host-name lookup.
+   * This will be appended to the base search paths generated from DNSPolicy.
+   * Duplicated search paths will be removed.
+   * +optional
+   * +listType=atomic
+   */
+  searches?: Array<string>;
+};
+
+export type V1PodDnsConfigOption = {
+  /**
+   * Name is this DNS resolver option's name.
+   * Required.
+   */
+  name?: string;
+  /**
+   * Value is this DNS resolver option's value.
+   * +optional
+   */
+  value?: string;
+};
+
+export type V1PodExtendedResourceClaimStatus = {
+  /**
+   * RequestMappings identifies the mapping of <container, extended resource backed by DRA> to  device request
+   * in the generated ResourceClaim.
+   * +listType=atomic
+   */
+  requestMappings?: Array<V1ContainerExtendedResourceRequest>;
+  /**
+   * ResourceClaimName is the name of the ResourceClaim that was
+   * generated for the Pod in the namespace of the Pod.
+   */
+  resourceClaimName?: string;
+};
+
+export const V1PodFsGroupChangePolicy = {
+  /**
+   * FSGroupChangeOnRootMismatch
+   */
+  FS_GROUP_CHANGE_ON_ROOT_MISMATCH: 'OnRootMismatch' /**
+   * FSGroupChangeAlways
+   */,
+  FS_GROUP_CHANGE_ALWAYS: 'Always',
+} as const;
+
+export type V1PodFsGroupChangePolicy =
+  (typeof V1PodFsGroupChangePolicy)[keyof typeof V1PodFsGroupChangePolicy];
+
+export type V1PodIp = {
+  /**
+   * IP is the IP address assigned to the pod
+   * +required
+   */
+  ip?: string;
+};
+
+export type V1PodOs = {
+  /**
+   * Name is the name of the operating system. The currently supported values are linux and windows.
+   * Additional value may be defined in future and can be one of:
+   * https://github.com/opencontainers/runtime-spec/blob/master/config.md#platform-specific-configuration
+   * Clients should expect to handle additional values and treat unrecognized values in this field as os: null
+   */
+  name?: V1OsName;
+};
+
+export const V1PodPhase = {
+  /**
+   * PodPending
+   */
+  POD_PENDING: 'Pending',
+  /**
+   * PodRunning
+   */
+  POD_RUNNING: 'Running',
+  /**
+   * PodSucceeded
+   */
+  POD_SUCCEEDED: 'Succeeded',
+  /**
+   * PodFailed
+   */
+  POD_FAILED: 'Failed',
+  /**
+   * PodUnknown
+   */
+  POD_UNKNOWN: 'Unknown',
+} as const;
+
+export type V1PodPhase = (typeof V1PodPhase)[keyof typeof V1PodPhase];
+
+export const V1PodQosClass = {
+  /**
+   * PodQOSGuaranteed
+   */
+  POD_QOS_GUARANTEED: 'Guaranteed',
+  /**
+   * PodQOSBurstable
+   */
+  POD_QOS_BURSTABLE: 'Burstable',
+  /**
+   * PodQOSBestEffort
+   */
+  POD_QOS_BEST_EFFORT: 'BestEffort',
+} as const;
+
+export type V1PodQosClass = (typeof V1PodQosClass)[keyof typeof V1PodQosClass];
+
+export type V1PodReadinessGate = {
+  /**
+   * ConditionType refers to a condition in the pod's condition list with matching type.
+   */
+  conditionType?: V1PodConditionType;
+};
+
+export const V1PodResizeStatus = {
+  /**
+   * PodResizeStatusInProgress
+   */
+  POD_RESIZE_STATUS_IN_PROGRESS: 'InProgress',
+  /**
+   * PodResizeStatusDeferred
+   */
+  POD_RESIZE_STATUS_DEFERRED: 'Deferred',
+  /**
+   * PodResizeStatusInfeasible
+   */
+  POD_RESIZE_STATUS_INFEASIBLE: 'Infeasible',
+} as const;
+
+export type V1PodResizeStatus =
+  (typeof V1PodResizeStatus)[keyof typeof V1PodResizeStatus];
+
+export type V1PodResourceClaim = {
+  /**
+   * Name uniquely identifies this resource claim inside the pod.
+   * This must be a DNS_LABEL.
+   */
+  name?: string;
+  /**
+   * ResourceClaimName is the name of a ResourceClaim object in the same
+   * namespace as this pod.
+   *
+   * Exactly one of ResourceClaimName and ResourceClaimTemplateName must
+   * be set.
+   */
+  resourceClaimName?: string;
+  /**
+   * ResourceClaimTemplateName is the name of a ResourceClaimTemplate
+   * object in the same namespace as this pod.
+   *
+   * The template will be used to create a new ResourceClaim, which will
+   * be bound to this pod. When this pod is deleted, the ResourceClaim
+   * will also be deleted. The pod name and resource name, along with a
+   * generated component, will be used to form a unique name for the
+   * ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
+   *
+   * This field is immutable and no changes will be made to the
+   * corresponding ResourceClaim by the control plane after creating the
+   * ResourceClaim.
+   *
+   * Exactly one of ResourceClaimName and ResourceClaimTemplateName must
+   * be set.
+   */
+  resourceClaimTemplateName?: string;
+};
+
+export type V1PodResourceClaimStatus = {
+  /**
+   * Name uniquely identifies this resource claim inside the pod.
+   * This must match the name of an entry in pod.spec.resourceClaims,
+   * which implies that the string must be a DNS_LABEL.
+   */
+  name?: string;
+  /**
+   * ResourceClaimName is the name of the ResourceClaim that was
+   * generated for the Pod in the namespace of the Pod. If this is
+   * unset, then generating a ResourceClaim was not necessary. The
+   * pod.spec.resourceClaims entry can be ignored in this case.
+   *
+   * +optional
+   */
+  resourceClaimName?: string;
+};
+
+export const V1PodSeLinuxChangePolicy = {
+  /**
+   * SELinuxChangePolicyRecursive
+   */
+  SE_LINUX_CHANGE_POLICY_RECURSIVE: 'Recursive' /**
+   * SELinuxChangePolicyMountOption
+   */,
+  SE_LINUX_CHANGE_POLICY_MOUNT_OPTION: 'MountOption',
+} as const;
+
+export type V1PodSeLinuxChangePolicy =
+  (typeof V1PodSeLinuxChangePolicy)[keyof typeof V1PodSeLinuxChangePolicy];
+
+export type V1PodSchedulingGate = {
+  /**
+   * Name of the scheduling gate.
+   * Each scheduling gate must have a unique name field.
+   */
+  name?: string;
+};
+
+export type V1PodSecurityContext = {
+  /**
+   * appArmorProfile is the AppArmor options to use by the containers in this pod.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   */
+  appArmorProfile?: V1AppArmorProfile;
+  /**
+   * A special supplemental group that applies to all containers in a pod.
+   * Some volume types allow the Kubelet to change the ownership of that volume
+   * to be owned by the pod:
+   *
+   * 1. The owning GID will be the FSGroup
+   * 2. The setgid bit is set (new files created in the volume will be owned by FSGroup)
+   * 3. The permission bits are OR'd with rw-rw----
+   *
+   * If unset, the Kubelet will not modify the ownership and permissions of any volume.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   */
+  fsGroup?: number;
+  /**
+   * fsGroupChangePolicy defines behavior of changing ownership and permission of the volume
+   * before being exposed inside Pod. This field will only apply to
+   * volume types which support fsGroup based ownership(and permissions).
+   * It will have no effect on ephemeral volume types such as: secret, configmaps
+   * and emptydir.
+   * Valid values are "OnRootMismatch" and "Always". If not specified, "Always" is used.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   */
+  fsGroupChangePolicy?: V1PodFsGroupChangePolicy;
+  /**
+   * The GID to run the entrypoint of the container process.
+   * Uses runtime default if unset.
+   * May also be set in SecurityContext.  If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence
+   * for that container.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   */
+  runAsGroup?: number;
+  /**
+   * Indicates that the container must run as a non-root user.
+   * If true, the Kubelet will validate the image at runtime to ensure that it
+   * does not run as UID 0 (root) and fail to start the container if it does.
+   * If unset or false, no such validation will be performed.
+   * May also be set in SecurityContext.  If set in both SecurityContext and
    * PodSecurityContext, the value specified in SecurityContext takes precedence.
    * +optional
    */
-  runAsUserName?: string;
-};
-
-export type V1VolumeMount = {
+  runAsNonRoot?: boolean;
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
-   */
-  mountPath?: string;
-  /**
-   * mountPropagation determines how mounts are propagated from the host
-   * to container and the other way around.
-   * When not set, MountPropagationNone is used.
-   * This field is beta in 1.10.
-   * When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
-   * (which defaults to None).
+   * The UID to run the entrypoint of the container process.
+   * Defaults to user specified in image metadata if unspecified.
+   * May also be set in SecurityContext.  If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence
+   * for that container.
+   * Note that this field cannot be set when spec.os.name is windows.
    * +optional
    */
-  mountPropagation?: V1MountPropagationMode;
+  runAsUser?: number;
   /**
-   * This must match the Name of a Volume.
+   * seLinuxChangePolicy defines how the container's SELinux label is applied to all volumes used by the Pod.
+   * It has no effect on nodes that do not support SELinux or to volumes does not support SELinux.
+   * Valid values are "MountOption" and "Recursive".
+   *
+   * "Recursive" means relabeling of all files on all Pod volumes by the container runtime.
+   * This may be slow for large volumes, but allows mixing privileged and unprivileged Pods sharing the same volume on the same node.
+   *
+   * "MountOption" mounts all eligible Pod volumes with `-o context` mount option.
+   * This requires all Pods that share the same volume to use the same SELinux label.
+   * It is not possible to share the same volume among privileged and unprivileged Pods.
+   * Eligible volumes are in-tree FibreChannel and iSCSI volumes, and all CSI volumes
+   * whose CSI driver announces SELinux support by setting spec.seLinuxMount: true in their
+   * CSIDriver instance. Other volumes are always re-labelled recursively.
+   * "MountOption" value is allowed only when SELinuxMount feature gate is enabled.
+   *
+   * If not specified and SELinuxMount feature gate is enabled, "MountOption" is used.
+   * If not specified and SELinuxMount feature gate is disabled, "MountOption" is used for ReadWriteOncePod volumes
+   * and "Recursive" for all other volumes.
+   *
+   * This field affects only Pods that have SELinux label set, either in PodSecurityContext or in SecurityContext of all containers.
+   *
+   * All Pods that use the same volume should use the same seLinuxChangePolicy, otherwise some pods can get stuck in ContainerCreating state.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +featureGate=SELinuxChangePolicy
+   * +optional
    */
-  name?: string;
+  seLinuxChangePolicy?: V1PodSeLinuxChangePolicy;
   /**
-   * Mounted read-only if true, read-write otherwise (false or unspecified).
+   * The SELinux context to be applied to all containers.
+   * If unspecified, the container runtime will allocate a random SELinux context for each
+   * container.  May also be set in SecurityContext.  If set in
+   * both SecurityContext and PodSecurityContext, the value specified in SecurityContext
+   * takes precedence for that container.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   */
+  seLinuxOptions?: V1SeLinuxOptions;
+  /**
+   * The seccomp options to use by the containers in this pod.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   */
+  seccompProfile?: V1SeccompProfile;
+  /**
+   * A list of groups applied to the first process run in each container, in
+   * addition to the container's primary GID and fsGroup (if specified).  If
+   * the SupplementalGroupsPolicy feature is enabled, the
+   * supplementalGroupsPolicy field determines whether these are in addition
+   * to or instead of any group memberships defined in the container image.
+   * If unspecified, no additional groups are added, though group memberships
+   * defined in the container image may still be used, depending on the
+   * supplementalGroupsPolicy field.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   * +listType=atomic
+   */
+  supplementalGroups?: Array<number>;
+  /**
+   * Defines how supplemental groups of the first container processes are calculated.
+   * Valid values are "Merge" and "Strict". If not specified, "Merge" is used.
+   * (Alpha) Using the field requires the SupplementalGroupsPolicy feature gate to be enabled
+   * and the container runtime must implement support for this feature.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * TODO: update the default value to "Merge" when spec.os.name is not windows in v1.34
+   * +featureGate=SupplementalGroupsPolicy
+   * +optional
+   */
+  supplementalGroupsPolicy?: V1SupplementalGroupsPolicy;
+  /**
+   * Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
+   * sysctls (by the container runtime) might fail to launch.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   * +listType=atomic
+   */
+  sysctls?: Array<V1Sysctl>;
+  /**
+   * The Windows specific settings applied to all containers.
+   * If unspecified, the options within a container's SecurityContext will be used.
+   * If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+   * Note that this field cannot be set when spec.os.name is linux.
+   * +optional
+   */
+  windowsOptions?: V1WindowsSecurityContextOptions;
+};
+
+export type V1PodSpec = {
+  /**
+   * Optional duration in seconds the pod may be active on the node relative to
+   * StartTime before the system will actively try to mark it failed and kill associated containers.
+   * Value must be a positive integer.
+   * +optional
+   */
+  activeDeadlineSeconds?: number;
+  /**
+   * If specified, the pod's scheduling constraints
+   * +optional
+   */
+  affinity?: V1Affinity;
+  /**
+   * AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.
+   * +optional
+   */
+  automountServiceAccountToken?: boolean;
+  /**
+   * List of containers belonging to the pod.
+   * Containers cannot currently be added or removed.
+   * There must be at least one container in a Pod.
+   * Cannot be updated.
+   * +patchMergeKey=name
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=name
+   */
+  containers?: Array<V1Container>;
+  /**
+   * Specifies the DNS parameters of a pod.
+   * Parameters specified here will be merged to the generated DNS
+   * configuration based on DNSPolicy.
+   * +optional
+   */
+  dnsConfig?: V1PodDnsConfig;
+  /**
+   * Set DNS policy for the pod.
+   * Defaults to "ClusterFirst".
+   * Valid values are 'ClusterFirstWithHostNet', 'ClusterFirst', 'Default' or 'None'.
+   * DNS parameters given in DNSConfig will be merged with the policy selected with DNSPolicy.
+   * To have DNS options set along with hostNetwork, you have to specify DNS policy
+   * explicitly to 'ClusterFirstWithHostNet'.
+   * +optional
+   */
+  dnsPolicy?: V1DnsPolicy;
+  /**
+   * EnableServiceLinks indicates whether information about services should be injected into pod's
+   * environment variables, matching the syntax of Docker links.
+   * Optional: Defaults to true.
+   * +optional
+   */
+  enableServiceLinks?: boolean;
+  /**
+   * List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing
+   * pod to perform user-initiated actions such as debugging. This list cannot be specified when
+   * creating a pod, and it cannot be modified by updating the pod spec. In order to add an
+   * ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource.
+   * +optional
+   * +patchMergeKey=name
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=name
+   */
+  ephemeralContainers?: Array<V1EphemeralContainer>;
+  /**
+   * HostAliases is an optional list of hosts and IPs that will be injected into the pod's hosts
+   * file if specified.
+   * +optional
+   * +patchMergeKey=ip
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=ip
+   */
+  hostAliases?: Array<V1HostAlias>;
+  /**
+   * Use the host's ipc namespace.
+   * Optional: Default to false.
+   * +k8s:conversion-gen=false
+   * +optional
+   */
+  hostIPC?: boolean;
+  /**
+   * Host networking requested for this pod. Use the host's network namespace.
+   * When using HostNetwork you should specify ports so the scheduler is aware.
+   * When `hostNetwork` is true, specified `hostPort` fields in port definitions must match `containerPort`,
+   * and unspecified `hostPort` fields in port definitions are defaulted to match `containerPort`.
+   * Default to false.
+   * +k8s:conversion-gen=false
+   * +optional
+   */
+  hostNetwork?: boolean;
+  /**
+   * Use the host's pid namespace.
+   * Optional: Default to false.
+   * +k8s:conversion-gen=false
+   * +optional
+   */
+  hostPID?: boolean;
+  /**
+   * Use the host's user namespace.
+   * Optional: Default to true.
+   * If set to true or not present, the pod will be run in the host user namespace, useful
+   * for when the pod needs a feature only available to the host user namespace, such as
+   * loading a kernel module with CAP_SYS_MODULE.
+   * When set to false, a new userns is created for the pod. Setting false is useful for
+   * mitigating container breakout vulnerabilities even allowing users to run their
+   * containers as root without actually having root privileges on the host.
+   * This field is alpha-level and is only honored by servers that enable the UserNamespacesSupport feature.
+   * +k8s:conversion-gen=false
+   * +optional
+   */
+  hostUsers?: boolean;
+  /**
+   * Specifies the hostname of the Pod
+   * If not specified, the pod's hostname will be set to a system-defined value.
+   * +optional
+   */
+  hostname?: string;
+  /**
+   * HostnameOverride specifies an explicit override for the pod's hostname as perceived by the pod.
+   * This field only specifies the pod's hostname and does not affect its DNS records.
+   * When this field is set to a non-empty string:
+   * - It takes precedence over the values set in `hostname` and `subdomain`.
+   * - The Pod's hostname will be set to this value.
+   * - `setHostnameAsFQDN` must be nil or set to false.
+   * - `hostNetwork` must be set to false.
+   *
+   * This field must be a valid DNS subdomain as defined in RFC 1123 and contain at most 64 characters.
+   * Requires the HostnameOverride feature gate to be enabled.
+   *
+   * +featureGate=HostnameOverride
+   * +optional
+   */
+  hostnameOverride?: string;
+  /**
+   * ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
+   * If specified, these secrets will be passed to individual puller implementations for them to use.
+   * More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
+   * +optional
+   * +patchMergeKey=name
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=name
+   */
+  imagePullSecrets?: Array<K8sIoApiCoreV1LocalObjectReference>;
+  /**
+   * List of initialization containers belonging to the pod.
+   * Init containers are executed in order prior to containers being started. If any
+   * init container fails, the pod is considered to have failed and is handled according
+   * to its restartPolicy. The name for an init container or normal container must be
+   * unique among all containers.
+   * Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes.
+   * The resourceRequirements of an init container are taken into account during scheduling
+   * by finding the highest request/limit for each resource type, and then using the max of
+   * that value or the sum of the normal containers. Limits are applied to init containers
+   * in a similar fashion.
+   * Init containers cannot currently be added or removed.
+   * Cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+   * +patchMergeKey=name
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=name
+   */
+  initContainers?: Array<V1Container>;
+  /**
+   * NodeName indicates in which node this pod is scheduled.
+   * If empty, this pod is a candidate for scheduling by the scheduler defined in schedulerName.
+   * Once this field is set, the kubelet for this node becomes responsible for the lifecycle of this pod.
+   * This field should not be used to express a desire for the pod to be scheduled on a specific node.
+   * https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodename
+   * +optional
+   */
+  nodeName?: string;
+  /**
+   * NodeSelector is a selector which must be true for the pod to fit on a node.
+   * Selector which must match a node's labels for the pod to be scheduled on that node.
+   * More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+   * +optional
+   * +mapType=atomic
+   */
+  nodeSelector?: {
+    [key: string]: string;
+  };
+  /**
+   * Specifies the OS of the containers in the pod.
+   * Some pod and container fields are restricted if this is set.
+   *
+   * If the OS field is set to linux, the following fields must be unset:
+   * -securityContext.windowsOptions
+   *
+   * If the OS field is set to windows, following fields must be unset:
+   * - spec.hostPID
+   * - spec.hostIPC
+   * - spec.hostUsers
+   * - spec.resources
+   * - spec.securityContext.appArmorProfile
+   * - spec.securityContext.seLinuxOptions
+   * - spec.securityContext.seccompProfile
+   * - spec.securityContext.fsGroup
+   * - spec.securityContext.fsGroupChangePolicy
+   * - spec.securityContext.sysctls
+   * - spec.shareProcessNamespace
+   * - spec.securityContext.runAsUser
+   * - spec.securityContext.runAsGroup
+   * - spec.securityContext.supplementalGroups
+   * - spec.securityContext.supplementalGroupsPolicy
+   * - spec.containers[*].securityContext.appArmorProfile
+   * - spec.containers[*].securityContext.seLinuxOptions
+   * - spec.containers[*].securityContext.seccompProfile
+   * - spec.containers[*].securityContext.capabilities
+   * - spec.containers[*].securityContext.readOnlyRootFilesystem
+   * - spec.containers[*].securityContext.privileged
+   * - spec.containers[*].securityContext.allowPrivilegeEscalation
+   * - spec.containers[*].securityContext.procMount
+   * - spec.containers[*].securityContext.runAsUser
+   * - spec.containers[*].securityContext.runAsGroup
+   * +optional
+   */
+  os?: V1PodOs;
+  /**
+   * Overhead represents the resource overhead associated with running a pod for a given RuntimeClass.
+   * This field will be autopopulated at admission time by the RuntimeClass admission controller. If
+   * the RuntimeClass admission controller is enabled, overhead must not be set in Pod create requests.
+   * The RuntimeClass admission controller will reject Pod create requests which have the overhead already
+   * set. If RuntimeClass is configured and selected in the PodSpec, Overhead will be set to the value
+   * defined in the corresponding RuntimeClass, otherwise it will remain unset and treated as zero.
+   * More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md
+   * +optional
+   */
+  overhead?: V1ResourceList;
+  /**
+   * PreemptionPolicy is the Policy for preempting pods with lower priority.
+   * One of Never, PreemptLowerPriority.
+   * Defaults to PreemptLowerPriority if unset.
+   * +optional
+   */
+  preemptionPolicy?: V1PreemptionPolicy;
+  /**
+   * The priority value. Various system components use this field to find the
+   * priority of the pod. When Priority Admission Controller is enabled, it
+   * prevents users from setting this field. The admission controller populates
+   * this field from PriorityClassName.
+   * The higher the value, the higher the priority.
+   * +optional
+   */
+  priority?: number;
+  /**
+   * If specified, indicates the pod's priority. "system-node-critical" and
+   * "system-cluster-critical" are two special keywords which indicate the
+   * highest priorities with the former being the highest priority. Any other
+   * name must be defined by creating a PriorityClass object with that name.
+   * If not specified, the pod priority will be default or zero if there is no
+   * default.
+   * +optional
+   */
+  priorityClassName?: string;
+  /**
+   * If specified, all readiness gates will be evaluated for pod readiness.
+   * A pod is ready when all its containers are ready AND
+   * all conditions specified in the readiness gates have status equal to "True"
+   * More info: https://git.k8s.io/enhancements/keps/sig-network/580-pod-readiness-gates
+   * +optional
+   * +listType=atomic
+   */
+  readinessGates?: Array<V1PodReadinessGate>;
+  /**
+   * ResourceClaims defines which ResourceClaims must be allocated
+   * and reserved before the Pod is allowed to start. The resources
+   * will be made available to those containers which consume them
+   * by name.
+   *
+   * This is a stable field but requires that the
+   * DynamicResourceAllocation feature gate is enabled.
+   *
+   * This field is immutable.
+   *
+   * +patchMergeKey=name
+   * +patchStrategy=merge,retainKeys
+   * +listType=map
+   * +listMapKey=name
+   * +featureGate=DynamicResourceAllocation
+   * +optional
+   */
+  resourceClaims?: Array<V1PodResourceClaim>;
+  /**
+   * Resources is the total amount of CPU and Memory resources required by all
+   * containers in the pod. It supports specifying Requests and Limits for
+   * "cpu", "memory" and "hugepages-" resource names only. ResourceClaims are not supported.
+   *
+   * This field enables fine-grained control over resource allocation for the
+   * entire pod, allowing resource sharing among containers in a pod.
+   * TODO: For beta graduation, expand this comment with a detailed explanation.
+   *
+   * This is an alpha field and requires enabling the PodLevelResources feature
+   * gate.
+   *
+   * +featureGate=PodLevelResources
+   * +optional
+   */
+  resources?: V1ResourceRequirements;
+  /**
+   * Restart policy for all containers within the pod.
+   * One of Always, OnFailure, Never. In some contexts, only a subset of those values may be permitted.
+   * Default to Always.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
+   * +optional
+   */
+  restartPolicy?: V1RestartPolicy;
+  /**
+   * RuntimeClassName refers to a RuntimeClass object in the node.k8s.io group, which should be used
+   * to run this pod.  If no RuntimeClass resource matches the named class, the pod will not be run.
+   * If unset or empty, the "legacy" RuntimeClass will be used, which is an implicit class with an
+   * empty definition that uses the default runtime handler.
+   * More info: https://git.k8s.io/enhancements/keps/sig-node/585-runtime-class
+   * +optional
+   */
+  runtimeClassName?: string;
+  /**
+   * If specified, the pod will be dispatched by specified scheduler.
+   * If not specified, the pod will be dispatched by default scheduler.
+   * +optional
+   */
+  schedulerName?: string;
+  /**
+   * SchedulingGates is an opaque list of values that if specified will block scheduling the pod.
+   * If schedulingGates is not empty, the pod will stay in the SchedulingGated state and the
+   * scheduler will not attempt to schedule the pod.
+   *
+   * SchedulingGates can only be set at pod creation time, and be removed only afterwards.
+   *
+   * +patchMergeKey=name
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=name
+   * +optional
+   */
+  schedulingGates?: Array<V1PodSchedulingGate>;
+  /**
+   * SecurityContext holds pod-level security attributes and common container settings.
+   * Optional: Defaults to empty.  See type description for default values of each field.
+   * +optional
+   */
+  securityContext?: V1PodSecurityContext;
+  /**
+   * DeprecatedServiceAccount is a deprecated alias for ServiceAccountName.
+   * Deprecated: Use serviceAccountName instead.
+   * +k8s:conversion-gen=false
+   * +optional
+   */
+  serviceAccount?: string;
+  /**
+   * ServiceAccountName is the name of the ServiceAccount to use to run this pod.
+   * More info: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+   * +optional
+   */
+  serviceAccountName?: string;
+  /**
+   * If true the pod's hostname will be configured as the pod's FQDN, rather than the leaf name (the default).
+   * In Linux containers, this means setting the FQDN in the hostname field of the kernel (the nodename field of struct utsname).
+   * In Windows containers, this means setting the registry value of hostname for the registry key HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters to FQDN.
+   * If a pod does not have FQDN, this has no effect.
+   * Default to false.
+   * +optional
+   */
+  setHostnameAsFQDN?: boolean;
+  /**
+   * Share a single process namespace between all of the containers in a pod.
+   * When this is set containers will be able to view and signal processes from other containers
+   * in the same pod, and the first process in each container will not be assigned PID 1.
+   * HostPID and ShareProcessNamespace cannot both be set.
+   * Optional: Default to false.
+   * +k8s:conversion-gen=false
+   * +optional
+   */
+  shareProcessNamespace?: boolean;
+  /**
+   * If specified, the fully qualified Pod hostname will be "<hostname>.<subdomain>.<pod namespace>.svc.<cluster domain>".
+   * If not specified, the pod will not have a domainname at all.
+   * +optional
+   */
+  subdomain?: string;
+  /**
+   * Optional duration in seconds the pod needs to terminate gracefully. May be decreased in delete request.
+   * Value must be non-negative integer. The value zero indicates stop immediately via
+   * the kill signal (no opportunity to shut down).
+   * If this value is nil, the default grace period will be used instead.
+   * The grace period is the duration in seconds after the processes running in the pod are sent
+   * a termination signal and the time when the processes are forcibly halted with a kill signal.
+   * Set this value longer than the expected cleanup time for your process.
+   * Defaults to 30 seconds.
+   * +optional
+   */
+  terminationGracePeriodSeconds?: number;
+  /**
+   * If specified, the pod's tolerations.
+   * +optional
+   * +listType=atomic
+   */
+  tolerations?: Array<V1Toleration>;
+  /**
+   * TopologySpreadConstraints describes how a group of pods ought to spread across topology
+   * domains. Scheduler will schedule pods in a way which abides by the constraints.
+   * All topologySpreadConstraints are ANDed.
+   * +optional
+   * +patchMergeKey=topologyKey
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=topologyKey
+   * +listMapKey=whenUnsatisfiable
+   */
+  topologySpreadConstraints?: Array<V1TopologySpreadConstraint>;
+  /**
+   * List of volumes that can be mounted by containers belonging to the pod.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes
+   * +optional
+   * +patchMergeKey=name
+   * +patchStrategy=merge,retainKeys
+   * +listType=map
+   * +listMapKey=name
+   */
+  volumes?: Array<V1Volume>;
+  /**
+   * WorkloadRef provides a reference to the Workload object that this Pod belongs to.
+   * This field is used by the scheduler to identify the PodGroup and apply the
+   * correct group scheduling policies. The Workload object referenced
+   * by this field may not exist at the time the Pod is created.
+   * This field is immutable, but a Workload object with the same name
+   * may be recreated with different policies. Doing this during pod scheduling
+   * may result in the placement not conforming to the expected policies.
+   *
+   * +featureGate=GenericWorkload
+   * +optional
+   */
+  workloadRef?: V1WorkloadReference;
+};
+
+export type V1PodStatus = {
+  /**
+   * AllocatedResources is the total requests allocated for this pod by the node.
+   * If pod-level requests are not set, this will be the total requests aggregated
+   * across containers in the pod.
+   * +featureGate=InPlacePodLevelResourcesVerticalScaling
+   * +optional
+   */
+  allocatedResources?: V1ResourceList;
+  /**
+   * Current service state of pod.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-conditions
+   * +optional
+   * +patchMergeKey=type
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=type
+   */
+  conditions?: Array<V1PodCondition>;
+  /**
+   * Statuses of containers in this pod.
+   * Each container in the pod should have at most one status in this list,
+   * and all statuses should be for containers in the pod.
+   * However this is not enforced.
+   * If a status for a non-existent container is present in the list, or the list has duplicate names,
+   * the behavior of various Kubernetes components is not defined and those statuses might be
+   * ignored.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-and-container-status
+   * +optional
+   * +listType=atomic
+   */
+  containerStatuses?: Array<V1ContainerStatus>;
+  /**
+   * Statuses for any ephemeral containers that have run in this pod.
+   * Each ephemeral container in the pod should have at most one status in this list,
+   * and all statuses should be for containers in the pod.
+   * However this is not enforced.
+   * If a status for a non-existent container is present in the list, or the list has duplicate names,
+   * the behavior of various Kubernetes components is not defined and those statuses might be
+   * ignored.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-and-container-status
+   * +optional
+   * +listType=atomic
+   */
+  ephemeralContainerStatuses?: Array<V1ContainerStatus>;
+  /**
+   * Status of extended resource claim backed by DRA.
+   * +featureGate=DRAExtendedResource
+   * +optional
+   */
+  extendedResourceClaimStatus?: V1PodExtendedResourceClaimStatus;
+  /**
+   * hostIP holds the IP address of the host to which the pod is assigned. Empty if the pod has not started yet.
+   * A pod can be assigned to a node that has a problem in kubelet which in turns mean that HostIP will
+   * not be updated even if there is a node is assigned to pod
+   * +optional
+   */
+  hostIP?: string;
+  /**
+   * hostIPs holds the IP addresses allocated to the host. If this field is specified, the first entry must
+   * match the hostIP field. This list is empty if the pod has not started yet.
+   * A pod can be assigned to a node that has a problem in kubelet which in turns means that HostIPs will
+   * not be updated even if there is a node is assigned to this pod.
+   * +optional
+   * +patchStrategy=merge
+   * +patchMergeKey=ip
+   * +listType=atomic
+   */
+  hostIPs?: Array<V1HostIp>;
+  /**
+   * Statuses of init containers in this pod. The most recent successful non-restartable
+   * init container will have ready = true, the most recently started container will have
+   * startTime set.
+   * Each init container in the pod should have at most one status in this list,
+   * and all statuses should be for containers in the pod.
+   * However this is not enforced.
+   * If a status for a non-existent container is present in the list, or the list has duplicate names,
+   * the behavior of various Kubernetes components is not defined and those statuses might be
+   * ignored.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-and-container-status
+   * +listType=atomic
+   */
+  initContainerStatuses?: Array<V1ContainerStatus>;
+  /**
+   * A human readable message indicating details about why the pod is in this condition.
+   * +optional
+   */
+  message?: string;
+  /**
+   * nominatedNodeName is set only when this pod preempts other pods on the node, but it cannot be
+   * scheduled right away as preemption victims receive their graceful termination periods.
+   * This field does not guarantee that the pod will be scheduled on this node. Scheduler may decide
+   * to place the pod elsewhere if other nodes become available sooner. Scheduler may also decide to
+   * give the resources on this node to a higher priority pod that is created after preemption.
+   * As a result, this field may be different than PodSpec.nodeName when the pod is
+   * scheduled.
+   * +optional
+   */
+  nominatedNodeName?: string;
+  /**
+   * If set, this represents the .metadata.generation that the pod status was set based upon.
+   * The PodObservedGenerationTracking feature gate must be enabled to use this field.
+   * +featureGate=PodObservedGenerationTracking
+   * +optional
+   */
+  observedGeneration?: number;
+  /**
+   * The phase of a Pod is a simple, high-level summary of where the Pod is in its lifecycle.
+   * The conditions array, the reason and message fields, and the individual container status
+   * arrays contain more detail about the pod's status.
+   * There are five possible phase values:
+   *
+   * Pending: The pod has been accepted by the Kubernetes system, but one or more of the
+   * container images has not been created. This includes time before being scheduled as
+   * well as time spent downloading images over the network, which could take a while.
+   * Running: The pod has been bound to a node, and all of the containers have been created.
+   * At least one container is still running, or is in the process of starting or restarting.
+   * Succeeded: All containers in the pod have terminated in success, and will not be restarted.
+   * Failed: All containers in the pod have terminated, and at least one container has
+   * terminated in failure. The container either exited with non-zero status or was terminated
+   * by the system.
+   * Unknown: For some reason the state of the pod could not be obtained, typically due to an
+   * error in communicating with the host of the pod.
+   *
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-phase
+   * +optional
+   */
+  phase?: V1PodPhase;
+  /**
+   * podIP address allocated to the pod. Routable at least within the cluster.
+   * Empty if not yet allocated.
+   * +optional
+   */
+  podIP?: string;
+  /**
+   * podIPs holds the IP addresses allocated to the pod. If this field is specified, the 0th entry must
+   * match the podIP field. Pods may be allocated at most 1 value for each of IPv4 and IPv6. This list
+   * is empty if no IPs have been allocated yet.
+   * +optional
+   * +patchStrategy=merge
+   * +patchMergeKey=ip
+   * +listType=map
+   * +listMapKey=ip
+   */
+  podIPs?: Array<V1PodIp>;
+  /**
+   * The Quality of Service (QOS) classification assigned to the pod based on resource requirements
+   * See PodQOSClass type for available QOS classes
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-qos/#quality-of-service-classes
+   * +optional
+   */
+  qosClass?: V1PodQosClass;
+  /**
+   * A brief CamelCase message indicating details about why the pod is in this state.
+   * e.g. 'Evicted'
+   * +optional
+   */
+  reason?: string;
+  /**
+   * Status of resources resize desired for pod's containers.
+   * It is empty if no resources resize is pending.
+   * Any changes to container resources will automatically set this to "Proposed"
+   * Deprecated: Resize status is moved to two pod conditions PodResizePending and PodResizeInProgress.
+   * PodResizePending will track states where the spec has been resized, but the Kubelet has not yet allocated the resources.
+   * PodResizeInProgress will track in-progress resizes, and should be present whenever allocated resources != acknowledged resources.
+   * +featureGate=InPlacePodVerticalScaling
+   * +optional
+   */
+  resize?: V1PodResizeStatus;
+  /**
+   * Status of resource claims.
+   * +patchMergeKey=name
+   * +patchStrategy=merge,retainKeys
+   * +listType=map
+   * +listMapKey=name
+   * +featureGate=DynamicResourceAllocation
+   * +optional
+   */
+  resourceClaimStatuses?: Array<V1PodResourceClaimStatus>;
+  /**
+   * Resources represents the compute resource requests and limits that have been
+   * applied at the pod level if pod-level requests or limits are set in
+   * PodSpec.Resources
+   * +featureGate=InPlacePodLevelResourcesVerticalScaling
+   * +optional
+   */
+  resources?: V1ResourceRequirements;
+  /**
+   * RFC 3339 date and time at which the object was acknowledged by the Kubelet.
+   * This is before the Kubelet pulled the container image(s) for the pod.
+   * +optional
+   */
+  startTime?: string;
+};
+
+export type V1PodTemplateSpec = {
+  /**
+   * Standard object's metadata.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+   * +optional
+   */
+  metadata?: V1ObjectMeta;
+  /**
+   * Specification of the desired behavior of the pod.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+   * +optional
+   */
+  spec?: V1PodSpec;
+};
+
+export type V1PortworxVolumeSource = {
+  /**
+   * fSType represents the filesystem type to mount
+   * Must be a filesystem type supported by the host operating system.
+   * Ex. "ext4", "xfs". Implicitly inferred to be "ext4" if unspecified.
+   */
+  fsType?: string;
+  /**
+   * readOnly defaults to false (read/write). ReadOnly here will force
+   * the ReadOnly setting in VolumeMounts.
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * volumeID uniquely identifies a Portworx volume
+   */
+  volumeID?: string;
+};
+
+export const V1PreemptionPolicy = {
+  /**
+   * PreemptLowerPriority
+   */
+  PREEMPT_LOWER_PRIORITY: 'PreemptLowerPriority' /**
+   * PreemptNever
+   */,
+  PREEMPT_NEVER: 'Never',
+} as const;
+
+export type V1PreemptionPolicy =
+  (typeof V1PreemptionPolicy)[keyof typeof V1PreemptionPolicy];
+
+export type V1PreferredSchedulingTerm = {
+  /**
+   * A node selector term, associated with the corresponding weight.
+   */
+  preference?: V1NodeSelectorTerm;
+  /**
+   * Weight associated with matching the corresponding nodeSelectorTerm, in the range 1-100.
+   */
+  weight?: number;
+};
+
+export type V1Probe = {
+  /**
+   * Exec specifies a command to execute in the container.
+   * +optional
+   */
+  exec?: V1ExecAction;
+  /**
+   * Minimum consecutive failures for the probe to be considered failed after having succeeded.
+   * Defaults to 3. Minimum value is 1.
+   * +optional
+   */
+  failureThreshold?: number;
+  /**
+   * GRPC specifies a GRPC HealthCheckRequest.
+   * +optional
+   */
+  grpc?: V1GrpcAction;
+  /**
+   * HTTPGet specifies an HTTP GET request to perform.
+   * +optional
+   */
+  httpGet?: V1HttpGetAction;
+  /**
+   * Number of seconds after the container has started before liveness probes are initiated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   * +optional
+   */
+  initialDelaySeconds?: number;
+  /**
+   * How often (in seconds) to perform the probe.
+   * Default to 10 seconds. Minimum value is 1.
+   * +optional
+   */
+  periodSeconds?: number;
+  /**
+   * Minimum consecutive successes for the probe to be considered successful after having failed.
+   * Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+   * +optional
+   */
+  successThreshold?: number;
+  /**
+   * TCPSocket specifies a connection to a TCP port.
+   * +optional
+   */
+  tcpSocket?: V1TcpSocketAction;
+  /**
+   * Optional duration in seconds the pod needs to terminate gracefully upon probe failure.
+   * The grace period is the duration in seconds after the processes running in the pod are sent
+   * a termination signal and the time when the processes are forcibly halted with a kill signal.
+   * Set this value longer than the expected cleanup time for your process.
+   * If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this
+   * value overrides the value provided by the pod spec.
+   * Value must be non-negative integer. The value zero indicates stop immediately via
+   * the kill signal (no opportunity to shut down).
+   * This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate.
+   * Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
+   * +optional
+   */
+  terminationGracePeriodSeconds?: number;
+  /**
+   * Number of seconds after which the probe times out.
+   * Defaults to 1 second. Minimum value is 1.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   * +optional
+   */
+  timeoutSeconds?: number;
+};
+
+export const V1ProcMountType = {
+  /**
+   * DefaultProcMount
+   */
+  DEFAULT_PROC_MOUNT: 'Default' /**
+   * UnmaskedProcMount
+   */,
+  UNMASKED_PROC_MOUNT: 'Unmasked',
+} as const;
+
+export type V1ProcMountType =
+  (typeof V1ProcMountType)[keyof typeof V1ProcMountType];
+
+export type V1ProjectedVolumeSource = {
+  /**
+   * defaultMode are the mode bits used to set permissions on created files by default.
+   * Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511.
+   * YAML accepts both octal and decimal values, JSON requires decimal values for mode bits.
+   * Directories within the path are not affected by this setting.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup, and the result can be other mode bits set.
+   * +optional
+   */
+  defaultMode?: number;
+  /**
+   * sources is the list of volume projections. Each entry in this list
+   * handles one source.
+   * +optional
+   * +listType=atomic
+   */
+  sources?: Array<V1VolumeProjection>;
+};
+
+export const V1Protocol = {
+  /**
+   * ProtocolTCP
+   */
+  PROTOCOL_TCP: 'TCP',
+  /**
+   * ProtocolUDP
+   */
+  PROTOCOL_UDP: 'UDP',
+  /**
+   * ProtocolSCTP
+   */
+  PROTOCOL_SCTP: 'SCTP',
+} as const;
+
+export type V1Protocol = (typeof V1Protocol)[keyof typeof V1Protocol];
+
+export const V1PullPolicy = {
+  /**
+   * PullAlways
+   */
+  PULL_ALWAYS: 'Always',
+  /**
+   * PullNever
+   */
+  PULL_NEVER: 'Never',
+  /**
+   * PullIfNotPresent
+   */
+  PULL_IF_NOT_PRESENT: 'IfNotPresent',
+} as const;
+
+export type V1PullPolicy = (typeof V1PullPolicy)[keyof typeof V1PullPolicy];
+
+export type V1QuobyteVolumeSource = {
+  /**
+   * group to map volume access to
+   * Default is no group
+   * +optional
+   */
+  group?: string;
+  /**
+   * readOnly here will force the Quobyte volume to be mounted with read-only permissions.
    * Defaults to false.
    * +optional
    */
   readOnly?: boolean;
   /**
-   * RecursiveReadOnly specifies whether read-only mounts should be handled
-   * recursively.
-   *
-   * If ReadOnly is false, this field has no meaning and must be unspecified.
-   *
-   * If ReadOnly is true, and this field is set to Disabled, the mount is not made
-   * recursively read-only.  If this field is set to IfPossible, the mount is made
-   * recursively read-only, if it is supported by the container runtime.  If this
-   * field is set to Enabled, the mount is made recursively read-only if it is
-   * supported by the container runtime, otherwise the pod will not be started and
-   * an error will be generated to indicate the reason.
-   *
-   * If this field is set to IfPossible or Enabled, MountPropagation must be set to
-   * None (or be unspecified, which defaults to None).
-   *
-   * If this field is not specified, it is treated as an equivalent of Disabled.
-   * +optional
+   * registry represents a single or multiple Quobyte Registry services
+   * specified as a string as host:port pair (multiple entries are separated with commas)
+   * which acts as the central registry for volumes
    */
-  recursiveReadOnly?: V1RecursiveReadOnlyMode;
+  registry?: string;
   /**
-   * Path within the volume from which the container's volume should be mounted.
-   * Defaults to "" (volume's root).
+   * tenant owning the given Quobyte volume in the Backend
+   * Used with dynamically provisioned Quobyte volumes, value is set by the plugin
    * +optional
    */
-  subPath?: string;
+  tenant?: string;
   /**
-   * Expanded path within the volume from which the container's volume should be mounted.
-   * Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
-   * Defaults to "" (volume's root).
-   * SubPathExpr and SubPath are mutually exclusive.
+   * user to map volume access to
+   * Defaults to serivceaccount user
    * +optional
    */
-  subPathExpr?: string;
+  user?: string;
+  /**
+   * volume is a string that references an already created Quobyte volume by name.
+   */
+  volume?: string;
+};
+
+export type V1RbdVolumeSource = {
+  /**
+   * fsType is the filesystem type of the volume that you want to mount.
+   * Tip: Ensure that the filesystem type is supported by the host operating system.
+   * Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#rbd
+   * TODO: how do we prevent errors in the filesystem from compromising the machine
+   * +optional
+   */
+  fsType?: string;
+  /**
+   * image is the rados image name.
+   * More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+   */
+  image?: string;
+  /**
+   * keyring is the path to key ring for RBDUser.
+   * Default is /etc/ceph/keyring.
+   * More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+   * +optional
+   * +default="/etc/ceph/keyring"
+   */
+  keyring?: string;
+  /**
+   * monitors is a collection of Ceph monitors.
+   * More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+   * +listType=atomic
+   */
+  monitors?: Array<string>;
+  /**
+   * pool is the rados pool name.
+   * Default is rbd.
+   * More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+   * +optional
+   * +default="rbd"
+   */
+  pool?: string;
+  /**
+   * readOnly here will force the ReadOnly setting in VolumeMounts.
+   * Defaults to false.
+   * More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * secretRef is name of the authentication secret for RBDUser. If provided
+   * overrides keyring.
+   * Default is nil.
+   * More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+   * +optional
+   */
+  secretRef?: K8sIoApiCoreV1LocalObjectReference;
+  /**
+   * user is the rados user name.
+   * Default is admin.
+   * More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+   * +optional
+   * +default="admin"
+   */
+  user?: string;
 };
 
 export const V1RecursiveReadOnlyMode = {
@@ -776,141 +10864,975 @@ export const V1RecursiveReadOnlyMode = {
 export type V1RecursiveReadOnlyMode =
   (typeof V1RecursiveReadOnlyMode)[keyof typeof V1RecursiveReadOnlyMode];
 
-export const V1MountPropagationMode = {
+export type V1ReplicaSet = {
   /**
-   * MountPropagationNone
+   * APIVersion defines the versioned schema of this representation of an object.
+   * Servers should convert recognized schemas to the latest internal value, and
+   * may reject unrecognized values.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+   * +optional
    */
-  MOUNT_PROPAGATION_NONE: 'None',
+  apiVersion?: string;
   /**
-   * MountPropagationHostToContainer
+   * Kind is a string value representing the REST resource this object represents.
+   * Servers may infer this from the endpoint the client submits requests to.
+   * Cannot be updated.
+   * In CamelCase.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
    */
-  MOUNT_PROPAGATION_HOST_TO_CONTAINER: 'HostToContainer',
+  kind?: string;
   /**
-   * MountPropagationBidirectional
+   * If the Labels of a ReplicaSet are empty, they are defaulted to
+   * be the same as the Pod(s) that the ReplicaSet manages.
+   * Standard object's metadata.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+   * +optional
    */
-  MOUNT_PROPAGATION_BIDIRECTIONAL: 'Bidirectional',
+  metadata?: V1ObjectMeta;
+  /**
+   * Spec defines the specification of the desired behavior of the ReplicaSet.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+   * +optional
+   */
+  spec?: V1ReplicaSetSpec;
+  /**
+   * Status is the most recently observed status of the ReplicaSet.
+   * This data may be out of date by some window of time.
+   * Populated by the system.
+   * Read-only.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+   * +optional
+   */
+  status?: V1ReplicaSetStatus;
+};
+
+export type V1ReplicaSetCondition = {
+  /**
+   * The last time the condition transitioned from one status to another.
+   * +optional
+   */
+  lastTransitionTime?: string;
+  /**
+   * A human readable message indicating details about the transition.
+   * +optional
+   */
+  message?: string;
+  /**
+   * The reason for the condition's last transition.
+   * +optional
+   */
+  reason?: string;
+  /**
+   * Status of the condition, one of True, False, Unknown.
+   */
+  status?: K8sIoApiCoreV1ConditionStatus;
+  /**
+   * Type of replica set condition.
+   */
+  type?: V1ReplicaSetConditionType;
+};
+
+export const V1ReplicaSetConditionType = {
+  /**
+   * ReplicaSetReplicaFailure
+   */
+  REPLICA_SET_REPLICA_FAILURE: 'ReplicaFailure',
 } as const;
 
-export type V1MountPropagationMode =
-  (typeof V1MountPropagationMode)[keyof typeof V1MountPropagationMode];
+export type V1ReplicaSetConditionType =
+  (typeof V1ReplicaSetConditionType)[keyof typeof V1ReplicaSetConditionType];
 
-export type V1VolumeDevice = {
+export type V1ReplicaSetSpec = {
   /**
-   * devicePath is the path inside of the container that the device will be mapped to.
+   * Minimum number of seconds for which a newly created pod should be ready
+   * without any of its container crashing, for it to be considered available.
+   * Defaults to 0 (pod will be considered available as soon as it is ready)
+   * +optional
    */
-  devicePath?: string;
+  minReadySeconds?: number;
   /**
-   * name must match the name of a persistentVolumeClaim in the pod
+   * Replicas is the number of desired pods.
+   * This is a pointer to distinguish between explicit zero and unspecified.
+   * Defaults to 1.
+   * More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset
+   * +optional
+   */
+  replicas?: number;
+  /**
+   * Selector is a label query over pods that should match the replica count.
+   * Label keys and values that must match in order to be controlled by this replica set.
+   * It must match the pod template's labels.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+   */
+  selector?: V1LabelSelector;
+  /**
+   * Template is the object that describes the pod that will be created if
+   * insufficient replicas are detected.
+   * More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/#pod-template
+   * +optional
+   */
+  template?: V1PodTemplateSpec;
+};
+
+export type V1ReplicaSetStatus = {
+  /**
+   * The number of available non-terminating pods (ready for at least minReadySeconds) for this replica set.
+   * +optional
+   */
+  availableReplicas?: number;
+  /**
+   * Represents the latest available observations of a replica set's current state.
+   * +optional
+   * +patchMergeKey=type
+   * +patchStrategy=merge
+   * +listType=map
+   * +listMapKey=type
+   */
+  conditions?: Array<V1ReplicaSetCondition>;
+  /**
+   * The number of non-terminating pods that have labels matching the labels of the pod template of the replicaset.
+   * +optional
+   */
+  fullyLabeledReplicas?: number;
+  /**
+   * ObservedGeneration reflects the generation of the most recently observed ReplicaSet.
+   * +optional
+   */
+  observedGeneration?: number;
+  /**
+   * The number of non-terminating pods targeted by this ReplicaSet with a Ready Condition.
+   * +optional
+   */
+  readyReplicas?: number;
+  /**
+   * Replicas is the most recently observed number of non-terminating pods.
+   * More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset
+   */
+  replicas?: number;
+  /**
+   * The number of terminating pods for this replica set. Terminating pods have a non-null .metadata.deletionTimestamp
+   * and have not yet reached the Failed or Succeeded .status.phase.
+   *
+   * This is a beta field and requires enabling DeploymentReplicaSetTerminatingReplicas feature (enabled by default).
+   * +optional
+   */
+  terminatingReplicas?: number;
+};
+
+export type V1ResourceFieldSelector = {
+  /**
+   * Container name: required for volumes, optional for env vars
+   * +optional
+   */
+  containerName?: string;
+  /**
+   * Specifies the output format of the exposed resources, defaults to "1"
+   * +optional
+   */
+  divisor?: ResourceQuantity;
+  /**
+   * Required: resource to select
+   */
+  resource?: string;
+};
+
+export type V1ResourceHealth = {
+  /**
+   * Health of the resource.
+   * can be one of:
+   * - Healthy: operates as normal
+   * - Unhealthy: reported unhealthy. We consider this a temporary health issue
+   * since we do not have a mechanism today to distinguish
+   * temporary and permanent issues.
+   * - Unknown: The status cannot be determined.
+   * For example, Device Plugin got unregistered and hasn't been re-registered since.
+   *
+   * In future we may want to introduce the PermanentlyUnhealthy Status.
+   */
+  health?: V1ResourceHealthStatus;
+  /**
+   * ResourceID is the unique identifier of the resource. See the ResourceID type for more information.
+   */
+  resourceID?: string;
+};
+
+export const V1ResourceHealthStatus = {
+  /**
+   * ResourceHealthStatusHealthy
+   */
+  RESOURCE_HEALTH_STATUS_HEALTHY: 'Healthy',
+  /**
+   * ResourceHealthStatusUnhealthy
+   */
+  RESOURCE_HEALTH_STATUS_UNHEALTHY: 'Unhealthy',
+  /**
+   * ResourceHealthStatusUnknown
+   */
+  RESOURCE_HEALTH_STATUS_UNKNOWN: 'Unknown',
+} as const;
+
+export type V1ResourceHealthStatus =
+  (typeof V1ResourceHealthStatus)[keyof typeof V1ResourceHealthStatus];
+
+export type V1ResourceList = {
+  [key: string]: ResourceQuantity;
+};
+
+export const V1ResourceName = {
+  /**
+   * ResourceCPU
+   */
+  RESOURCE_CPU: 'cpu',
+  /**
+   * ResourceMemory
+   */
+  RESOURCE_MEMORY: 'memory',
+  /**
+   * ResourceStorage
+   */
+  RESOURCE_STORAGE: 'storage',
+  /**
+   * ResourceEphemeralStorage
+   */
+  RESOURCE_EPHEMERAL_STORAGE: 'ephemeral-storage',
+  /**
+   * ResourcePods
+   */
+  RESOURCE_PODS: 'pods',
+  /**
+   * ResourceServices
+   */
+  RESOURCE_SERVICES: 'services',
+  /**
+   * ResourceReplicationControllers
+   */
+  RESOURCE_REPLICATION_CONTROLLERS: 'replicationcontrollers',
+  /**
+   * ResourceQuotas
+   */
+  RESOURCE_QUOTAS: 'resourcequotas',
+  /**
+   * ResourceSecrets
+   */
+  RESOURCE_SECRETS: 'secrets',
+  /**
+   * ResourceConfigMaps
+   */
+  RESOURCE_CONFIG_MAPS: 'configmaps',
+  /**
+   * ResourcePersistentVolumeClaims
+   */
+  RESOURCE_PERSISTENT_VOLUME_CLAIMS: 'persistentvolumeclaims',
+  /**
+   * ResourceServicesNodePorts
+   */
+  RESOURCE_SERVICES_NODE_PORTS: 'services.nodeports',
+  /**
+   * ResourceServicesLoadBalancers
+   */
+  RESOURCE_SERVICES_LOAD_BALANCERS: 'services.loadbalancers',
+  /**
+   * ResourceRequestsCPU
+   */
+  RESOURCE_REQUESTS_CPU: 'requests.cpu',
+  /**
+   * ResourceRequestsMemory
+   */
+  RESOURCE_REQUESTS_MEMORY: 'requests.memory',
+  /**
+   * ResourceRequestsStorage
+   */
+  RESOURCE_REQUESTS_STORAGE: 'requests.storage',
+  /**
+   * ResourceRequestsEphemeralStorage
+   */
+  RESOURCE_REQUESTS_EPHEMERAL_STORAGE: 'requests.ephemeral-storage',
+  /**
+   * ResourceLimitsCPU
+   */
+  RESOURCE_LIMITS_CPU: 'limits.cpu',
+  /**
+   * ResourceLimitsMemory
+   */
+  RESOURCE_LIMITS_MEMORY: 'limits.memory',
+  /**
+   * ResourceLimitsEphemeralStorage
+   */
+  RESOURCE_LIMITS_EPHEMERAL_STORAGE: 'limits.ephemeral-storage',
+} as const;
+
+export type V1ResourceName =
+  (typeof V1ResourceName)[keyof typeof V1ResourceName];
+
+export type V1ResourceQuota = {
+  /**
+   * APIVersion defines the versioned schema of this representation of an object.
+   * Servers should convert recognized schemas to the latest internal value, and
+   * may reject unrecognized values.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+   * +optional
+   */
+  apiVersion?: string;
+  /**
+   * Kind is a string value representing the REST resource this object represents.
+   * Servers may infer this from the endpoint the client submits requests to.
+   * Cannot be updated.
+   * In CamelCase.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
+   */
+  kind?: string;
+  /**
+   * Standard object's metadata.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+   * +optional
+   */
+  metadata?: V1ObjectMeta;
+  /**
+   * Spec defines the desired quota.
+   * https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+   * +optional
+   */
+  spec?: V1ResourceQuotaSpec;
+  /**
+   * Status defines the actual enforced quota and its current usage.
+   * https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+   * +optional
+   */
+  status?: V1ResourceQuotaStatus;
+};
+
+export const V1ResourceQuotaScope = {
+  /**
+   * ResourceQuotaScopeTerminating
+   */
+  RESOURCE_QUOTA_SCOPE_TERMINATING: 'Terminating',
+  /**
+   * ResourceQuotaScopeNotTerminating
+   */
+  RESOURCE_QUOTA_SCOPE_NOT_TERMINATING: 'NotTerminating',
+  /**
+   * ResourceQuotaScopeBestEffort
+   */
+  RESOURCE_QUOTA_SCOPE_BEST_EFFORT: 'BestEffort',
+  /**
+   * ResourceQuotaScopeNotBestEffort
+   */
+  RESOURCE_QUOTA_SCOPE_NOT_BEST_EFFORT: 'NotBestEffort',
+  /**
+   * ResourceQuotaScopePriorityClass
+   */
+  RESOURCE_QUOTA_SCOPE_PRIORITY_CLASS: 'PriorityClass',
+  /**
+   * ResourceQuotaScopeCrossNamespacePodAffinity
+   */
+  RESOURCE_QUOTA_SCOPE_CROSS_NAMESPACE_POD_AFFINITY:
+    'CrossNamespacePodAffinity',
+  /**
+   * ResourceQuotaScopeVolumeAttributesClass
+   */
+  RESOURCE_QUOTA_SCOPE_VOLUME_ATTRIBUTES_CLASS: 'VolumeAttributesClass',
+} as const;
+
+export type V1ResourceQuotaScope =
+  (typeof V1ResourceQuotaScope)[keyof typeof V1ResourceQuotaScope];
+
+export type V1ResourceQuotaSpec = {
+  /**
+   * hard is the set of desired hard limits for each named resource.
+   * More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
+   * +optional
+   */
+  hard?: V1ResourceList;
+  /**
+   * scopeSelector is also a collection of filters like scopes that must match each object tracked by a quota
+   * but expressed using ScopeSelectorOperator in combination with possible values.
+   * For a resource to match, both scopes AND scopeSelector (if specified in spec), must be matched.
+   * +optional
+   */
+  scopeSelector?: V1ScopeSelector;
+  /**
+   * A collection of filters that must match each object tracked by a quota.
+   * If not specified, the quota matches all objects.
+   * +optional
+   * +listType=atomic
+   */
+  scopes?: Array<V1ResourceQuotaScope>;
+};
+
+export type V1ResourceQuotaStatus = {
+  /**
+   * Hard is the set of enforced hard limits for each named resource.
+   * More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
+   * +optional
+   */
+  hard?: V1ResourceList;
+  /**
+   * Used is the current observed total usage of the resource in the namespace.
+   * +optional
+   */
+  used?: V1ResourceList;
+};
+
+export type V1ResourceRequirements = {
+  /**
+   * Claims lists the names of resources, defined in spec.resourceClaims,
+   * that are used by this container.
+   *
+   * This field depends on the
+   * DynamicResourceAllocation feature gate.
+   *
+   * This field is immutable. It can only be set for containers.
+   *
+   * +listType=map
+   * +listMapKey=name
+   * +featureGate=DynamicResourceAllocation
+   * +optional
+   */
+  claims?: Array<K8sIoApiCoreV1ResourceClaim>;
+  /**
+   * Limits describes the maximum amount of compute resources allowed.
+   * More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+   * +optional
+   */
+  limits?: V1ResourceList;
+  /**
+   * Requests describes the minimum amount of compute resources required.
+   * If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+   * otherwise to an implementation-defined value. Requests cannot exceed Limits.
+   * More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+   * +optional
+   */
+  requests?: V1ResourceList;
+};
+
+export const V1ResourceResizeRestartPolicy = {
+  /**
+   * NotRequired
+   */
+  NOT_REQUIRED: 'NotRequired' /**
+   * RestartContainer
+   */,
+  RESTART_CONTAINER: 'RestartContainer',
+} as const;
+
+export type V1ResourceResizeRestartPolicy =
+  (typeof V1ResourceResizeRestartPolicy)[keyof typeof V1ResourceResizeRestartPolicy];
+
+export type V1ResourceStatus = {
+  /**
+   * Name of the resource. Must be unique within the pod and in case of non-DRA resource, match one of the resources from the pod spec.
+   * For DRA resources, the value must be "claim:<claim_name>/<request>".
+   * When this status is reported about a container, the "claim_name" and "request" must match one of the claims of this container.
+   * +required
+   */
+  name?: V1ResourceName;
+  /**
+   * List of unique resources health. Each element in the list contains an unique resource ID and its health.
+   * At a minimum, for the lifetime of a Pod, resource ID must uniquely identify the resource allocated to the Pod on the Node.
+   * If other Pod on the same Node reports the status with the same resource ID, it must be the same resource they share.
+   * See ResourceID type definition for a specific format it has in various use cases.
+   * +listType=map
+   * +listMapKey=resourceID
+   */
+  resources?: Array<V1ResourceHealth>;
+};
+
+export const V1RestartPolicy = {
+  /**
+   * RestartPolicyAlways
+   */
+  RESTART_POLICY_ALWAYS: 'Always',
+  /**
+   * RestartPolicyOnFailure
+   */
+  RESTART_POLICY_ON_FAILURE: 'OnFailure',
+  /**
+   * RestartPolicyNever
+   */
+  RESTART_POLICY_NEVER: 'Never',
+} as const;
+
+export type V1RestartPolicy =
+  (typeof V1RestartPolicy)[keyof typeof V1RestartPolicy];
+
+export type V1RoleRef = {
+  /**
+   * APIGroup is the group for the resource being referenced
+   */
+  apiGroup?: string;
+  /**
+   * Kind is the type of resource being referenced
+   */
+  kind?: string;
+  /**
+   * Name is the name of resource being referenced
+   * +required
+   * +k8s:required
    */
   name?: string;
 };
 
-export const V1UriScheme = {
+export type V1RollingUpdateDeployment = {
   /**
-   * URISchemeHTTP
+   * The maximum number of pods that can be scheduled above the desired number of
+   * pods.
+   * Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
+   * This can not be 0 if MaxUnavailable is 0.
+   * Absolute number is calculated from percentage by rounding up.
+   * Defaults to 25%.
+   * Example: when this is set to 30%, the new ReplicaSet can be scaled up immediately when
+   * the rolling update starts, such that the total number of old and new pods do not exceed
+   * 130% of desired pods. Once old pods have been killed,
+   * new ReplicaSet can be scaled up further, ensuring that total number of pods running
+   * at any time during the update is at most 130% of desired pods.
+   * +optional
    */
-  URI_SCHEME_HTTP: 'HTTP' /**
-   * URISchemeHTTPS
-   */,
-  URI_SCHEME_HTTPS: 'HTTPS',
+  maxSurge?: IntstrIntOrString;
+  /**
+   * The maximum number of pods that can be unavailable during the update.
+   * Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
+   * Absolute number is calculated from percentage by rounding down.
+   * This can not be 0 if MaxSurge is 0.
+   * Defaults to 25%.
+   * Example: when this is set to 30%, the old ReplicaSet can be scaled down to 70% of desired pods
+   * immediately when the rolling update starts. Once new pods are ready, old ReplicaSet
+   * can be scaled down further, followed by scaling up the new ReplicaSet, ensuring
+   * that the total number of pods available at all times during the update is at
+   * least 70% of desired pods.
+   * +optional
+   */
+  maxUnavailable?: IntstrIntOrString;
+};
+
+export type V1SeLinuxOptions = {
+  /**
+   * Level is SELinux level label that applies to the container.
+   * +optional
+   */
+  level?: string;
+  /**
+   * Role is a SELinux role label that applies to the container.
+   * +optional
+   */
+  role?: string;
+  /**
+   * Type is a SELinux type label that applies to the container.
+   * +optional
+   */
+  type?: string;
+  /**
+   * User is a SELinux user label that applies to the container.
+   * +optional
+   */
+  user?: string;
+};
+
+export type V1ScaleIoVolumeSource = {
+  /**
+   * fsType is the filesystem type to mount.
+   * Must be a filesystem type supported by the host operating system.
+   * Ex. "ext4", "xfs", "ntfs".
+   * Default is "xfs".
+   * +optional
+   * +default="xfs"
+   */
+  fsType?: string;
+  /**
+   * gateway is the host address of the ScaleIO API Gateway.
+   */
+  gateway?: string;
+  /**
+   * protectionDomain is the name of the ScaleIO Protection Domain for the configured storage.
+   * +optional
+   */
+  protectionDomain?: string;
+  /**
+   * readOnly Defaults to false (read/write). ReadOnly here will force
+   * the ReadOnly setting in VolumeMounts.
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * secretRef references to the secret for ScaleIO user and other
+   * sensitive information. If this is not provided, Login operation will fail.
+   */
+  secretRef?: K8sIoApiCoreV1LocalObjectReference;
+  /**
+   * sslEnabled Flag enable/disable SSL communication with Gateway, default false
+   * +optional
+   */
+  sslEnabled?: boolean;
+  /**
+   * storageMode indicates whether the storage for a volume should be ThickProvisioned or ThinProvisioned.
+   * Default is ThinProvisioned.
+   * +optional
+   * +default="ThinProvisioned"
+   */
+  storageMode?: string;
+  /**
+   * storagePool is the ScaleIO Storage Pool associated with the protection domain.
+   * +optional
+   */
+  storagePool?: string;
+  /**
+   * system is the name of the storage system as configured in ScaleIO.
+   */
+  system?: string;
+  /**
+   * volumeName is the name of a volume already created in the ScaleIO system
+   * that is associated with this volume source.
+   */
+  volumeName?: string;
+};
+
+export type V1ScopeSelector = {
+  /**
+   * A list of scope selector requirements by scope of the resources.
+   * +optional
+   * +listType=atomic
+   */
+  matchExpressions?: Array<V1ScopedResourceSelectorRequirement>;
+};
+
+export const V1ScopeSelectorOperator = {
+  /**
+   * ScopeSelectorOpIn
+   */
+  SCOPE_SELECTOR_OP_IN: 'In',
+  /**
+   * ScopeSelectorOpNotIn
+   */
+  SCOPE_SELECTOR_OP_NOT_IN: 'NotIn',
+  /**
+   * ScopeSelectorOpExists
+   */
+  SCOPE_SELECTOR_OP_EXISTS: 'Exists',
+  /**
+   * ScopeSelectorOpDoesNotExist
+   */
+  SCOPE_SELECTOR_OP_DOES_NOT_EXIST: 'DoesNotExist',
 } as const;
 
-export type V1UriScheme = (typeof V1UriScheme)[keyof typeof V1UriScheme];
+export type V1ScopeSelectorOperator =
+  (typeof V1ScopeSelectorOperator)[keyof typeof V1ScopeSelectorOperator];
 
-export const V1TerminationMessagePolicy = {
+export type V1ScopedResourceSelectorRequirement = {
   /**
-   * TerminationMessageReadFile
+   * Represents a scope's relationship to a set of values.
+   * Valid operators are In, NotIn, Exists, DoesNotExist.
    */
-  TERMINATION_MESSAGE_READ_FILE: 'File' /**
-   * TerminationMessageFallbackToLogsOnError
-   */,
-  TERMINATION_MESSAGE_FALLBACK_TO_LOGS_ON_ERROR: 'FallbackToLogsOnError',
+  operator?: V1ScopeSelectorOperator;
+  /**
+   * The name of the scope that the selector applies to.
+   */
+  scopeName?: V1ResourceQuotaScope;
+  /**
+   * An array of string values. If the operator is In or NotIn,
+   * the values array must be non-empty. If the operator is Exists or DoesNotExist,
+   * the values array must be empty.
+   * This array is replaced during a strategic merge patch.
+   * +optional
+   * +listType=atomic
+   */
+  values?: Array<string>;
+};
+
+export type V1SeccompProfile = {
+  /**
+   * localhostProfile indicates a profile defined in a file on the node should be used.
+   * The profile must be preconfigured on the node to work.
+   * Must be a descending path, relative to the kubelet's configured seccomp profile location.
+   * Must be set if type is "Localhost". Must NOT be set for any other type.
+   * +optional
+   */
+  localhostProfile?: string;
+  /**
+   * type indicates which kind of seccomp profile will be applied.
+   * Valid options are:
+   *
+   * Localhost - a profile defined in a file on the node should be used.
+   * RuntimeDefault - the container runtime default profile should be used.
+   * Unconfined - no profile should be applied.
+   * +unionDiscriminator
+   */
+  type?: V1SeccompProfileType;
+};
+
+export const V1SeccompProfileType = {
+  /**
+   * SeccompProfileTypeUnconfined
+   */
+  SECCOMP_PROFILE_TYPE_UNCONFINED: 'Unconfined',
+  /**
+   * SeccompProfileTypeRuntimeDefault
+   */
+  SECCOMP_PROFILE_TYPE_RUNTIME_DEFAULT: 'RuntimeDefault',
+  /**
+   * SeccompProfileTypeLocalhost
+   */
+  SECCOMP_PROFILE_TYPE_LOCALHOST: 'Localhost',
 } as const;
 
-export type V1TerminationMessagePolicy =
-  (typeof V1TerminationMessagePolicy)[keyof typeof V1TerminationMessagePolicy];
+export type V1SeccompProfileType =
+  (typeof V1SeccompProfileType)[keyof typeof V1SeccompProfileType];
 
-export const V1TaintEffect = {
+export type V1SecretEnvSource = {
   /**
-   * TaintEffectNoSchedule
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   * +optional
+   * +default=""
+   * +kubebuilder:default=""
+   * TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
    */
-  TAINT_EFFECT_NO_SCHEDULE: 'NoSchedule',
+  name?: string;
   /**
-   * TaintEffectPreferNoSchedule
+   * Specify whether the Secret must be defined
+   * +optional
    */
-  TAINT_EFFECT_PREFER_NO_SCHEDULE: 'PreferNoSchedule',
-  /**
-   * TaintEffectNoExecute
-   */
-  TAINT_EFFECT_NO_EXECUTE: 'NoExecute',
-} as const;
+  optional?: boolean;
+};
 
-export type V1TaintEffect = (typeof V1TaintEffect)[keyof typeof V1TaintEffect];
-
-export type V1Taint = {
+export type V1SecretKeySelector = {
   /**
-   * Required. The effect of the taint on pods
-   * that do not tolerate the taint.
-   * Valid effects are NoSchedule, PreferNoSchedule and NoExecute.
-   */
-  effect?: V1TaintEffect;
-  /**
-   * Required. The taint key to be applied to a node.
+   * The key of the secret to select from.  Must be a valid secret key.
    */
   key?: string;
   /**
-   * TimeAdded represents the time at which the taint was added.
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   * +optional
+   * +default=""
+   * +kubebuilder:default=""
+   * TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
+   */
+  name?: string;
+  /**
+   * Specify whether the Secret or its key must be defined
    * +optional
    */
-  timeAdded?: string;
+  optional?: boolean;
+};
+
+export type V1SecretProjection = {
   /**
-   * The taint value corresponding to the taint key.
+   * items if unspecified, each key-value pair in the Data field of the referenced
+   * Secret will be projected into the volume as a file whose name is the
+   * key and content is the value. If specified, the listed keys will be
+   * projected into the specified paths, and unlisted keys will not be
+   * present. If a key is specified which is not present in the Secret,
+   * the volume setup will error unless it is marked optional. Paths must be
+   * relative and may not contain the '..' path or start with '..'.
+   * +optional
+   * +listType=atomic
+   */
+  items?: Array<V1KeyToPath>;
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   * +optional
+   * +default=""
+   * +kubebuilder:default=""
+   * TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
+   */
+  name?: string;
+  /**
+   * optional field specify whether the Secret or its key must be defined
    * +optional
    */
-  value?: string;
+  optional?: boolean;
 };
 
-export type V1TcpSocketAction = {
+export type V1SecretReference = {
   /**
-   * Optional: Host name to connect to, defaults to the pod IP.
+   * name is unique within a namespace to reference a secret resource.
    * +optional
    */
-  host?: string;
+  name?: string;
   /**
-   * Number or name of the port to access on the container.
-   * Number must be in the range 1 to 65535.
-   * Name must be an IANA_SVC_NAME.
+   * namespace defines the space within which the secret name must be unique.
+   * +optional
    */
-  port?: IntstrIntOrString;
+  namespace?: string;
 };
 
-export const IntstrType = {
+export type V1SecretVolumeSource = {
   /**
-   * Int
-   *
-   * The IntOrString holds an int.
+   * defaultMode is Optional: mode bits used to set permissions on created files by default.
+   * Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511.
+   * YAML accepts both octal and decimal values, JSON requires decimal values
+   * for mode bits. Defaults to 0644.
+   * Directories within the path are not affected by this setting.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup, and the result can be other mode bits set.
+   * +optional
    */
-  INT: 0 /**
-   * String
-   *
-   * The IntOrString holds a string.
-   */,
-  STRING: 1,
-} as const;
-
-export type IntstrType = (typeof IntstrType)[keyof typeof IntstrType];
-
-export type IntstrIntOrString = {
-  IntVal?: number;
-  StrVal?: string;
-  Type?: IntstrType;
+  defaultMode?: number;
+  /**
+   * items If unspecified, each key-value pair in the Data field of the referenced
+   * Secret will be projected into the volume as a file whose name is the
+   * key and content is the value. If specified, the listed keys will be
+   * projected into the specified paths, and unlisted keys will not be
+   * present. If a key is specified which is not present in the Secret,
+   * the volume setup will error unless it is marked optional. Paths must be
+   * relative and may not contain the '..' path or start with '..'.
+   * +optional
+   * +listType=atomic
+   */
+  items?: Array<V1KeyToPath>;
+  /**
+   * optional field specify whether the Secret or its keys must be defined
+   * +optional
+   */
+  optional?: boolean;
+  /**
+   * secretName is the name of the secret in the pod's namespace to use.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#secret
+   * +optional
+   */
+  secretName?: string;
 };
 
-export type V1SleepAction = {
+export type V1SecurityContext = {
   /**
-   * Seconds is the number of seconds to sleep.
+   * AllowPrivilegeEscalation controls whether a process can gain more
+   * privileges than its parent process. This bool directly controls if
+   * the no_new_privs flag will be set on the container process.
+   * AllowPrivilegeEscalation is true always when the container is:
+   * 1) run as Privileged
+   * 2) has CAP_SYS_ADMIN
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
    */
-  seconds?: number;
+  allowPrivilegeEscalation?: boolean;
+  /**
+   * appArmorProfile is the AppArmor options to use by this container. If set, this profile
+   * overrides the pod's appArmorProfile.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   */
+  appArmorProfile?: V1AppArmorProfile;
+  /**
+   * The capabilities to add/drop when running containers.
+   * Defaults to the default set of capabilities granted by the container runtime.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   */
+  capabilities?: V1Capabilities;
+  /**
+   * Run container in privileged mode.
+   * Processes in privileged containers are essentially equivalent to root on the host.
+   * Defaults to false.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   */
+  privileged?: boolean;
+  /**
+   * procMount denotes the type of proc mount to use for the containers.
+   * The default value is Default which uses the container runtime defaults for
+   * readonly paths and masked paths.
+   * This requires the ProcMountType feature flag to be enabled.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   */
+  procMount?: V1ProcMountType;
+  /**
+   * Whether this container has a read-only root filesystem.
+   * Default is false.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   */
+  readOnlyRootFilesystem?: boolean;
+  /**
+   * The GID to run the entrypoint of the container process.
+   * Uses runtime default if unset.
+   * May also be set in PodSecurityContext.  If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   */
+  runAsGroup?: number;
+  /**
+   * Indicates that the container must run as a non-root user.
+   * If true, the Kubelet will validate the image at runtime to ensure that it
+   * does not run as UID 0 (root) and fail to start the container if it does.
+   * If unset or false, no such validation will be performed.
+   * May also be set in PodSecurityContext.  If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence.
+   * +optional
+   */
+  runAsNonRoot?: boolean;
+  /**
+   * The UID to run the entrypoint of the container process.
+   * Defaults to user specified in image metadata if unspecified.
+   * May also be set in PodSecurityContext.  If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   */
+  runAsUser?: number;
+  /**
+   * The SELinux context to be applied to the container.
+   * If unspecified, the container runtime will allocate a random SELinux context for each
+   * container.  May also be set in PodSecurityContext.  If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   */
+  seLinuxOptions?: V1SeLinuxOptions;
+  /**
+   * The seccomp options to use by this container. If seccomp options are
+   * provided at both the pod & container level, the container options
+   * override the pod options.
+   * Note that this field cannot be set when spec.os.name is windows.
+   * +optional
+   */
+  seccompProfile?: V1SeccompProfile;
+  /**
+   * The Windows specific settings applied to all containers.
+   * If unspecified, the options from the PodSecurityContext will be used.
+   * If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+   * Note that this field cannot be set when spec.os.name is linux.
+   * +optional
+   */
+  windowsOptions?: V1WindowsSecurityContextOptions;
+};
+
+export type V1ServiceAccountTokenProjection = {
+  /**
+   * audience is the intended audience of the token. A recipient of a token
+   * must identify itself with an identifier specified in the audience of the
+   * token, and otherwise should reject the token. The audience defaults to the
+   * identifier of the apiserver.
+   * +optional
+   */
+  audience?: string;
+  /**
+   * expirationSeconds is the requested duration of validity of the service
+   * account token. As the token approaches expiration, the kubelet volume
+   * plugin will proactively rotate the service account token. The kubelet will
+   * start trying to rotate the token if the token is older than 80 percent of
+   * its time to live or if the token is older than 24 hours.Defaults to 1 hour
+   * and must be at least 10 minutes.
+   * +optional
+   */
+  expirationSeconds?: number;
+  /**
+   * path is the path relative to the mount point of the file to project the
+   * token into.
+   */
+  path?: string;
 };
 
 export const V1Signal = {
@@ -1178,386 +12100,369 @@ export const V1Signal = {
 
 export type V1Signal = (typeof V1Signal)[keyof typeof V1Signal];
 
-export type V1SecurityContext = {
+export type V1SleepAction = {
   /**
-   * AllowPrivilegeEscalation controls whether a process can gain more
-   * privileges than its parent process. This bool directly controls if
-   * the no_new_privs flag will be set on the container process.
-   * AllowPrivilegeEscalation is true always when the container is:
-   * 1) run as Privileged
-   * 2) has CAP_SYS_ADMIN
-   * Note that this field cannot be set when spec.os.name is windows.
-   * +optional
+   * Seconds is the number of seconds to sleep.
    */
-  allowPrivilegeEscalation?: boolean;
-  /**
-   * appArmorProfile is the AppArmor options to use by this container. If set, this profile
-   * overrides the pod's appArmorProfile.
-   * Note that this field cannot be set when spec.os.name is windows.
-   * +optional
-   */
-  appArmorProfile?: V1AppArmorProfile;
-  /**
-   * The capabilities to add/drop when running containers.
-   * Defaults to the default set of capabilities granted by the container runtime.
-   * Note that this field cannot be set when spec.os.name is windows.
-   * +optional
-   */
-  capabilities?: V1Capabilities;
-  /**
-   * Run container in privileged mode.
-   * Processes in privileged containers are essentially equivalent to root on the host.
-   * Defaults to false.
-   * Note that this field cannot be set when spec.os.name is windows.
-   * +optional
-   */
-  privileged?: boolean;
-  /**
-   * procMount denotes the type of proc mount to use for the containers.
-   * The default value is Default which uses the container runtime defaults for
-   * readonly paths and masked paths.
-   * This requires the ProcMountType feature flag to be enabled.
-   * Note that this field cannot be set when spec.os.name is windows.
-   * +optional
-   */
-  procMount?: V1ProcMountType;
-  /**
-   * Whether this container has a read-only root filesystem.
-   * Default is false.
-   * Note that this field cannot be set when spec.os.name is windows.
-   * +optional
-   */
-  readOnlyRootFilesystem?: boolean;
-  /**
-   * The GID to run the entrypoint of the container process.
-   * Uses runtime default if unset.
-   * May also be set in PodSecurityContext.  If set in both SecurityContext and
-   * PodSecurityContext, the value specified in SecurityContext takes precedence.
-   * Note that this field cannot be set when spec.os.name is windows.
-   * +optional
-   */
-  runAsGroup?: number;
-  /**
-   * Indicates that the container must run as a non-root user.
-   * If true, the Kubelet will validate the image at runtime to ensure that it
-   * does not run as UID 0 (root) and fail to start the container if it does.
-   * If unset or false, no such validation will be performed.
-   * May also be set in PodSecurityContext.  If set in both SecurityContext and
-   * PodSecurityContext, the value specified in SecurityContext takes precedence.
-   * +optional
-   */
-  runAsNonRoot?: boolean;
-  /**
-   * The UID to run the entrypoint of the container process.
-   * Defaults to user specified in image metadata if unspecified.
-   * May also be set in PodSecurityContext.  If set in both SecurityContext and
-   * PodSecurityContext, the value specified in SecurityContext takes precedence.
-   * Note that this field cannot be set when spec.os.name is windows.
-   * +optional
-   */
-  runAsUser?: number;
-  /**
-   * The SELinux context to be applied to the container.
-   * If unspecified, the container runtime will allocate a random SELinux context for each
-   * container.  May also be set in PodSecurityContext.  If set in both SecurityContext and
-   * PodSecurityContext, the value specified in SecurityContext takes precedence.
-   * Note that this field cannot be set when spec.os.name is windows.
-   * +optional
-   */
-  seLinuxOptions?: V1SeLinuxOptions;
-  /**
-   * The seccomp options to use by this container. If seccomp options are
-   * provided at both the pod & container level, the container options
-   * override the pod options.
-   * Note that this field cannot be set when spec.os.name is windows.
-   * +optional
-   */
-  seccompProfile?: V1SeccompProfile;
-  /**
-   * The Windows specific settings applied to all containers.
-   * If unspecified, the options from the PodSecurityContext will be used.
-   * If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
-   * Note that this field cannot be set when spec.os.name is linux.
-   * +optional
-   */
-  windowsOptions?: V1WindowsSecurityContextOptions;
+  seconds?: number;
 };
 
-export const V1SeccompProfileType = {
+export const V1StorageMedium = {
   /**
-   * SeccompProfileTypeUnconfined
-   */
-  SECCOMP_PROFILE_TYPE_UNCONFINED: 'Unconfined',
-  /**
-   * SeccompProfileTypeRuntimeDefault
-   */
-  SECCOMP_PROFILE_TYPE_RUNTIME_DEFAULT: 'RuntimeDefault',
-  /**
-   * SeccompProfileTypeLocalhost
-   */
-  SECCOMP_PROFILE_TYPE_LOCALHOST: 'Localhost',
-} as const;
-
-export type V1SeccompProfileType =
-  (typeof V1SeccompProfileType)[keyof typeof V1SeccompProfileType];
-
-export type V1SeccompProfile = {
-  /**
-   * localhostProfile indicates a profile defined in a file on the node should be used.
-   * The profile must be preconfigured on the node to work.
-   * Must be a descending path, relative to the kubelet's configured seccomp profile location.
-   * Must be set if type is "Localhost". Must NOT be set for any other type.
-   * +optional
-   */
-  localhostProfile?: string;
-  /**
-   * type indicates which kind of seccomp profile will be applied.
-   * Valid options are:
+   * StorageMediumDefault
    *
-   * Localhost - a profile defined in a file on the node should be used.
-   * RuntimeDefault - the container runtime default profile should be used.
-   * Unconfined - no profile should be applied.
-   * +unionDiscriminator
+   * use whatever the default is for the node, assume anything we don't explicitly handle is this
    */
-  type?: V1SeccompProfileType;
+  STORAGE_MEDIUM_DEFAULT: '',
+  /**
+   * StorageMediumMemory
+   *
+   * use memory (e.g. tmpfs on linux)
+   */
+  STORAGE_MEDIUM_MEMORY: 'Memory',
+  /**
+   * StorageMediumHugePages
+   *
+   * use hugepages
+   */
+  STORAGE_MEDIUM_HUGE_PAGES: 'HugePages',
+  /**
+   * StorageMediumHugePagesPrefix
+   *
+   * prefix for full medium notation HugePages-<size>
+   */
+  STORAGE_MEDIUM_HUGE_PAGES_PREFIX: 'HugePages-',
+} as const;
+
+export type V1StorageMedium =
+  (typeof V1StorageMedium)[keyof typeof V1StorageMedium];
+
+export type V1StorageOsVolumeSource = {
+  /**
+   * fsType is the filesystem type to mount.
+   * Must be a filesystem type supported by the host operating system.
+   * Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+   * +optional
+   */
+  fsType?: string;
+  /**
+   * readOnly defaults to false (read/write). ReadOnly here will force
+   * the ReadOnly setting in VolumeMounts.
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * secretRef specifies the secret to use for obtaining the StorageOS API
+   * credentials.  If not specified, default values will be attempted.
+   * +optional
+   */
+  secretRef?: K8sIoApiCoreV1LocalObjectReference;
+  /**
+   * volumeName is the human-readable name of the StorageOS volume.  Volume
+   * names are only unique within a namespace.
+   */
+  volumeName?: string;
+  /**
+   * volumeNamespace specifies the scope of the volume within StorageOS.  If no
+   * namespace is specified then the Pod's namespace will be used.  This allows the
+   * Kubernetes name scoping to be mirrored within StorageOS for tighter integration.
+   * Set VolumeName to any name to override the default behaviour.
+   * Set to "default" if you are not using namespaces within StorageOS.
+   * Namespaces that do not pre-exist within StorageOS will be created.
+   * +optional
+   */
+  volumeNamespace?: string;
 };
 
-export type V1SeLinuxOptions = {
+export const V1SupplementalGroupsPolicy = {
   /**
-   * Level is SELinux level label that applies to the container.
-   * +optional
+   * SupplementalGroupsPolicyMerge
    */
-  level?: string;
-  /**
-   * Role is a SELinux role label that applies to the container.
-   * +optional
-   */
-  role?: string;
-  /**
-   * Type is a SELinux type label that applies to the container.
-   * +optional
-   */
-  type?: string;
-  /**
-   * User is a SELinux user label that applies to the container.
-   * +optional
-   */
-  user?: string;
-};
-
-export const V1ProcMountType = {
-  /**
-   * DefaultProcMount
-   */
-  DEFAULT_PROC_MOUNT: 'Default' /**
-   * UnmaskedProcMount
+  SUPPLEMENTAL_GROUPS_POLICY_MERGE: 'Merge' /**
+   * SupplementalGroupsPolicyStrict
    */,
-  UNMASKED_PROC_MOUNT: 'Unmasked',
+  SUPPLEMENTAL_GROUPS_POLICY_STRICT: 'Strict',
 } as const;
 
-export type V1ProcMountType =
-  (typeof V1ProcMountType)[keyof typeof V1ProcMountType];
+export type V1SupplementalGroupsPolicy =
+  (typeof V1SupplementalGroupsPolicy)[keyof typeof V1SupplementalGroupsPolicy];
 
-export type V1Capabilities = {
+export type V1Sysctl = {
   /**
-   * Added capabilities
-   * +optional
-   * +listType=atomic
-   */
-  add?: Array<string>;
-  /**
-   * Removed capabilities
-   * +optional
-   * +listType=atomic
-   */
-  drop?: Array<string>;
-};
-
-export const V1AppArmorProfileType = {
-  /**
-   * AppArmorProfileTypeUnconfined
-   */
-  APP_ARMOR_PROFILE_TYPE_UNCONFINED: 'Unconfined',
-  /**
-   * AppArmorProfileTypeRuntimeDefault
-   */
-  APP_ARMOR_PROFILE_TYPE_RUNTIME_DEFAULT: 'RuntimeDefault',
-  /**
-   * AppArmorProfileTypeLocalhost
-   */
-  APP_ARMOR_PROFILE_TYPE_LOCALHOST: 'Localhost',
-} as const;
-
-export type V1AppArmorProfileType =
-  (typeof V1AppArmorProfileType)[keyof typeof V1AppArmorProfileType];
-
-export type V1AppArmorProfile = {
-  /**
-   * localhostProfile indicates a profile loaded on the node that should be used.
-   * The profile must be preconfigured on the node to work.
-   * Must match the loaded name of the profile.
-   * Must be set if and only if type is "Localhost".
-   * +optional
-   */
-  localhostProfile?: string;
-  /**
-   * type indicates which kind of AppArmor profile will be applied.
-   * Valid options are:
-   * Localhost - a profile pre-loaded on the node.
-   * RuntimeDefault - the container runtime's default profile.
-   * Unconfined - no AppArmor enforcement.
-   * +unionDiscriminator
-   */
-  type?: V1AppArmorProfileType;
-};
-
-export type V1SecretReference = {
-  /**
-   * name is unique within a namespace to reference a secret resource.
-   * +optional
+   * Name of a property to set
    */
   name?: string;
   /**
-   * namespace defines the space within which the secret name must be unique.
-   * +optional
+   * Value of a property to set
    */
-  namespace?: string;
+  value?: string;
 };
 
-export type V1SecretKeySelector = {
+export type V1TcpSocketAction = {
   /**
-   * The key of the secret to select from.  Must be a valid secret key.
+   * Optional: Host name to connect to, defaults to the pod IP.
+   * +optional
+   */
+  host?: string;
+  /**
+   * Number or name of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   */
+  port?: IntstrIntOrString;
+};
+
+export type V1Taint = {
+  /**
+   * Required. The effect of the taint on pods
+   * that do not tolerate the taint.
+   * Valid effects are NoSchedule, PreferNoSchedule and NoExecute.
+   */
+  effect?: V1TaintEffect;
+  /**
+   * Required. The taint key to be applied to a node.
    */
   key?: string;
   /**
-   * Name of the referent.
-   * This field is effectively required, but due to backwards compatibility is
-   * allowed to be empty. Instances of this type with an empty value here are
-   * almost certainly wrong.
-   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   * TimeAdded represents the time at which the taint was added.
    * +optional
-   * +default=""
-   * +kubebuilder:default=""
-   * TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
    */
-  name?: string;
+  timeAdded?: string;
   /**
-   * Specify whether the Secret or its key must be defined
+   * The taint value corresponding to the taint key.
    * +optional
    */
-  optional?: boolean;
+  value?: string;
 };
 
-export type V1SecretEnvSource = {
+export const V1TaintEffect = {
   /**
-   * Name of the referent.
-   * This field is effectively required, but due to backwards compatibility is
-   * allowed to be empty. Instances of this type with an empty value here are
-   * almost certainly wrong.
-   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-   * +optional
-   * +default=""
-   * +kubebuilder:default=""
-   * TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
+   * TaintEffectNoSchedule
    */
-  name?: string;
+  TAINT_EFFECT_NO_SCHEDULE: 'NoSchedule',
   /**
-   * Specify whether the Secret must be defined
-   * +optional
+   * TaintEffectPreferNoSchedule
    */
-  optional?: boolean;
-};
-
-export type V1ScopedResourceSelectorRequirement = {
+  TAINT_EFFECT_PREFER_NO_SCHEDULE: 'PreferNoSchedule',
   /**
-   * Represents a scope's relationship to a set of values.
-   * Valid operators are In, NotIn, Exists, DoesNotExist.
+   * TaintEffectNoExecute
    */
-  operator?: V1ScopeSelectorOperator;
-  /**
-   * The name of the scope that the selector applies to.
-   */
-  scopeName?: V1ResourceQuotaScope;
-  /**
-   * An array of string values. If the operator is In or NotIn,
-   * the values array must be non-empty. If the operator is Exists or DoesNotExist,
-   * the values array must be empty.
-   * This array is replaced during a strategic merge patch.
-   * +optional
-   * +listType=atomic
-   */
-  values?: Array<string>;
-};
-
-export const V1ResourceQuotaScope = {
-  /**
-   * ResourceQuotaScopeTerminating
-   */
-  RESOURCE_QUOTA_SCOPE_TERMINATING: 'Terminating',
-  /**
-   * ResourceQuotaScopeNotTerminating
-   */
-  RESOURCE_QUOTA_SCOPE_NOT_TERMINATING: 'NotTerminating',
-  /**
-   * ResourceQuotaScopeBestEffort
-   */
-  RESOURCE_QUOTA_SCOPE_BEST_EFFORT: 'BestEffort',
-  /**
-   * ResourceQuotaScopeNotBestEffort
-   */
-  RESOURCE_QUOTA_SCOPE_NOT_BEST_EFFORT: 'NotBestEffort',
-  /**
-   * ResourceQuotaScopePriorityClass
-   */
-  RESOURCE_QUOTA_SCOPE_PRIORITY_CLASS: 'PriorityClass',
-  /**
-   * ResourceQuotaScopeCrossNamespacePodAffinity
-   */
-  RESOURCE_QUOTA_SCOPE_CROSS_NAMESPACE_POD_AFFINITY:
-    'CrossNamespacePodAffinity',
-  /**
-   * ResourceQuotaScopeVolumeAttributesClass
-   */
-  RESOURCE_QUOTA_SCOPE_VOLUME_ATTRIBUTES_CLASS: 'VolumeAttributesClass',
+  TAINT_EFFECT_NO_EXECUTE: 'NoExecute',
 } as const;
 
-export type V1ResourceQuotaScope =
-  (typeof V1ResourceQuotaScope)[keyof typeof V1ResourceQuotaScope];
+export type V1TaintEffect = (typeof V1TaintEffect)[keyof typeof V1TaintEffect];
 
-export const V1ScopeSelectorOperator = {
+export const V1TerminationMessagePolicy = {
   /**
-   * ScopeSelectorOpIn
+   * TerminationMessageReadFile
    */
-  SCOPE_SELECTOR_OP_IN: 'In',
-  /**
-   * ScopeSelectorOpNotIn
-   */
-  SCOPE_SELECTOR_OP_NOT_IN: 'NotIn',
-  /**
-   * ScopeSelectorOpExists
-   */
-  SCOPE_SELECTOR_OP_EXISTS: 'Exists',
-  /**
-   * ScopeSelectorOpDoesNotExist
-   */
-  SCOPE_SELECTOR_OP_DOES_NOT_EXIST: 'DoesNotExist',
+  TERMINATION_MESSAGE_READ_FILE: 'File' /**
+   * TerminationMessageFallbackToLogsOnError
+   */,
+  TERMINATION_MESSAGE_FALLBACK_TO_LOGS_ON_ERROR: 'FallbackToLogsOnError',
 } as const;
 
-export type V1ScopeSelectorOperator =
-  (typeof V1ScopeSelectorOperator)[keyof typeof V1ScopeSelectorOperator];
+export type V1TerminationMessagePolicy =
+  (typeof V1TerminationMessagePolicy)[keyof typeof V1TerminationMessagePolicy];
 
-export type V1ScopeSelector = {
+export type V1Toleration = {
   /**
-   * A list of scope selector requirements by scope of the resources.
+   * Effect indicates the taint effect to match. Empty means match all taint effects.
+   * When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
    * +optional
-   * +listType=atomic
    */
-  matchExpressions?: Array<V1ScopedResourceSelectorRequirement>;
+  effect?: V1TaintEffect;
+  /**
+   * Key is the taint key that the toleration applies to. Empty means match all taint keys.
+   * If the key is empty, operator must be Exists; this combination means to match all values and all keys.
+   * +optional
+   */
+  key?: string;
+  /**
+   * Operator represents a key's relationship to the value.
+   * Valid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.
+   * Exists is equivalent to wildcard for value, so that a pod can
+   * tolerate all taints of a particular category.
+   * Lt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).
+   * +optional
+   */
+  operator?: V1TolerationOperator;
+  /**
+   * TolerationSeconds represents the period of time the toleration (which must be
+   * of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default,
+   * it is not set, which means tolerate the taint forever (do not evict). Zero and
+   * negative values will be treated as 0 (evict immediately) by the system.
+   * +optional
+   */
+  tolerationSeconds?: number;
+  /**
+   * Value is the taint value the toleration matches to.
+   * If the operator is Exists, the value should be empty, otherwise just a regular string.
+   * +optional
+   */
+  value?: string;
 };
 
-export type V1RoleRef = {
+export const V1TolerationOperator = {
   /**
-   * APIGroup is the group for the resource being referenced
+   * TolerationOpExists
+   */
+  TOLERATION_OP_EXISTS: 'Exists',
+  /**
+   * TolerationOpEqual
+   */
+  TOLERATION_OP_EQUAL: 'Equal',
+  /**
+   * TolerationOpLt
+   */
+  TOLERATION_OP_LT: 'Lt',
+  /**
+   * TolerationOpGt
+   */
+  TOLERATION_OP_GT: 'Gt',
+} as const;
+
+export type V1TolerationOperator =
+  (typeof V1TolerationOperator)[keyof typeof V1TolerationOperator];
+
+export type V1TopologySpreadConstraint = {
+  /**
+   * LabelSelector is used to find matching pods.
+   * Pods that match this label selector are counted to determine the number of pods
+   * in their corresponding topology domain.
+   * +optional
+   */
+  labelSelector?: V1LabelSelector;
+  /**
+   * MatchLabelKeys is a set of pod label keys to select the pods over which
+   * spreading will be calculated. The keys are used to lookup values from the
+   * incoming pod labels, those key-value labels are ANDed with labelSelector
+   * to select the group of existing pods over which spreading will be calculated
+   * for the incoming pod. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector.
+   * MatchLabelKeys cannot be set when LabelSelector isn't set.
+   * Keys that don't exist in the incoming pod labels will
+   * be ignored. A null or empty list means only match against labelSelector.
+   *
+   * This is a beta field and requires the MatchLabelKeysInPodTopologySpread feature gate to be enabled (enabled by default).
+   * +listType=atomic
+   * +optional
+   */
+  matchLabelKeys?: Array<string>;
+  /**
+   * MaxSkew describes the degree to which pods may be unevenly distributed.
+   * When `whenUnsatisfiable=DoNotSchedule`, it is the maximum permitted difference
+   * between the number of matching pods in the target topology and the global minimum.
+   * The global minimum is the minimum number of matching pods in an eligible domain
+   * or zero if the number of eligible domains is less than MinDomains.
+   * For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same
+   * labelSelector spread as 2/2/1:
+   * In this case, the global minimum is 1.
+   * +-------+-------+-------+
+   * | zone1 | zone2 | zone3 |
+   * +-------+-------+-------+
+   * |  P P  |  P P  |   P   |
+   * +-------+-------+-------+
+   * - if MaxSkew is 1, incoming pod can only be scheduled to zone3 to become 2/2/2;
+   * scheduling it onto zone1(zone2) would make the ActualSkew(3-1) on zone1(zone2)
+   * violate MaxSkew(1).
+   * - if MaxSkew is 2, incoming pod can be scheduled onto any zone.
+   * When `whenUnsatisfiable=ScheduleAnyway`, it is used to give higher precedence
+   * to topologies that satisfy it.
+   * It's a required field. Default value is 1 and 0 is not allowed.
+   */
+  maxSkew?: number;
+  /**
+   * MinDomains indicates a minimum number of eligible domains.
+   * When the number of eligible domains with matching topology keys is less than minDomains,
+   * Pod Topology Spread treats "global minimum" as 0, and then the calculation of Skew is performed.
+   * And when the number of eligible domains with matching topology keys equals or greater than minDomains,
+   * this value has no effect on scheduling.
+   * As a result, when the number of eligible domains is less than minDomains,
+   * scheduler won't schedule more than maxSkew Pods to those domains.
+   * If value is nil, the constraint behaves as if MinDomains is equal to 1.
+   * Valid values are integers greater than 0.
+   * When value is not nil, WhenUnsatisfiable must be DoNotSchedule.
+   *
+   * For example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same
+   * labelSelector spread as 2/2/2:
+   * +-------+-------+-------+
+   * | zone1 | zone2 | zone3 |
+   * +-------+-------+-------+
+   * |  P P  |  P P  |  P P  |
+   * +-------+-------+-------+
+   * The number of domains is less than 5(MinDomains), so "global minimum" is treated as 0.
+   * In this situation, new pod with the same labelSelector cannot be scheduled,
+   * because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones,
+   * it will violate MaxSkew.
+   * +optional
+   */
+  minDomains?: number;
+  /**
+   * NodeAffinityPolicy indicates how we will treat Pod's nodeAffinity/nodeSelector
+   * when calculating pod topology spread skew. Options are:
+   * - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations.
+   * - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.
+   *
+   * If this value is nil, the behavior is equivalent to the Honor policy.
+   * +optional
+   */
+  nodeAffinityPolicy?: V1NodeInclusionPolicy;
+  /**
+   * NodeTaintsPolicy indicates how we will treat node taints when calculating
+   * pod topology spread skew. Options are:
+   * - Honor: nodes without taints, along with tainted nodes for which the incoming pod
+   * has a toleration, are included.
+   * - Ignore: node taints are ignored. All nodes are included.
+   *
+   * If this value is nil, the behavior is equivalent to the Ignore policy.
+   * +optional
+   */
+  nodeTaintsPolicy?: V1NodeInclusionPolicy;
+  /**
+   * TopologyKey is the key of node labels. Nodes that have a label with this key
+   * and identical values are considered to be in the same topology.
+   * We consider each <key, value> as a "bucket", and try to put balanced number
+   * of pods into each bucket.
+   * We define a domain as a particular instance of a topology.
+   * Also, we define an eligible domain as a domain whose nodes meet the requirements of
+   * nodeAffinityPolicy and nodeTaintsPolicy.
+   * e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology.
+   * And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology.
+   * It's a required field.
+   */
+  topologyKey?: string;
+  /**
+   * WhenUnsatisfiable indicates how to deal with a pod if it doesn't satisfy
+   * the spread constraint.
+   * - DoNotSchedule (default) tells the scheduler not to schedule it.
+   * - ScheduleAnyway tells the scheduler to schedule the pod in any location,
+   * but giving higher precedence to topologies that would help reduce the
+   * skew.
+   * A constraint is considered "Unsatisfiable" for an incoming pod
+   * if and only if every possible node assignment for that pod would violate
+   * "MaxSkew" on some topology.
+   * For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same
+   * labelSelector spread as 3/1/1:
+   * +-------+-------+-------+
+   * | zone1 | zone2 | zone3 |
+   * +-------+-------+-------+
+   * | P P P |   P   |   P   |
+   * +-------+-------+-------+
+   * If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled
+   * to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies
+   * MaxSkew(1). In other words, the cluster can still be imbalanced, but scheduler
+   * won't make it *more* imbalanced.
+   * It's a required field.
+   */
+  whenUnsatisfiable?: V1UnsatisfiableConstraintAction;
+};
+
+export type V1TypedLocalObjectReference = {
+  /**
+   * APIGroup is the group for the resource being referenced.
+   * If APIGroup is not specified, the specified Kind must be in the core API group.
+   * For any other third-party types, APIGroup is required.
+   * +optional
    */
   apiGroup?: string;
   /**
@@ -1566,41 +12471,482 @@ export type V1RoleRef = {
   kind?: string;
   /**
    * Name is the name of resource being referenced
-   * +required
-   * +k8s:required
    */
   name?: string;
 };
 
-export const V1ResourceResizeRestartPolicy = {
+export type V1TypedObjectReference = {
   /**
-   * NotRequired
-   */
-  NOT_REQUIRED: 'NotRequired' /**
-   * RestartContainer
-   */,
-  RESTART_CONTAINER: 'RestartContainer',
-} as const;
-
-export type V1ResourceResizeRestartPolicy =
-  (typeof V1ResourceResizeRestartPolicy)[keyof typeof V1ResourceResizeRestartPolicy];
-
-export type V1ResourceRequirements = {
-  /**
-   * Claims lists the names of resources, defined in spec.resourceClaims,
-   * that are used by this container.
-   *
-   * This field depends on the
-   * DynamicResourceAllocation feature gate.
-   *
-   * This field is immutable. It can only be set for containers.
-   *
-   * +listType=map
-   * +listMapKey=name
-   * +featureGate=DynamicResourceAllocation
+   * APIGroup is the group for the resource being referenced.
+   * If APIGroup is not specified, the specified Kind must be in the core API group.
+   * For any other third-party types, APIGroup is required.
    * +optional
    */
-  claims?: Array<K8sIoApiCoreV1ResourceClaim>;
+  apiGroup?: string;
+  /**
+   * Kind is the type of resource being referenced
+   */
+  kind?: string;
+  /**
+   * Name is the name of resource being referenced
+   */
+  name?: string;
+  /**
+   * Namespace is the namespace of resource being referenced
+   * Note that when a namespace is specified, a gateway.networking.k8s.io/ReferenceGrant object is required in the referent namespace to allow that namespace's owner to accept the reference. See the ReferenceGrant documentation for details.
+   * (Alpha) This field requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
+   * +featureGate=CrossNamespaceVolumeDataSource
+   * +optional
+   */
+  namespace?: string;
+};
+
+export const V1UriScheme = {
+  /**
+   * URISchemeHTTP
+   */
+  URI_SCHEME_HTTP: 'HTTP' /**
+   * URISchemeHTTPS
+   */,
+  URI_SCHEME_HTTPS: 'HTTPS',
+} as const;
+
+export type V1UriScheme = (typeof V1UriScheme)[keyof typeof V1UriScheme];
+
+export const V1UnsatisfiableConstraintAction = {
+  /**
+   * DoNotSchedule
+   */
+  DO_NOT_SCHEDULE: 'DoNotSchedule' /**
+   * ScheduleAnyway
+   */,
+  SCHEDULE_ANYWAY: 'ScheduleAnyway',
+} as const;
+
+export type V1UnsatisfiableConstraintAction =
+  (typeof V1UnsatisfiableConstraintAction)[keyof typeof V1UnsatisfiableConstraintAction];
+
+export type V1Volume = {
+  /**
+   * awsElasticBlockStore represents an AWS Disk resource that is attached to a
+   * kubelet's host machine and then exposed to the pod.
+   * Deprecated: AWSElasticBlockStore is deprecated. All operations for the in-tree
+   * awsElasticBlockStore type are redirected to the ebs.csi.aws.com CSI driver.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
+   * +optional
+   */
+  awsElasticBlockStore?: V1AwsElasticBlockStoreVolumeSource;
+  /**
+   * azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod.
+   * Deprecated: AzureDisk is deprecated. All operations for the in-tree azureDisk type
+   * are redirected to the disk.csi.azure.com CSI driver.
+   * +optional
+   */
+  azureDisk?: V1AzureDiskVolumeSource;
+  /**
+   * azureFile represents an Azure File Service mount on the host and bind mount to the pod.
+   * Deprecated: AzureFile is deprecated. All operations for the in-tree azureFile type
+   * are redirected to the file.csi.azure.com CSI driver.
+   * +optional
+   */
+  azureFile?: V1AzureFileVolumeSource;
+  /**
+   * cephFS represents a Ceph FS mount on the host that shares a pod's lifetime.
+   * Deprecated: CephFS is deprecated and the in-tree cephfs type is no longer supported.
+   * +optional
+   */
+  cephfs?: V1CephFsVolumeSource;
+  /**
+   * cinder represents a cinder volume attached and mounted on kubelets host machine.
+   * Deprecated: Cinder is deprecated. All operations for the in-tree cinder type
+   * are redirected to the cinder.csi.openstack.org CSI driver.
+   * More info: https://examples.k8s.io/mysql-cinder-pd/README.md
+   * +optional
+   */
+  cinder?: V1CinderVolumeSource;
+  /**
+   * configMap represents a configMap that should populate this volume
+   * +optional
+   */
+  configMap?: V1ConfigMapVolumeSource;
+  /**
+   * csi (Container Storage Interface) represents ephemeral storage that is handled by certain external CSI drivers.
+   * +optional
+   */
+  csi?: V1CsiVolumeSource;
+  /**
+   * downwardAPI represents downward API about the pod that should populate this volume
+   * +optional
+   */
+  downwardAPI?: V1DownwardApiVolumeSource;
+  /**
+   * emptyDir represents a temporary directory that shares a pod's lifetime.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir
+   * +optional
+   */
+  emptyDir?: V1EmptyDirVolumeSource;
+  /**
+   * ephemeral represents a volume that is handled by a cluster storage driver.
+   * The volume's lifecycle is tied to the pod that defines it - it will be created before the pod starts,
+   * and deleted when the pod is removed.
+   *
+   * Use this if:
+   * a) the volume is only needed while the pod runs,
+   * b) features of normal volumes like restoring from snapshot or capacity
+   * tracking are needed,
+   * c) the storage driver is specified through a storage class, and
+   * d) the storage driver supports dynamic volume provisioning through
+   * a PersistentVolumeClaim (see EphemeralVolumeSource for more
+   * information on the connection between this volume type
+   * and PersistentVolumeClaim).
+   *
+   * Use PersistentVolumeClaim or one of the vendor-specific
+   * APIs for volumes that persist for longer than the lifecycle
+   * of an individual pod.
+   *
+   * Use CSI for light-weight local ephemeral volumes if the CSI driver is meant to
+   * be used that way - see the documentation of the driver for
+   * more information.
+   *
+   * A pod can use both types of ephemeral volumes and
+   * persistent volumes at the same time.
+   *
+   * +optional
+   */
+  ephemeral?: V1EphemeralVolumeSource;
+  /**
+   * fc represents a Fibre Channel resource that is attached to a kubelet's host machine and then exposed to the pod.
+   * +optional
+   */
+  fc?: V1FcVolumeSource;
+  /**
+   * flexVolume represents a generic volume resource that is
+   * provisioned/attached using an exec based plugin.
+   * Deprecated: FlexVolume is deprecated. Consider using a CSIDriver instead.
+   * +optional
+   */
+  flexVolume?: V1FlexVolumeSource;
+  /**
+   * flocker represents a Flocker volume attached to a kubelet's host machine. This depends on the Flocker control service being running.
+   * Deprecated: Flocker is deprecated and the in-tree flocker type is no longer supported.
+   * +optional
+   */
+  flocker?: V1FlockerVolumeSource;
+  /**
+   * gcePersistentDisk represents a GCE Disk resource that is attached to a
+   * kubelet's host machine and then exposed to the pod.
+   * Deprecated: GCEPersistentDisk is deprecated. All operations for the in-tree
+   * gcePersistentDisk type are redirected to the pd.csi.storage.gke.io CSI driver.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
+   * +optional
+   */
+  gcePersistentDisk?: V1GcePersistentDiskVolumeSource;
+  /**
+   * gitRepo represents a git repository at a particular revision.
+   * Deprecated: GitRepo is deprecated. To provision a container with a git repo, mount an
+   * EmptyDir into an InitContainer that clones the repo using git, then mount the EmptyDir
+   * into the Pod's container.
+   * +optional
+   */
+  gitRepo?: V1GitRepoVolumeSource;
+  /**
+   * glusterfs represents a Glusterfs mount on the host that shares a pod's lifetime.
+   * Deprecated: Glusterfs is deprecated and the in-tree glusterfs type is no longer supported.
+   * +optional
+   */
+  glusterfs?: V1GlusterfsVolumeSource;
+  /**
+   * hostPath represents a pre-existing file or directory on the host
+   * machine that is directly exposed to the container. This is generally
+   * used for system agents or other privileged things that are allowed
+   * to see the host machine. Most containers will NOT need this.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath
+   * ---
+   * TODO(jonesdl) We need to restrict who can use host directory mounts and who can/can not
+   * mount host directories as read/write.
+   * +optional
+   */
+  hostPath?: V1HostPathVolumeSource;
+  /**
+   * image represents an OCI object (a container image or artifact) pulled and mounted on the kubelet's host machine.
+   * The volume is resolved at pod startup depending on which PullPolicy value is provided:
+   *
+   * - Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.
+   * - Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.
+   * - IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.
+   *
+   * The volume gets re-resolved if the pod gets deleted and recreated, which means that new remote content will become available on pod recreation.
+   * A failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message.
+   * The types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field.
+   * The OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images.
+   * The volume will be mounted read-only (ro) and non-executable files (noexec).
+   * Sub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath) before 1.33.
+   * The field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.
+   * +featureGate=ImageVolume
+   * +optional
+   */
+  image?: V1ImageVolumeSource;
+  /**
+   * iscsi represents an ISCSI Disk resource that is attached to a
+   * kubelet's host machine and then exposed to the pod.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes/#iscsi
+   * +optional
+   */
+  iscsi?: V1IscsiVolumeSource;
+  /**
+   * name of the volume.
+   * Must be a DNS_LABEL and unique within the pod.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   */
+  name?: string;
+  /**
+   * nfs represents an NFS mount on the host that shares a pod's lifetime
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs
+   * +optional
+   */
+  nfs?: V1NfsVolumeSource;
+  /**
+   * persistentVolumeClaimVolumeSource represents a reference to a
+   * PersistentVolumeClaim in the same namespace.
+   * More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
+   * +optional
+   */
+  persistentVolumeClaim?: V1PersistentVolumeClaimVolumeSource;
+  /**
+   * photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine.
+   * Deprecated: PhotonPersistentDisk is deprecated and the in-tree photonPersistentDisk type is no longer supported.
+   */
+  photonPersistentDisk?: V1PhotonPersistentDiskVolumeSource;
+  /**
+   * portworxVolume represents a portworx volume attached and mounted on kubelets host machine.
+   * Deprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type
+   * are redirected to the pxd.portworx.com CSI driver when the CSIMigrationPortworx feature-gate
+   * is on.
+   * +optional
+   */
+  portworxVolume?: V1PortworxVolumeSource;
+  /**
+   * projected items for all in one resources secrets, configmaps, and downward API
+   */
+  projected?: V1ProjectedVolumeSource;
+  /**
+   * quobyte represents a Quobyte mount on the host that shares a pod's lifetime.
+   * Deprecated: Quobyte is deprecated and the in-tree quobyte type is no longer supported.
+   * +optional
+   */
+  quobyte?: V1QuobyteVolumeSource;
+  /**
+   * rbd represents a Rados Block Device mount on the host that shares a pod's lifetime.
+   * Deprecated: RBD is deprecated and the in-tree rbd type is no longer supported.
+   * +optional
+   */
+  rbd?: V1RbdVolumeSource;
+  /**
+   * scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes.
+   * Deprecated: ScaleIO is deprecated and the in-tree scaleIO type is no longer supported.
+   * +optional
+   */
+  scaleIO?: V1ScaleIoVolumeSource;
+  /**
+   * secret represents a secret that should populate this volume.
+   * More info: https://kubernetes.io/docs/concepts/storage/volumes#secret
+   * +optional
+   */
+  secret?: V1SecretVolumeSource;
+  /**
+   * storageOS represents a StorageOS volume attached and mounted on Kubernetes nodes.
+   * Deprecated: StorageOS is deprecated and the in-tree storageos type is no longer supported.
+   * +optional
+   */
+  storageos?: V1StorageOsVolumeSource;
+  /**
+   * vsphereVolume represents a vSphere volume attached and mounted on kubelets host machine.
+   * Deprecated: VsphereVolume is deprecated. All operations for the in-tree vsphereVolume type
+   * are redirected to the csi.vsphere.vmware.com CSI driver.
+   * +optional
+   */
+  vsphereVolume?: V1VsphereVirtualDiskVolumeSource;
+};
+
+export type V1VolumeDevice = {
+  /**
+   * devicePath is the path inside of the container that the device will be mapped to.
+   */
+  devicePath?: string;
+  /**
+   * name must match the name of a persistentVolumeClaim in the pod
+   */
+  name?: string;
+};
+
+export type V1VolumeMount = {
+  /**
+   * Path within the container at which the volume should be mounted.  Must
+   * not contain ':'.
+   */
+  mountPath?: string;
+  /**
+   * mountPropagation determines how mounts are propagated from the host
+   * to container and the other way around.
+   * When not set, MountPropagationNone is used.
+   * This field is beta in 1.10.
+   * When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+   * (which defaults to None).
+   * +optional
+   */
+  mountPropagation?: V1MountPropagationMode;
+  /**
+   * This must match the Name of a Volume.
+   */
+  name?: string;
+  /**
+   * Mounted read-only if true, read-write otherwise (false or unspecified).
+   * Defaults to false.
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * RecursiveReadOnly specifies whether read-only mounts should be handled
+   * recursively.
+   *
+   * If ReadOnly is false, this field has no meaning and must be unspecified.
+   *
+   * If ReadOnly is true, and this field is set to Disabled, the mount is not made
+   * recursively read-only.  If this field is set to IfPossible, the mount is made
+   * recursively read-only, if it is supported by the container runtime.  If this
+   * field is set to Enabled, the mount is made recursively read-only if it is
+   * supported by the container runtime, otherwise the pod will not be started and
+   * an error will be generated to indicate the reason.
+   *
+   * If this field is set to IfPossible or Enabled, MountPropagation must be set to
+   * None (or be unspecified, which defaults to None).
+   *
+   * If this field is not specified, it is treated as an equivalent of Disabled.
+   * +optional
+   */
+  recursiveReadOnly?: V1RecursiveReadOnlyMode;
+  /**
+   * Path within the volume from which the container's volume should be mounted.
+   * Defaults to "" (volume's root).
+   * +optional
+   */
+  subPath?: string;
+  /**
+   * Expanded path within the volume from which the container's volume should be mounted.
+   * Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+   * Defaults to "" (volume's root).
+   * SubPathExpr and SubPath are mutually exclusive.
+   * +optional
+   */
+  subPathExpr?: string;
+};
+
+export type V1VolumeMountStatus = {
+  /**
+   * MountPath corresponds to the original VolumeMount.
+   */
+  mountPath?: string;
+  /**
+   * Name corresponds to the name of the original VolumeMount.
+   */
+  name?: string;
+  /**
+   * ReadOnly corresponds to the original VolumeMount.
+   * +optional
+   */
+  readOnly?: boolean;
+  /**
+   * RecursiveReadOnly must be set to Disabled, Enabled, or unspecified (for non-readonly mounts).
+   * An IfPossible value in the original VolumeMount must be translated to Disabled or Enabled,
+   * depending on the mount result.
+   * +optional
+   */
+  recursiveReadOnly?: V1RecursiveReadOnlyMode;
+};
+
+export type V1VolumeProjection = {
+  /**
+   * ClusterTrustBundle allows a pod to access the `.spec.trustBundle` field
+   * of ClusterTrustBundle objects in an auto-updating file.
+   *
+   * Alpha, gated by the ClusterTrustBundleProjection feature gate.
+   *
+   * ClusterTrustBundle objects can either be selected by name, or by the
+   * combination of signer name and a label selector.
+   *
+   * Kubelet performs aggressive normalization of the PEM contents written
+   * into the pod filesystem.  Esoteric PEM features such as inter-block
+   * comments and block headers are stripped.  Certificates are deduplicated.
+   * The ordering of certificates within the file is arbitrary, and Kubelet
+   * may change the order over time.
+   *
+   * +featureGate=ClusterTrustBundleProjection
+   * +optional
+   */
+  clusterTrustBundle?: V1ClusterTrustBundleProjection;
+  /**
+   * configMap information about the configMap data to project
+   * +optional
+   */
+  configMap?: V1ConfigMapProjection;
+  /**
+   * downwardAPI information about the downwardAPI data to project
+   * +optional
+   */
+  downwardAPI?: V1DownwardApiProjection;
+  /**
+   * Projects an auto-rotating credential bundle (private key and certificate
+   * chain) that the pod can use either as a TLS client or server.
+   *
+   * Kubelet generates a private key and uses it to send a
+   * PodCertificateRequest to the named signer.  Once the signer approves the
+   * request and issues a certificate chain, Kubelet writes the key and
+   * certificate chain to the pod filesystem.  The pod does not start until
+   * certificates have been issued for each podCertificate projected volume
+   * source in its spec.
+   *
+   * Kubelet will begin trying to rotate the certificate at the time indicated
+   * by the signer using the PodCertificateRequest.Status.BeginRefreshAt
+   * timestamp.
+   *
+   * Kubelet can write a single file, indicated by the credentialBundlePath
+   * field, or separate files, indicated by the keyPath and
+   * certificateChainPath fields.
+   *
+   * The credential bundle is a single file in PEM format.  The first PEM
+   * entry is the private key (in PKCS#8 format), and the remaining PEM
+   * entries are the certificate chain issued by the signer (typically,
+   * signers will return their certificate chain in leaf-to-root order).
+   *
+   * Prefer using the credential bundle format, since your application code
+   * can read it atomically.  If you use keyPath and certificateChainPath,
+   * your application must make two separate file reads. If these coincide
+   * with a certificate rotation, it is possible that the private key and leaf
+   * certificate you read may not correspond to each other.  Your application
+   * will need to check for this condition, and re-read until they are
+   * consistent.
+   *
+   * The named signer controls chooses the format of the certificate it
+   * issues; consult the signer implementation's documentation to learn how to
+   * use the certificates it issues.
+   *
+   * +featureGate=PodCertificateProjection
+   * +optional
+   */
+  podCertificate?: V1PodCertificateProjection;
+  /**
+   * secret information about the secret data to project
+   * +optional
+   */
+  secret?: V1SecretProjection;
+  /**
+   * serviceAccountToken is information about the serviceAccountToken data to project
+   * +optional
+   */
+  serviceAccountToken?: V1ServiceAccountTokenProjection;
+};
+
+export type V1VolumeResourceRequirements = {
   /**
    * Limits describes the maximum amount of compute resources allowed.
    * More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
@@ -1617,5359 +12963,116 @@ export type V1ResourceRequirements = {
   requests?: V1ResourceList;
 };
 
-export type K8sIoApiCoreV1ResourceClaim = {
-  /**
-   * Name must match the name of one entry in pod.spec.resourceClaims of
-   * the Pod where this field is used. It makes that resource available
-   * inside a container.
-   */
-  name?: string;
-  /**
-   * Request is the name chosen for a request in the referenced claim.
-   * If empty, everything from the claim is made available, otherwise
-   * only the result of this request.
-   *
-   * +optional
-   */
-  request?: string;
-};
-
-export type V1ResourceQuotaStatus = {
-  /**
-   * Hard is the set of enforced hard limits for each named resource.
-   * More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
-   * +optional
-   */
-  hard?: V1ResourceList;
-  /**
-   * Used is the current observed total usage of the resource in the namespace.
-   * +optional
-   */
-  used?: V1ResourceList;
-};
-
-export type V1ResourceQuotaSpec = {
-  /**
-   * hard is the set of desired hard limits for each named resource.
-   * More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
-   * +optional
-   */
-  hard?: V1ResourceList;
-  /**
-   * scopeSelector is also a collection of filters like scopes that must match each object tracked by a quota
-   * but expressed using ScopeSelectorOperator in combination with possible values.
-   * For a resource to match, both scopes AND scopeSelector (if specified in spec), must be matched.
-   * +optional
-   */
-  scopeSelector?: V1ScopeSelector;
-  /**
-   * A collection of filters that must match each object tracked by a quota.
-   * If not specified, the quota matches all objects.
-   * +optional
-   * +listType=atomic
-   */
-  scopes?: Array<V1ResourceQuotaScope>;
-};
-
-export type V1ResourceQuota = {
-  /**
-   * APIVersion defines the versioned schema of this representation of an object.
-   * Servers should convert recognized schemas to the latest internal value, and
-   * may reject unrecognized values.
-   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
-   * +optional
-   */
-  apiVersion?: string;
-  /**
-   * Kind is a string value representing the REST resource this object represents.
-   * Servers may infer this from the endpoint the client submits requests to.
-   * Cannot be updated.
-   * In CamelCase.
-   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-   * +optional
-   */
-  kind?: string;
-  /**
-   * Standard object's metadata.
-   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
-   * +optional
-   */
-  metadata?: V1ObjectMeta;
-  /**
-   * Spec defines the desired quota.
-   * https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
-   * +optional
-   */
-  spec?: V1ResourceQuotaSpec;
-  /**
-   * Status defines the actual enforced quota and its current usage.
-   * https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
-   * +optional
-   */
-  status?: V1ResourceQuotaStatus;
-};
-
-export const V1ResourceName = {
-  /**
-   * ResourceCPU
-   */
-  RESOURCE_CPU: 'cpu',
-  /**
-   * ResourceMemory
-   */
-  RESOURCE_MEMORY: 'memory',
-  /**
-   * ResourceStorage
-   */
-  RESOURCE_STORAGE: 'storage',
-  /**
-   * ResourceEphemeralStorage
-   */
-  RESOURCE_EPHEMERAL_STORAGE: 'ephemeral-storage',
-  /**
-   * ResourcePods
-   */
-  RESOURCE_PODS: 'pods',
-  /**
-   * ResourceServices
-   */
-  RESOURCE_SERVICES: 'services',
-  /**
-   * ResourceReplicationControllers
-   */
-  RESOURCE_REPLICATION_CONTROLLERS: 'replicationcontrollers',
-  /**
-   * ResourceQuotas
-   */
-  RESOURCE_QUOTAS: 'resourcequotas',
-  /**
-   * ResourceSecrets
-   */
-  RESOURCE_SECRETS: 'secrets',
-  /**
-   * ResourceConfigMaps
-   */
-  RESOURCE_CONFIG_MAPS: 'configmaps',
-  /**
-   * ResourcePersistentVolumeClaims
-   */
-  RESOURCE_PERSISTENT_VOLUME_CLAIMS: 'persistentvolumeclaims',
-  /**
-   * ResourceServicesNodePorts
-   */
-  RESOURCE_SERVICES_NODE_PORTS: 'services.nodeports',
-  /**
-   * ResourceServicesLoadBalancers
-   */
-  RESOURCE_SERVICES_LOAD_BALANCERS: 'services.loadbalancers',
-  /**
-   * ResourceRequestsCPU
-   */
-  RESOURCE_REQUESTS_CPU: 'requests.cpu',
-  /**
-   * ResourceRequestsMemory
-   */
-  RESOURCE_REQUESTS_MEMORY: 'requests.memory',
-  /**
-   * ResourceRequestsStorage
-   */
-  RESOURCE_REQUESTS_STORAGE: 'requests.storage',
-  /**
-   * ResourceRequestsEphemeralStorage
-   */
-  RESOURCE_REQUESTS_EPHEMERAL_STORAGE: 'requests.ephemeral-storage',
-  /**
-   * ResourceLimitsCPU
-   */
-  RESOURCE_LIMITS_CPU: 'limits.cpu',
-  /**
-   * ResourceLimitsMemory
-   */
-  RESOURCE_LIMITS_MEMORY: 'limits.memory',
-  /**
-   * ResourceLimitsEphemeralStorage
-   */
-  RESOURCE_LIMITS_EPHEMERAL_STORAGE: 'limits.ephemeral-storage',
-} as const;
-
-export type V1ResourceName =
-  (typeof V1ResourceName)[keyof typeof V1ResourceName];
-
-export type V1ResourceFieldSelector = {
-  /**
-   * Container name: required for volumes, optional for env vars
-   * +optional
-   */
-  containerName?: string;
-  /**
-   * Specifies the output format of the exposed resources, defaults to "1"
-   * +optional
-   */
-  divisor?: ResourceQuantity;
-  /**
-   * Required: resource to select
-   */
-  resource?: string;
-};
-
-export const V1PullPolicy = {
-  /**
-   * PullAlways
-   */
-  PULL_ALWAYS: 'Always',
-  /**
-   * PullNever
-   */
-  PULL_NEVER: 'Never',
-  /**
-   * PullIfNotPresent
-   */
-  PULL_IF_NOT_PRESENT: 'IfNotPresent',
-} as const;
-
-export type V1PullPolicy = (typeof V1PullPolicy)[keyof typeof V1PullPolicy];
-
-export const V1Protocol = {
-  /**
-   * ProtocolTCP
-   */
-  PROTOCOL_TCP: 'TCP',
-  /**
-   * ProtocolUDP
-   */
-  PROTOCOL_UDP: 'UDP',
-  /**
-   * ProtocolSCTP
-   */
-  PROTOCOL_SCTP: 'SCTP',
-} as const;
-
-export type V1Protocol = (typeof V1Protocol)[keyof typeof V1Protocol];
-
-export type V1Probe = {
-  /**
-   * Exec specifies a command to execute in the container.
-   * +optional
-   */
-  exec?: V1ExecAction;
-  /**
-   * Minimum consecutive failures for the probe to be considered failed after having succeeded.
-   * Defaults to 3. Minimum value is 1.
-   * +optional
-   */
-  failureThreshold?: number;
-  /**
-   * GRPC specifies a GRPC HealthCheckRequest.
-   * +optional
-   */
-  grpc?: V1GrpcAction;
-  /**
-   * HTTPGet specifies an HTTP GET request to perform.
-   * +optional
-   */
-  httpGet?: V1HttpGetAction;
-  /**
-   * Number of seconds after the container has started before liveness probes are initiated.
-   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
-   * +optional
-   */
-  initialDelaySeconds?: number;
-  /**
-   * How often (in seconds) to perform the probe.
-   * Default to 10 seconds. Minimum value is 1.
-   * +optional
-   */
-  periodSeconds?: number;
-  /**
-   * Minimum consecutive successes for the probe to be considered successful after having failed.
-   * Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
-   * +optional
-   */
-  successThreshold?: number;
-  /**
-   * TCPSocket specifies a connection to a TCP port.
-   * +optional
-   */
-  tcpSocket?: V1TcpSocketAction;
-  /**
-   * Optional duration in seconds the pod needs to terminate gracefully upon probe failure.
-   * The grace period is the duration in seconds after the processes running in the pod are sent
-   * a termination signal and the time when the processes are forcibly halted with a kill signal.
-   * Set this value longer than the expected cleanup time for your process.
-   * If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this
-   * value overrides the value provided by the pod spec.
-   * Value must be non-negative integer. The value zero indicates stop immediately via
-   * the kill signal (no opportunity to shut down).
-   * This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate.
-   * Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
-   * +optional
-   */
-  terminationGracePeriodSeconds?: number;
-  /**
-   * Number of seconds after which the probe times out.
-   * Defaults to 1 second. Minimum value is 1.
-   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
-   * +optional
-   */
-  timeoutSeconds?: number;
-};
-
-export type V1HttpHeader = {
-  /**
-   * The header field name.
-   * This will be canonicalized upon output, so case-variant names will be understood as the same header.
-   */
-  name?: string;
-  /**
-   * The header field value
-   */
-  value?: string;
-};
-
-export type V1HttpGetAction = {
-  /**
-   * Host name to connect to, defaults to the pod IP. You probably want to set
-   * "Host" in httpHeaders instead.
-   * +optional
-   */
-  host?: string;
-  /**
-   * Custom headers to set in the request. HTTP allows repeated headers.
-   * +optional
-   * +listType=atomic
-   */
-  httpHeaders?: Array<V1HttpHeader>;
-  /**
-   * Path to access on the HTTP server.
-   * +optional
-   */
-  path?: string;
-  /**
-   * Name or number of the port to access on the container.
-   * Number must be in the range 1 to 65535.
-   * Name must be an IANA_SVC_NAME.
-   */
-  port?: IntstrIntOrString;
-  /**
-   * Scheme to use for connecting to the host.
-   * Defaults to HTTP.
-   * +optional
-   */
-  scheme?: V1UriScheme;
-};
-
-export type V1GrpcAction = {
-  /**
-   * Port number of the gRPC service. Number must be in the range 1 to 65535.
-   */
-  port?: number;
-  /**
-   * Service is the name of the service to place in the gRPC HealthCheckRequest
-   * (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
-   *
-   * If this is not specified, the default behavior is defined by gRPC.
-   * +optional
-   * +default=""
-   */
-  service?: string;
-};
-
-export type V1ExecAction = {
-  /**
-   * Command is the command line to execute inside the container, the working directory for the
-   * command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
-   * not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
-   * a shell, you need to explicitly call out to that shell.
-   * Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
-   * +optional
-   * +listType=atomic
-   */
-  command?: Array<string>;
-};
-
-export const V1PersistentVolumeReclaimPolicy = {
-  /**
-   * PersistentVolumeReclaimRecycle
-   */
-  PERSISTENT_VOLUME_RECLAIM_RECYCLE: 'Recycle',
-  /**
-   * PersistentVolumeReclaimDelete
-   */
-  PERSISTENT_VOLUME_RECLAIM_DELETE: 'Delete',
-  /**
-   * PersistentVolumeReclaimRetain
-   */
-  PERSISTENT_VOLUME_RECLAIM_RETAIN: 'Retain',
-} as const;
-
-export type V1PersistentVolumeReclaimPolicy =
-  (typeof V1PersistentVolumeReclaimPolicy)[keyof typeof V1PersistentVolumeReclaimPolicy];
-
-export const V1PersistentVolumePhase = {
-  /**
-   * VolumePending
-   */
-  VOLUME_PENDING: 'Pending',
-  /**
-   * VolumeAvailable
-   */
-  VOLUME_AVAILABLE: 'Available',
-  /**
-   * VolumeBound
-   */
-  VOLUME_BOUND: 'Bound',
-  /**
-   * VolumeReleased
-   */
-  VOLUME_RELEASED: 'Released',
-  /**
-   * VolumeFailed
-   */
-  VOLUME_FAILED: 'Failed',
-} as const;
-
-export type V1PersistentVolumePhase =
-  (typeof V1PersistentVolumePhase)[keyof typeof V1PersistentVolumePhase];
-
-export const V1PersistentVolumeMode = {
-  /**
-   * PersistentVolumeBlock
-   */
-  PERSISTENT_VOLUME_BLOCK: 'Block' /**
-   * PersistentVolumeFilesystem
-   */,
-  PERSISTENT_VOLUME_FILESYSTEM: 'Filesystem',
-} as const;
-
-export type V1PersistentVolumeMode =
-  (typeof V1PersistentVolumeMode)[keyof typeof V1PersistentVolumeMode];
-
-export const V1PersistentVolumeClaimPhase = {
-  /**
-   * ClaimPending
-   */
-  CLAIM_PENDING: 'Pending',
-  /**
-   * ClaimBound
-   */
-  CLAIM_BOUND: 'Bound',
-  /**
-   * ClaimLost
-   */
-  CLAIM_LOST: 'Lost',
-} as const;
-
-export type V1PersistentVolumeClaimPhase =
-  (typeof V1PersistentVolumeClaimPhase)[keyof typeof V1PersistentVolumeClaimPhase];
-
-export const V1PersistentVolumeAccessMode = {
-  /**
-   * ReadWriteOnce
-   */
-  READ_WRITE_ONCE: 'ReadWriteOnce',
-  /**
-   * ReadOnlyMany
-   */
-  READ_ONLY_MANY: 'ReadOnlyMany',
-  /**
-   * ReadWriteMany
-   */
-  READ_WRITE_MANY: 'ReadWriteMany',
-  /**
-   * ReadWriteOncePod
-   */
-  READ_WRITE_ONCE_POD: 'ReadWriteOncePod',
-} as const;
-
-export type V1PersistentVolumeAccessMode =
-  (typeof V1PersistentVolumeAccessMode)[keyof typeof V1PersistentVolumeAccessMode];
-
-export type V1ObjectReference = {
-  /**
-   * API version of the referent.
-   * +optional
-   */
-  apiVersion?: string;
-  /**
-   * If referring to a piece of an object instead of an entire object, this string
-   * should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
-   * For example, if the object reference is to a container within a pod, this would take on a value like:
-   * "spec.containers{name}" (where "name" refers to the name of the container that triggered
-   * the event) or if no container name is specified "spec.containers[2]" (container with
-   * index 2 in this pod). This syntax is chosen only to have some well-defined way of
-   * referencing a part of an object.
-   * TODO: this design is not final and this field is subject to change in the future.
-   * +optional
-   */
-  fieldPath?: string;
-  /**
-   * Kind of the referent.
-   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-   * +optional
-   */
-  kind?: string;
-  /**
-   * Name of the referent.
-   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-   * +optional
-   */
-  name?: string;
-  /**
-   * Namespace of the referent.
-   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
-   * +optional
-   */
-  namespace?: string;
-  /**
-   * Specific resourceVersion to which this reference is made, if any.
-   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
-   * +optional
-   */
-  resourceVersion?: string;
-  /**
-   * UID of the referent.
-   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
-   * +optional
-   */
-  uid?: string;
-};
-
-export type V1ObjectFieldSelector = {
-  /**
-   * Version of the schema the FieldPath is written in terms of, defaults to "v1".
-   * +optional
-   */
-  apiVersion?: string;
-  /**
-   * Path of the field to select in the specified API version.
-   */
-  fieldPath?: string;
-};
-
-export type V1NodeSystemInfo = {
-  /**
-   * The Architecture reported by the node
-   */
-  architecture?: string;
-  /**
-   * Boot ID reported by the node.
-   */
-  bootID?: string;
-  /**
-   * ContainerRuntime Version reported by the node through runtime remote API (e.g. containerd://1.4.2).
-   */
-  containerRuntimeVersion?: string;
-  /**
-   * Kernel Version reported by the node from 'uname -r' (e.g. 3.16.0-0.bpo.4-amd64).
-   */
-  kernelVersion?: string;
-  /**
-   * Deprecated: KubeProxy Version reported by the node.
-   */
-  kubeProxyVersion?: string;
-  /**
-   * Kubelet Version reported by the node.
-   */
-  kubeletVersion?: string;
-  /**
-   * MachineID reported by the node. For unique machine identification
-   * in the cluster this field is preferred. Learn more from man(5)
-   * machine-id: http://man7.org/linux/man-pages/man5/machine-id.5.html
-   */
-  machineID?: string;
-  /**
-   * The Operating System reported by the node
-   */
-  operatingSystem?: string;
-  /**
-   * OS Image reported by the node from /etc/os-release (e.g. Debian GNU/Linux 7 (wheezy)).
-   */
-  osImage?: string;
-  /**
-   * Swap Info reported by the node.
-   */
-  swap?: V1NodeSwapStatus;
-  /**
-   * SystemUUID reported by the node. For unique machine identification
-   * MachineID is preferred. This field is specific to Red Hat hosts
-   * https://access.redhat.com/documentation/en-us/red_hat_subscription_management/1/html/rhsm/uuid
-   */
-  systemUUID?: string;
-};
-
-export type V1NodeSwapStatus = {
-  /**
-   * Total amount of swap memory in bytes.
-   * +optional
-   */
-  capacity?: number;
-};
-
-export type V1NodeStatus = {
-  /**
-   * List of addresses reachable to the node.
-   * Queried from cloud provider, if available.
-   * More info: https://kubernetes.io/docs/reference/node/node-status/#addresses
-   * Note: This field is declared as mergeable, but the merge key is not sufficiently
-   * unique, which can cause data corruption when it is merged. Callers should instead
-   * use a full-replacement patch. See https://pr.k8s.io/79391 for an example.
-   * Consumers should assume that addresses can change during the
-   * lifetime of a Node. However, there are some exceptions where this may not
-   * be possible, such as Pods that inherit a Node's address in its own status or
-   * consumers of the downward API (status.hostIP).
-   * +optional
-   * +patchMergeKey=type
-   * +patchStrategy=merge
-   * +listType=map
-   * +listMapKey=type
-   */
-  addresses?: Array<V1NodeAddress>;
-  /**
-   * Allocatable represents the resources of a node that are available for scheduling.
-   * Defaults to Capacity.
-   * +optional
-   */
-  allocatable?: V1ResourceList;
-  /**
-   * Capacity represents the total resources of a node.
-   * More info: https://kubernetes.io/docs/reference/node/node-status/#capacity
-   * +optional
-   */
-  capacity?: V1ResourceList;
-  /**
-   * Conditions is an array of current observed node conditions.
-   * More info: https://kubernetes.io/docs/reference/node/node-status/#condition
-   * +optional
-   * +patchMergeKey=type
-   * +patchStrategy=merge
-   * +listType=map
-   * +listMapKey=type
-   */
-  conditions?: Array<V1NodeCondition>;
-  /**
-   * Status of the config assigned to the node via the dynamic Kubelet config feature.
-   * +optional
-   */
-  config?: V1NodeConfigStatus;
-  /**
-   * Endpoints of daemons running on the Node.
-   * +optional
-   */
-  daemonEndpoints?: V1NodeDaemonEndpoints;
-  /**
-   * DeclaredFeatures represents the features related to feature gates that are declared by the node.
-   * +featureGate=NodeDeclaredFeatures
-   * +optional
-   * +listType=atomic
-   */
-  declaredFeatures?: Array<string>;
-  /**
-   * Features describes the set of features implemented by the CRI implementation.
-   * +featureGate=SupplementalGroupsPolicy
-   * +optional
-   */
-  features?: V1NodeFeatures;
-  /**
-   * List of container images on this node
-   * +optional
-   * +listType=atomic
-   */
-  images?: Array<V1ContainerImage>;
-  /**
-   * Set of ids/uuids to uniquely identify the node.
-   * More info: https://kubernetes.io/docs/reference/node/node-status/#info
-   * +optional
-   */
-  nodeInfo?: V1NodeSystemInfo;
-  /**
-   * NodePhase is the recently observed lifecycle phase of the node.
-   * More info: https://kubernetes.io/docs/concepts/nodes/node/#phase
-   * The field is never populated, and now is deprecated.
-   * +optional
-   */
-  phase?: V1NodePhase;
-  /**
-   * The available runtime handlers.
-   * +featureGate=UserNamespacesSupport
-   * +optional
-   * +listType=atomic
-   */
-  runtimeHandlers?: Array<V1NodeRuntimeHandler>;
-  /**
-   * List of volumes that are attached to the node.
-   * +optional
-   * +listType=atomic
-   */
-  volumesAttached?: Array<V1AttachedVolume>;
-  /**
-   * List of attachable volumes in use (mounted) by the node.
-   * +optional
-   * +listType=atomic
-   */
-  volumesInUse?: Array<string>;
-};
-
-export type V1AttachedVolume = {
-  /**
-   * DevicePath represents the device path where the volume should be available
-   */
-  devicePath?: string;
-  /**
-   * Name of the attached volume
-   */
-  name?: string;
-};
-
-export type V1NodeRuntimeHandlerFeatures = {
-  /**
-   * RecursiveReadOnlyMounts is set to true if the runtime handler supports RecursiveReadOnlyMounts.
-   * +optional
-   */
-  recursiveReadOnlyMounts?: boolean;
-  /**
-   * UserNamespaces is set to true if the runtime handler supports UserNamespaces, including for volumes.
-   * +featureGate=UserNamespacesSupport
-   * +optional
-   */
-  userNamespaces?: boolean;
-};
-
-export type V1NodeRuntimeHandler = {
-  /**
-   * Supported features.
-   * +optional
-   */
-  features?: V1NodeRuntimeHandlerFeatures;
-  /**
-   * Runtime handler name.
-   * Empty for the default runtime handler.
-   * +optional
-   */
-  name?: string;
-};
-
-export const V1NodePhase = {
-  /**
-   * NodePending
-   */
-  NODE_PENDING: 'Pending',
-  /**
-   * NodeRunning
-   */
-  NODE_RUNNING: 'Running',
-  /**
-   * NodeTerminated
-   */
-  NODE_TERMINATED: 'Terminated',
-} as const;
-
-export type V1NodePhase = (typeof V1NodePhase)[keyof typeof V1NodePhase];
-
-export type V1ContainerImage = {
-  /**
-   * Names by which this image is known.
-   * e.g. ["kubernetes.example/hyperkube:v1.0.7", "cloud-vendor.registry.example/cloud-vendor/hyperkube:v1.0.7"]
-   * +optional
-   * +listType=atomic
-   */
-  names?: Array<string>;
-  /**
-   * The size of the image in bytes.
-   * +optional
-   */
-  sizeBytes?: number;
-};
-
-export type V1NodeFeatures = {
-  /**
-   * SupplementalGroupsPolicy is set to true if the runtime supports SupplementalGroupsPolicy and ContainerUser.
-   * +optional
-   */
-  supplementalGroupsPolicy?: boolean;
-};
-
-export type V1DaemonEndpoint = {
-  /**
-   * Port number of the given endpoint.
-   */
-  Port?: number;
-};
-
-export type V1NodeDaemonEndpoints = {
-  /**
-   * Endpoint on which Kubelet is listening.
-   * +optional
-   */
-  kubeletEndpoint?: V1DaemonEndpoint;
-};
-
-export type V1ConfigMapNodeConfigSource = {
-  /**
-   * KubeletConfigKey declares which key of the referenced ConfigMap corresponds to the KubeletConfiguration structure
-   * This field is required in all cases.
-   */
-  kubeletConfigKey?: string;
-  /**
-   * Name is the metadata.name of the referenced ConfigMap.
-   * This field is required in all cases.
-   */
-  name?: string;
-  /**
-   * Namespace is the metadata.namespace of the referenced ConfigMap.
-   * This field is required in all cases.
-   */
-  namespace?: string;
-  /**
-   * ResourceVersion is the metadata.ResourceVersion of the referenced ConfigMap.
-   * This field is forbidden in Node.Spec, and required in Node.Status.
-   * +optional
-   */
-  resourceVersion?: string;
-  /**
-   * UID is the metadata.UID of the referenced ConfigMap.
-   * This field is forbidden in Node.Spec, and required in Node.Status.
-   * +optional
-   */
-  uid?: string;
-};
-
-export type V1NodeConfigSource = {
-  /**
-   * ConfigMap is a reference to a Node's ConfigMap
-   */
-  configMap?: V1ConfigMapNodeConfigSource;
-};
-
-export type V1NodeConfigStatus = {
-  /**
-   * Active reports the checkpointed config the node is actively using.
-   * Active will represent either the current version of the Assigned config,
-   * or the current LastKnownGood config, depending on whether attempting to use the
-   * Assigned config results in an error.
-   * +optional
-   */
-  active?: V1NodeConfigSource;
-  /**
-   * Assigned reports the checkpointed config the node will try to use.
-   * When Node.Spec.ConfigSource is updated, the node checkpoints the associated
-   * config payload to local disk, along with a record indicating intended
-   * config. The node refers to this record to choose its config checkpoint, and
-   * reports this record in Assigned. Assigned only updates in the status after
-   * the record has been checkpointed to disk. When the Kubelet is restarted,
-   * it tries to make the Assigned config the Active config by loading and
-   * validating the checkpointed payload identified by Assigned.
-   * +optional
-   */
-  assigned?: V1NodeConfigSource;
-  /**
-   * Error describes any problems reconciling the Spec.ConfigSource to the Active config.
-   * Errors may occur, for example, attempting to checkpoint Spec.ConfigSource to the local Assigned
-   * record, attempting to checkpoint the payload associated with Spec.ConfigSource, attempting
-   * to load or validate the Assigned config, etc.
-   * Errors may occur at different points while syncing config. Earlier errors (e.g. download or
-   * checkpointing errors) will not result in a rollback to LastKnownGood, and may resolve across
-   * Kubelet retries. Later errors (e.g. loading or validating a checkpointed config) will result in
-   * a rollback to LastKnownGood. In the latter case, it is usually possible to resolve the error
-   * by fixing the config assigned in Spec.ConfigSource.
-   * You can find additional information for debugging by searching the error message in the Kubelet log.
-   * Error is a human-readable description of the error state; machines can check whether or not Error
-   * is empty, but should not rely on the stability of the Error text across Kubelet versions.
-   * +optional
-   */
-  error?: string;
-  /**
-   * LastKnownGood reports the checkpointed config the node will fall back to
-   * when it encounters an error attempting to use the Assigned config.
-   * The Assigned config becomes the LastKnownGood config when the node determines
-   * that the Assigned config is stable and correct.
-   * This is currently implemented as a 10-minute soak period starting when the local
-   * record of Assigned config is updated. If the Assigned config is Active at the end
-   * of this period, it becomes the LastKnownGood. Note that if Spec.ConfigSource is
-   * reset to nil (use local defaults), the LastKnownGood is also immediately reset to nil,
-   * because the local default config is always assumed good.
-   * You should not make assumptions about the node's method of determining config stability
-   * and correctness, as this may change or become configurable in the future.
-   * +optional
-   */
-  lastKnownGood?: V1NodeConfigSource;
-};
-
-export const V1NodeConditionType = {
-  /**
-   * NodeReady
-   */
-  NODE_READY: 'Ready',
-  /**
-   * NodeMemoryPressure
-   */
-  NODE_MEMORY_PRESSURE: 'MemoryPressure',
-  /**
-   * NodeDiskPressure
-   */
-  NODE_DISK_PRESSURE: 'DiskPressure',
-  /**
-   * NodePIDPressure
-   */
-  NODE_PID_PRESSURE: 'PIDPressure',
-  /**
-   * NodeNetworkUnavailable
-   */
-  NODE_NETWORK_UNAVAILABLE: 'NetworkUnavailable',
-} as const;
-
-export type V1NodeConditionType =
-  (typeof V1NodeConditionType)[keyof typeof V1NodeConditionType];
-
-export const K8sIoApiCoreV1ConditionStatus = {
-  /**
-   * ConditionTrue
-   */
-  CONDITION_TRUE: 'True',
-  /**
-   * ConditionFalse
-   */
-  CONDITION_FALSE: 'False',
-  /**
-   * ConditionUnknown
-   */
-  CONDITION_UNKNOWN: 'Unknown',
-} as const;
-
-export type K8sIoApiCoreV1ConditionStatus =
-  (typeof K8sIoApiCoreV1ConditionStatus)[keyof typeof K8sIoApiCoreV1ConditionStatus];
-
-export type V1NodeCondition = {
-  /**
-   * Last time we got an update on a given condition.
-   * +optional
-   */
-  lastHeartbeatTime?: string;
-  /**
-   * Last time the condition transit from one status to another.
-   * +optional
-   */
-  lastTransitionTime?: string;
-  /**
-   * Human readable message indicating details about last transition.
-   * +optional
-   */
-  message?: string;
-  /**
-   * (brief) reason for the condition's last transition.
-   * +optional
-   */
-  reason?: string;
-  /**
-   * Status of the condition, one of True, False, Unknown.
-   */
-  status?: K8sIoApiCoreV1ConditionStatus;
-  /**
-   * Type of node condition.
-   */
-  type?: V1NodeConditionType;
-};
-
-export const V1NodeAddressType = {
-  /**
-   * NodeHostName
-   */
-  NODE_HOST_NAME: 'Hostname',
-  /**
-   * NodeInternalIP
-   */
-  NODE_INTERNAL_IP: 'InternalIP',
-  /**
-   * NodeExternalIP
-   */
-  NODE_EXTERNAL_IP: 'ExternalIP',
-  /**
-   * NodeInternalDNS
-   */
-  NODE_INTERNAL_DNS: 'InternalDNS',
-  /**
-   * NodeExternalDNS
-   */
-  NODE_EXTERNAL_DNS: 'ExternalDNS',
-} as const;
-
-export type V1NodeAddressType =
-  (typeof V1NodeAddressType)[keyof typeof V1NodeAddressType];
-
-export type V1NodeAddress = {
-  /**
-   * The node address.
-   */
-  address?: string;
-  /**
-   * Node address type, one of Hostname, ExternalIP or InternalIP.
-   */
-  type?: V1NodeAddressType;
-};
-
-export type V1NodeSpec = {
-  /**
-   * Deprecated: Previously used to specify the source of the node's configuration for the DynamicKubeletConfig feature. This feature is removed.
-   * +optional
-   */
-  configSource?: V1NodeConfigSource;
-  /**
-   * Deprecated. Not all kubelets will set this field. Remove field after 1.13.
-   * see: https://issues.k8s.io/61966
-   * +optional
-   */
-  externalID?: string;
-  /**
-   * PodCIDR represents the pod IP range assigned to the node.
-   * +optional
-   */
-  podCIDR?: string;
-  /**
-   * podCIDRs represents the IP ranges assigned to the node for usage by Pods on that node. If this
-   * field is specified, the 0th entry must match the podCIDR field. It may contain at most 1 value for
-   * each of IPv4 and IPv6.
-   * +optional
-   * +patchStrategy=merge
-   * +listType=set
-   */
-  podCIDRs?: Array<string>;
-  /**
-   * ID of the node assigned by the cloud provider in the format: <ProviderName>://<ProviderSpecificNodeID>
-   * +optional
-   */
-  providerID?: string;
-  /**
-   * If specified, the node's taints.
-   * +optional
-   * +listType=atomic
-   */
-  taints?: Array<V1Taint>;
-  /**
-   * Unschedulable controls node schedulability of new pods. By default, node is schedulable.
-   * More info: https://kubernetes.io/docs/concepts/nodes/node/#manual-node-administration
-   * +optional
-   */
-  unschedulable?: boolean;
-};
-
-export type V1NamespaceStatus = {
-  /**
-   * Represents the latest available observations of a namespace's current state.
-   * +optional
-   * +patchMergeKey=type
-   * +patchStrategy=merge
-   * +listType=map
-   * +listMapKey=type
-   */
-  conditions?: Array<V1NamespaceCondition>;
-  /**
-   * Phase is the current lifecycle phase of the namespace.
-   * More info: https://kubernetes.io/docs/tasks/administer-cluster/namespaces/
-   * +optional
-   */
-  phase?: V1NamespacePhase;
-};
-
-export const V1NamespacePhase = {
-  /**
-   * NamespaceActive
-   */
-  NAMESPACE_ACTIVE: 'Active' /**
-   * NamespaceTerminating
-   */,
-  NAMESPACE_TERMINATING: 'Terminating',
-} as const;
-
-export type V1NamespacePhase =
-  (typeof V1NamespacePhase)[keyof typeof V1NamespacePhase];
-
-export const V1NamespaceConditionType = {
-  /**
-   * NamespaceDeletionDiscoveryFailure
-   */
-  NAMESPACE_DELETION_DISCOVERY_FAILURE: 'NamespaceDeletionDiscoveryFailure',
-  /**
-   * NamespaceDeletionContentFailure
-   */
-  NAMESPACE_DELETION_CONTENT_FAILURE: 'NamespaceDeletionContentFailure',
-  /**
-   * NamespaceDeletionGVParsingFailure
-   */
-  NAMESPACE_DELETION_GV_PARSING_FAILURE:
-    'NamespaceDeletionGroupVersionParsingFailure',
-  /**
-   * NamespaceContentRemaining
-   */
-  NAMESPACE_CONTENT_REMAINING: 'NamespaceContentRemaining',
-  /**
-   * NamespaceFinalizersRemaining
-   */
-  NAMESPACE_FINALIZERS_REMAINING: 'NamespaceFinalizersRemaining',
-} as const;
-
-export type V1NamespaceConditionType =
-  (typeof V1NamespaceConditionType)[keyof typeof V1NamespaceConditionType];
-
-export type V1NamespaceCondition = {
-  /**
-   * Last time the condition transitioned from one status to another.
-   * +optional
-   */
-  lastTransitionTime?: string;
-  /**
-   * Human-readable message indicating details about last transition.
-   * +optional
-   */
-  message?: string;
-  /**
-   * Unique, one-word, CamelCase reason for the condition's last transition.
-   * +optional
-   */
-  reason?: string;
-  /**
-   * Status of the condition, one of True, False, Unknown.
-   */
-  status?: K8sIoApiCoreV1ConditionStatus;
-  /**
-   * Type of namespace controller condition.
-   */
-  type?: V1NamespaceConditionType;
-};
-
-export type V1LocalObjectReference = {
-  /**
-   * Name of the referent.
-   * This field is effectively required, but due to backwards compatibility is
-   * allowed to be empty. Instances of this type with an empty value here are
-   * almost certainly wrong.
-   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-   * +optional
-   * +default=""
-   * +kubebuilder:default=""
-   * TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
-   */
-  name?: string;
-};
-
-export type V1LifecycleHandler = {
-  /**
-   * Exec specifies a command to execute in the container.
-   * +optional
-   */
-  exec?: V1ExecAction;
-  /**
-   * HTTPGet specifies an HTTP GET request to perform.
-   * +optional
-   */
-  httpGet?: V1HttpGetAction;
-  /**
-   * Sleep represents a duration that the container should sleep.
-   * +optional
-   */
-  sleep?: V1SleepAction;
-  /**
-   * Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
-   * for backward compatibility. There is no validation of this field and
-   * lifecycle hooks will fail at runtime when it is specified.
-   * +optional
-   */
-  tcpSocket?: V1TcpSocketAction;
-};
-
-export type V1Lifecycle = {
-  /**
-   * PostStart is called immediately after a container is created. If the handler fails,
-   * the container is terminated and restarted according to its restart policy.
-   * Other management of the container blocks until the hook completes.
-   * More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
-   * +optional
-   */
-  postStart?: V1LifecycleHandler;
-  /**
-   * PreStop is called immediately before a container is terminated due to an
-   * API request or management event such as liveness/startup probe failure,
-   * preemption, resource contention, etc. The handler is not called if the
-   * container crashes or exits. The Pod's termination grace period countdown begins before the
-   * PreStop hook is executed. Regardless of the outcome of the handler, the
-   * container will eventually terminate within the Pod's termination grace
-   * period (unless delayed by finalizers). Other management of the container blocks until the hook completes
-   * or until the termination grace period is reached.
-   * More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
-   * +optional
-   */
-  preStop?: V1LifecycleHandler;
-  /**
-   * StopSignal defines which signal will be sent to a container when it is being stopped.
-   * If not specified, the default is defined by the container runtime in use.
-   * StopSignal can only be set for Pods with a non-empty .spec.os.name
-   * +optional
-   */
-  stopSignal?: V1Signal;
-};
-
-export type V1FileKeySelector = {
-  /**
-   * The key within the env file. An invalid key will prevent the pod from starting.
-   * The keys defined within a source may consist of any printable ASCII characters except '='.
-   * During Alpha stage of the EnvFiles feature gate, the key size is limited to 128 characters.
-   * +required
-   */
-  key?: string;
-  /**
-   * Specify whether the file or its key must be defined. If the file or key
-   * does not exist, then the env var is not published.
-   * If optional is set to true and the specified key does not exist,
-   * the environment variable will not be set in the Pod's containers.
-   *
-   * If optional is set to false and the specified key does not exist,
-   * an error will be returned during Pod creation.
-   * +optional
-   * +default=false
-   */
-  optional?: boolean;
-  /**
-   * The path within the volume from which to select the file.
-   * Must be relative and may not contain the '..' path or start with '..'.
-   * +required
-   */
-  path?: string;
-  /**
-   * The name of the volume mount containing the env file.
-   * +required
-   */
-  volumeName?: string;
-};
-
-export type V1EnvVarSource = {
-  /**
-   * Selects a key of a ConfigMap.
-   * +optional
-   */
-  configMapKeyRef?: V1ConfigMapKeySelector;
-  /**
-   * Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`,
-   * spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
-   * +optional
-   */
-  fieldRef?: V1ObjectFieldSelector;
-  /**
-   * FileKeyRef selects a key of the env file.
-   * Requires the EnvFiles feature gate to be enabled.
-   *
-   * +featureGate=EnvFiles
-   * +optional
-   */
-  fileKeyRef?: V1FileKeySelector;
-  /**
-   * Selects a resource of the container: only resources limits and requests
-   * (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
-   * +optional
-   */
-  resourceFieldRef?: V1ResourceFieldSelector;
-  /**
-   * Selects a key of a secret in the pod's namespace
-   * +optional
-   */
-  secretKeyRef?: V1SecretKeySelector;
-};
-
-export type V1ConfigMapKeySelector = {
-  /**
-   * The key to select.
-   */
-  key?: string;
-  /**
-   * Name of the referent.
-   * This field is effectively required, but due to backwards compatibility is
-   * allowed to be empty. Instances of this type with an empty value here are
-   * almost certainly wrong.
-   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-   * +optional
-   * +default=""
-   * +kubebuilder:default=""
-   * TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
-   */
-  name?: string;
-  /**
-   * Specify whether the ConfigMap or its key must be defined
-   * +optional
-   */
-  optional?: boolean;
-};
-
-export type V1EnvVar = {
-  /**
-   * Name of the environment variable.
-   * May consist of any printable ASCII characters except '='.
-   */
-  name?: string;
-  /**
-   * Variable references $(VAR_NAME) are expanded
-   * using the previously defined environment variables in the container and
-   * any service environment variables. If a variable cannot be resolved,
-   * the reference in the input string will be unchanged. Double $$ are reduced
-   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e.
-   * "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)".
-   * Escaped references will never be expanded, regardless of whether the variable
-   * exists or not.
-   * Defaults to "".
-   * +optional
-   */
-  value?: string;
-  /**
-   * Source for the environment variable's value. Cannot be used if value is not empty.
-   * +optional
-   */
-  valueFrom?: V1EnvVarSource;
-};
-
-export type V1EnvFromSource = {
-  /**
-   * The ConfigMap to select from
-   * +optional
-   */
-  configMapRef?: V1ConfigMapEnvSource;
-  /**
-   * Optional text to prepend to the name of each environment variable.
-   * May consist of any printable ASCII characters except '='.
-   * +optional
-   */
-  prefix?: string;
-  /**
-   * The Secret to select from
-   * +optional
-   */
-  secretRef?: V1SecretEnvSource;
-};
-
-export type V1ConfigMapEnvSource = {
-  /**
-   * Name of the referent.
-   * This field is effectively required, but due to backwards compatibility is
-   * allowed to be empty. Instances of this type with an empty value here are
-   * almost certainly wrong.
-   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-   * +optional
-   * +default=""
-   * +kubebuilder:default=""
-   * TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
-   */
-  name?: string;
-  /**
-   * Specify whether the ConfigMap must be defined
-   * +optional
-   */
-  optional?: boolean;
-};
-
-export const V1ContainerRestartRuleOnExitCodesOperator = {
-  /**
-   * ContainerRestartRuleOnExitCodesOpIn
-   */
-  CONTAINER_RESTART_RULE_ON_EXIT_CODES_OP_IN: 'In' /**
-   * ContainerRestartRuleOnExitCodesOpNotIn
-   */,
-  CONTAINER_RESTART_RULE_ON_EXIT_CODES_OP_NOT_IN: 'NotIn',
-} as const;
-
-export type V1ContainerRestartRuleOnExitCodesOperator =
-  (typeof V1ContainerRestartRuleOnExitCodesOperator)[keyof typeof V1ContainerRestartRuleOnExitCodesOperator];
-
-export type V1ContainerRestartRuleOnExitCodes = {
-  /**
-   * Represents the relationship between the container exit code(s) and the
-   * specified values. Possible values are:
-   * - In: the requirement is satisfied if the container exit code is in the
-   * set of specified values.
-   * - NotIn: the requirement is satisfied if the container exit code is
-   * not in the set of specified values.
-   * +required
-   */
-  operator?: V1ContainerRestartRuleOnExitCodesOperator;
-  /**
-   * Specifies the set of values to check for container exit codes.
-   * At most 255 elements are allowed.
-   * +optional
-   * +listType=set
-   */
-  values?: Array<number>;
-};
-
-export const V1ContainerRestartRuleAction = {
-  /**
-   * ContainerRestartRuleActionRestart
-   */
-  CONTAINER_RESTART_RULE_ACTION_RESTART: 'Restart' /**
-   * ContainerRestartRuleActionRestartAllContainers
-   */,
-  CONTAINER_RESTART_RULE_ACTION_RESTART_ALL_CONTAINERS: 'RestartAllContainers',
-} as const;
-
-export type V1ContainerRestartRuleAction =
-  (typeof V1ContainerRestartRuleAction)[keyof typeof V1ContainerRestartRuleAction];
-
-export type V1ContainerRestartRule = {
-  /**
-   * Specifies the action taken on a container exit if the requirements
-   * are satisfied. The only possible value is "Restart" to restart the
-   * container.
-   * +required
-   */
-  action?: V1ContainerRestartRuleAction;
-  /**
-   * Represents the exit codes to check on container exits.
-   * +optional
-   * +oneOf=when
-   */
-  exitCodes?: V1ContainerRestartRuleOnExitCodes;
-};
-
-export const V1ContainerRestartPolicy = {
-  /**
-   * ContainerRestartPolicyAlways
-   */
-  CONTAINER_RESTART_POLICY_ALWAYS: 'Always',
-  /**
-   * ContainerRestartPolicyNever
-   */
-  CONTAINER_RESTART_POLICY_NEVER: 'Never',
-  /**
-   * ContainerRestartPolicyOnFailure
-   */
-  CONTAINER_RESTART_POLICY_ON_FAILURE: 'OnFailure',
-} as const;
-
-export type V1ContainerRestartPolicy =
-  (typeof V1ContainerRestartPolicy)[keyof typeof V1ContainerRestartPolicy];
-
-export type V1ContainerResizePolicy = {
-  /**
-   * Name of the resource to which this resource resize policy applies.
-   * Supported values: cpu, memory.
-   */
-  resourceName?: V1ResourceName;
-  /**
-   * Restart policy to apply when specified resource is resized.
-   * If not specified, it defaults to NotRequired.
-   */
-  restartPolicy?: V1ResourceResizeRestartPolicy;
-};
-
-export type V1ContainerPort = {
-  /**
-   * Number of port to expose on the pod's IP address.
-   * This must be a valid port number, 0 < x < 65536.
-   */
-  containerPort?: number;
-  /**
-   * What host IP to bind the external port to.
-   * +optional
-   */
-  hostIP?: string;
-  /**
-   * Number of port to expose on the host.
-   * If specified, this must be a valid port number, 0 < x < 65536.
-   * If HostNetwork is specified, this must match ContainerPort.
-   * Most containers do not need this.
-   * +optional
-   */
-  hostPort?: number;
-  /**
-   * If specified, this must be an IANA_SVC_NAME and unique within the pod. Each
-   * named port in a pod must have a unique name. Name for the port that can be
-   * referred to by services.
-   * +optional
-   */
-  name?: string;
-  /**
-   * Protocol for port. Must be UDP, TCP, or SCTP.
-   * Defaults to "TCP".
-   * +optional
-   * +default="TCP"
-   */
-  protocol?: V1Protocol;
-};
-
-export type V1Container = {
-  /**
-   * Arguments to the entrypoint.
-   * The container image's CMD is used if this is not provided.
-   * Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-   * cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-   * produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
-   * of whether the variable exists or not. Cannot be updated.
-   * More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
-   * +optional
-   * +listType=atomic
-   */
-  args?: Array<string>;
-  /**
-   * Entrypoint array. Not executed within a shell.
-   * The container image's ENTRYPOINT is used if this is not provided.
-   * Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-   * cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-   * produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
-   * of whether the variable exists or not. Cannot be updated.
-   * More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
-   * +optional
-   * +listType=atomic
-   */
-  command?: Array<string>;
-  /**
-   * List of environment variables to set in the container.
-   * Cannot be updated.
-   * +optional
-   * +patchMergeKey=name
-   * +patchStrategy=merge
-   * +listType=map
-   * +listMapKey=name
-   */
-  env?: Array<V1EnvVar>;
-  /**
-   * List of sources to populate environment variables in the container.
-   * The keys defined within a source may consist of any printable ASCII characters except '='.
-   * When a key exists in multiple
-   * sources, the value associated with the last source will take precedence.
-   * Values defined by an Env with a duplicate key will take precedence.
-   * Cannot be updated.
-   * +optional
-   * +listType=atomic
-   */
-  envFrom?: Array<V1EnvFromSource>;
-  /**
-   * Container image name.
-   * More info: https://kubernetes.io/docs/concepts/containers/images
-   * This field is optional to allow higher level config management to default or override
-   * container images in workload controllers like Deployments and StatefulSets.
-   * +optional
-   */
-  image?: string;
-  /**
-   * Image pull policy.
-   * One of Always, Never, IfNotPresent.
-   * Defaults to Always if :latest tag is specified, or IfNotPresent otherwise.
-   * Cannot be updated.
-   * More info: https://kubernetes.io/docs/concepts/containers/images#updating-images
-   * +optional
-   */
-  imagePullPolicy?: V1PullPolicy;
-  /**
-   * Actions that the management system should take in response to container lifecycle events.
-   * Cannot be updated.
-   * +optional
-   */
-  lifecycle?: V1Lifecycle;
-  /**
-   * Periodic probe of container liveness.
-   * Container will be restarted if the probe fails.
-   * Cannot be updated.
-   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
-   * +optional
-   */
-  livenessProbe?: V1Probe;
-  /**
-   * Name of the container specified as a DNS_LABEL.
-   * Each container in a pod must have a unique name (DNS_LABEL).
-   * Cannot be updated.
-   */
-  name?: string;
-  /**
-   * List of ports to expose from the container. Not specifying a port here
-   * DOES NOT prevent that port from being exposed. Any port which is
-   * listening on the default "0.0.0.0" address inside a container will be
-   * accessible from the network.
-   * Modifying this array with strategic merge patch may corrupt the data.
-   * For more information See https://github.com/kubernetes/kubernetes/issues/108255.
-   * Cannot be updated.
-   * +optional
-   * +patchMergeKey=containerPort
-   * +patchStrategy=merge
-   * +listType=map
-   * +listMapKey=containerPort
-   * +listMapKey=protocol
-   */
-  ports?: Array<V1ContainerPort>;
-  /**
-   * Periodic probe of container service readiness.
-   * Container will be removed from service endpoints if the probe fails.
-   * Cannot be updated.
-   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
-   * +optional
-   */
-  readinessProbe?: V1Probe;
-  /**
-   * Resources resize policy for the container.
-   * This field cannot be set on ephemeral containers.
-   * +featureGate=InPlacePodVerticalScaling
-   * +optional
-   * +listType=atomic
-   */
-  resizePolicy?: Array<V1ContainerResizePolicy>;
-  /**
-   * Compute Resources required by this container.
-   * Cannot be updated.
-   * More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-   * +optional
-   */
-  resources?: V1ResourceRequirements;
-  /**
-   * RestartPolicy defines the restart behavior of individual containers in a pod.
-   * This overrides the pod-level restart policy. When this field is not specified,
-   * the restart behavior is defined by the Pod's restart policy and the container type.
-   * Additionally, setting the RestartPolicy as "Always" for the init container will
-   * have the following effect:
-   * this init container will be continually restarted on
-   * exit until all regular containers have terminated. Once all regular
-   * containers have completed, all init containers with restartPolicy "Always"
-   * will be shut down. This lifecycle differs from normal init containers and
-   * is often referred to as a "sidecar" container. Although this init
-   * container still starts in the init container sequence, it does not wait
-   * for the container to complete before proceeding to the next init
-   * container. Instead, the next init container starts immediately after this
-   * init container is started, or after any startupProbe has successfully
-   * completed.
-   * +optional
-   */
-  restartPolicy?: V1ContainerRestartPolicy;
-  /**
-   * Represents a list of rules to be checked to determine if the
-   * container should be restarted on exit. The rules are evaluated in
-   * order. Once a rule matches a container exit condition, the remaining
-   * rules are ignored. If no rule matches the container exit condition,
-   * the Container-level restart policy determines the whether the container
-   * is restarted or not. Constraints on the rules:
-   * - At most 20 rules are allowed.
-   * - Rules can have the same action.
-   * - Identical rules are not forbidden in validations.
-   * When rules are specified, container MUST set RestartPolicy explicitly
-   * even it if matches the Pod's RestartPolicy.
-   * +featureGate=ContainerRestartRules
-   * +optional
-   * +listType=atomic
-   */
-  restartPolicyRules?: Array<V1ContainerRestartRule>;
-  /**
-   * SecurityContext defines the security options the container should be run with.
-   * If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext.
-   * More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
-   * +optional
-   */
-  securityContext?: V1SecurityContext;
-  /**
-   * StartupProbe indicates that the Pod has successfully initialized.
-   * If specified, no other probes are executed until this completes successfully.
-   * If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
-   * This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
-   * when it might take a long time to load data or warm a cache, than during steady-state operation.
-   * This cannot be updated.
-   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
-   * +optional
-   */
-  startupProbe?: V1Probe;
-  /**
-   * Whether this container should allocate a buffer for stdin in the container runtime. If this
-   * is not set, reads from stdin in the container will always result in EOF.
-   * Default is false.
-   * +optional
-   */
-  stdin?: boolean;
-  /**
-   * Whether the container runtime should close the stdin channel after it has been opened by
-   * a single attach. When stdin is true the stdin stream will remain open across multiple attach
-   * sessions. If stdinOnce is set to true, stdin is opened on container start, is empty until the
-   * first client attaches to stdin, and then remains open and accepts data until the client disconnects,
-   * at which time stdin is closed and remains closed until the container is restarted. If this
-   * flag is false, a container processes that reads from stdin will never receive an EOF.
-   * Default is false
-   * +optional
-   */
-  stdinOnce?: boolean;
-  /**
-   * Optional: Path at which the file to which the container's termination message
-   * will be written is mounted into the container's filesystem.
-   * Message written is intended to be brief final status, such as an assertion failure message.
-   * Will be truncated by the node if greater than 4096 bytes. The total message length across
-   * all containers will be limited to 12kb.
-   * Defaults to /dev/termination-log.
-   * Cannot be updated.
-   * +optional
-   */
-  terminationMessagePath?: string;
-  /**
-   * Indicate how the termination message should be populated. File will use the contents of
-   * terminationMessagePath to populate the container status message on both success and failure.
-   * FallbackToLogsOnError will use the last chunk of container log output if the termination
-   * message file is empty and the container exited with an error.
-   * The log output is limited to 2048 bytes or 80 lines, whichever is smaller.
-   * Defaults to File.
-   * Cannot be updated.
-   * +optional
-   */
-  terminationMessagePolicy?: V1TerminationMessagePolicy;
-  /**
-   * Whether this container should allocate a TTY for itself, also requires 'stdin' to be true.
-   * Default is false.
-   * +optional
-   */
-  tty?: boolean;
-  /**
-   * volumeDevices is the list of block devices to be used by the container.
-   * +patchMergeKey=devicePath
-   * +patchStrategy=merge
-   * +listType=map
-   * +listMapKey=devicePath
-   * +optional
-   */
-  volumeDevices?: Array<V1VolumeDevice>;
-  /**
-   * Pod volumes to mount into the container's filesystem.
-   * Cannot be updated.
-   * +optional
-   * +patchMergeKey=mountPath
-   * +patchStrategy=merge
-   * +listType=map
-   * +listMapKey=mountPath
-   */
-  volumeMounts?: Array<V1VolumeMount>;
-  /**
-   * Container's working directory.
-   * If not specified, the container runtime's default will be used, which
-   * might be configured in the container image.
-   * Cannot be updated.
-   * +optional
-   */
-  workingDir?: string;
-};
-
-export type V1CsiPersistentVolumeSource = {
-  /**
-   * controllerExpandSecretRef is a reference to the secret object containing
-   * sensitive information to pass to the CSI driver to complete the CSI
-   * ControllerExpandVolume call.
-   * This field is optional, and may be empty if no secret is required. If the
-   * secret object contains more than one secret, all secrets are passed.
-   * +optional
-   */
-  controllerExpandSecretRef?: V1SecretReference;
-  /**
-   * controllerPublishSecretRef is a reference to the secret object containing
-   * sensitive information to pass to the CSI driver to complete the CSI
-   * ControllerPublishVolume and ControllerUnpublishVolume calls.
-   * This field is optional, and may be empty if no secret is required. If the
-   * secret object contains more than one secret, all secrets are passed.
-   * +optional
-   */
-  controllerPublishSecretRef?: V1SecretReference;
-  /**
-   * driver is the name of the driver to use for this volume.
-   * Required.
-   */
-  driver?: string;
-  /**
-   * fsType to mount. Must be a filesystem type supported by the host operating system.
-   * Ex. "ext4", "xfs", "ntfs".
+export type V1VsphereVirtualDiskVolumeSource = {
+  /**
+   * fsType is filesystem type to mount.
+   * Must be a filesystem type supported by the host operating system.
+   * Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
    * +optional
    */
   fsType?: string;
   /**
-   * nodeExpandSecretRef is a reference to the secret object containing
-   * sensitive information to pass to the CSI driver to complete the CSI
-   * NodeExpandVolume call.
-   * This field is optional, may be omitted if no secret is required. If the
-   * secret object contains more than one secret, all secrets are passed.
+   * storagePolicyID is the storage Policy Based Management (SPBM) profile ID associated with the StoragePolicyName.
    * +optional
    */
-  nodeExpandSecretRef?: V1SecretReference;
+  storagePolicyID?: string;
   /**
-   * nodePublishSecretRef is a reference to the secret object containing
-   * sensitive information to pass to the CSI driver to complete the CSI
-   * NodePublishVolume and NodeUnpublishVolume calls.
-   * This field is optional, and may be empty if no secret is required. If the
-   * secret object contains more than one secret, all secrets are passed.
+   * storagePolicyName is the storage Policy Based Management (SPBM) profile name.
    * +optional
    */
-  nodePublishSecretRef?: V1SecretReference;
+  storagePolicyName?: string;
   /**
-   * nodeStageSecretRef is a reference to the secret object containing sensitive
-   * information to pass to the CSI driver to complete the CSI NodeStageVolume
-   * and NodeStageVolume and NodeUnstageVolume calls.
-   * This field is optional, and may be empty if no secret is required. If the
-   * secret object contains more than one secret, all secrets are passed.
-   * +optional
+   * volumePath is the path that identifies vSphere volume vmdk
    */
-  nodeStageSecretRef?: V1SecretReference;
-  /**
-   * readOnly value to pass to ControllerPublishVolumeRequest.
-   * Defaults to false (read/write).
-   * +optional
-   */
-  readOnly?: boolean;
-  /**
-   * volumeAttributes of the volume to publish.
-   * +optional
-   */
-  volumeAttributes?: {
-    [key: string]: string;
-  };
-  /**
-   * volumeHandle is the unique volume name returned by the CSI volume
-   * plugin’s CreateVolume to refer to the volume on all subsequent calls.
-   * Required.
-   */
-  volumeHandle?: string;
-};
-
-export type UsersUserUpdatePayload = {
-  NewPassword: string;
-  Password: string;
-  /**
-   * User role (1 for administrator account and 2 for regular account)
-   */
-  Role: 1 | 2;
-  Theme?: UsersThemePayload;
-  UseCache: boolean;
-  Username: string;
-};
-
-export type UsersThemePayload = {
-  /**
-   * Color represents the color theme of the UI
-   */
-  color?: 'dark' | 'light' | 'highcontrast' | 'auto';
-};
-
-export type UsersUserUpdatePasswordPayload = {
-  /**
-   * New Password
-   */
-  NewPassword: string;
-  /**
-   * Current Password
-   */
-  Password: string;
-};
-
-export type UsersUserCreatePayload = {
-  Password: string;
-  /**
-   * User role (1 for administrator account and 2 for regular account)
-   */
-  Role: 1 | 2;
-  Username: string;
-};
-
-export type UsersUserAccessTokenCreatePayload = {
-  description: string;
-  password: string;
-};
-
-export type UsersHelmUserRepositoryResponse = {
-  GlobalRepository?: string;
-  UserRepositories?: Array<PortainerHelmUserRepository>;
-};
-
-export type PortainerHelmUserRepository = {
-  /**
-   * Membership Identifier
-   */
-  Id?: number;
-  /**
-   * Helm repository URL
-   */
-  URL?: string;
-  /**
-   * User identifier
-   */
-  UserId?: number;
-};
-
-export type UsersAdminInitPayload = {
-  /**
-   * Password for the admin user
-   */
-  Password: string;
-  /**
-   * Username for the admin user
-   */
-  Username: string;
-};
-
-export type UsersAddHelmRepoUrlPayload = {
-  url?: string;
-};
-
-export type UsersAccessTokenResponse = {
-  apiKey?: PortainerApiKey;
-  rawAPIKey?: string;
-};
-
-export type PortainerApiKey = {
-  /**
-   * Unix timestamp (UTC) when the API key was created
-   */
-  dateCreated?: number;
-  description?: string;
-  /**
-   * Digest represents SHA256 hash of the raw API key
-   */
-  digest?: string;
-  id?: number;
-  /**
-   * Unix timestamp (UTC) when the API key was last used
-   */
-  lastUsed?: number;
-  /**
-   * API key identifier (7 char prefix)
-   */
-  prefix?: string;
-  userId?: number;
-};
-
-export type UsersEffectiveAccessEntry = {
-  accessLocation?: UsersAccessLocation;
-  endpointId?: number;
-  endpointName?: string;
-  groupId?: number;
-  groupName?: string;
-  roleId?: number;
-  roleName?: string;
-  rolePriority?: number;
-  teamId?: number;
-  teamName?: string;
-};
-
-export const UsersAccessLocation = {
-  /**
-   * AccessLocationEnvironment
-   */
-  ACCESS_LOCATION_ENVIRONMENT: 'environment' /**
-   * AccessLocationEnvironmentGroup
-   */,
-  ACCESS_LOCATION_ENVIRONMENT_GROUP: 'environmentGroup',
-} as const;
-
-export type UsersAccessLocation =
-  (typeof UsersAccessLocation)[keyof typeof UsersAccessLocation];
-
-export type UnstructuredUnstructured = {
-  /**
-   * Object is a JSON compatible map with string, float, int, bool, []interface{}, or
-   * map[string]interface{}
-   * children.
-   */
-  Object?: {
-    [key: string]: unknown;
-  };
-};
-
-export type TemplatesListResponse = {
-  templates?: Array<PortainerTemplate>;
-  version?: string;
-};
-
-export type PortainerTemplateVolume = {
-  /**
-   * Path on the host
-   */
-  bind?: string;
-  /**
-   * Path inside the container
-   */
-  container?: string;
-  /**
-   * Whether the volume used should be readonly
-   */
-  readonly?: boolean;
-};
-
-export const PortainerTemplateType = {
-  /**
-   * _
-   */
-  '': 0,
-  /**
-   * ContainerTemplate
-   */
-  CONTAINER_TEMPLATE: 1,
-  /**
-   * SwarmStackTemplate
-   */
-  SWARM_STACK_TEMPLATE: 2,
-  /**
-   * ComposeStackTemplate
-   */
-  COMPOSE_STACK_TEMPLATE: 3,
-} as const;
-
-export type PortainerTemplateType =
-  (typeof PortainerTemplateType)[keyof typeof PortainerTemplateType];
-
-export type PortainerTemplateRepository = {
-  /**
-   * Path to the stack file inside the git repository
-   */
-  stackfile?: string;
-  /**
-   * URL of a git repository used to deploy a stack template. Mandatory for a Swarm/Compose stack template
-   */
-  url?: string;
-};
-
-export type PortainerPair = {
-  name: string;
-  value: string;
-};
-
-export type PortainerTemplateEnvSelect = {
-  /**
-   * Will set this choice as the default choice
-   */
-  default?: boolean;
-  /**
-   * Some text that will displayed as a choice
-   */
-  text?: string;
-  /**
-   * A value that will be associated to the choice
-   */
-  value?: string;
-};
-
-export type PortainerTemplateEnv = {
-  /**
-   * Default value that will be set for the variable
-   */
-  default?: string;
-  /**
-   * Content of the tooltip that will be generated in the UI
-   */
-  description?: string;
-  /**
-   * Text for the label that will be generated in the UI
-   */
-  label?: string;
-  /**
-   * name of the environment(endpoint) variable
-   */
-  name?: string;
-  /**
-   * If set to true, will not generate any input for this variable in the UI
-   */
-  preset?: boolean;
-  /**
-   * A list of name/value that will be used to generate a dropdown in the UI
-   */
-  select?: Array<PortainerTemplateEnvSelect>;
-};
-
-export type PortainerTemplate = {
-  /**
-   * Whether the template should be available to administrators only
-   */
-  administrator_only?: boolean;
-  /**
-   * A list of categories associated to the template
-   */
-  categories?: Array<string>;
-  /**
-   * The command that will be executed in a container template
-   */
-  command?: string;
-  /**
-   * Description of the template
-   */
-  description?: string;
-  /**
-   * A list of environment(endpoint) variables used during the template deployment
-   */
-  env?: Array<PortainerTemplateEnv>;
-  /**
-   * Container hostname
-   */
-  hostname?: string;
-  /**
-   * Mandatory container/stack fields
-   * Template Identifier
-   */
-  id?: number;
-  /**
-   * Mandatory container fields
-   * Image associated to a container template. Mandatory for a container template
-   */
-  image?: string;
-  /**
-   * Whether the container should be started in
-   * interactive mode (-i -t equivalent on the CLI)
-   */
-  interactive?: boolean;
-  /**
-   * Container labels
-   */
-  labels?: Array<PortainerPair>;
-  /**
-   * URL of the template's logo
-   */
-  logo?: string;
-  /**
-   * Optional stack/container fields
-   * Default name for the stack/container to be used on deployment
-   */
-  name?: string;
-  /**
-   * Name of a network that will be used on container deployment if it exists inside the environment(endpoint)
-   */
-  network?: string;
-  /**
-   * A note that will be displayed in the UI. Supports HTML content
-   */
-  note?: string;
-  /**
-   * Platform associated to the template.
-   * Valid values are: 'linux', 'windows' or leave empty for multi-platform
-   */
-  platform?: string;
-  /**
-   * A list of ports exposed by the container
-   */
-  ports?: Array<string>;
-  /**
-   * Whether the container should be started in privileged mode
-   */
-  privileged?: boolean;
-  /**
-   * Optional container fields
-   * The URL of a registry associated to the image for a container template
-   */
-  registry?: string;
-  /**
-   * Mandatory stack fields
-   */
-  repository?: PortainerTemplateRepository;
-  /**
-   * Container restart policy
-   */
-  restart_policy?: string;
-  /**
-   * Mandatory Edge stack fields
-   * Stack file used for this template
-   */
-  stackFile?: string;
-  /**
-   * Title of the template
-   */
-  title?: string;
-  /**
-   * Template type. Valid values are: 1 (container), 2 (Swarm stack), 3 (Compose stack), 4 (Compose edge stack)
-   */
-  type?: PortainerTemplateType;
-  /**
-   * A list of volumes used during the container template deployment
-   */
-  volumes?: Array<PortainerTemplateVolume>;
-};
-
-export type TemplatesFileResponse = {
-  /**
-   * The requested file content
-   */
-  FileContent?: string;
-};
-
-export type TeamsTeamUpdatePayload = {
-  /**
-   * Name
-   */
-  Name?: string;
-};
-
-export type TeamsTeamCreatePayload = {
-  /**
-   * Name
-   */
-  Name: string;
-  /**
-   * TeamLeaders
-   */
-  TeamLeaders?: Array<number>;
-};
-
-export type TeammembershipsTeamMembershipUpdatePayload = {
-  /**
-   * Role for the user inside the team (1 for leader and 2 for regular member)
-   */
-  Role: 1 | 2;
-  /**
-   * Team identifier
-   */
-  TeamID: number;
-  /**
-   * User identifier
-   */
-  UserID: number;
-};
-
-export type TeammembershipsTeamMembershipCreatePayload = {
-  /**
-   * Role for the user inside the team (1 for leader and 2 for regular member)
-   */
-  Role: 1 | 2;
-  /**
-   * Team identifier
-   */
-  TeamID: number;
-  /**
-   * User identifier
-   */
-  UserID: number;
-};
-
-export type TagsTagCreatePayload = {
-  Name: string;
-};
-
-export type SystemVersionResponse = {
-  Build?: BuildBuildInfo;
-  DatabaseVersion?: string;
-  Dependencies?: BuildDependenciesInfo;
-  /**
-   * The latest version available
-   */
-  LatestVersion?: string;
-  Runtime?: BuildRuntimeInfo;
-  ServerEdition?: string;
-  ServerVersion?: string;
-  /**
-   * Whether portainer has an update available
-   */
-  UpdateAvailable?: boolean;
-  VersionSupport?: string;
-};
-
-export type BuildRuntimeInfo = {
-  Env?: Array<string>;
-};
-
-export type BuildDependenciesInfo = {
-  ComposeVersion?: string;
-  DockerVersion?: string;
-  HelmVersion?: string;
-  KubectlVersion?: string;
-};
-
-export type BuildBuildInfo = {
-  BuildNumber?: string;
-  GitCommit?: string;
-  GoVersion?: string;
-  ImageTag?: string;
-  NodejsVersion?: string;
-  PnpmVersion?: string;
-  WebpackVersion?: string;
-};
-
-export type SystemSystemInfoResponse = {
-  agents?: number;
-  edgeAgents?: number;
-  platform?: PlatformContainerPlatform;
-};
-
-export const PlatformContainerPlatform = {
-  /**
-   * PlatformDocker
-   */
-  PLATFORM_DOCKER: 'Docker',
-  /**
-   * PlatformDockerStandalone
-   */
-  PLATFORM_DOCKER_STANDALONE: 'Docker Standalone',
-  /**
-   * PlatformDockerSwarm
-   */
-  PLATFORM_DOCKER_SWARM: 'Docker Swarm',
-  /**
-   * PlatformKubernetes
-   */
-  PLATFORM_KUBERNETES: 'Kubernetes',
-  /**
-   * PlatformPodman
-   */
-  PLATFORM_PODMAN: 'Podman',
-} as const;
-
-export type PlatformContainerPlatform =
-  (typeof PlatformContainerPlatform)[keyof typeof PlatformContainerPlatform];
-
-export type SystemStatus = {
-  /**
-   * Server Instance ID
-   */
-  InstanceID?: string;
-  /**
-   * Portainer API version
-   */
-  Version?: string;
-};
-
-export type SystemNodesCountResponse = {
-  nodes?: number;
-};
-
-export type SwarmServiceUpdateResponse = {
-  /**
-   * Optional warning messages
-   */
-  Warnings?: Array<string>;
-};
-
-export type StatsContainerStats = {
-  healthy?: number;
-  running?: number;
-  stopped?: number;
-  total?: number;
-  unhealthy?: number;
-};
-
-export type StacksUpdateSwarmStackPayload = {
-  /**
-   * A list of environment(endpoint) variables used during stack deployment
-   */
-  Env?: Array<PortainerPair>;
-  /**
-   * Prune services that are no longer referenced
-   */
-  Prune?: boolean;
-  /**
-   * Deprecated(2.36): use RepullImageAndRedeploy instead for cleaner responsibility
-   * Force a pulling to current image with the original tag though the image is already the latest
-   */
-  PullImage?: boolean;
-  /**
-   * RepullImageAndRedeploy indicates whether to force repulling images and redeploying the stack
-   */
-  RepullImageAndRedeploy?: boolean;
-  /**
-   * New content of the Stack file
-   */
-  StackFileContent?: string;
-};
-
-export type StacksSwarmStackFromGitRepositoryPayload = {
-  /**
-   * Applicable when deploying with multiple stack files
-   */
-  AdditionalFiles?: Array<string>;
-  /**
-   * Optional GitOps update configuration
-   */
-  AutoUpdate?: PortainerAutoUpdateSettings;
-  /**
-   * Path to the Stack file inside the Git repository
-   */
-  ComposeFile?: string;
-  /**
-   * A list of environment variables used during stack deployment
-   */
-  Env?: Array<PortainerPair>;
-  /**
-   * Whether the stack is from a app template
-   */
-  FromAppTemplate?: boolean;
-  /**
-   * Name of the stack
-   */
-  Name: string;
-  /**
-   * Deprecated: use SourceID instead. Use basic authentication to clone the Git repository.
-   */
-  RepositoryAuthentication?: boolean;
-  /**
-   * Deprecated: use SourceID instead. Password used in basic authentication.
-   */
-  RepositoryPassword?: string;
-  /**
-   * Reference name of a Git repository hosting the Stack file
-   */
-  RepositoryReferenceName?: string;
-  /**
-   * Deprecated: use SourceID instead. URL of a Git repository hosting the Stack file.
-   */
-  RepositoryURL?: string;
-  /**
-   * Deprecated: use SourceID instead. Username used in basic authentication.
-   */
-  RepositoryUsername?: string;
-  /**
-   * SourceID references an existing Source for git credentials/URL.
-   * When set, the inline URL and authentication fields are ignored.
-   */
-  SourceID?: number;
-  /**
-   * Swarm cluster identifier
-   */
-  SwarmID: string;
-  /**
-   * Deprecated: use SourceID instead. TLSSkipVerify skips SSL verification when cloning the Git repository.
-   */
-  TLSSkipVerify?: boolean;
-};
-
-export type StacksSwarmStackFromFileContentPayload = {
-  /**
-   * A list of environment variables used during stack deployment
-   */
-  Env?: Array<PortainerPair>;
-  /**
-   * Whether the stack is from a app template
-   */
-  FromAppTemplate?: boolean;
-  /**
-   * Name of the stack
-   */
-  Name: string;
-  /**
-   * Content of the Stack file
-   */
-  StackFileContent: string;
-  /**
-   * Swarm cluster identifier
-   */
-  SwarmID: string;
-};
-
-export type StacksStackResponse = {
-  /**
-   * Only applies when deploying stack with multiple files
-   */
-  AdditionalFiles?: Array<string>;
-  /**
-   * The GitOps update settings of a git stack
-   */
-  AutoUpdate?: PortainerAutoUpdateSettings;
-  /**
-   * The username which created this stack
-   */
-  CreatedBy?: string;
-  /**
-   * The date in unix time when stack was created
-   */
-  CreationDate?: number;
-  /**
-   * CurrentDeploymentInfo records the git repository state at the time of the last actual deployment.
-   */
-  CurrentDeploymentInfo?: PortainerStackDeploymentInfo;
-  /**
-   * DeploymentStartStatus is the stack status captured when the current
-   * deployment starts. It is used by deployment logic during the current
-   * deployment attempt and is cleared/replaced when a new deployment begins.
-   */
-  DeploymentStartStatus?: PortainerStackStatus;
-  /**
-   * DeploymentStatus records the status progression of the current deployment.
-   * Cleared when a new deployment starts.
-   */
-  DeploymentStatus?: Array<PortainerStackDeploymentStatus>;
-  /**
-   * Environment(Endpoint) identifier. Reference the environment(endpoint) that will be used for deployment
-   */
-  EndpointId?: number;
-  /**
-   * EntryPoint is the path to the config file relative to the project root.
-   * NOTE: For git stacks this mirrors GitConfig.ConfigFilePath and the two are kept in sync
-   * by stackUpdateGit. The deploy command builder (compose_unpacker_cmd_builder) uses this
-   * field directly; Kubernetes deploy and git clone operations use GitConfig.ConfigFilePath.
-   */
-  EntryPoint?: string;
-  /**
-   * A list of environment(endpoint) variables used during stack deployment
-   */
-  Env?: Array<PortainerPair>;
-  /**
-   * Whether the stack is from a app template
-   */
-  FromAppTemplate?: boolean;
-  /**
-   * GitConfig is the git repository configuration for git-backed stacks.
-   * Deprecated: loaded from Source via WorkflowID; kept for DB backwards-compatibility only.
-   * Non-migration code must not read or write this field; use Source records instead.
-   */
-  GitConfig?: GittypesRepoConfig;
-  GitSourceId?: number;
-  /**
-   * Stack Identifier
-   */
-  Id?: number;
-  /**
-   * Stack name
-   */
-  Name?: string;
-  /**
-   * Kubernetes namespace if stack is a kube application
-   */
-  Namespace?: string;
-  /**
-   * The stack deployment option
-   */
-  Option?: PortainerStackOption;
-  /**
-   * Path on disk to the repository hosting the Stack file
-   */
-  ProjectPath?: string;
-  ResourceControl?: PortainerResourceControl;
-  /**
-   * Stack status (1 - active, 2 - inactive, 3 - deploying, 4 - error)
-   */
-  Status?: PortainerStackStatus;
-  /**
-   * Cluster identifier of the Swarm cluster where the stack is deployed
-   */
-  SwarmId?: string;
-  /**
-   * Stack type. 1 for a Swarm stack, 2 for a Compose stack
-   */
-  Type?: PortainerStackType;
-  /**
-   * The date in unix time when stack was last updated
-   */
-  UpdateDate?: number;
-  /**
-   * The username which last updated this stack
-   */
-  UpdatedBy?: string;
-  /**
-   * WorkflowID is the ID of the Workflow that owns the Source for this stack.
-   */
-  WorkflowID?: number;
-};
-
-export const PortainerStackType = {
-  /**
-   * _
-   */
-  '': 0,
-  /**
-   * DockerSwarmStack
-   */
-  DOCKER_SWARM_STACK: 1,
-  /**
-   * DockerComposeStack
-   */
-  DOCKER_COMPOSE_STACK: 2,
-  /**
-   * KubernetesStack
-   */
-  KUBERNETES_STACK: 3,
-} as const;
-
-export type PortainerStackType =
-  (typeof PortainerStackType)[keyof typeof PortainerStackType];
-
-export type PortainerUserResourceAccess = {
-  AccessLevel?: PortainerResourceAccessLevel;
-  UserId?: number;
-};
-
-export const PortainerResourceAccessLevel = {
-  /**
-   * _
-   */
-  '': 0 /**
-   * ReadWriteAccessLevel
-   */,
-  READ_WRITE_ACCESS_LEVEL: 1,
-} as const;
-
-export type PortainerResourceAccessLevel =
-  (typeof PortainerResourceAccessLevel)[keyof typeof PortainerResourceAccessLevel];
-
-export const PortainerResourceControlType = {
-  /**
-   * _
-   */
-  '': 0,
-  /**
-   * ContainerResourceControl
-   */
-  CONTAINER_RESOURCE_CONTROL: 1,
-  /**
-   * ServiceResourceControl
-   */
-  SERVICE_RESOURCE_CONTROL: 2,
-  /**
-   * VolumeResourceControl
-   */
-  VOLUME_RESOURCE_CONTROL: 3,
-  /**
-   * NetworkResourceControl
-   */
-  NETWORK_RESOURCE_CONTROL: 4,
-  /**
-   * SecretResourceControl
-   */
-  SECRET_RESOURCE_CONTROL: 5,
-  /**
-   * StackResourceControl
-   */
-  STACK_RESOURCE_CONTROL: 6,
-  /**
-   * ConfigResourceControl
-   */
-  CONFIG_RESOURCE_CONTROL: 7,
-  /**
-   * CustomTemplateResourceControl
-   */
-  CUSTOM_TEMPLATE_RESOURCE_CONTROL: 8,
-  /**
-   * ContainerGroupResourceControl
-   */
-  CONTAINER_GROUP_RESOURCE_CONTROL: 9,
-} as const;
-
-export type PortainerResourceControlType =
-  (typeof PortainerResourceControlType)[keyof typeof PortainerResourceControlType];
-
-export type PortainerTeamResourceAccess = {
-  AccessLevel?: PortainerResourceAccessLevel;
-  TeamId?: number;
-};
-
-export type PortainerResourceControl = {
-  AccessLevel?: PortainerResourceAccessLevel;
-  /**
-   * Permit access to resource only to admins
-   */
-  AdministratorsOnly?: boolean;
-  /**
-   * ResourceControl Identifier
-   */
-  Id?: number;
-  /**
-   * Deprecated fields
-   * Deprecated in DBVersion == 2
-   */
-  OwnerId?: number;
-  /**
-   * Permit access to the associated resource to any user
-   */
-  Public?: boolean;
-  /**
-   * Docker resource identifier on which access control will be applied.\
-   * In the case of a resource control applied to a stack, use the stack name as identifier
-   */
-  ResourceId?: string;
-  /**
-   * List of Docker resources that will inherit this access control
-   */
-  SubResourceIds?: Array<string>;
-  System?: boolean;
-  TeamAccesses?: Array<PortainerTeamResourceAccess>;
-  /**
-   * Type of Docker resource. Valid values are: 1- container, 2 -service
-   * 3 - volume, 4 - secret, 5 - stack, 6 - config or 7 - custom template
-   */
-  Type?: PortainerResourceControlType;
-  UserAccesses?: Array<PortainerUserResourceAccess>;
-};
-
-export type PortainerStackOption = {
-  /**
-   * Enable atomic rollback on failure (Helm --atomic flag for Kubernetes Helm stacks)
-   */
-  HelmAtomic?: boolean;
-  /**
-   * Prune services that are no longer referenced
-   */
-  Prune?: boolean;
-};
-
-export type PortainerStackDeploymentStatus = {
-  /**
-   * populated on Error entries
-   */
-  Message?: string;
-  Status?: PortainerStackStatus;
-  Time?: number;
-};
-
-export const PortainerStackStatus = {
-  /**
-   * _
-   */
-  '': 0,
-  /**
-   * StackStatusActive
-   *
-   * 1 - deployed and running
-   */
-  STACK_STATUS_ACTIVE: 1,
-  /**
-   * StackStatusInactive
-   *
-   * 2 - intentionally stopped
-   */
-  STACK_STATUS_INACTIVE: 2,
-  /**
-   * StackStatusDeploying
-   *
-   * 3 - deployment in progress
-   */
-  STACK_STATUS_DEPLOYING: 3,
-  /**
-   * StackStatusError
-   *
-   * 4 - deployment failed
-   */
-  STACK_STATUS_ERROR: 4,
-} as const;
-
-export type PortainerStackStatus =
-  (typeof PortainerStackStatus)[keyof typeof PortainerStackStatus];
-
-export type PortainerStackDeploymentInfo = {
-  /**
-   * AdditionalFiles are the additional files used for deploying the stack
-   */
-  AdditionalFiles?: Array<string>;
-  /**
-   * ConfigFilePath is the path to the config file in the git repository used for deploying the stack
-   */
-  ConfigFilePath?: string;
-  /**
-   * ConfigHash is the commit hash of the git repository used for deploying the stack
-   */
-  ConfigHash?: string;
-  /**
-   * FileVersion is the version of the stack file, used to detect changes
-   */
-  FileVersion?: number;
-  /**
-   * ReferenceName is the git reference (branch/tag) used for deploying the stack
-   */
-  ReferenceName?: string;
-  /**
-   * RepositoryURL is the git repository URL used for deploying the stack
-   */
-  RepositoryURL?: string;
-  /**
-   * SourceID is the Source used for deploying the stack
-   */
-  SourceID?: number;
-  /**
-   * Version is the version of the stack and also is the deployed version in edge agent
-   */
-  Version?: number;
-};
-
-export type StacksStackMigratePayload = {
-  /**
-   * Environment(Endpoint) identifier of the target environment(endpoint) where the stack will be relocated
-   */
-  EndpointID: number;
-  /**
-   * If provided will rename the migrated stack
-   */
-  Name?: string;
-  /**
-   * Swarm cluster identifier, must match the identifier of the cluster where the stack will be relocated
-   */
-  SwarmID?: string;
-};
-
-export type StacksStackGitUpdatePayload = {
-  AdditionalFiles?: Array<string>;
-  AutoUpdate?: PortainerAutoUpdateSettings;
-  ConfigFilePath?: string;
-  Env?: Array<PortainerPair>;
-  Prune?: boolean;
-  /**
-   * Deprecated: use SourceID instead. Use basic authentication to clone the Git repository.
-   */
-  RepositoryAuthentication?: boolean;
-  /**
-   * Deprecated: use SourceID instead. Password used in basic authentication.
-   */
-  RepositoryPassword?: string;
-  RepositoryReferenceName?: string;
-  /**
-   * Deprecated: use SourceID instead. URL of a Git repository hosting the Stack file.
-   */
-  RepositoryURL?: string;
-  /**
-   * Deprecated: use SourceID instead. Username used in basic authentication.
-   */
-  RepositoryUsername?: string;
-  /**
-   * SourceID references an existing Source for git credentials/URL.
-   * When set, the inline URL and authentication fields are ignored.
-   */
-  SourceID?: number;
-  /**
-   * Deprecated: use SourceID instead. Skip TLS verification when cloning the Git repository.
-   */
-  TLSSkipVerify?: boolean;
-};
-
-export type StacksStackGitRedeployPayload = {
-  Env?: Array<PortainerPair>;
-  Prune?: boolean;
-  /**
-   * Deprecated(2.36): use RepullImageAndRedeploy instead for cleaner responsibility
-   * Force a pulling to current image with the original tag though the image is already the latest
-   */
-  PullImage?: boolean;
-  RepositoryAuthentication?: boolean;
-  RepositoryPassword?: string;
-  RepositoryReferenceName?: string;
-  RepositoryUsername?: string;
-  /**
-   * RepullImageAndRedeploy indicates whether to force repulling images and redeploying the stack
-   */
-  RepullImageAndRedeploy?: boolean;
-  StackName?: string;
-};
-
-export type StacksStackFileResponse = {
-  /**
-   * Content of the Stack file
-   */
-  StackFileContent?: string;
-};
-
-export type StacksKubernetesStringDeploymentPayload = {
-  ComposeFormat?: boolean;
-  /**
-   * Whether the stack is from a app template
-   */
-  FromAppTemplate?: boolean;
-  Namespace?: string;
-  StackFileContent?: string;
-  StackName?: string;
-};
-
-export type StacksKubernetesManifestUrlDeploymentPayload = {
-  ComposeFormat?: boolean;
-  ManifestURL?: string;
-  Namespace?: string;
-  StackName?: string;
-};
-
-export type StacksKubernetesGitDeploymentPayload = {
-  AdditionalFiles?: Array<string>;
-  AutoUpdate?: PortainerAutoUpdateSettings;
-  ComposeFormat?: boolean;
-  ManifestFile?: string;
-  Namespace?: string;
-  /**
-   * Deprecated: use SourceID instead. Use basic authentication to clone the Git repository.
-   */
-  RepositoryAuthentication?: boolean;
-  /**
-   * Deprecated: use SourceID instead. Password used in basic authentication.
-   */
-  RepositoryPassword?: string;
-  /**
-   * Deprecated: use SourceID instead. Reference name of a Git repository hosting the Stack file.
-   */
-  RepositoryReferenceName?: string;
-  /**
-   * Deprecated: use SourceID instead. URL of a Git repository hosting the Stack file.
-   */
-  RepositoryURL?: string;
-  /**
-   * Deprecated: use SourceID instead. Username used in basic authentication.
-   */
-  RepositoryUsername?: string;
-  /**
-   * SourceID references an existing Source for git credentials/URL.
-   * When set, the inline URL and authentication fields are ignored.
-   */
-  SourceID?: number;
-  StackName?: string;
-  /**
-   * Deprecated: use SourceID instead. TLSSkipVerify skips SSL verification when cloning the Git repository.
-   */
-  TLSSkipVerify?: boolean;
-};
-
-export type StacksComposeStackFromGitRepositoryPayload = {
-  /**
-   * Applicable when deploying with multiple stack files
-   */
-  AdditionalFiles?: Array<string>;
-  /**
-   * Optional GitOps update configuration
-   */
-  AutoUpdate?: PortainerAutoUpdateSettings;
-  /**
-   * Path to the Stack file inside the Git repository
-   */
-  ComposeFile?: string;
-  /**
-   * A list of environment variables used during stack deployment
-   */
-  Env?: Array<PortainerPair>;
-  /**
-   * Whether the stack is from a app template
-   */
-  FromAppTemplate?: boolean;
-  /**
-   * Name of the stack
-   */
-  Name: string;
-  /**
-   * Deprecated: use SourceID instead. Use basic authentication to clone the Git repository.
-   */
-  RepositoryAuthentication?: boolean;
-  /**
-   * Deprecated: use SourceID instead. Password used in basic authentication.
-   */
-  RepositoryPassword?: string;
-  /**
-   * Reference name of a Git repository hosting the Stack file
-   */
-  RepositoryReferenceName?: string;
-  /**
-   * Deprecated: use SourceID instead. URL of a Git repository hosting the Stack file.
-   */
-  RepositoryURL?: string;
-  /**
-   * Deprecated: use SourceID instead. Username used in basic authentication.
-   */
-  RepositoryUsername?: string;
-  /**
-   * SourceID references an existing Source for git credentials/URL.
-   * When set, the inline URL and authentication fields are ignored.
-   */
-  SourceID?: number;
-  /**
-   * Deprecated: use SourceID instead. TLSSkipVerify skips SSL verification when cloning the Git repository.
-   */
-  TLSSkipVerify?: boolean;
-};
-
-export type StacksComposeStackFromFileContentPayload = {
-  /**
-   * A list of environment variables used during stack deployment
-   */
-  Env?: Array<PortainerPair>;
-  /**
-   * Whether the stack is from a app template
-   */
-  FromAppTemplate?: boolean;
-  /**
-   * Name of the stack
-   */
-  Name: string;
-  /**
-   * Content of the Stack file
-   */
-  StackFileContent: string;
-};
-
-export type SslSslUpdatePayload = {
-  /**
-   * SSL Certificates
-   */
-  Cert?: string;
-  HTTPEnabled?: boolean;
-  Key?: string;
-};
-
-export type SourcesGitAuthInfo = {
-  username?: string;
-};
-
-export type SourcesConnectionInfo = {
-  authentication?: SourcesGitAuthInfo;
-  configFilePath?: string;
-  tlsSkipVerify?: boolean;
-};
-
-export const SourcesSourceType = {
-  /**
-   * SourceTypeGit
-   */
-  SOURCE_TYPE_GIT: 'git',
-  /**
-   * SourceTypeHelm
-   */
-  SOURCE_TYPE_HELM: 'helm',
-  /**
-   * SourceTypeOCI
-   */
-  SOURCE_TYPE_OCI: 'oci',
-} as const;
-
-export type SourcesSourceType =
-  (typeof SourcesSourceType)[keyof typeof SourcesSourceType];
-
-export type SourcesSourceDetail = {
-  access?: SourcesSourceAccess;
-  autoUpdate?: SourcesAutoUpdateInfo;
-  connection: SourcesConnectionInfo;
-  environments?: number;
-  error?: string;
-  id: number;
-  lastSync?: number;
-  name: string;
-  status: WorkflowsStatus;
-  type: SourcesSourceType;
-  url: string;
-  usedBy?: number;
-  workflows?: Array<WorkflowsWorkflow>;
-};
-
-export type SourcesAutoUpdateInfo = {
-  fetchInterval?: string;
-  mechanism?: string;
-};
-
-export type SourcesSourceAccess = {
-  public?: boolean;
-  teams?: Array<number>;
-  users?: Array<number>;
-};
-
-export type SourcesSourceAccessUpdatePayload = {
-  public?: boolean;
-  teams?: Array<number>;
-  users?: Array<number>;
-};
-
-export type SourcesSource = {
-  environments?: number;
-  error?: string;
-  id: number;
-  lastSync?: number;
-  name: string;
-  status: WorkflowsStatus;
-  type: SourcesSourceType;
-  url: string;
-  usedBy?: number;
-};
-
-export type SourcesGitSourceUpdatePayload = {
-  authentication?: SourcesGitAuthenticationUpdatePayload;
-  name?: string;
-  referenceName?: string;
-  tlsSkipVerify?: boolean;
-  url?: string;
-};
-
-export type SourcesGitAuthenticationUpdatePayload = {
-  password?: string;
-  username?: string;
-};
-
-export type SourcesGitSourceCreatePayload = {
-  administratorsOnly?: boolean;
-  authentication?: SourcesGitAuthenticationPayload;
-  name?: string;
-  public?: boolean;
-  teamAccesses?: Array<number>;
-  tlsSkipVerify?: boolean;
-  url: string;
-  userAccesses?: Array<number>;
-};
-
-export type SourcesGitAuthenticationPayload = {
-  password?: string;
-  username?: string;
-};
-
-export type SourcesConnectionTestResult = {
-  error?: string;
-  success?: boolean;
-};
-
-export type SettingsSettingsUpdatePayload = {
-  /**
-   * Active authentication method for the Portainer instance. Valid values are: 1 for internal, 2 for LDAP, or 3 for oauth
-   */
-  AuthenticationMethod?: number;
-  /**
-   * A list of label name & value that will be used to hide containers when querying containers
-   */
-  BlackListedLabels?: Array<PortainerPair>;
-  EdgeAgentCheckinInterval?: number;
-  /**
-   * EdgePortainerURL is the URL that is exposed to edge agents
-   */
-  EdgePortainerURL?: string;
-  /**
-   * Whether edge compute features are enabled
-   */
-  EnableEdgeComputeFeatures?: boolean;
-  /**
-   * EnforceEdgeID makes Portainer store the Edge ID instead of accepting anyone
-   */
-  EnforceEdgeID?: boolean;
-  /**
-   * ForceSecureCookies forces the Secure attribute on auth cookies regardless of the detected scheme
-   */
-  ForceSecureCookies?: boolean;
-  /**
-   * Deployment options for encouraging deployment as code
-   */
-  GlobalDeploymentOptions?: PortainerGlobalDeploymentOptions;
-  /**
-   * Helm repository URL
-   */
-  HelmRepositoryURL?: string;
-  InternalAuthSettings?: PortainerInternalAuthSettings;
-  /**
-   * The expiry of a Kubeconfig
-   */
-  KubeconfigExpiry?: string;
-  /**
-   * Kubectl Shell Image
-   */
-  KubectlShellImage?: string;
-  LDAPSettings?: PortainerLdapSettings;
-  /**
-   * URL to a logo that will be displayed on the login page as well as on top of the sidebar. Will use default Portainer logo when value is empty string
-   */
-  LogoURL?: string;
-  OAuthSettings?: PortainerOAuthSettings;
-  /**
-   * The interval in which environment(endpoint) snapshots are created
-   */
-  SnapshotInterval?: string;
-  /**
-   * URL to the templates that will be displayed in the UI when navigating to App Templates
-   */
-  TemplatesURL?: string;
-  /**
-   * TrustOnFirstConnect makes Portainer accepting edge agent connection by default
-   */
-  TrustOnFirstConnect?: boolean;
-  /**
-   * The duration of a user session
-   */
-  UserSessionTimeout?: string;
-};
-
-export const Oauth2AuthStyle = {
-  /**
-   * AuthStyleAutoDetect
-   */
-  AUTH_STYLE_AUTO_DETECT: 0,
-  /**
-   * AuthStyleInParams
-   */
-  AUTH_STYLE_IN_PARAMS: 1,
-  /**
-   * AuthStyleInHeader
-   */
-  AUTH_STYLE_IN_HEADER: 2,
-} as const;
-
-export type Oauth2AuthStyle =
-  (typeof Oauth2AuthStyle)[keyof typeof Oauth2AuthStyle];
-
-export type PortainerOAuthSettings = {
-  AccessTokenURI?: string;
-  AuthStyle?: Oauth2AuthStyle;
-  AuthorizationURI?: string;
-  ClientID?: string;
-  ClientSecret?: string;
-  DefaultTeamID?: number;
-  KubeSecretKey?: Array<number>;
-  LogoutURI?: string;
-  OAuthAutoCreateUsers?: boolean;
-  RedirectURI?: string;
-  ResourceURI?: string;
-  SSO?: boolean;
-  Scopes?: string;
-  UserIdentifier?: string;
-};
-
-export type PortainerTlsConfiguration = {
-  /**
-   * Use TLS
-   */
-  TLS: boolean;
-  /**
-   * Path to the TLS CA certificate file
-   */
-  TLSCACert?: string;
-  /**
-   * Path to the TLS client certificate file
-   */
-  TLSCert?: string;
-  /**
-   * Path to the TLS client key file
-   */
-  TLSKey?: string;
-  /**
-   * Skip the verification of the server TLS certificate
-   */
-  TLSSkipVerify: boolean;
-};
-
-export type PortainerLdapSearchSettings = {
-  /**
-   * The distinguished name of the element from which the LDAP server will search for users
-   */
-  BaseDN?: string;
-  /**
-   * Optional LDAP search filter used to select user elements
-   */
-  Filter?: string;
-  /**
-   * LDAP attribute which denotes the username
-   */
-  UserNameAttribute?: string;
-};
-
-export type PortainerLdapGroupSearchSettings = {
-  /**
-   * LDAP attribute which denotes the group membership
-   */
-  GroupAttribute?: string;
-  /**
-   * The distinguished name of the element from which the LDAP server will search for groups
-   */
-  GroupBaseDN?: string;
-  /**
-   * The LDAP search filter used to select group elements, optional
-   */
-  GroupFilter?: string;
-};
-
-export type PortainerLdapSettings = {
-  /**
-   * Enable this option if the server is configured for Anonymous access. When enabled, ReaderDN and Password will not be used
-   */
-  AnonymousMode?: boolean;
-  /**
-   * Automatically provision users and assign them to matching LDAP group names
-   */
-  AutoCreateUsers?: boolean;
-  GroupSearchSettings?: Array<PortainerLdapGroupSearchSettings>;
-  /**
-   * Password of the account that will be used to search users
-   */
-  Password?: string;
-  /**
-   * Account that will be used to search for users
-   */
-  ReaderDN?: string;
-  SearchSettings?: Array<PortainerLdapSearchSettings>;
-  /**
-   * Whether LDAP connection should use StartTLS
-   */
-  StartTLS?: boolean;
-  TLSConfig?: PortainerTlsConfiguration;
-  /**
-   * URL or IP address of the LDAP server
-   */
-  URL?: string;
-};
-
-export type PortainerInternalAuthSettings = {
-  RequiredPasswordLength?: number;
-};
-
-export type PortainerGlobalDeploymentOptions = {
-  hideStacksFunctionality?: boolean;
-};
-
-export type SettingsPublicSettingsResponse = {
-  /**
-   * Active authentication method for the Portainer instance. Valid values are: 1 for internal, 2 for LDAP, or 3 for oauth
-   */
-  AuthenticationMethod?: PortainerAuthenticationMethod;
-  Edge?: {
-    /**
-     * The check in interval for edge agent (in seconds) - used in non async mode [seconds]
-     */
-    CheckinInterval?: number;
-    /**
-     * The command list interval for edge agent - used in edge async mode [seconds]
-     */
-    CommandInterval?: number;
-    /**
-     * The ping interval for edge agent - used in edge async mode [seconds]
-     */
-    PingInterval?: number;
-    /**
-     * The snapshot interval for edge agent - used in edge async mode [seconds]
-     */
-    SnapshotInterval?: number;
-  };
-  /**
-   * Whether edge compute features are enabled
-   */
-  EnableEdgeComputeFeatures?: boolean;
-  /**
-   * Supported feature flags
-   */
-  Features?: {
-    [key: string]: boolean;
-  };
-  /**
-   * Deployment options for encouraging deployment as code
-   */
-  GlobalDeploymentOptions?: PortainerGlobalDeploymentOptions;
-  IsDockerDesktopExtension?: boolean;
-  /**
-   * The expiry of a Kubeconfig
-   */
-  KubeconfigExpiry?: string;
-  /**
-   * URL to a logo that will be displayed on the login page as well as on top of the sidebar. Will use default Portainer logo when value is empty string
-   */
-  LogoURL?: string;
-  /**
-   * The URL used for oauth login
-   */
-  OAuthLoginURI?: string;
-  /**
-   * The URL used for oauth logout
-   */
-  OAuthLogoutURI?: string;
-  /**
-   * The minimum required length for a password of any user when using internal auth mode
-   */
-  RequiredPasswordLength?: number;
-  /**
-   * Whether the setup wizard must send the X-Setup-Token header for admin init / restore
-   */
-  RequiresSetupToken?: boolean;
-  /**
-   * Whether team sync is enabled
-   */
-  TeamSync?: boolean;
-};
-
-export const PortainerAuthenticationMethod = {
-  /**
-   * _
-   */
-  '': 0,
-  /**
-   * AuthenticationInternal
-   */
-  AUTHENTICATION_INTERNAL: 1,
-  /**
-   * AuthenticationLDAP
-   */
-  AUTHENTICATION_LDAP: 2,
-  /**
-   * AuthenticationOAuth
-   */
-  AUTHENTICATION_O_AUTH: 3,
-} as const;
-
-export type PortainerAuthenticationMethod =
-  (typeof PortainerAuthenticationMethod)[keyof typeof PortainerAuthenticationMethod];
-
-export type RoarRoarPortainerEndpointId = {
-  [key: string]: unknown;
-};
-
-export type ResourcecontrolsResourceControlUpdatePayload = {
-  /**
-   * Permit access to resource only to admins
-   */
-  AdministratorsOnly?: boolean;
-  /**
-   * Permit access to the associated resource to any user
-   */
-  Public?: boolean;
-  /**
-   * List of team identifiers with access to the associated resource
-   */
-  Teams?: Array<number>;
-  /**
-   * List of user identifiers with access to the associated resource
-   */
-  Users?: Array<number>;
-};
-
-export type ResourcecontrolsResourceControlCreatePayload = {
-  /**
-   * Permit access to resource only to admins
-   */
-  AdministratorsOnly?: boolean;
-  /**
-   * Permit access to the associated resource to any user
-   */
-  Public?: boolean;
-  ResourceID: string;
-  /**
-   * List of Docker resources that will inherit this access control
-   */
-  SubResourceIDs?: Array<string>;
-  /**
-   * List of team identifiers with access to the associated resource
-   */
-  Teams?: Array<number>;
-  /**
-   * Type of Resource. Valid values are: 1 - container, 2 - service
-   * 3 - volume, 4 - network, 5 - secret, 6 - stack, 7 - config, 8 - custom template, 9 - azure-container-group
-   */
-  Type: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-  /**
-   * List of user identifiers with access to the associated resource
-   */
-  Users?: Array<number>;
-};
-
-export type ReleaseValues = {
-  computedValues?: string;
-  userSuppliedValues?: string;
-};
-
-export type ReleaseReleaseElement = {
-  appVersion?: string;
-  chart?: string;
-  name?: string;
-  namespace?: string;
-  revision?: string;
-  status?: string;
-  updated?: string;
-};
-
-export type ReleaseRelease = {
-  /**
-   * AppVersion is the app version of the release.
-   */
-  appVersion?: string;
-  /**
-   * Chart is the chart that was released.
-   */
-  chart?: ReleaseChart;
-  /**
-   * ChartReference are the labels that are used to identify the chart source.
-   */
-  chartReference?: ReleaseChartReference;
-  /**
-   * Config is the set of extra Values added to the chart.
-   * These values override the default values inside of the chart.
-   */
-  config?: {
-    [key: string]: unknown;
-  };
-  /**
-   * Hooks are all of the hooks declared for this release.
-   */
-  hooks?: Array<GithubComPortainerPortainerPkgLibhelmReleaseHook>;
-  /**
-   * Info provides information about a release
-   */
-  info?: ReleaseInfo;
-  /**
-   * Manifest is the string representation of the rendered template.
-   */
-  manifest?: string;
-  /**
-   * Name is the name of the release
-   */
-  name?: string;
-  /**
-   * Namespace is the kubernetes namespace of the release.
-   */
-  namespace?: string;
-  /**
-   * StackID is the ID of the Portainer stack associated with this release (if using GitOps)
-   */
-  stackID?: number;
-  /**
-   * Values are the values used to deploy the chart.
-   */
-  values?: ReleaseValues;
-  /**
-   * Version is an int which represents the revision of the release.
-   */
-  version?: number;
-};
-
-export type ReleaseInfo = {
-  /**
-   * Deleted tracks when this object was deleted.
-   */
-  deleted?: string;
-  /**
-   * Description is human-friendly "log entry" about this release.
-   */
-  description?: string;
-  /**
-   * FirstDeployed is when the release was first deployed.
-   */
-  first_deployed?: string;
-  /**
-   * LastDeployed is when the release was last deployed.
-   */
-  last_deployed?: string;
-  /**
-   * Contains the rendered templates/NOTES.txt if available
-   */
-  notes?: string;
-  /**
-   * Resources is the list of resources that are part of the release
-   */
-  resources?: Array<UnstructuredUnstructured>;
-  /**
-   * Status is the current state of the release
-   */
-  status?: string;
-};
-
-export type ReleaseHookExecution = {
-  /**
-   * CompletedAt indicates the date/time this hook was completed.
-   */
-  completed_at?: string;
-  /**
-   * Phase indicates whether the hook completed successfully
-   */
-  phase?: string;
-  /**
-   * StartedAt indicates the date/time this hook was started
-   */
-  started_at?: string;
+  volumePath?: string;
 };
 
-export type GithubComPortainerPortainerPkgLibhelmReleaseHook = {
-  /**
-   * DeletePolicies are the policies that indicate when to delete the hook
-   */
-  delete_policies?: Array<string>;
-  /**
-   * Events are the events that this hook fires on.
-   */
-  events?: Array<string>;
-  /**
-   * Kind is the Kubernetes kind.
-   */
-  kind?: string;
-  /**
-   * LastRun indicates the date/time this was last run.
-   */
-  last_run?: ReleaseHookExecution;
-  /**
-   * Manifest is the manifest contents.
-   */
-  manifest?: string;
-  name?: string;
+export type V1WeightedPodAffinityTerm = {
   /**
-   * Path is the chart-relative path to the template.
+   * Required. A pod affinity term, associated with the corresponding weight.
    */
-  path?: string;
+  podAffinityTerm?: V1PodAffinityTerm;
   /**
-   * Weight indicates the sort order for execution among similar Hook type
+   * weight associated with matching the corresponding podAffinityTerm,
+   * in the range 1-100.
    */
   weight?: number;
 };
 
-export type ReleaseChartReference = {
-  chartPath?: string;
-  registryID?: number;
-  repoURL?: string;
+export type V1WindowsSecurityContextOptions = {
+  /**
+   * GMSACredentialSpec is where the GMSA admission webhook
+   * (https://github.com/kubernetes-sigs/windows-gmsa) inlines the contents of the
+   * GMSA credential spec named by the GMSACredentialSpecName field.
+   * +optional
+   */
+  gmsaCredentialSpec?: string;
+  /**
+   * GMSACredentialSpecName is the name of the GMSA credential spec to use.
+   * +optional
+   */
+  gmsaCredentialSpecName?: string;
+  /**
+   * HostProcess determines if a container should be run as a 'Host Process' container.
+   * All of a Pod's containers must have the same effective HostProcess value
+   * (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).
+   * In addition, if HostProcess is true then HostNetwork must also be set to true.
+   * +optional
+   */
+  hostProcess?: boolean;
+  /**
+   * The UserName in Windows to run the entrypoint of the container process.
+   * Defaults to the user specified in image metadata if unspecified.
+   * May also be set in PodSecurityContext. If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence.
+   * +optional
+   */
+  runAsUserName?: string;
 };
 
-export type ReleaseMaintainer = {
+export type V1WorkloadReference = {
   /**
-   * Email is an optional email address to contact the named maintainer
-   */
-  email?: string;
-  /**
-   * Name is a user name or organization name
-   */
-  name?: string;
-  /**
-   * URL is an optional URL to an address for the named maintainer
-   */
-  url?: string;
-};
-
-export type ReleaseMetadata = {
-  /**
-   * Annotations are additional mappings uninterpreted by Helm,
-   * made available for inspection by other applications.
-   */
-  annotations?: {
-    [key: string]: string;
-  };
-  /**
-   * The API Version of this chart. Required.
-   */
-  apiVersion?: string;
-  /**
-   * The version of the application enclosed inside of this chart.
-   */
-  appVersion?: string;
-  /**
-   * The condition to check to enable chart
-   */
-  condition?: string;
-  /**
-   * Dependencies are a list of dependencies for a chart.
-   */
-  dependencies?: Array<ReleaseDependency>;
-  /**
-   * Whether or not this chart is deprecated
-   */
-  deprecated?: boolean;
-  /**
-   * A one-sentence description of the chart
-   */
-  description?: string;
-  /**
-   * The URL to a relevant project page, git repo, or contact person
-   */
-  home?: string;
-  /**
-   * The URL to an icon file.
-   */
-  icon?: string;
-  /**
-   * A list of string keywords
-   */
-  keywords?: Array<string>;
-  /**
-   * KubeVersion is a SemVer constraint specifying the version of Kubernetes required.
-   */
-  kubeVersion?: string;
-  /**
-   * A list of name and URL/email address combinations for the maintainer(s)
-   */
-  maintainers?: Array<ReleaseMaintainer>;
-  /**
-   * The name of the chart. Required.
-   */
-  name?: string;
-  /**
-   * Source is the URL to the source code of this chart
-   */
-  sources?: Array<string>;
-  /**
-   * The tags to check to enable chart
-   */
-  tags?: string;
-  /**
-   * Specifies the chart type: application or library
-   */
-  type?: string;
-  /**
-   * A SemVer 2 conformant version string of the chart. Required.
-   */
-  version?: string;
-};
-
-export type ReleaseDependency = {
-  /**
-   * Alias usable alias to be used for the chart
-   */
-  alias?: string;
-  /**
-   * A yaml path that resolves to a boolean, used for enabling/disabling charts (e.g. subchart1.enabled )
-   */
-  condition?: string;
-  /**
-   * Enabled bool determines if chart should be loaded
-   */
-  enabled?: boolean;
-  /**
-   * ImportValues holds the mapping of source values to parent key to be imported. Each item can be a
-   * string or pair of child/parent sublist items.
-   */
-  'import-values'?: Array<unknown>;
-  /**
-   * Name is the name of the dependency.
+   * Name defines the name of the Workload object this Pod belongs to.
+   * Workload must be in the same namespace as the Pod.
+   * If it doesn't match any existing Workload, the Pod will remain unschedulable
+   * until a Workload object is created and observed by the kube-scheduler.
+   * It must be a DNS subdomain.
    *
-   * This must mach the name in the dependency's Chart.yaml.
+   * +required
    */
   name?: string;
   /**
-   * The URL to the repository.
+   * PodGroup is the name of the PodGroup within the Workload that this Pod
+   * belongs to. If it doesn't match any existing PodGroup within the Workload,
+   * the Pod will remain unschedulable until the Workload object is recreated
+   * and observed by the kube-scheduler. It must be a DNS label.
    *
-   * Appending `index.yaml` to this string should result in a URL that can be
-   * used to fetch the repository index.
+   * +required
    */
-  repository?: string;
+  podGroup?: string;
   /**
-   * Tags can be used to group charts for enabling/disabling together
-   */
-  tags?: Array<string>;
-  /**
-   * Version is the version (range) of this chart.
+   * PodGroupReplicaKey specifies the replica key of the PodGroup to which this
+   * Pod belongs. It is used to distinguish pods belonging to different replicas
+   * of the same pod group. The pod group policy is applied separately to each replica.
+   * When set, it must be a DNS label.
    *
-   * A lock file will always produce a single version, while a dependency
-   * may contain a semantic version range.
+   * +optional
    */
-  version?: string;
+  podGroupReplicaKey?: string;
 };
 
-export type ReleaseLock = {
+export type V1Beta1ContainerMetrics = {
   /**
-   * Dependencies is the list of dependencies that this lock file has locked.
-   */
-  dependencies?: Array<ReleaseDependency>;
-  /**
-   * Digest is a hash of the dependencies in Chart.yaml.
-   */
-  digest?: string;
-  /**
-   * Generated is the date the lock file was last generated.
-   */
-  generated?: string;
-};
-
-export type ReleaseFile = {
-  /**
-   * Data is the template as byte data.
-   */
-  data?: Array<number>;
-  /**
-   * Name is the path-like name of the template.
+   * Container name corresponding to the one from pod.spec.containers.
    */
   name?: string;
-};
-
-export type ReleaseChart = {
-  /**
-   * Files are miscellaneous files in a chart archive,
-   * e.g. README, LICENSE, etc.
-   */
-  files?: Array<ReleaseFile>;
-  /**
-   * Lock is the contents of Chart.lock.
-   */
-  lock?: ReleaseLock;
-  /**
-   * Metadata is the contents of the Chartfile.
-   */
-  metadata?: ReleaseMetadata;
-  /**
-   * Schema is an optional JSON schema for imposing structure on Values
-   */
-  schema?: Array<number>;
-  /**
-   * Templates for this chart.
-   */
-  templates?: Array<ReleaseFile>;
-  /**
-   * Values are default config for this chart.
-   */
-  values?: {
-    [key: string]: unknown;
-  };
-};
-
-export type RegistriesRegistryUpdatePayload = {
-  /**
-   * Is authentication against this registry enabled
-   */
-  Authentication: boolean;
-  /**
-   * BaseURL is used for quay registry
-   */
-  BaseURL?: string;
-  /**
-   * ECR data
-   */
-  Ecr?: PortainerEcrData;
-  /**
-   * Name that will be used to identify this registry
-   */
-  Name: string;
-  /**
-   * Password used to authenticate against this registry. required when Authentication is true
-   */
-  Password?: string;
-  /**
-   * Quay data
-   */
-  Quay?: PortainerQuayRegistryData;
-  /**
-   * Registry access control
-   */
-  RegistryAccesses?: PortainerRegistryAccesses;
-  /**
-   * URL or IP address of the Docker registry
-   */
-  URL: string;
-  /**
-   * Username used to authenticate against this registry. Required when Authentication is true
-   */
-  Username?: string;
-};
-
-export type PortainerUserAccessPolicies = {
-  [key: string]: PortainerAccessPolicy;
-};
-
-export type PortainerAccessPolicy = {
-  /**
-   * Namespaces is a list of namespaces that this access policy applies to. Only used for namespaced level roles
-   */
-  Namespaces?: Array<string>;
-  /**
-   * Role identifier. Reference the role that will be associated to this access policy
-   */
-  RoleId: number;
-};
-
-export type PortainerTeamAccessPolicies = {
-  [key: string]: PortainerAccessPolicy;
-};
-
-export type PortainerRegistryAccessPolicies = {
-  /**
-   * Kubernetes specific fields (with kubernetes, namespaces have access to a registry, if users/teams have access to the same namespace, they have access to the registry)
-   */
-  Namespaces?: Array<string>;
-  TeamAccessPolicies?: PortainerTeamAccessPolicies;
-  /**
-   * Docker specific fields (with docker, users/teams have access to a registry)
-   */
-  UserAccessPolicies?: PortainerUserAccessPolicies;
-};
-
-export type PortainerRegistryAccesses = {
-  [key: string]: PortainerRegistryAccessPolicies;
-};
-
-export type PortainerQuayRegistryData = {
-  OrganisationName?: string;
-  UseOrganisation?: boolean;
-};
-
-export type PortainerEcrData = {
-  Region?: string;
-};
-
-export type RegistriesRegistryPingResponse = {
-  /**
-   * Message provides details about the connection test result
-   */
-  message?: string;
-  /**
-   * Success indicates if the registry connection was successful
-   */
-  success?: boolean;
-};
-
-export type RegistriesRegistryPingPayload = {
-  /**
-   * Password used to authenticate against this registry
-   */
-  Password?: string;
-  /**
-   * Use TLS
-   */
-  TLS?: boolean;
-  /**
-   * Registry Type. Valid values are:
-   * 1 (Quay.io),
-   * 2 (Azure container registry),
-   * 3 (custom registry),
-   * 4 (Gitlab registry),
-   * 5 (ProGet registry),
-   * 6 (DockerHub)
-   * 7 (ECR)
-   * 8 (Github registry)
-   */
-  Type: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-  /**
-   * URL or IP address of the Docker registry
-   */
-  URL: string;
-  /**
-   * Username used to authenticate against this registry
-   */
-  Username?: string;
-};
-
-export const PortainerRegistryType = {
-  /**
-   * _
-   */
-  '': 0,
-  /**
-   * QuayRegistry
-   */
-  QUAY_REGISTRY: 1,
-  /**
-   * AzureRegistry
-   */
-  AZURE_REGISTRY: 2,
-  /**
-   * CustomRegistry
-   */
-  CUSTOM_REGISTRY: 3,
-  /**
-   * GitlabRegistry
-   */
-  GITLAB_REGISTRY: 4,
-  /**
-   * ProGetRegistry
-   */
-  PRO_GET_REGISTRY: 5,
-  /**
-   * DockerHubRegistry
-   */
-  DOCKER_HUB_REGISTRY: 6,
-  /**
-   * EcrRegistry
-   */
-  ECR_REGISTRY: 7,
-  /**
-   * GithubRegistry
-   */
-  GITHUB_REGISTRY: 8,
-} as const;
-
-export type PortainerRegistryType =
-  (typeof PortainerRegistryType)[keyof typeof PortainerRegistryType];
-
-export type RegistriesRegistryCreatePayload = {
-  /**
-   * Is authentication against this registry enabled
-   */
-  Authentication: boolean;
-  /**
-   * BaseURL required for ProGet registry
-   */
-  BaseURL?: string;
-  /**
-   * ECR specific details, required when type = 7
-   */
-  Ecr?: PortainerEcrData;
-  /**
-   * Gitlab specific details, required when type = 4
-   */
-  Gitlab?: PortainerGitlabRegistryData;
-  /**
-   * Name that will be used to identify this registry
-   */
-  Name: string;
-  /**
-   * Password used to authenticate against this registry. required when Authentication is true
-   */
-  Password?: string;
-  /**
-   * Quay specific details, required when type = 1
-   */
-  Quay?: PortainerQuayRegistryData;
-  /**
-   * Use TLS
-   */
-  TLS?: boolean;
-  /**
-   * Registry Type. Valid values are:
-   * 1 (Quay.io),
-   * 2 (Azure container registry),
-   * 3 (custom registry),
-   * 4 (Gitlab registry),
-   * 5 (ProGet registry),
-   * 6 (DockerHub)
-   * 7 (ECR)
-   */
-  Type: 1 | 2 | 3 | 4 | 5 | 6 | 7;
-  /**
-   * URL or IP address of the Docker registry
-   */
-  URL: string;
-  /**
-   * Username used to authenticate against this registry. Required when Authentication is true
-   */
-  Username?: string;
-};
-
-export type PortainerGitlabRegistryData = {
-  InstanceURL?: string;
-  ProjectId?: number;
-  ProjectPath?: string;
-};
-
-export type RegistriesRegistryConfigurePayload = {
-  /**
-   * Is authentication against this registry enabled
-   */
-  Authentication: boolean;
-  /**
-   * Password used to authenticate against this registry. required when Authentication is true
-   */
-  Password?: string;
-  /**
-   * ECR region
-   */
-  Region?: string;
-  /**
-   * Use TLS
-   */
-  TLS?: boolean;
-  /**
-   * The TLS CA certificate file
-   */
-  TLSCACertFile?: Array<number>;
-  /**
-   * The TLS client certificate file
-   */
-  TLSCertFile?: Array<number>;
-  /**
-   * The TLS client key file
-   */
-  TLSKeyFile?: Array<number>;
-  /**
-   * Skip the verification of the server TLS certificate
-   */
-  TLSSkipVerify?: boolean;
-  /**
-   * Username used to authenticate against this registry. Required when Authentication is true
-   */
-  Username?: string;
-};
-
-export type PortainerWebhook = {
-  EndpointId?: number;
-  /**
-   * Webhook Identifier
-   */
-  Id?: number;
-  RegistryId?: number;
-  ResourceId?: string;
-  Token?: string;
-  /**
-   * Type of webhook (1 - service)
-   */
-  Type?: PortainerWebhookType;
-};
-
-export type PortainerUserThemeSettings = {
-  /**
-   * Color represents the color theme of the UI
-   */
-  color?: 'dark' | 'light' | 'highcontrast' | 'auto' | '';
-};
-
-export const PortainerUserRole = {
-  /**
-   * _
-   */
-  '': 0,
-  /**
-   * AdministratorRole
-   */
-  ADMINISTRATOR_ROLE: 1,
-  /**
-   * StandardUserRole
-   */
-  STANDARD_USER_ROLE: 2,
-} as const;
-
-export type PortainerUserRole =
-  (typeof PortainerUserRole)[keyof typeof PortainerUserRole];
-
-export type PortainerUser = {
-  /**
-   * User Identifier
-   */
-  Id: number;
-  /**
-   * User role (1 for administrator account and 2 for regular account)
-   */
-  Role: PortainerUserRole;
-  ThemeSettings?: PortainerUserThemeSettings;
-  TokenIssueAt?: number;
-  UseCache?: boolean;
-  Username: string;
-};
-
-export type PortainerTeamMembership = {
-  /**
-   * Membership Identifier
-   */
-  Id?: number;
-  /**
-   * Team role (1 for team leader and 2 for team member)
-   */
-  Role?: PortainerMembershipRole;
-  /**
-   * Team identifier
-   */
-  TeamID?: number;
-  /**
-   * User identifier
-   */
-  UserID?: number;
-};
-
-export const PortainerMembershipRole = {
-  /**
-   * _
-   */
-  '': 0,
-  /**
-   * TeamLeader
-   */
-  TEAM_LEADER: 1,
-  /**
-   * TeamMember
-   */
-  TEAM_MEMBER: 2,
-} as const;
-
-export type PortainerMembershipRole =
-  (typeof PortainerMembershipRole)[keyof typeof PortainerMembershipRole];
-
-export type PortainerTeam = {
-  /**
-   * Team Identifier
-   */
-  Id?: number;
-  /**
-   * Team name
-   */
-  Name?: string;
-};
-
-export type PortainerTag = {
-  /**
-   * A set of environment(endpoint) group ids that have this tag
-   */
-  EndpointGroups?: {
-    [key: string]: boolean;
-  };
-  /**
-   * A set of environment(endpoint) ids that have this tag
-   */
-  Endpoints?: {
-    [key: string]: boolean;
-  };
-  /**
-   * Tag identifier
-   */
-  ID?: number;
-  /**
-   * Tag name
-   */
-  Name?: string;
-};
-
-export type PortainerStack = {
-  /**
-   * Only applies when deploying stack with multiple files
-   */
-  AdditionalFiles?: Array<string>;
-  /**
-   * The GitOps update settings of a git stack
-   */
-  AutoUpdate?: PortainerAutoUpdateSettings;
-  /**
-   * The username which created this stack
-   */
-  CreatedBy?: string;
-  /**
-   * The date in unix time when stack was created
-   */
-  CreationDate?: number;
-  /**
-   * CurrentDeploymentInfo records the git repository state at the time of the last actual deployment.
-   */
-  CurrentDeploymentInfo?: PortainerStackDeploymentInfo;
-  /**
-   * DeploymentStartStatus is the stack status captured when the current
-   * deployment starts. It is used by deployment logic during the current
-   * deployment attempt and is cleared/replaced when a new deployment begins.
-   */
-  DeploymentStartStatus?: PortainerStackStatus;
-  /**
-   * DeploymentStatus records the status progression of the current deployment.
-   * Cleared when a new deployment starts.
-   */
-  DeploymentStatus?: Array<PortainerStackDeploymentStatus>;
-  /**
-   * Environment(Endpoint) identifier. Reference the environment(endpoint) that will be used for deployment
-   */
-  EndpointId?: number;
-  /**
-   * EntryPoint is the path to the config file relative to the project root.
-   * NOTE: For git stacks this mirrors GitConfig.ConfigFilePath and the two are kept in sync
-   * by stackUpdateGit. The deploy command builder (compose_unpacker_cmd_builder) uses this
-   * field directly; Kubernetes deploy and git clone operations use GitConfig.ConfigFilePath.
-   */
-  EntryPoint?: string;
-  /**
-   * A list of environment(endpoint) variables used during stack deployment
-   */
-  Env?: Array<PortainerPair>;
-  /**
-   * Whether the stack is from a app template
-   */
-  FromAppTemplate?: boolean;
-  /**
-   * GitConfig is the git repository configuration for git-backed stacks.
-   * Deprecated: loaded from Source via WorkflowID; kept for DB backwards-compatibility only.
-   * Non-migration code must not read or write this field; use Source records instead.
-   */
-  GitConfig?: GittypesRepoConfig;
-  /**
-   * Stack Identifier
-   */
-  Id?: number;
-  /**
-   * Stack name
-   */
-  Name?: string;
-  /**
-   * Kubernetes namespace if stack is a kube application
-   */
-  Namespace?: string;
-  /**
-   * The stack deployment option
-   */
-  Option?: PortainerStackOption;
-  /**
-   * Path on disk to the repository hosting the Stack file
-   */
-  ProjectPath?: string;
-  ResourceControl?: PortainerResourceControl;
-  /**
-   * Stack status (1 - active, 2 - inactive, 3 - deploying, 4 - error)
-   */
-  Status?: PortainerStackStatus;
-  /**
-   * Cluster identifier of the Swarm cluster where the stack is deployed
-   */
-  SwarmId?: string;
-  /**
-   * Stack type. 1 for a Swarm stack, 2 for a Compose stack
-   */
-  Type?: PortainerStackType;
-  /**
-   * The date in unix time when stack was last updated
-   */
-  UpdateDate?: number;
-  /**
-   * The username which last updated this stack
-   */
-  UpdatedBy?: string;
-  /**
-   * WorkflowID is the ID of the Workflow that owns the Source for this stack.
-   */
-  WorkflowID?: number;
-};
-
-export const PortainerSourceType = {
-  /**
-   * _
-   */
-  '': 0,
-  /**
-   * SourceTypeGit
-   */
-  SOURCE_TYPE_GIT: 1,
-  /**
-   * SourceTypeRegistry
-   */
-  SOURCE_TYPE_REGISTRY: 2,
-  /**
-   * SourceTypeHelm
-   */
-  SOURCE_TYPE_HELM: 3,
-} as const;
-
-export type PortainerSourceType =
-  (typeof PortainerSourceType)[keyof typeof PortainerSourceType];
-
-export type PortainerSource = {
-  administratorsOnly?: boolean;
-  git?: GittypesRepoConfig;
-  helm?: PortainerHelmConfig;
-  id?: number;
-  lastSync?: number;
-  name?: string;
-  ownerID?: number;
-  public?: boolean;
-  registry?: PortainerRegistry;
-  teamAccesses?: Array<number>;
-  type?: PortainerSourceType;
-  userAccesses?: Array<number>;
-};
-
-export type PortainerRegistryManagementConfiguration = {
-  AccessToken?: string;
-  AccessTokenExpiry?: number;
-  Authentication?: boolean;
-  Ecr?: PortainerEcrData;
-  Password?: string;
-  TLSConfig?: PortainerTlsConfiguration;
-  Type?: PortainerRegistryType;
-  Username?: string;
-};
-
-export type PortainerGithubRegistryData = {
-  OrganisationName?: string;
-  UseOrganisation?: boolean;
-};
-
-export type PortainerRegistry = {
-  /**
-   * Stores temporary access token
-   */
-  AccessToken?: string;
-  AccessTokenExpiry?: number;
-  /**
-   * Is authentication against this registry enabled
-   */
-  Authentication?: boolean;
-  /**
-   * Deprecated in DBVersion == 18
-   */
-  AuthorizedTeams?: Array<number>;
-  /**
-   * Deprecated in DBVersion == 18
-   */
-  AuthorizedUsers?: Array<number>;
-  /**
-   * Base URL, introduced for ProGet registry
-   */
-  BaseURL?: string;
-  Ecr?: PortainerEcrData;
-  Github?: PortainerGithubRegistryData;
-  Gitlab?: PortainerGitlabRegistryData;
-  /**
-   * Registry Identifier
-   */
-  Id?: number;
-  ManagementConfiguration?: PortainerRegistryManagementConfiguration;
-  /**
-   * Registry Name
-   */
-  Name?: string;
-  /**
-   * Password or SecretAccessKey used to authenticate against this registry
-   */
-  Password?: string;
-  Quay?: PortainerQuayRegistryData;
-  RegistryAccesses?: PortainerRegistryAccesses;
-  /**
-   * Deprecated in DBVersion == 31
-   */
-  TeamAccessPolicies?: PortainerTeamAccessPolicies;
-  /**
-   * Registry Type (1 - Quay, 2 - Azure, 3 - Custom, 4 - Gitlab, 5 - ProGet, 6 - DockerHub, 7 - ECR)
-   */
-  Type?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
-  /**
-   * URL or IP address of the Docker registry
-   */
-  URL?: string;
-  /**
-   * Deprecated fields
-   * Deprecated in DBVersion == 31
-   */
-  UserAccessPolicies?: PortainerUserAccessPolicies;
-  /**
-   * Username or AccessKeyID used to authenticate against this registry
-   */
-  Username?: string;
-};
-
-export type PortainerHelmConfig = {
-  /**
-   * Atomic enables automatic rollback on deployment failure (equivalent to helm --atomic).
-   * Used by both git repo and Helm repository deployments.
-   */
-  Atomic?: boolean;
-  /**
-   * ChartName is the name of the Helm chart within the repository.
-   * Required for Helm repository deployments.
-   */
-  ChartName?: string;
-  /**
-   * ChartPath is the path to a Helm chart folder within the cloned git repository.
-   * Used exclusively for git repo helm deployments. Mutually exclusive with ChartURL.
-   */
-  ChartPath?: string;
-  /**
-   * ChartURL is the URL of a Helm chart repository.
-   * Used exclusively for Helm repository deployments. Mutually exclusive with ChartPath.
-   */
-  ChartURL?: string;
-  /**
-   * ChartVersion is the version of the Helm chart to deploy. Empty means latest.
-   * Used exclusively for Helm repository deployments.
-   */
-  ChartVersion?: string;
-  /**
-   * Namespace is the Kubernetes namespace to deploy the Helm chart into.
-   * Used by both git repo and Helm repository deployments.
-   */
-  Namespace?: string;
-  /**
-   * Timeout sets the deadline for Helm operations (equivalent to helm --timeout, e.g. "5m0s").
-   * Used by both git repo and Helm repository deployments.
-   */
-  Timeout?: string;
-  /**
-   * ValuesFiles is a list of relative paths to Helm values YAML files within the cloned git repository.
-   * Used exclusively for git repo helm deployments.
-   */
-  ValuesFiles?: Array<string>;
-  /**
-   * ValuesInline is the inline YAML string of Helm values.
-   * Used exclusively for Helm repository deployments.
-   */
-  ValuesInline?: string;
-};
-
-export type PortainerSettings = {
-  /**
-   * Container environment parameter AGENT_SECRET
-   */
-  AgentSecret?: string;
-  AllowBindMountsForRegularUsers?: boolean;
-  AllowContainerCapabilitiesForRegularUsers?: boolean;
-  AllowDeviceMappingForRegularUsers?: boolean;
-  AllowHostNamespaceForRegularUsers?: boolean;
-  AllowPrivilegedModeForRegularUsers?: boolean;
-  AllowStackManagementForRegularUsers?: boolean;
-  AllowVolumeBrowserForRegularUsers?: boolean;
-  /**
-   * Active authentication method for the Portainer instance. Valid values are: 1 for internal, 2 for LDAP, or 3 for oauth
-   */
-  AuthenticationMethod?: PortainerAuthenticationMethod;
-  /**
-   * A list of label name & value that will be used to hide containers when querying containers
-   */
-  BlackListedLabels?: Array<PortainerPair>;
-  /**
-   * Deprecated fields
-   */
-  DisplayDonationHeader?: boolean;
-  DisplayExternalContributors?: boolean;
-  Edge?: PortainerEdge;
-  /**
-   * The default check in interval for edge agent (in seconds)
-   */
-  EdgeAgentCheckinInterval?: number;
-  /**
-   * EdgePortainerURL is the URL that is exposed to edge agents
-   */
-  EdgePortainerUrl?: string;
-  /**
-   * Whether edge compute features are enabled
-   */
-  EnableEdgeComputeFeatures?: boolean;
-  /**
-   * Deprecated fields v26
-   */
-  EnableHostManagementFeatures?: boolean;
-  /**
-   * EnforceEdgeID makes Portainer store the Edge ID instead of accepting anyone
-   */
-  EnforceEdgeID?: boolean;
-  FeatureFlagSettings?: {
-    [key: string]: boolean;
-  };
-  /**
-   * ForceSecureCookies forces the Secure attribute on auth cookies regardless of detected scheme.
-   * Enable when Portainer runs behind a TLS-terminating proxy.
-   */
-  ForceSecureCookies?: boolean;
-  /**
-   * Deployment options for encouraging git ops workflows
-   */
-  GlobalDeploymentOptions?: PortainerGlobalDeploymentOptions;
-  /**
-   * Helm repository URL, defaults to "https://charts.bitnami.com/bitnami"
-   */
-  HelmRepositoryURL?: string;
-  InternalAuthSettings?: PortainerInternalAuthSettings;
-  IsDockerDesktopExtension?: boolean;
-  /**
-   * The expiry of a Kubeconfig
-   */
-  KubeconfigExpiry?: string;
-  /**
-   * KubectlImage, defaults to portainer/kubectl-shell
-   */
-  KubectlShellImage?: string;
-  LDAPSettings?: PortainerLdapSettings;
-  /**
-   * URL to a logo that will be displayed on the login page as well as on top of the sidebar. Will use default Portainer logo when value is empty string
-   */
-  LogoURL?: string;
-  OAuthSettings?: PortainerOAuthSettings;
-  /**
-   * The interval in which environment(endpoint) snapshots are created
-   */
-  SnapshotInterval?: string;
-  /**
-   * URL to the templates that will be displayed in the UI when navigating to App Templates
-   */
-  TemplatesURL?: string;
-  /**
-   * TrustOnFirstConnect makes Portainer accepting edge agent connection by default
-   */
-  TrustOnFirstConnect?: boolean;
-  /**
-   * The duration of a user session
-   */
-  UserSessionTimeout?: string;
-};
-
-export type PortainerEdge = {
-  /**
-   * Deprecated 2.18
-   */
-  AsyncMode?: boolean;
-  /**
-   * The command list interval for edge agent - used in edge async mode (in seconds)
-   */
-  CommandInterval?: number;
-  /**
-   * The ping interval for edge agent - used in edge async mode (in seconds)
-   */
-  PingInterval?: number;
-  /**
-   * The snapshot interval for edge agent - used in edge async mode (in seconds)
-   */
-  SnapshotInterval?: number;
-};
-
-export type PortainerSslSettings = {
-  certPath?: string;
-  httpEnabled?: boolean;
-  keyPath?: string;
-  selfSigned?: boolean;
-};
-
-export type PortainerRole = {
-  /**
-   * Authorizations associated to a role
-   */
-  Authorizations?: PortainerAuthorizations;
-  /**
-   * Role description
-   */
-  Description?: string;
-  /**
-   * Role Identifier
-   */
-  Id?: number;
-  /**
-   * Role name
-   */
-  Name?: string;
-  Priority?: number;
-};
-
-export type PortainerAuthorizations = {
-  [key: string]: boolean;
-};
-
-export type PortainerPerformanceMetrics = {
-  CPUUsage?: number;
-  DiskUsage?: number;
-  MemoryUsage?: number;
-  NetworkUsage?: number;
-};
-
-export type PortainerKubernetesStorageClassConfig = {
-  AccessModes?: Array<string>;
-  AllowVolumeExpansion: boolean;
-  Name: string;
-  Provisioner: string;
-};
-
-export type PortainerKubernetesSnapshot = {
-  ClusterType?: string;
-  DiagnosticsData?: PortainerDiagnosticsData;
-  KubernetesVersion: string;
-  NodeCount: number;
-  PerformanceMetrics?: PortainerPerformanceMetrics;
-  Time: number;
-  TotalCPU: number;
-  TotalMemory: number;
-};
-
-export type PortainerDiagnosticsData = {
-  DNS?: {
-    [key: string]: string;
-  };
-  Log?: string;
-  Proxy?: {
-    [key: string]: string;
-  };
-  Telnet?: {
-    [key: string]: string;
-  };
-};
-
-export type PortainerKubernetesIngressClassConfig = {
-  Blocked?: boolean;
-  BlockedNamespaces?: Array<string>;
-  Name: string;
-  Type: string;
-};
-
-export type PortainerKubernetesFlags = {
-  IsServerIngressClassDetected: boolean;
-  IsServerMetricsDetected: boolean;
-  IsServerStorageDetected: boolean;
-};
-
-export type PortainerKubernetesData = {
-  Configuration: PortainerKubernetesConfiguration;
-  Flags: PortainerKubernetesFlags;
-  Snapshots?: Array<PortainerKubernetesSnapshot>;
-};
-
-export type PortainerKubernetesConfiguration = {
-  AllowNoneIngressClass: boolean;
-  EnableResourceOverCommit?: boolean;
-  IngressAvailabilityPerNamespace: boolean;
-  IngressClasses?: Array<PortainerKubernetesIngressClassConfig>;
-  ResourceOverCommitPercentage?: number;
-  RestrictDefaultNamespace?: boolean;
-  StorageClasses?: Array<PortainerKubernetesStorageClassConfig>;
-  UseLoadBalancer?: boolean;
-  UseServerMetrics?: boolean;
-};
-
-export type PortainerK8sNodesLimits = {
-  [key: string]: PortainerK8sNodeLimits;
-};
-
-export type PortainerK8sNodeLimits = {
-  CPU?: number;
-  Memory?: number;
-};
-
-export type PortainerK8sNamespaceInfo = {
-  Annotations?: {
-    [key: string]: string;
-  };
-  CreationDate?: string;
-  Id?: string;
-  IsDefault?: boolean;
-  IsSystem?: boolean;
-  Name?: string;
-  NamespaceOwner?: string;
-  ResourceQuota?: V1ResourceQuota;
-  Status?: V1NamespaceStatus;
-  UnhealthyEventCount?: number;
-};
-
-export type PortainerEnvironmentEdgeSettings = {
-  /**
-   * Whether the device has been started in edge async mode
-   */
-  AsyncMode: boolean;
-  /**
-   * The command list interval for edge agent - used in edge async mode [seconds]
-   */
-  CommandInterval: number;
-  /**
-   * The ping interval for edge agent - used in edge async mode [seconds]
-   */
-  PingInterval: number;
-  /**
-   * The snapshot interval for edge agent - used in edge async mode [seconds]
-   */
-  SnapshotInterval: number;
-};
-
-export type PortainerEnvironmentAgentData = {
-  Version?: string;
-};
-
-export const PortainerEndpointType = {
-  /**
-   * _
-   */
-  '': 0,
-  /**
-   * DockerEnvironment
-   */
-  DOCKER_ENVIRONMENT: 1,
-  /**
-   * AgentOnDockerEnvironment
-   */
-  AGENT_ON_DOCKER_ENVIRONMENT: 2,
-  /**
-   * AzureEnvironment
-   */
-  AZURE_ENVIRONMENT: 3,
-  /**
-   * EdgeAgentOnDockerEnvironment
-   */
-  EDGE_AGENT_ON_DOCKER_ENVIRONMENT: 4,
-  /**
-   * KubernetesLocalEnvironment
-   */
-  KUBERNETES_LOCAL_ENVIRONMENT: 5,
-  /**
-   * AgentOnKubernetesEnvironment
-   */
-  AGENT_ON_KUBERNETES_ENVIRONMENT: 6,
-  /**
-   * EdgeAgentOnKubernetesEnvironment
-   */
-  EDGE_AGENT_ON_KUBERNETES_ENVIRONMENT: 7,
-} as const;
-
-export type PortainerEndpointType =
-  (typeof PortainerEndpointType)[keyof typeof PortainerEndpointType];
-
-export const PortainerEndpointStatus = {
-  /**
-   * _
-   */
-  '': 0,
-  /**
-   * EndpointStatusUp
-   */
-  ENDPOINT_STATUS_UP: 1,
-  /**
-   * EndpointStatusDown
-   */
-  ENDPOINT_STATUS_DOWN: 2,
-} as const;
-
-export type PortainerEndpointStatus =
-  (typeof PortainerEndpointStatus)[keyof typeof PortainerEndpointStatus];
-
-export type PortainerEndpointSecuritySettings = {
-  /**
-   * Whether non-administrator should be able to use bind mounts when creating containers
-   */
-  allowBindMountsForRegularUsers: boolean;
-  /**
-   * Whether non-administrator should be able to use container capabilities
-   */
-  allowContainerCapabilitiesForRegularUsers: boolean;
-  /**
-   * Whether non-administrator should be able to use device mapping
-   */
-  allowDeviceMappingForRegularUsers: boolean;
-  /**
-   * Whether non-administrator should be able to use the host pid
-   */
-  allowHostNamespaceForRegularUsers: boolean;
-  /**
-   * Whether non-administrator should be able to use privileged mode when creating containers
-   */
-  allowPrivilegedModeForRegularUsers: boolean;
-  /**
-   * Whether non-administrator should be able to use security-opt settings
-   */
-  allowSecurityOptForRegularUsers: boolean;
-  /**
-   * Whether non-administrator should be able to manage stacks
-   */
-  allowStackManagementForRegularUsers: boolean;
-  /**
-   * Whether non-administrator should be able to use sysctl settings
-   */
-  allowSysctlSettingForRegularUsers: boolean;
-  /**
-   * Whether non-administrator should be able to browse volumes
-   */
-  allowVolumeBrowserForRegularUsers: boolean;
-  /**
-   * Whether host management features are enabled
-   */
-  enableHostManagementFeatures: boolean;
-};
-
-export type PortainerEndpointGroup = {
-  /**
-   * Description associated to the environment(endpoint) group
-   */
-  Description: string;
-  /**
-   * Environment(Endpoint) group Identifier
-   */
-  Id: number;
-  /**
-   * Environment(Endpoint) group name
-   */
-  Name: string;
-  /**
-   * List of tags associated to this environment(endpoint) group
-   */
-  TagIds?: Array<number>;
-  TeamAccessPolicies?: PortainerTeamAccessPolicies;
-  UserAccessPolicies?: PortainerUserAccessPolicies;
-};
-
-export type PortainerEndpoint = {
-  Agent: PortainerEnvironmentAgentData;
-  AzureCredentials?: PortainerAzureCredentials;
-  /**
-   * Maximum version of docker-compose
-   */
-  ComposeSyntaxMaxVersion: string;
-  /**
-   * ContainerEngine represents the container engine type. This can be 'docker' or 'podman' when interacting directly with these environments, otherwise '' for kubernetes environments.
-   */
-  ContainerEngine: string;
-  Edge: PortainerEnvironmentEdgeSettings;
-  /**
-   * The check in interval for edge agent (in seconds)
-   */
-  EdgeCheckinInterval: number;
-  /**
-   * The identifier of the edge agent associated with this environment(endpoint)
-   */
-  EdgeID?: string;
-  /**
-   * The key which is used to map the agent to Portainer
-   */
-  EdgeKey: string;
-  EnableGPUManagement?: boolean;
-  Gpus?: Array<PortainerPair>;
-  /**
-   * Environment(Endpoint) group identifier
-   */
-  GroupId: number;
-  /**
-   * Heartbeat indicates the heartbeat status of an edge environment
-   */
-  Heartbeat?: boolean;
-  /**
-   * Environment(Endpoint) Identifier
-   */
-  Id: number;
-  /**
-   * Associated Kubernetes data
-   */
-  Kubernetes: PortainerKubernetesData;
-  /**
-   * LastCheckInDate mark last check-in date on checkin
-   */
-  LastCheckInDate: number;
-  /**
-   * Environment(Endpoint) name
-   */
-  Name: string;
-  /**
-   * URL or IP address where exposed containers will be reachable
-   */
-  PublicURL: string;
-  /**
-   * Environment(Endpoint) specific security settings
-   */
-  SecuritySettings: PortainerEndpointSecuritySettings;
-  /**
-   * List of snapshots
-   */
-  Snapshots?: Array<PortainerDockerSnapshot>;
-  /**
-   * The status of the environment(endpoint) (1 - up, 2 - down, 3 - provisioning, 4 - error)
-   */
-  Status?: 1 | 2 | 3 | 4;
-  TLSConfig: PortainerTlsConfiguration;
-  /**
-   * List of tag identifiers to which this environment(endpoint) is associated
-   */
-  TagIds?: Array<number>;
-  /**
-   * List of team identifiers authorized to connect to this environment(endpoint)
-   */
-  TeamAccessPolicies?: PortainerTeamAccessPolicies;
-  /**
-   * Environment(Endpoint) environment(endpoint) type. 1 for a Docker environment(endpoint), 2 for an agent on Docker environment(endpoint) or 3 for an Azure environment(endpoint).
-   */
-  Type: PortainerEndpointType;
-  /**
-   * URL or IP address of the Docker host associated to this environment(endpoint)
-   */
-  URL: string;
-  /**
-   * List of user identifiers authorized to connect to this environment(endpoint)
-   */
-  UserAccessPolicies?: PortainerUserAccessPolicies;
-  /**
-   * Whether the device has been trusted or not by the user
-   */
-  UserTrusted?: boolean;
-};
-
-export type PortainerDockerSnapshotRaw = {
-  [key: string]: unknown;
-};
-
-export type PortainerDockerSnapshot = {
-  ContainerCount: number;
-  DiagnosticsData?: PortainerDiagnosticsData;
-  DockerSnapshotRaw?: PortainerDockerSnapshotRaw;
-  DockerVersion: string;
-  GpuUseAll: boolean;
-  GpuUseList?: Array<string>;
-  HealthyContainerCount: number;
-  ImageCount: number;
-  IsPodman: boolean;
-  NodeCount: number;
-  PerformanceMetrics?: PortainerPerformanceMetrics;
-  RunningContainerCount: number;
-  ServiceCount: number;
-  StackCount: number;
-  StoppedContainerCount: number;
-  Swarm: boolean;
-  Time: number;
-  TotalCPU: number;
-  TotalMemory: number;
-  UnhealthyContainerCount: number;
-  VolumeCount: number;
-};
-
-export type PortainerAzureCredentials = {
-  /**
-   * Azure application ID
-   */
-  ApplicationID: string;
-  /**
-   * Azure authentication key
-   */
-  AuthenticationKey: string;
-  /**
-   * Azure tenant ID
-   */
-  TenantID: string;
-};
-
-export const PortainerEdgeStackStatusType = {
-  /**
-   * EdgeStackStatusPending
-   */
-  EDGE_STACK_STATUS_PENDING: 0,
-  /**
-   * EdgeStackStatusDeploymentReceived
-   */
-  EDGE_STACK_STATUS_DEPLOYMENT_RECEIVED: 1,
-  /**
-   * EdgeStackStatusError
-   */
-  EDGE_STACK_STATUS_ERROR: 2,
-  /**
-   * EdgeStackStatusAcknowledged
-   */
-  EDGE_STACK_STATUS_ACKNOWLEDGED: 3,
-  /**
-   * EdgeStackStatusRemoved
-   */
-  EDGE_STACK_STATUS_REMOVED: 4,
-  /**
-   * EdgeStackStatusRemoteUpdateSuccess
-   */
-  EDGE_STACK_STATUS_REMOTE_UPDATE_SUCCESS: 5,
-  /**
-   * EdgeStackStatusImagesPulled
-   */
-  EDGE_STACK_STATUS_IMAGES_PULLED: 6,
-  /**
-   * EdgeStackStatusRunning
-   */
-  EDGE_STACK_STATUS_RUNNING: 7,
-  /**
-   * EdgeStackStatusDeploying
-   */
-  EDGE_STACK_STATUS_DEPLOYING: 8,
-  /**
-   * EdgeStackStatusRemoving
-   */
-  EDGE_STACK_STATUS_REMOVING: 9,
-  /**
-   * EdgeStackStatusPausedDeploying
-   */
-  EDGE_STACK_STATUS_PAUSED_DEPLOYING: 10,
-  /**
-   * EdgeStackStatusRollingBack
-   */
-  EDGE_STACK_STATUS_ROLLING_BACK: 11,
-  /**
-   * EdgeStackStatusRolledBack
-   */
-  EDGE_STACK_STATUS_ROLLED_BACK: 12,
-  /**
-   * EdgeStackStatusCompleted
-   */
-  EDGE_STACK_STATUS_COMPLETED: 13,
-} as const;
-
-export type PortainerEdgeStackStatusType =
-  (typeof PortainerEdgeStackStatusType)[keyof typeof PortainerEdgeStackStatusType];
-
-export type PortainerEdgeStackStatusDetails = {
-  Acknowledged?: boolean;
-  Error?: boolean;
-  ImagesPulled?: boolean;
-  Ok?: boolean;
-  Pending?: boolean;
-  RemoteUpdateSuccess?: boolean;
-  Remove?: boolean;
-};
-
-export type PortainerEdgeStackStatus = {
-  /**
-   * EE only feature
-   */
-  DeploymentInfo?: PortainerStackDeploymentInfo;
-  /**
-   * Deprecated
-   */
-  Details?: PortainerEdgeStackStatusDetails;
-  EndpointID?: number;
-  /**
-   * Deprecated
-   */
-  Error?: string;
-  /**
-   * ReadyRePullImage is a flag to indicate whether the auto update is trigger to re-pull image
-   */
-  ReadyRePullImage?: boolean;
-  Status?: Array<PortainerEdgeStackDeploymentStatus>;
-  /**
-   * Deprecated
-   */
-  Type?: PortainerEdgeStackStatusType;
-};
-
-export type PortainerEdgeStackDeploymentStatus = {
-  Error?: string;
-  /**
-   * EE only feature
-   */
-  RollbackTo?: number;
-  Time?: number;
-  Type?: PortainerEdgeStackStatusType;
-  Version?: number;
-};
-
-export const PortainerEdgeStackDeploymentType = {
-  /**
-   * EdgeStackDeploymentCompose
-   */
-  EDGE_STACK_DEPLOYMENT_COMPOSE: 0 /**
-   * EdgeStackDeploymentKubernetes
-   */,
-  EDGE_STACK_DEPLOYMENT_KUBERNETES: 1,
-} as const;
-
-export type PortainerEdgeStackDeploymentType =
-  (typeof PortainerEdgeStackDeploymentType)[keyof typeof PortainerEdgeStackDeploymentType];
-
-export type PortainerEdgeStack = {
-  /**
-   * The username which created this stack
-   */
-  CreatedBy?: string;
-  /**
-   * The username id which created this stack
-   */
-  CreatedByUserId?: string;
-  /**
-   * StatusArray    map[EndpointID][]EdgeStackStatus `json:"StatusArray"`
-   */
-  CreationDate?: number;
-  DeploymentType?: PortainerEdgeStackDeploymentType;
-  EdgeGroups?: Array<number>;
-  EntryPoint?: string;
-  /**
-   * EdgeStack Identifier
-   */
-  Id?: number;
-  ManifestPath?: string;
-  Name?: string;
-  NumDeployments?: number;
-  ProjectPath?: string;
-  Status?: {
-    [key: string]: PortainerEdgeStackStatus;
-  };
-  /**
-   * Uses the manifest's namespaces instead of the default one
-   */
-  UseManifestNamespaces?: boolean;
-  Version?: number;
-};
-
-export const PortainerEdgeJobLogsStatus = {
-  /**
-   * _
-   */
-  '': 0,
-  /**
-   * EdgeJobLogsStatusIdle
-   */
-  EDGE_JOB_LOGS_STATUS_IDLE: 1,
-  /**
-   * EdgeJobLogsStatusPending
-   */
-  EDGE_JOB_LOGS_STATUS_PENDING: 2,
-  /**
-   * EdgeJobLogsStatusCollected
-   */
-  EDGE_JOB_LOGS_STATUS_COLLECTED: 3,
-} as const;
-
-export type PortainerEdgeJobLogsStatus =
-  (typeof PortainerEdgeJobLogsStatus)[keyof typeof PortainerEdgeJobLogsStatus];
-
-export type PortainerEdgeJobEndpointMeta = {
-  CollectLogs?: boolean;
-  LogsStatus?: PortainerEdgeJobLogsStatus;
-};
-
-export type PortainerEdgeJob = {
-  Created?: number;
-  CronExpression?: string;
-  EdgeGroups?: Array<number>;
-  Endpoints?: {
-    [key: string]: PortainerEdgeJobEndpointMeta;
-  };
-  /**
-   * Field used for log collection of Endpoints belonging to EdgeGroups
-   */
-  GroupLogsCollection?: {
-    [key: string]: PortainerEdgeJobEndpointMeta;
-  };
-  /**
-   * EdgeJob Identifier
-   */
-  Id?: number;
-  Name?: string;
-  Recurring?: boolean;
-  ScriptPath?: string;
-  Version?: number;
-};
-
-export type PortainerEdgeGroup = {
-  Dynamic?: boolean;
-  EndpointIds?: RoarRoarPortainerEndpointId;
-  /**
-   * Deprecated: only used for API responses
-   */
-  Endpoints?: Array<number>;
-  /**
-   * EdgeGroup Identifier
-   */
-  Id?: number;
-  Name?: string;
-  PartialMatch?: boolean;
-  TagIds?: Array<number>;
-};
-
-export type PortainerCustomTemplateVariableDefinition = {
-  defaultValue?: string;
-  description?: string;
-  label?: string;
-  name?: string;
-};
-
-export const PortainerCustomTemplatePlatform = {
-  /**
-   * _
-   */
-  '': 0,
-  /**
-   * CustomTemplatePlatformLinux
-   */
-  CUSTOM_TEMPLATE_PLATFORM_LINUX: 1,
-  /**
-   * CustomTemplatePlatformWindows
-   */
-  CUSTOM_TEMPLATE_PLATFORM_WINDOWS: 2,
-} as const;
-
-export type PortainerCustomTemplatePlatform =
-  (typeof PortainerCustomTemplatePlatform)[keyof typeof PortainerCustomTemplatePlatform];
-
-export type PortainerCustomTemplate = {
-  /**
-   * User identifier who created this template
-   */
-  CreatedByUserId?: number;
-  /**
-   * Description of the template
-   */
-  Description?: string;
-  /**
-   * EdgeTemplate indicates if this template purpose for Edge Stack
-   */
-  EdgeTemplate?: boolean;
-  /**
-   * Path to the Stack file
-   */
-  EntryPoint?: string;
-  GitConfig?: GittypesRepoConfig;
-  /**
-   * CustomTemplate Identifier
-   */
-  Id?: number;
-  /**
-   * IsComposeFormat indicates if the Kubernetes template is created from a Docker Compose file
-   */
-  IsComposeFormat?: boolean;
-  /**
-   * URL of the template's logo
-   */
-  Logo?: string;
-  /**
-   * A note that will be displayed in the UI. Supports HTML content
-   */
-  Note?: string;
-  /**
-   * Platform associated to the template.
-   * Valid values are: 1 - 'linux', 2 - 'windows'
-   */
-  Platform?: 1 | 2;
-  /**
-   * Path on disk to the repository hosting the Stack file
-   */
-  ProjectPath?: string;
-  ResourceControl?: PortainerResourceControl;
-  /**
-   * Title of the template
-   */
-  Title?: string;
-  /**
-   * Type of created stack:
-   * * 1 - swarm
-   * * 2 - compose
-   * * 3 - kubernetes
-   */
-  Type?: 1 | 2 | 3;
-  Variables?: Array<PortainerCustomTemplateVariableDefinition>;
-  artifact?: PortainerArtifact;
-};
-
-export type PortainerArtifactFile = {
-  hash?: string;
-  path?: string;
-  ref?: string;
-  sourceId?: number;
-};
-
-export type PortainerArtifact = {
-  edgeGroups?: Array<number>;
-  edgeStackId?: number;
-  envGroups?: Array<number>;
-  envIds?: Array<number>;
-  files?: Array<PortainerArtifactFile>;
-  stackId?: number;
-};
-
-export type MotdMotd = {
-  ContentLayout?: {
-    [key: string]: string;
-  };
-  Hash?: Array<number>;
-  Message?: string;
-  Style?: string;
-  Title?: string;
-};
-
-export type LdapCheckPayload = {
-  LDAPSettings?: PortainerLdapSettings;
-};
-
-export type KubernetesNamespacesToggleSystemPayload = {
-  /**
-   * Toggle the system state of this namespace to true or false
-   */
-  System?: boolean;
-};
-
-export type KubernetesKubernetesVersionResponse = {
-  buildDate?: string;
-  compiler?: string;
-  /**
-   * EmulationMajor is the major version of the emulation version
-   */
-  emulationMajor?: string;
-  /**
-   * EmulationMinor is the minor version of the emulation version
-   */
-  emulationMinor?: string;
-  gitCommit?: string;
-  gitTreeState?: string;
-  gitVersion?: string;
-  goVersion?: string;
-  /**
-   * Major is the major version of the binary version
-   */
-  major?: string;
-  /**
-   * MinCompatibilityMajor is the major version of the minimum compatibility version
-   */
-  minCompatibilityMajor?: string;
-  /**
-   * MinCompatibilityMinor is the minor version of the minimum compatibility version
-   */
-  minCompatibilityMinor?: string;
-  /**
-   * Minor is the minor version of the binary version
-   */
-  minor?: string;
-  platform?: string;
   /**
-   * SupportsPodRestart is true when the cluster exposes the `pods/restart`
-   * subresource via API discovery — i.e. the feature gate is enabled and
-   * the cluster version is recent enough. This is the authoritative
-   * signal for whether Portainer can call the pod-restart endpoint, and
-   * is preferred over a raw Kubernetes-version comparison.
+   * The memory usage is the memory working set.
    */
-  supportsPodRestart?: boolean;
-};
-
-export type KubernetesDescribeResourceResponse = {
-  describe?: string;
-};
-
-export type KubernetesTlsInfo = {
-  hosts?: Array<string>;
-};
-
-export type KubernetesPublishedPort = {
-  IngressRules?: Array<KubernetesIngressRule>;
-  Port?: number;
-};
-
-export type KubernetesIngressRule = {
-  Host?: string;
-  IP?: string;
-  Path?: string;
-  TLS?: Array<KubernetesTlsInfo>;
-};
-
-export type KubernetesPod = {
-  ContainerName?: string;
-  CreationDate?: string;
-  Image?: string;
-  ImagePullPolicy?: string;
-  Name?: string;
-  NodeName?: string;
-  PodIP?: string;
-  Resource?: KubernetesK8sApplicationResource;
-  Status?: string;
-  Uid?: string;
-};
-
-export type KubernetesK8sApplicationResource = {
-  CpuLimit?: number;
-  CpuRequest?: number;
-  MemoryLimit?: number;
-  MemoryRequest?: number;
-};
-
-export type KubernetesMetadata = {
-  annotations?: {
-    [key: string]: string;
-  };
-  labels?: {
-    [key: string]: string;
-  };
+  usage?: V1ResourceList;
 };
 
-export type KubernetesKubernetesNodeResponse = {
+export type V1Beta1NodeMetrics = {
   /**
    * APIVersion defines the versioned schema of this representation of an object.
    * Servers should convert recognized schemas to the latest internal value, and
@@ -6994,1268 +13097,266 @@ export type KubernetesKubernetesNodeResponse = {
    */
   metadata?: V1ObjectMeta;
   /**
-   * Spec defines the behavior of a node.
-   * https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
-   * +optional
+   * The following fields define time interval from which metrics were
+   * collected from the interval [Timestamp-Window, Timestamp].
    */
-  spec?: V1NodeSpec;
+  timestamp?: string;
   /**
-   * Most recently observed status of the node.
-   * Populated by the system.
-   * Read-only.
-   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+   * The memory usage is the memory working set.
+   */
+  usage?: V1ResourceList;
+  window?: string;
+};
+
+export type V1Beta1NodeMetricsList = {
+  /**
+   * APIVersion defines the versioned schema of this representation of an object.
+   * Servers should convert recognized schemas to the latest internal value, and
+   * may reject unrecognized values.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
    * +optional
    */
-  status?: V1NodeStatus;
-};
-
-export type KubernetesK8sVolumeInfo = {
-  persistentVolume?: KubernetesK8sPersistentVolume;
-  persistentVolumeClaim?: KubernetesK8sPersistentVolumeClaim;
-  storageClass?: KubernetesK8sStorageClass;
-};
-
-export type KubernetesK8sStorageClass = {
-  allowVolumeExpansion?: boolean;
-  annotations?: {
-    [key: string]: string;
-  };
-  creationDate?: string;
-  isDefault?: boolean;
-  labels?: {
-    [key: string]: string;
-  };
-  mountOptions?: Array<string>;
-  name?: string;
-  parameters?: {
-    [key: string]: string;
-  };
-  provisioner?: string;
-  reclaimPolicy?: V1PersistentVolumeReclaimPolicy;
-};
-
-export type KubernetesCustomResourceMetadata = {
   apiVersion?: string;
-  kind?: string;
-  name?: string;
-  plural?: string;
-  scope?: string;
-};
-
-export type KubernetesConfiguration = {
-  ConfigurationOwner?: string;
-  Data?: {
-    [key: string]: unknown;
-  };
-  Kind?: string;
-};
-
-export type KubernetesK8sApplication = {
-  Annotations?: {
-    [key: string]: string;
-  };
-  ApplicationOwner?: string;
-  ApplicationType?: string;
-  Configurations?: Array<KubernetesConfiguration>;
-  Containers?: Array<unknown>;
-  CreationDate?: string;
-  CustomResourceMetadata?: KubernetesCustomResourceMetadata;
-  DeploymentType?: string;
-  Id?: string;
-  Image?: string;
-  Kind?: string;
-  Labels?: {
-    [key: string]: string;
-  };
-  LoadBalancerIPAddress?: string;
-  MatchLabels?: {
-    [key: string]: string;
-  };
-  Metadata?: KubernetesMetadata;
-  Name?: string;
-  Namespace?: string;
-  Pods?: Array<KubernetesPod>;
-  PublishedPorts?: Array<KubernetesPublishedPort>;
-  Resource?: KubernetesK8sApplicationResource;
-  ResourcePool?: string;
-  RunningPodsCount?: number;
-  ServiceId?: string;
-  ServiceName?: string;
-  ServiceType?: string;
-  StackId?: string;
-  StackKind?: string;
-  StackName?: string;
-  Status?: string;
-  TotalPodsCount?: number;
-  Uid?: string;
-};
-
-export type KubernetesK8sPersistentVolumeClaim = {
-  accessModes?: Array<string>;
-  allowVolumeExpansion?: boolean;
-  creationDate?: string;
-  humanReadableAccessModes?: Array<V1PersistentVolumeAccessMode>;
-  id?: string;
-  labels?: {
-    [key: string]: string;
-  };
-  name?: string;
-  namespace?: string;
-  owningApplications?: Array<KubernetesK8sApplication>;
-  phase?: V1PersistentVolumeClaimPhase;
-  resourcesRequests?: V1ResourceList;
-  storage?: number;
-  storageClass?: string;
-  storageRequest?: string;
-  volumeMode?: V1PersistentVolumeMode;
-  volumeName?: string;
-};
-
-export type KubernetesK8sPersistentVolume = {
-  accessModes?: Array<string>;
-  annotations?: {
-    [key: string]: string;
-  };
-  capacity?: V1ResourceList;
-  claimRef?: V1ObjectReference;
-  creationDate?: string;
-  csi?: V1CsiPersistentVolumeSource;
-  humanReadableAccessModes?: Array<V1PersistentVolumeAccessMode>;
-  labels?: {
-    [key: string]: string;
-  };
-  name?: string;
-  persistentVolumeReclaimPolicy?: V1PersistentVolumeReclaimPolicy;
-  status?: V1PersistentVolumePhase;
-  storageClassName?: string;
-  volumeMode?: V1PersistentVolumeMode;
-};
-
-export type KubernetesK8sVolumeDeleteRequest = {
-  name?: string;
-  namespace?: string;
-};
-
-export type KubernetesK8sServicePort = {
-  Name?: string;
-  NodePort?: number;
-  Port?: number;
-  Protocol?: string;
-  TargetPort?: string;
-};
-
-export type KubernetesK8sServiceIngress = {
-  Hostname?: string;
-  IP?: string;
-};
-
-export type KubernetesK8sServiceInfo = {
-  AllocateLoadBalancerNodePorts?: boolean;
-  Annotations?: {
-    [key: string]: string;
-  };
   /**
-   * serviceList screen
+   * List of node metrics.
    */
-  Applications?: Array<KubernetesK8sApplication>;
-  ClusterIPs?: Array<string>;
-  CreationDate?: string;
-  ExternalIPs?: Array<string>;
-  ExternalName?: string;
-  IngressStatus?: Array<KubernetesK8sServiceIngress>;
-  Labels?: {
-    [key: string]: string;
-  };
-  Name?: string;
-  Namespace?: string;
-  Ports?: Array<KubernetesK8sServicePort>;
-  Selector?: {
-    [key: string]: string;
-  };
-  Type?: string;
-  UID?: string;
-};
-
-export type KubernetesK8sServiceDeleteRequests = {
-  [key: string]: Array<string>;
-};
-
-export type KubernetesK8sServiceAccountImagePullSecretsUpdatePayload = {
-  secretNames?: Array<string>;
-};
-
-export type KubernetesK8sServiceAccountDeleteRequests = {
-  [key: string]: Array<string>;
-};
-
-export type KubernetesK8sServiceAccount = {
-  annotations?: {
-    [key: string]: string;
-  };
-  automountServiceAccountToken?: boolean;
-  creationDate?: string;
-  imagePullSecrets?: Array<V1LocalObjectReference>;
-  isSystem?: boolean;
-  labels?: {
-    [key: string]: string;
-  };
-  name?: string;
-  namespace?: string;
-  uid?: string;
-};
-
-export type KubernetesK8sSecret = {
-  Annotations?: {
-    [key: string]: string;
-  };
-  ConfigurationOwner?: string;
-  ConfigurationOwnerId?: string;
-  ConfigurationOwners?: Array<KubernetesK8sConfigurationOwnerResource>;
-  CreationDate?: string;
-  Data?: {
-    [key: string]: string;
-  };
-  IsUsed?: boolean;
-  Labels?: {
-    [key: string]: string;
-  };
-  Name?: string;
-  Namespace?: string;
-  SecretType?: string;
-  UID?: string;
-};
-
-export type KubernetesK8sConfigurationOwnerResource = {
-  Id?: string;
-  Name?: string;
-  ResourceKind?: string;
-};
-
-export type KubernetesK8sRoleDeleteRequests = {
-  [key: string]: Array<string>;
-};
-
-export type KubernetesK8sRoleBindingDeleteRequests = {
-  [key: string]: Array<string>;
-};
-
-export type KubernetesK8sRoleBinding = {
-  creationDate?: string;
-  isSystem?: boolean;
-  name?: string;
-  namespace?: string;
-  roleRef?: V1RoleRef;
-  subjects?: Array<K8sIoApiRbacV1Subject>;
-  uid?: string;
-};
-
-export type K8sIoApiRbacV1Subject = {
+  items?: Array<V1Beta1NodeMetrics>;
   /**
-   * APIGroup holds the API group of the referenced subject.
-   * Defaults to "" for ServiceAccount subjects.
-   * Defaults to "rbac.authorization.k8s.io" for User and Group subjects.
+   * Kind is a string value representing the REST resource this object represents.
+   * Servers may infer this from the endpoint the client submits requests to.
+   * Cannot be updated.
+   * In CamelCase.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
    * +optional
    */
-  apiGroup?: string;
-  /**
-   * Kind of object being referenced. Values defined by this API group are "User", "Group", and "ServiceAccount".
-   * If the Authorizer does not recognized the kind value, the Authorizer should report an error.
-   */
   kind?: string;
   /**
-   * Name of the object being referenced.
-   * +required
-   * +k8s:required
+   * Standard list metadata.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
    */
-  name?: string;
+  metadata?: V1ListMeta;
+};
+
+export type V1Beta1PodMetrics = {
   /**
-   * Namespace of the referenced object.  If the object kind is non-namespace, such as "User" or "Group", and this value is not empty
-   * the Authorizer should report an error.
+   * APIVersion defines the versioned schema of this representation of an object.
+   * Servers should convert recognized schemas to the latest internal value, and
+   * may reject unrecognized values.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
    * +optional
    */
-  namespace?: string;
-};
-
-export type KubernetesK8sRole = {
-  creationDate?: string;
+  apiVersion?: string;
   /**
-   * isSystem is true if prefixed with "system:" or exists in the kube-system namespace
-   * or is one of the portainer roles
+   * Metrics for all containers are collected within the same time window.
+   * +listType=atomic
    */
-  isSystem?: boolean;
-  name?: string;
-  namespace?: string;
-  uid?: string;
-};
-
-export type KubernetesK8sResourceQuota = {
-  cpu?: string;
-  enabled?: boolean;
-  memory?: string;
-};
-
-export type KubernetesK8sPvReclaimPolicyRequest = {
-  name?: string;
-  reclaimPolicy?: V1PersistentVolumeReclaimPolicy;
-};
-
-export type KubernetesK8sPvcResizeRequest = {
-  name?: string;
-  namespace?: string;
-  newSize?: string;
-};
-
-export type KubernetesK8sNamespaceDetails = {
-  Annotations?: {
-    [key: string]: string;
-  };
-  Name?: string;
-  Owner?: string;
-  ResourceQuota?: KubernetesK8sResourceQuota;
-};
-
-export type KubernetesK8sJobDeleteRequests = {
-  [key: string]: Array<string>;
-};
-
-export type KubernetesK8sJob = {
-  BackoffLimit?: number;
-  Command?: string;
-  Completions?: number;
-  Container?: V1Container;
-  Duration?: string;
-  FailedReason?: string;
-  FinishTime?: string;
-  Id?: string;
-  IsSystem?: boolean;
-  Name?: string;
-  Namespace?: string;
-  PodName?: string;
-  StartTime?: string;
-  Status?: string;
-};
-
-export type KubernetesK8sIngressTls = {
-  Hosts?: Array<string>;
-  SecretName?: string;
-};
-
-export type KubernetesK8sIngressPath = {
-  HasService?: boolean;
-  Host?: string;
-  IngressName?: string;
-  Path?: string;
-  PathType?: string;
-  Port?: number;
-  ServiceName?: string;
-};
-
-export type KubernetesK8sIngressInfo = {
-  Annotations?: {
-    [key: string]: string;
-  };
-  ClassName?: string;
-  CreationDate?: string;
-  Hosts?: Array<string>;
-  Labels?: {
-    [key: string]: string;
-  };
-  Name?: string;
-  Namespace?: string;
-  Paths?: Array<KubernetesK8sIngressPath>;
-  TLS?: Array<KubernetesK8sIngressTls>;
-  Type?: string;
-  UID?: string;
-};
-
-export type KubernetesK8sIngressDeleteRequests = {
-  [key: string]: Array<string>;
-};
-
-export type KubernetesK8sIngressController = {
-  Availability?: boolean;
-  ClassName?: string;
-  Name?: string;
-  New?: boolean;
-  Type?: string;
-  Used?: boolean;
-};
-
-export type KubernetesK8sEventInvolvedObject = {
+  containers?: Array<V1Beta1ContainerMetrics>;
+  /**
+   * Kind is a string value representing the REST resource this object represents.
+   * Servers may infer this from the endpoint the client submits requests to.
+   * Cannot be updated.
+   * In CamelCase.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
+   */
   kind?: string;
-  name?: string;
-  namespace?: string;
-  uid?: string;
+  /**
+   * Standard object's metadata.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+   * +optional
+   */
+  metadata?: V1ObjectMeta;
+  /**
+   * The following fields define time interval from which metrics were
+   * collected from the interval [Timestamp-Window, Timestamp].
+   */
+  timestamp?: string;
+  window?: string;
 };
 
-export type KubernetesK8sEvent = {
-  count?: number;
-  eventTime?: string;
-  firstTimestamp?: string;
-  involvedObject?: KubernetesK8sEventInvolvedObject;
+export type V1Beta1PodMetricsList = {
+  /**
+   * APIVersion defines the versioned schema of this representation of an object.
+   * Servers should convert recognized schemas to the latest internal value, and
+   * may reject unrecognized values.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+   * +optional
+   */
+  apiVersion?: string;
+  /**
+   * List of pod metrics.
+   */
+  items?: Array<V1Beta1PodMetrics>;
+  /**
+   * Kind is a string value representing the REST resource this object represents.
+   * Servers may infer this from the endpoint the client submits requests to.
+   * Cannot be updated.
+   * In CamelCase.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   * +optional
+   */
   kind?: string;
-  lastTimestamp?: string;
-  message?: string;
-  name?: string;
-  namespace?: string;
-  reason?: string;
-  type?: string;
-  uid?: string;
+  /**
+   * Standard list metadata.
+   * More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+   */
+  metadata?: V1ListMeta;
 };
 
-export type KubernetesK8sDashboard = {
-  applicationsCount?: number;
-  configMapsCount?: number;
-  ingressesCount?: number;
-  namespacesCount?: number;
-  secretsCount?: number;
-  servicesCount?: number;
-  volumesCount?: number;
-};
-
-export type KubernetesK8sCronJobDeleteRequests = {
-  [key: string]: Array<string>;
-};
-
-export type KubernetesK8sCronJob = {
-  Command?: string;
-  Id?: string;
-  IsSystem?: boolean;
-  Jobs?: Array<KubernetesK8sJob>;
-  Name?: string;
-  Namespace?: string;
-  Schedule?: string;
-  Suspend?: boolean;
-  Timezone?: string;
-};
-
-export type KubernetesK8sConfigMap = {
-  Annotations?: {
-    [key: string]: string;
-  };
-  ConfigurationOwner?: string;
-  ConfigurationOwnerId?: string;
-  ConfigurationOwners?: Array<KubernetesK8sConfigurationOwnerResource>;
-  CreationDate?: string;
-  Data?: {
-    [key: string]: string;
-  };
-  IsUsed?: boolean;
-  Labels?: {
-    [key: string]: string;
-  };
-  Name?: string;
-  Namespace?: string;
-  UID?: string;
-};
-
-export type KubernetesK8sClusterRoleBinding = {
-  creationDate?: string;
-  isSystem?: boolean;
-  name?: string;
-  namespace?: string;
-  roleRef?: V1RoleRef;
-  subjects?: Array<K8sIoApiRbacV1Subject>;
-  uid?: string;
-};
-
-export type KubernetesK8sClusterRole = {
-  creationDate?: string;
-  isSystem?: boolean;
-  name?: string;
-  uid?: string;
-};
-
-export type ImagesImageResponse = {
-  created?: number;
-  id?: string;
-  nodeName?: string;
-  size?: number;
-  tags?: Array<string>;
-  /**
-   * Used is true if the image is used by at least one container
-   * supplied only when withUsage is true
-   */
-  used?: boolean;
-};
-
-export type HelmInstallChartPayload = {
-  atomic?: boolean;
-  chart?: string;
-  name?: string;
-  namespace?: string;
-  repo?: string;
-  values?: string;
-  version?: string;
-};
-
-export type GitopsRepositoryFilePreviewPayload = {
-  /**
-   * Password for git authentication.
-   * Deprecated: use SourceID instead
-   */
-  password?: string;
-  reference?: string;
-  /**
-   * URL of a Git repository to preview.
-   * Deprecated: use SourceID instead
-   */
-  repository?: string;
-  /**
-   * SourceID resolves URL and auth from the stored Source record.
-   * When set, the inline Repository/Username/Password/TLSSkipVerify fields are ignored.
-   */
-  sourceID?: number;
-  /**
-   * Path to file whose content will be read
-   */
-  targetFile?: string;
-  /**
-   * TLSSkipVerify skips SSL verification when cloning the Git repository.
-   * Deprecated: use SourceID instead
-   */
-  tlsSkipVerify?: boolean;
-  /**
-   * Username for git authentication.
-   * Deprecated: use SourceID instead
-   */
-  username?: string;
-};
-
-export type GitopsFileResponse = {
-  FileContent?: string;
-};
-
-export type EndpointsRegistryAccessPayload = {
-  Namespaces?: Array<string>;
-  TeamAccessPolicies?: PortainerTeamAccessPolicies;
-  UserAccessPolicies?: PortainerUserAccessPolicies;
-};
-
-export type EndpointsPlatformCounts = {
-  azure?: number;
-  docker?: number;
-  kubernetes?: number;
-  podman?: number;
-};
-
-export type EndpointsHealthCounts = {
-  down?: number;
-  heartbeat?: number;
-  outdated?: number;
-  up?: number;
-};
-
-export type EndpointsGroupCount = {
-  count?: number;
-  groupID?: number;
-  groupName?: string;
-};
-
-export type EndpointsForceUpdateServicePayload = {
-  /**
-   * PullImage if true will pull the image
-   */
-  PullImage?: boolean;
-  /**
-   * ServiceId to update
-   */
-  ServiceID?: string;
-};
-
-export type EndpointsEndpointUpdateRelationsPayload = {
-  Relations?: {
-    [key: string]: {
-      EdgeGroups?: Array<number>;
-      Group?: number;
-      Tags?: Array<number>;
-    };
-  };
-};
-
-export type EndpointsEndpointUpdatePayload = {
-  /**
-   * Azure application ID
-   */
-  AzureApplicationID?: string;
-  /**
-   * Azure authentication key
-   */
-  AzureAuthenticationKey?: string;
-  /**
-   * Azure tenant ID
-   */
-  AzureTenantID?: string;
-  /**
-   * The check in interval for edge agent (in seconds)
-   */
-  EdgeCheckinInterval?: number;
-  /**
-   * GPUs information
-   */
-  Gpus?: Array<PortainerPair>;
-  /**
-   * Group identifier
-   */
-  GroupID?: number;
-  /**
-   * Associated Kubernetes data
-   */
-  Kubernetes?: PortainerKubernetesData;
-  /**
-   * Name that will be used to identify this environment(endpoint)
-   */
-  Name?: string;
-  /**
-   * URL or IP address where exposed containers will be reachable.\
-   * Defaults to URL if not specified
-   */
-  PublicURL?: string;
-  /**
-   * The status of the environment(endpoint) (1 - up, 2 - down)
-   */
-  Status?: number;
-  /**
-   * Require TLS to connect against this environment(endpoint)
-   */
-  TLS?: boolean;
-  /**
-   * Skip client verification when using TLS
-   */
-  TLSSkipClientVerify?: boolean;
-  /**
-   * Skip server verification when using TLS
-   */
-  TLSSkipVerify?: boolean;
-  /**
-   * List of tag identifiers to which this environment(endpoint) is associated
-   */
-  TagIDs?: Array<number>;
-  TeamAccessPolicies?: PortainerTeamAccessPolicies;
-  /**
-   * URL or IP address of a Docker host
-   */
-  URL?: string;
-  UserAccessPolicies?: PortainerUserAccessPolicies;
-};
-
-export type EndpointsEndpointSettingsUpdatePayload = {
-  /**
-   * Whether non-administrator should be able to use bind mounts when creating containers
-   */
-  allowBindMountsForRegularUsers?: boolean;
-  /**
-   * Whether non-administrator should be able to use container capabilities
-   */
-  allowContainerCapabilitiesForRegularUsers?: boolean;
-  /**
-   * Whether non-administrator should be able to use device mapping
-   */
-  allowDeviceMappingForRegularUsers?: boolean;
-  /**
-   * Whether non-administrator should be able to use the host pid
-   */
-  allowHostNamespaceForRegularUsers?: boolean;
-  /**
-   * Whether non-administrator should be able to use privileged mode when creating containers
-   */
-  allowPrivilegedModeForRegularUsers?: boolean;
-  /**
-   * Whether non-administrator should be able to use security-opt settings
-   */
-  allowSecurityOptForRegularUsers?: boolean;
-  /**
-   * Whether non-administrator should be able to manage stacks
-   */
-  allowStackManagementForRegularUsers?: boolean;
-  /**
-   * Whether non-administrator should be able to use sysctl settings
-   */
-  allowSysctlSettingForRegularUsers?: boolean;
-  /**
-   * Whether non-administrator should be able to browse volumes
-   */
-  allowVolumeBrowserForRegularUsers?: boolean;
-  enableGPUManagement?: boolean;
-  /**
-   * Whether host management features are enabled
-   */
-  enableHostManagementFeatures?: boolean;
-  gpus?: Array<PortainerPair>;
-};
-
-export type EndpointsEndpointDeleteRequest = {
-  deleteCluster?: boolean;
-  id?: number;
-};
-
-export type EndpointsEndpointDeleteBatchPayload = {
-  endpoints?: Array<EndpointsEndpointDeleteRequest>;
-};
-
-export type EndpointsEndpointDeleteBatchPartialResponse = {
-  deleted?: Array<number>;
-  errors?: Array<number>;
-};
-
-export type EndpointsEndpointCreateGlobalKeyResponse = {
-  endpointID?: number;
-};
-
-export type EndpointsDockerhubStatusResponse = {
-  /**
-   * Daily limit
-   */
-  limit?: number;
-  /**
-   * Remaiming images to pull
-   */
-  remaining?: number;
-};
-
-export type EndpointsEnvironmentSummaryCountsResponse = {
-  byGroup?: Array<EndpointsGroupCount>;
-  byHealth?: EndpointsHealthCounts;
-  byPlatformType?: EndpointsPlatformCounts;
-  down?: number;
-  outdated?: number;
-  total?: number;
-  unassigned?: number;
-  up?: number;
-};
-
-export type EndpointgroupsEndpointGroupUpdatePayload = {
-  /**
-   * List of environment(endpoint) identifiers that will be part of this group
-   */
-  AssociatedEndpoints?: Array<number>;
-  /**
-   * Environment(Endpoint) group description
-   */
-  Description?: string;
-  /**
-   * Environment(Endpoint) group name
-   */
-  Name?: string;
-  /**
-   * List of tag identifiers associated to the environment(endpoint) group
-   */
-  TagIDs?: Array<number>;
-  TeamAccessPolicies?: PortainerTeamAccessPolicies;
-  UserAccessPolicies?: PortainerUserAccessPolicies;
-};
-
-export type EndpointgroupsEndpointGroupCreatePayload = {
-  /**
-   * List of environment(endpoint) identifiers that will be part of this group
-   */
-  AssociatedEndpoints?: Array<number>;
-  /**
-   * Environment(Endpoint) group description
-   */
-  Description?: string;
-  /**
-   * Environment(Endpoint) group name
-   */
-  Name: string;
-  /**
-   * List of tag identifiers to which this environment(endpoint) group is associated
-   */
-  TagIDs?: Array<number>;
-};
-
-export type EndpointgroupsEndpointGroupTypeInfo = {
-  Docker: number;
-  Kubernetes: number;
-  Mixed: boolean;
-  Podman: number;
-};
-
-export type EndpointgroupsEndpointGroupResponse = {
-  /**
-   * Description associated to the environment(endpoint) group
-   */
-  Description: string;
-  /**
-   * Environment(Endpoint) group Identifier
-   */
-  Id: number;
-  /**
-   * Environment(Endpoint) group name
-   */
-  Name: string;
-  /**
-   * List of tags associated to this environment(endpoint) group
-   */
-  TagIds?: Array<number>;
-  TeamAccessPolicies?: PortainerTeamAccessPolicies;
-  Total?: number;
-  TypeInfo?: EndpointgroupsEndpointGroupTypeInfo;
-  UserAccessPolicies?: PortainerUserAccessPolicies;
-};
-
-export type EdgestacksUpdateStatusPayload = {
+export type WebhooksWebhookCreatePayload = {
   EndpointID?: number;
-  Error?: string;
-  Status?: PortainerEdgeStackStatusType;
-  Time?: number;
-  Version?: number;
+  RegistryID?: number;
+  ResourceID?: string;
+  /**
+   * Type of webhook (1 - service)
+   */
+  WebhookType?: PortainerWebhookType;
 };
 
-export type EdgestacksUpdateEdgeStackPayload = {
-  DeploymentType?: PortainerEdgeStackDeploymentType;
-  EdgeGroups?: Array<number>;
-  StackFileContent?: string;
-  UpdateVersion?: boolean;
-  /**
-   * Uses the manifest's namespaces instead of the default one
-   */
-  UseManifestNamespaces?: boolean;
+export type WebhooksWebhookUpdatePayload = {
+  RegistryID?: number;
 };
 
-export type EdgestacksStackFileResponse = {
-  StackFileContent?: string;
+export type WorkflowsArtifactDetail = {
+  autoUpdate?: PortainerAutoUpdateSettings;
+  creationDate?: number;
+  files?: Array<WorkflowsArtifactFileDetail>;
+  id: number;
+  lastSyncDate?: number;
+  name: string;
+  platform?: WorkflowsDeploymentPlatform;
+  status?: WorkflowsWorkflowStatusObject;
+  target?: WorkflowsTarget;
+  type: WorkflowsType;
 };
 
-export type EdgestacksEdgeStackFromStringPayload = {
-  /**
-   * Deployment type to deploy this stack
-   * Valid values are: 0 - 'compose', 1 - 'kubernetes'
-   * compose is enabled only for docker environments
-   * kubernetes is enabled only for kubernetes environments
-   */
-  DeploymentType?: 0 | 1 | 2;
-  /**
-   * List of identifiers of EdgeGroups
-   */
-  EdgeGroups?: Array<number>;
-  /**
-   * Name of the stack
-   * Max length: 255
-   * Name must only contains lowercase characters, numbers, hyphens, or underscores
-   * Name must start with a lowercase character or number
-   * Example: stack-name or stack_123 or stackName
-   */
-  Name: string;
-  /**
-   * List of Registries to use for this stack
-   */
-  Registries?: Array<number>;
-  /**
-   * Content of the Stack file
-   */
-  StackFileContent: string;
-  /**
-   * Uses the manifest's namespaces instead of the default one
-   */
-  UseManifestNamespaces?: boolean;
+export type WorkflowsArtifactFileDetail = {
+  hash?: string;
+  path?: string;
+  pathError?: string;
+  pathStatus?: SourcesStatus;
+  ref?: string;
+  refError?: string;
+  refStatus?: SourcesStatus;
+  sourceId?: number;
 };
 
-export type EdgestacksEdgeStackFromGitRepositoryPayload = {
+export const WorkflowsDeploymentPlatform = {
   /**
-   * Deployment type to deploy this stack
-   * Valid values are: 0 - 'compose', 1 - 'kubernetes'
-   * compose is enabled only for docker environments
-   * kubernetes is enabled only for kubernetes environments
+   * DeploymentPlatformDockerStandalone
    */
-  DeploymentType?: 0 | 1 | 2;
+  DEPLOYMENT_PLATFORM_DOCKER_STANDALONE: 'dockerStandalone',
   /**
-   * List of identifiers of EdgeGroups
+   * DeploymentPlatformDockerSwarm
    */
-  EdgeGroups: Array<number>;
+  DEPLOYMENT_PLATFORM_DOCKER_SWARM: 'dockerSwarm',
   /**
-   * Path to the Stack file inside the Git repository
+   * DeploymentPlatformKubernetes
    */
-  FilePathInRepository?: string;
+  DEPLOYMENT_PLATFORM_KUBERNETES: 'kubernetes',
+} as const;
+
+export type WorkflowsDeploymentPlatform =
+  (typeof WorkflowsDeploymentPlatform)[keyof typeof WorkflowsDeploymentPlatform];
+
+export const WorkflowsStatus = {
   /**
-   * Name of the stack
-   * Max length: 255
-   * Name must only contains lowercase characters, numbers, hyphens, or underscores
-   * Name must start with a lowercase character or number
-   * Example: stack-name or stack_123 or stackName
+   * StatusHealthy
    */
-  Name: string;
+  STATUS_HEALTHY: 'healthy',
   /**
-   * List of Registries to use for this stack
+   * StatusSyncing
    */
-  Registries?: Array<number>;
+  STATUS_SYNCING: 'syncing',
   /**
-   * Deprecated: Use SourceID instead. Use basic authentication to clone the Git repository.
+   * StatusError
    */
-  RepositoryAuthentication?: boolean;
+  STATUS_ERROR: 'error',
   /**
-   * Deprecated: Use SourceID instead. Password used in basic authentication.
+   * StatusPaused
    */
-  RepositoryPassword?: string;
+  STATUS_PAUSED: 'paused',
   /**
-   * Reference name of a Git repository hosting the Stack file
+   * StatusUnknown
    */
-  RepositoryReferenceName?: string;
-  /**
-   * Deprecated: Use SourceID instead. URL of a Git repository hosting the Stack file.
-   */
-  RepositoryURL?: string;
-  /**
-   * Deprecated: Use SourceID instead. Username used in basic authentication.
-   */
-  RepositoryUsername?: string;
-  /**
-   * SourceID references an existing Source for git credentials/URL.
-   * When set, the inline URL and authentication fields are ignored.
-   */
-  SourceID?: number;
-  /**
-   * Deprecated: Use SourceID instead. TLSSkipVerify skips SSL verification when cloning the Git repository.
-   */
-  TLSSkipVerify?: boolean;
-  /**
-   * Uses the manifest's namespaces instead of the default one
-   */
-  UseManifestNamespaces?: boolean;
+  STATUS_UNKNOWN: 'unknown',
+} as const;
+
+export type WorkflowsStatus =
+  (typeof WorkflowsStatus)[keyof typeof WorkflowsStatus];
+
+export type WorkflowsStatusSummary = {
+  error?: number;
+  healthy?: number;
+  paused?: number;
+  syncing?: number;
+  unknown?: number;
 };
 
-export type EdgejobsTaskContainer = {
-  EndpointId?: number;
-  EndpointName?: string;
-  Id?: string;
-  LogsStatus?: PortainerEdgeJobLogsStatus;
+export type WorkflowsTarget = {
+  edgeGroupIds?: Array<number>;
+  endpointId?: number;
+  groupStatus?: {
+    [key: string]: WorkflowsStatus;
+  };
+  namespace?: string;
+  resolvedEndpointIds?: Array<number>;
 };
 
-export type EdgejobsFileResponse = {
-  FileContent?: string;
+export const WorkflowsType = {
+  /**
+   * TypeStack
+   */
+  TYPE_STACK: 'stack' /**
+   * TypeEdgeStack
+   */,
+  TYPE_EDGE_STACK: 'edgeStack',
+} as const;
+
+export type WorkflowsType = (typeof WorkflowsType)[keyof typeof WorkflowsType];
+
+export type WorkflowsWorkflow = {
+  artifacts?: Array<WorkflowsArtifactDetail>;
+  creationDate?: number;
+  id: number;
+  lastSyncDate?: number;
+  name: string;
+  status: WorkflowsWorkflowStatusObject;
 };
 
-export type EdgejobsEdgeJobUpdatePayload = {
-  CronExpression?: string;
-  EdgeGroups?: Array<number>;
-  Endpoints?: Array<number>;
-  FileContent?: string;
-  Name?: string;
-  Recurring?: boolean;
+export type WorkflowsWorkflowPhaseStatus = {
+  error?: string;
+  status?: WorkflowsStatus;
 };
 
-export type EdgejobsEdgeJobFileResponse = {
-  FileContent?: string;
+export type WorkflowsWorkflowStatusObject = {
+  artifact?: WorkflowsWorkflowPhaseStatus;
+  source?: WorkflowsWorkflowPhaseStatus;
+  target?: WorkflowsWorkflowPhaseStatus;
 };
 
-export type EdgejobsEdgeJobCreateFromFileContentPayload = {
-  CronExpression?: string;
-  EdgeGroups?: Array<number>;
-  Endpoints?: Array<number>;
-  FileContent?: string;
-  Name?: string;
-  Recurring?: boolean;
-};
-
-export type EdgegroupsEdgeGroupUpdatePayload = {
-  Dynamic?: boolean;
-  Endpoints?: Array<number>;
-  Name?: string;
-  PartialMatch?: boolean;
-  TagIDs?: Array<number>;
-};
-
-export type EdgegroupsEdgeGroupCreatePayload = {
-  Dynamic?: boolean;
-  Endpoints?: Array<number>;
-  Name?: string;
-  PartialMatch?: boolean;
-  TagIDs?: Array<number>;
-};
-
-export type EdgegroupsDecoratedEdgeGroup = {
-  Dynamic?: boolean;
-  /**
-   * Shadow to avoid exposing in the API
-   */
-  EndpointIds?: number;
-  EndpointTypes?: Array<PortainerEndpointType>;
-  /**
-   * Deprecated: only used for API responses
-   */
-  Endpoints?: Array<number>;
-  HasEdgeJob?: boolean;
-  HasEdgeStack?: boolean;
-  /**
-   * EdgeGroup Identifier
-   */
-  Id?: number;
-  Name?: string;
-  PartialMatch?: boolean;
-  TagIds?: Array<number>;
-  TrustedEndpoints?: Array<number>;
-};
-
-export type DockerImagesCounters = {
-  size?: number;
-  total?: number;
-};
-
-export type DockerDashboardResponse = {
-  containers?: StatsContainerStats;
-  images?: DockerImagesCounters;
-  networks?: number;
-  services?: number;
-  stacks?: number;
-  volumes?: number;
-};
-
-export type CustomtemplatesFileResponse = {
-  FileContent?: string;
-};
-
-export type CustomtemplatesCustomTemplateUpdatePayload = {
-  /**
-   * Path to the Stack file inside the Git repository
-   */
-  ComposeFilePathInRepository?: string;
-  /**
-   * Description of the template
-   */
-  Description: string;
-  /**
-   * EdgeTemplate indicates if this template purpose for Edge Stack
-   */
-  EdgeTemplate?: boolean;
-  /**
-   * Content of stack file
-   */
-  FileContent: string;
-  /**
-   * IsComposeFormat indicates if the Kubernetes template is created from a Docker Compose file
-   */
-  IsComposeFormat?: boolean;
-  /**
-   * URL of the template's logo
-   */
-  Logo?: string;
-  /**
-   * A note that will be displayed in the UI. Supports HTML content
-   */
-  Note?: string;
-  /**
-   * Platform associated to the template.
-   * Valid values are: 1 - 'linux', 2 - 'windows'
-   * Required for Docker stacks
-   */
-  Platform?: 1 | 2;
-  /**
-   * Deprecated: use SourceID instead. Use authentication to clone the Git repository.
-   */
-  RepositoryAuthentication?: boolean;
-  /**
-   * Deprecated: use SourceID instead. Password used in basic authentication or token used in token authentication. Required when RepositoryAuthentication is true.
-   */
-  RepositoryPassword?: string;
-  /**
-   * Reference name of a Git repository hosting the Stack file
-   */
-  RepositoryReferenceName?: string;
-  /**
-   * Deprecated: use SourceID instead. URL of a Git repository hosting the Stack file.
-   */
-  RepositoryURL?: string;
-  /**
-   * Deprecated: use SourceID instead. Username used in basic authentication. Required when RepositoryAuthentication is true.
-   */
-  RepositoryUsername?: string;
-  /**
-   * SourceID references an existing Source for git credentials/URL.
-   * When set, the inline URL and authentication fields are ignored.
-   */
-  SourceID?: number;
-  /**
-   * Deprecated: use SourceID instead. TLSSkipVerify skips SSL verification when cloning the Git repository.
-   */
-  TLSSkipVerify?: boolean;
-  /**
-   * Title of the template
-   */
-  Title: string;
-  /**
-   * Type of created stack (1 - swarm, 2 - compose, 3 - kubernetes)
-   */
-  Type: 1 | 2 | 3;
-  /**
-   * Definitions of variables in the stack file
-   */
-  Variables?: Array<PortainerCustomTemplateVariableDefinition>;
-};
-
-export type CustomtemplatesCustomTemplateFromGitRepositoryPayload = {
-  /**
-   * Path to the Stack file inside the Git repository
-   */
-  ComposeFilePathInRepository?: string;
-  /**
-   * Description of the template
-   */
-  Description: string;
-  /**
-   * EdgeTemplate indicates if this template purpose for Edge Stack
-   */
-  EdgeTemplate?: boolean;
-  /**
-   * IsComposeFormat indicates if the Kubernetes template is created from a Docker Compose file
-   */
-  IsComposeFormat?: boolean;
-  /**
-   * URL of the template's logo
-   */
-  Logo?: string;
-  /**
-   * A note that will be displayed in the UI. Supports HTML content
-   */
-  Note?: string;
-  /**
-   * Platform associated to the template.
-   * Valid values are: 1 - 'linux', 2 - 'windows'
-   * Required for Docker stacks
-   */
-  Platform?: 1 | 2;
-  /**
-   * Deprecated: use SourceID instead. Use basic authentication to clone the Git repository.
-   */
-  RepositoryAuthentication?: boolean;
-  /**
-   * Deprecated: use SourceID instead. Password used in basic authentication. Required when RepositoryAuthentication is true.
-   */
-  RepositoryPassword?: string;
-  /**
-   * Reference name of a Git repository hosting the Stack file
-   */
-  RepositoryReferenceName?: string;
-  /**
-   * Deprecated: use SourceID instead. URL of a Git repository hosting the Stack file.
-   */
-  RepositoryURL?: string;
-  /**
-   * Deprecated: use SourceID instead. Username used in basic authentication. Required when RepositoryAuthentication is true.
-   */
-  RepositoryUsername?: string;
-  /**
-   * SourceID references an existing Source for git credentials/URL.
-   * When set, the inline URL and authentication fields are ignored.
-   */
-  SourceID: number;
-  /**
-   * Deprecated: use SourceID instead. TLSSkipVerify skips SSL verification when cloning the Git repository.
-   */
-  TLSSkipVerify?: boolean;
-  /**
-   * Title of the template
-   */
-  Title: string;
-  /**
-   * Type of created stack:
-   * * 1 - swarm
-   * * 2 - compose
-   * * 3 - kubernetes
-   */
-  Type: 1 | 2;
-  /**
-   * Definitions of variables in the stack file
-   */
-  Variables?: Array<PortainerCustomTemplateVariableDefinition>;
-};
-
-export type CustomtemplatesCustomTemplateFromFileContentPayload = {
-  /**
-   * Description of the template
-   */
-  Description: string;
-  /**
-   * EdgeTemplate indicates if this template purpose for Edge Stack
-   */
-  EdgeTemplate?: boolean;
-  /**
-   * Content of stack file
-   */
-  FileContent: string;
-  /**
-   * URL of the template's logo
-   */
-  Logo?: string;
-  /**
-   * A note that will be displayed in the UI. Supports HTML content
-   */
-  Note?: string;
-  /**
-   * Platform associated to the template.
-   * Valid values are: 1 - 'linux', 2 - 'windows'
-   * Required for Docker stacks
-   */
-  Platform?: 1 | 2;
-  /**
-   * Title of the template
-   */
-  Title: string;
-  /**
-   * Type of created stack:
-   * * 1 - swarm
-   * * 2 - compose
-   * * 3 - kubernetes
-   */
-  Type: 1 | 2 | 3;
-  /**
-   * Definitions of variables in the stack file
-   */
-  Variables?: Array<PortainerCustomTemplateVariableDefinition>;
-};
-
-export type ContainersContainerGpusResponse = {
-  gpus?: string;
-};
-
-export type BackupRestorePayload = {
-  FileContent?: Array<number>;
-  FileName?: string;
-  Password?: string;
-};
-
-export type BackupBackupPayload = {
-  Password?: string;
-};
-
-export type AuthOauthPayload = {
-  /**
-   * OAuth code returned from OAuth Provided
-   */
-  Code?: string;
-};
-
-export type AuthAuthenticateResponse = {
-  /**
-   * JWT token used to authenticate against the API
-   */
-  jwt?: string;
-};
-
-export type AuthAuthenticatePayload = {
-  /**
-   * Password
-   */
-  Password: string;
-  /**
-   * Username
-   */
-  Username: string;
-};
-
-export type KubernetesK8sServiceInfo2 = KubernetesK8sServiceInfo;
-
-export type KubernetesK8sIngressInfo2 = KubernetesK8sIngressInfo;
-
-export type KubernetesK8sNamespaceDetails2 = KubernetesK8sNamespaceDetails;
-
-export type EndpointsEndpointDeleteBatchPayload2 =
-  EndpointsEndpointDeleteBatchPayload;
+export type KubernetesK8sDeploymentWriteRequest2 =
+  KubernetesK8sDeploymentWriteRequest;
 
 /**
  * Ingress controllers
  */
 export type KubernetesK8sIngressControllerArray =
   Array<KubernetesK8sIngressController>;
+
+export type EndpointsEndpointDeleteBatchPayload2 =
+  EndpointsEndpointDeleteBatchPayload;
+
+export type KubernetesK8sNamespaceDetails2 = KubernetesK8sNamespaceDetails;
+
+export type KubernetesK8sConfigMapWriteRequest2 =
+  KubernetesK8sConfigMapWriteRequest;
+
+export type KubernetesK8sIngressInfo2 = KubernetesK8sIngressInfo;
+
+export type KubernetesK8sSecretWriteRequest2 = KubernetesK8sSecretWriteRequest;
+
+export type KubernetesK8sServiceInfo2 = KubernetesK8sServiceInfo;
 
 export type AuthenticateUserData = {
   /**
@@ -8915,7 +14016,7 @@ export type EdgeGroupDeleteData = {
 
 export type EdgeGroupDeleteErrors = {
   /**
-   * Edge group is in use by an Edge stack or Edge job
+   * Edge group is in use by an Edge stack, Edge job or Workflow
    */
   409: unknown;
   /**
@@ -11594,6 +16695,47 @@ export type GitOpsSourcesTestByIdResponses = {
 export type GitOpsSourcesTestByIdResponse =
   GitOpsSourcesTestByIdResponses[keyof GitOpsSourcesTestByIdResponses];
 
+export type GitOpsSourceWorkflowsListData = {
+  body?: never;
+  path: {
+    /**
+     * Source identifier
+     */
+    id: number;
+  };
+  query?: never;
+  url: '/gitops/sources/{id}/workflows';
+};
+
+export type GitOpsSourceWorkflowsListErrors = {
+  /**
+   * Invalid request
+   */
+  400: unknown;
+  /**
+   * Access denied
+   */
+  403: unknown;
+  /**
+   * Source not found
+   */
+  404: unknown;
+  /**
+   * Server error
+   */
+  500: unknown;
+};
+
+export type GitOpsSourceWorkflowsListResponses = {
+  /**
+   * OK
+   */
+  200: Array<SourcesWorkflow>;
+};
+
+export type GitOpsSourceWorkflowsListResponse =
+  GitOpsSourceWorkflowsListResponses[keyof GitOpsSourceWorkflowsListResponses];
+
 export type GitOpsSourcesCreateGitData = {
   /**
    * Git source details
@@ -11701,17 +16843,17 @@ export type GitOpsWorkflowsListData = {
   path?: never;
   query?: {
     /**
-     * Search term (matches name or repository URL)
+     * Search term (matches workflow name)
      */
     search?: string;
     /**
-     * Sort field: name | type | status | creationDate | lastSyncDate
+     * Sort field
      */
-    sort?: string;
+    sort?: 'name' | 'status' | 'creationDate' | 'lastSyncDate';
     /**
-     * Sort order: asc or desc
+     * Sort order
      */
-    order?: string;
+    order?: 'asc' | 'desc';
     /**
      * Pagination start index
      */
@@ -11725,22 +16867,26 @@ export type GitOpsWorkflowsListData = {
      */
     endpointIds?: Array<number>;
     /**
-     * Filter by status: healthy | syncing | error | paused | unknown
+     * Filter by status
      */
-    status?: string;
+    status?: 'healthy' | 'syncing' | 'error' | 'paused' | 'unknown';
     /**
-     * Filter by type: stack
+     * Keep workflows that have at least one artifact of this type
      */
-    type?: string;
+    type?: 'stack';
     /**
-     * Filter by platform: dockerStandalone | dockerSwarm | kubernetes
+     * Keep workflows that have at least one artifact on this platform
      */
-    platform?: string;
+    platform?: 'dockerStandalone' | 'dockerSwarm' | 'kubernetes';
   };
   url: '/gitops/workflows';
 };
 
 export type GitOpsWorkflowsListErrors = {
+  /**
+   * Invalid request
+   */
+  400: unknown;
   /**
    * Server error
    */
@@ -11756,6 +16902,43 @@ export type GitOpsWorkflowsListResponses = {
 
 export type GitOpsWorkflowsListResponse =
   GitOpsWorkflowsListResponses[keyof GitOpsWorkflowsListResponses];
+
+export type GitOpsWorkflowGetData = {
+  body?: never;
+  path: {
+    /**
+     * Workflow identifier
+     */
+    id: number;
+  };
+  query?: never;
+  url: '/gitops/workflows/{id}';
+};
+
+export type GitOpsWorkflowGetErrors = {
+  /**
+   * Invalid request
+   */
+  400: unknown;
+  /**
+   * Workflow not found
+   */
+  404: unknown;
+  /**
+   * Server error
+   */
+  500: unknown;
+};
+
+export type GitOpsWorkflowGetResponses = {
+  /**
+   * OK
+   */
+  200: WorkflowsWorkflow;
+};
+
+export type GitOpsWorkflowGetResponse =
+  GitOpsWorkflowGetResponses[keyof GitOpsWorkflowGetResponses];
 
 export type GitOpsWorkflowsSummaryData = {
   body?: never;
@@ -12287,6 +17470,52 @@ export type GetKubernetesDashboardResponses = {
 export type GetKubernetesDashboardResponse =
   GetKubernetesDashboardResponses[keyof GetKubernetesDashboardResponses];
 
+export type GetAllKubernetesDeploymentsData = {
+  body?: never;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+  };
+  query?: {
+    /**
+     * Kubernetes label selector to filter the deployments
+     */
+    labelSelector?: string;
+    /**
+     * Kubernetes field selector to filter the deployments
+     */
+    fieldSelector?: string;
+  };
+  url: '/kubernetes/{id}/deployments';
+};
+
+export type GetAllKubernetesDeploymentsErrors = {
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Server error occurred while attempting to retrieve the deployments.
+   */
+  500: unknown;
+};
+
+export type GetAllKubernetesDeploymentsResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesKubernetesDeploymentListResponse;
+};
+
+export type GetAllKubernetesDeploymentsResponse =
+  GetAllKubernetesDeploymentsResponses[keyof GetAllKubernetesDeploymentsResponses];
+
 export type DescribeResourceData = {
   body?: never;
   path: {
@@ -12390,6 +17619,43 @@ export type GetAllKubernetesEventsResponses = {
 
 export type GetAllKubernetesEventsResponse =
   GetAllKubernetesEventsResponses[keyof GetAllKubernetesEventsResponses];
+
+export type GetKubernetesIngressClassesData = {
+  body?: never;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/ingressclasses';
+};
+
+export type GetKubernetesIngressClassesErrors = {
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Server error occurred while attempting to retrieve the ingress classes.
+   */
+  500: unknown;
+};
+
+export type GetKubernetesIngressClassesResponses = {
+  /**
+   * Success
+   */
+  200: Array<KubernetesK8sIngressClass>;
+};
+
+export type GetKubernetesIngressClassesResponse =
+  GetKubernetesIngressClassesResponses[keyof GetKubernetesIngressClassesResponses];
 
 export type GetAllKubernetesIngressControllersData = {
   body?: never;
@@ -12729,6 +17995,54 @@ export type DeleteJobsResponses = {
 
 export type DeleteJobsResponse = DeleteJobsResponses[keyof DeleteJobsResponses];
 
+export type DryRunKubernetesManifestsData = {
+  /**
+   * The manifests to validate
+   */
+  body: KubernetesManifestDryRunPayload;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/manifests/dry_run';
+};
+
+export type DryRunKubernetesManifestsErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Unable to find an environment with the specified identifier.
+   */
+  404: unknown;
+  /**
+   * Server error occurred while attempting to validate the manifests.
+   */
+  500: unknown;
+};
+
+export type DryRunKubernetesManifestsResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesManifestDryRunResponse;
+};
+
+export type DryRunKubernetesManifestsResponse =
+  DryRunKubernetesManifestsResponses[keyof DryRunKubernetesManifestsResponses];
+
 export type GetKubernetesMaxResourceLimitsData = {
   body?: never;
   path: {
@@ -12898,47 +18212,6 @@ export type GetKubernetesMetricsForNodeResponses = {
 export type GetKubernetesMetricsForNodeResponse =
   GetKubernetesMetricsForNodeResponses[keyof GetKubernetesMetricsForNodeResponses];
 
-export type GetKubernetesMetricsForAllPodsData = {
-  body?: never;
-  path: {
-    /**
-     * Environment identifier
-     */
-    id: number;
-    /**
-     * Namespace
-     */
-    namespace: string;
-  };
-  query?: never;
-  url: '/kubernetes/{id}/metrics/pods/{namespace}';
-};
-
-export type GetKubernetesMetricsForAllPodsErrors = {
-  /**
-   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
-   */
-  400: unknown;
-  /**
-   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
-   */
-  401: unknown;
-  /**
-   * Server error occurred while attempting to retrieve the list of pods with their live metrics.
-   */
-  500: unknown;
-};
-
-export type GetKubernetesMetricsForAllPodsResponses = {
-  /**
-   * Success
-   */
-  200: V1Beta1PodMetricsList;
-};
-
-export type GetKubernetesMetricsForAllPodsResponse =
-  GetKubernetesMetricsForAllPodsResponses[keyof GetKubernetesMetricsForAllPodsResponses];
-
 export type GetKubernetesMetricsForPodData = {
   body?: never;
   path: {
@@ -12984,8 +18257,56 @@ export type GetKubernetesMetricsForPodResponses = {
 export type GetKubernetesMetricsForPodResponse =
   GetKubernetesMetricsForPodResponses[keyof GetKubernetesMetricsForPodResponses];
 
-export type DeleteKubernetesNamespaceData = {
+export type GetKubernetesMetricsForAllPodsData = {
   body?: never;
+  path: {
+    /**
+     * Environment identifier
+     */
+    id: number;
+    /**
+     * Namespace
+     */
+    namespace: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/metrics/pods/namespace/{namespace}';
+};
+
+export type GetKubernetesMetricsForAllPodsErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but is not authorized to access pod metrics in the specified namespace. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Server error occurred while attempting to retrieve the list of pods with their live metrics.
+   */
+  500: unknown;
+};
+
+export type GetKubernetesMetricsForAllPodsResponses = {
+  /**
+   * Success
+   */
+  200: V1Beta1PodMetricsList;
+};
+
+export type GetKubernetesMetricsForAllPodsResponse =
+  GetKubernetesMetricsForAllPodsResponses[keyof GetKubernetesMetricsForAllPodsResponses];
+
+export type DeleteKubernetesNamespaceData = {
+  /**
+   * List of namespace names to delete
+   */
+  body: Array<string>;
   path: {
     /**
      * Environment identifier
@@ -13029,15 +18350,15 @@ export type GetKubernetesNamespacesData = {
      */
     id: number;
   };
-  query: {
+  query?: {
     /**
      * When set to true, include the resource quota information as part of the Namespace information. Default is false
      */
-    withResourceQuota: boolean;
+    withResourceQuota?: boolean;
     /**
      * When set to true, include the unhealthy events information as part of the Namespace information. Default is false
      */
-    withUnhealthyEvents: boolean;
+    withUnhealthyEvents?: boolean;
   };
   url: '/kubernetes/{id}/namespaces';
 };
@@ -13117,7 +18438,7 @@ export type CreateKubernetesNamespaceResponses = {
   /**
    * Success
    */
-  200: PortainerK8sNamespaceInfo;
+  200: KubernetesKubernetesCreateNamespaceResponse;
 };
 
 export type CreateKubernetesNamespaceResponse =
@@ -13187,11 +18508,11 @@ export type GetKubernetesNamespaceData = {
      */
     namespace: string;
   };
-  query: {
+  query?: {
     /**
      * When set to true, include the resource quota information as part of the Namespace information. Default is false
      */
-    withResourceQuota: boolean;
+    withResourceQuota?: boolean;
   };
   url: '/kubernetes/{id}/namespaces/{namespace}';
 };
@@ -13281,6 +18602,111 @@ export type UpdateKubernetesNamespaceResponses = {
 export type UpdateKubernetesNamespaceResponse =
   UpdateKubernetesNamespaceResponses[keyof UpdateKubernetesNamespaceResponses];
 
+export type CreateKubernetesConfigMapData = {
+  /**
+   * ConfigMap definition
+   */
+  body: KubernetesK8sConfigMapWriteRequest2;
+  path: {
+    /**
+     * Environment identifier
+     */
+    id: number;
+    /**
+     * The namespace name where the configmap is created
+     */
+    namespace: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/namespaces/{namespace}/configmaps';
+};
+
+export type CreateKubernetesConfigMapErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * A configmap with the same name already exists in the namespace.
+   */
+  409: unknown;
+  /**
+   * Server error occurred while attempting to create the configmap.
+   */
+  500: unknown;
+};
+
+export type CreateKubernetesConfigMapResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesK8sConfigMap;
+};
+
+export type CreateKubernetesConfigMapResponse =
+  CreateKubernetesConfigMapResponses[keyof CreateKubernetesConfigMapResponses];
+
+export type DeleteKubernetesConfigMapData = {
+  body?: never;
+  path: {
+    /**
+     * Environment identifier
+     */
+    id: number;
+    /**
+     * The namespace name where the configmap is located
+     */
+    namespace: string;
+    /**
+     * The configmap name to delete
+     */
+    configmap: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/namespaces/{namespace}/configmaps/{configmap}';
+};
+
+export type DeleteKubernetesConfigMapErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Unable to find the configmap to delete.
+   */
+  404: unknown;
+  /**
+   * Server error occurred while attempting to delete the configmap.
+   */
+  500: unknown;
+};
+
+export type DeleteKubernetesConfigMapResponses = {
+  /**
+   * Success
+   */
+  204: void;
+};
+
+export type DeleteKubernetesConfigMapResponse =
+  DeleteKubernetesConfigMapResponses[keyof DeleteKubernetesConfigMapResponses];
+
 export type GetKubernetesConfigMapData = {
   body?: never;
   path: {
@@ -13333,6 +18759,498 @@ export type GetKubernetesConfigMapResponses = {
 
 export type GetKubernetesConfigMapResponse =
   GetKubernetesConfigMapResponses[keyof GetKubernetesConfigMapResponses];
+
+export type UpdateKubernetesConfigMapData = {
+  /**
+   * ConfigMap definition
+   */
+  body: KubernetesK8sConfigMapWriteRequest2;
+  path: {
+    /**
+     * Environment identifier
+     */
+    id: number;
+    /**
+     * The namespace name where the configmap is located
+     */
+    namespace: string;
+    /**
+     * The configmap name to update
+     */
+    configmap: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/namespaces/{namespace}/configmaps/{configmap}';
+};
+
+export type UpdateKubernetesConfigMapErrors = {
+  /**
+   * Invalid request payload, such as missing required fields, fields not meeting validation criteria, or a payload name that does not match the route.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Unable to find the configmap to update.
+   */
+  404: unknown;
+  /**
+   * Server error occurred while attempting to update the configmap.
+   */
+  500: unknown;
+};
+
+export type UpdateKubernetesConfigMapResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesK8sConfigMap;
+};
+
+export type UpdateKubernetesConfigMapResponse =
+  UpdateKubernetesConfigMapResponses[keyof UpdateKubernetesConfigMapResponses];
+
+export type GetKubernetesDeploymentsForNamespaceData = {
+  body?: never;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+    /**
+     * Namespace
+     */
+    namespace: string;
+  };
+  query?: {
+    /**
+     * Kubernetes label selector to filter the deployments
+     */
+    labelSelector?: string;
+    /**
+     * Kubernetes field selector to filter the deployments
+     */
+    fieldSelector?: string;
+  };
+  url: '/kubernetes/{id}/namespaces/{namespace}/deployments';
+};
+
+export type GetKubernetesDeploymentsForNamespaceErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Server error occurred while attempting to retrieve the deployments within the specified namespace.
+   */
+  500: unknown;
+};
+
+export type GetKubernetesDeploymentsForNamespaceResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesKubernetesDeploymentListResponse;
+};
+
+export type GetKubernetesDeploymentsForNamespaceResponse =
+  GetKubernetesDeploymentsForNamespaceResponses[keyof GetKubernetesDeploymentsForNamespaceResponses];
+
+export type CreateKubernetesDeploymentData = {
+  /**
+   * Deployment definition
+   */
+  body: KubernetesK8sDeploymentWriteRequest2;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+    /**
+     * Namespace
+     */
+    namespace: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/namespaces/{namespace}/deployments';
+};
+
+export type CreateKubernetesDeploymentErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * A deployment with the same name already exists in the namespace.
+   */
+  409: unknown;
+  /**
+   * Server error occurred while attempting to create the deployment.
+   */
+  500: unknown;
+};
+
+export type CreateKubernetesDeploymentResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesKubernetesDeploymentResponse;
+};
+
+export type CreateKubernetesDeploymentResponse =
+  CreateKubernetesDeploymentResponses[keyof CreateKubernetesDeploymentResponses];
+
+export type DeleteKubernetesDeploymentData = {
+  body?: never;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+    /**
+     * Namespace
+     */
+    namespace: string;
+    /**
+     * Deployment name
+     */
+    name: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/namespaces/{namespace}/deployments/{name}';
+};
+
+export type DeleteKubernetesDeploymentErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Unable to find the deployment to delete.
+   */
+  404: unknown;
+  /**
+   * Server error occurred while attempting to delete the deployment.
+   */
+  500: unknown;
+};
+
+export type DeleteKubernetesDeploymentResponses = {
+  /**
+   * Success
+   */
+  204: void;
+};
+
+export type DeleteKubernetesDeploymentResponse =
+  DeleteKubernetesDeploymentResponses[keyof DeleteKubernetesDeploymentResponses];
+
+export type GetKubernetesDeploymentData = {
+  body?: never;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+    /**
+     * Namespace
+     */
+    namespace: string;
+    /**
+     * Deployment name
+     */
+    name: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/namespaces/{namespace}/deployments/{name}';
+};
+
+export type GetKubernetesDeploymentErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Server error occurred while attempting to retrieve the deployment.
+   */
+  500: unknown;
+};
+
+export type GetKubernetesDeploymentResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesKubernetesDeploymentResponse;
+};
+
+export type GetKubernetesDeploymentResponse =
+  GetKubernetesDeploymentResponses[keyof GetKubernetesDeploymentResponses];
+
+export type PatchKubernetesDeploymentData = {
+  /**
+   * Annotations to apply
+   */
+  body: KubernetesK8sDeploymentPatchRequest;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+    /**
+     * Namespace
+     */
+    namespace: string;
+    /**
+     * Deployment name
+     */
+    name: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/namespaces/{namespace}/deployments/{name}';
+};
+
+export type PatchKubernetesDeploymentErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Unable to find the deployment to annotate.
+   */
+  404: unknown;
+  /**
+   * Server error occurred while attempting to annotate the deployment.
+   */
+  500: unknown;
+};
+
+export type PatchKubernetesDeploymentResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesKubernetesDeploymentResponse;
+};
+
+export type PatchKubernetesDeploymentResponse =
+  PatchKubernetesDeploymentResponses[keyof PatchKubernetesDeploymentResponses];
+
+export type UpdateKubernetesDeploymentData = {
+  /**
+   * Deployment definition
+   */
+  body: KubernetesK8sDeploymentWriteRequest2;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+    /**
+     * Namespace
+     */
+    namespace: string;
+    /**
+     * Deployment name
+     */
+    name: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/namespaces/{namespace}/deployments/{name}';
+};
+
+export type UpdateKubernetesDeploymentErrors = {
+  /**
+   * Invalid request payload, such as missing required fields, fields not meeting validation criteria, or a payload name that does not match the route.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Unable to find the deployment to update.
+   */
+  404: unknown;
+  /**
+   * The deployment was modified concurrently.
+   */
+  409: unknown;
+  /**
+   * Server error occurred while attempting to update the deployment.
+   */
+  500: unknown;
+};
+
+export type UpdateKubernetesDeploymentResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesKubernetesDeploymentResponse;
+};
+
+export type UpdateKubernetesDeploymentResponse =
+  UpdateKubernetesDeploymentResponses[keyof UpdateKubernetesDeploymentResponses];
+
+export type RollbackKubernetesDeploymentData = {
+  /**
+   * Revision to roll back to
+   */
+  body: KubernetesK8sDeploymentRollbackRequest;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+    /**
+     * Namespace
+     */
+    namespace: string;
+    /**
+     * Deployment name
+     */
+    name: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/namespaces/{namespace}/deployments/{name}/rollback';
+};
+
+export type RollbackKubernetesDeploymentErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Unable to find the deployment, or the requested revision is not part of its rollout history.
+   */
+  404: unknown;
+  /**
+   * Server error occurred while attempting to roll the deployment back.
+   */
+  500: unknown;
+};
+
+export type RollbackKubernetesDeploymentResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesKubernetesDeploymentResponse;
+};
+
+export type RollbackKubernetesDeploymentResponse =
+  RollbackKubernetesDeploymentResponses[keyof RollbackKubernetesDeploymentResponses];
+
+export type ScaleKubernetesDeploymentData = {
+  /**
+   * Desired replica count
+   */
+  body: KubernetesK8sDeploymentScaleRequest;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+    /**
+     * Namespace
+     */
+    namespace: string;
+    /**
+     * Deployment name
+     */
+    name: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/namespaces/{namespace}/deployments/{name}/scale';
+};
+
+export type ScaleKubernetesDeploymentErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Unable to find the deployment to scale.
+   */
+  404: unknown;
+  /**
+   * Server error occurred while attempting to scale the deployment.
+   */
+  500: unknown;
+};
+
+export type ScaleKubernetesDeploymentResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesKubernetesDeploymentResponse;
+};
+
+export type ScaleKubernetesDeploymentResponse =
+  ScaleKubernetesDeploymentResponses[keyof ScaleKubernetesDeploymentResponses];
 
 export type GetKubernetesEventsForNamespaceData = {
   body?: never;
@@ -13736,6 +19654,58 @@ export type GetKubernetesPersistentVolumeClaimsInNamespaceResponses = {
 export type GetKubernetesPersistentVolumeClaimsInNamespaceResponse =
   GetKubernetesPersistentVolumeClaimsInNamespaceResponses[keyof GetKubernetesPersistentVolumeClaimsInNamespaceResponses];
 
+export type CreateKubernetesPersistentVolumeClaimData = {
+  /**
+   * PersistentVolumeClaim definition
+   */
+  body: KubernetesK8sPersistentVolumeClaimCreateRequest;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+    /**
+     * Namespace
+     */
+    namespace: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/namespaces/{namespace}/persistent_volume_claims';
+};
+
+export type CreateKubernetesPersistentVolumeClaimErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or a storage size that is not a valid quantity.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * A persistent volume claim with the same name already exists in the namespace.
+   */
+  409: unknown;
+  /**
+   * Server error occurred while attempting to create the persistent volume claim.
+   */
+  500: unknown;
+};
+
+export type CreateKubernetesPersistentVolumeClaimResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesK8sPersistentVolumeClaim;
+};
+
+export type CreateKubernetesPersistentVolumeClaimResponse =
+  CreateKubernetesPersistentVolumeClaimResponses[keyof CreateKubernetesPersistentVolumeClaimResponses];
+
 export type GetKubernetesPersistentVolumeClaimData = {
   body?: never;
   path: {
@@ -13784,6 +19754,60 @@ export type GetKubernetesPersistentVolumeClaimResponses = {
 
 export type GetKubernetesPersistentVolumeClaimResponse =
   GetKubernetesPersistentVolumeClaimResponses[keyof GetKubernetesPersistentVolumeClaimResponses];
+
+export type GetKubernetesPodsForNamespaceData = {
+  body?: never;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+    /**
+     * Namespace
+     */
+    namespace: string;
+  };
+  query?: {
+    /**
+     * Kubernetes label selector to filter the pods (e.g. app=nginx)
+     */
+    labelSelector?: string;
+    /**
+     * Kubernetes field selector to filter the pods (e.g. status.phase=Running)
+     */
+    fieldSelector?: string;
+  };
+  url: '/kubernetes/{id}/namespaces/{namespace}/pods';
+};
+
+export type GetKubernetesPodsForNamespaceErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Server error occurred while attempting to retrieve the pods within the specified namespace.
+   */
+  500: unknown;
+};
+
+export type GetKubernetesPodsForNamespaceResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesKubernetesPodListResponse;
+};
+
+export type GetKubernetesPodsForNamespaceResponse =
+  GetKubernetesPodsForNamespaceResponses[keyof GetKubernetesPodsForNamespaceResponses];
 
 export type DeleteKubernetesPodData = {
   body?: never;
@@ -13837,6 +19861,80 @@ export type DeleteKubernetesPodResponses = {
 
 export type DeleteKubernetesPodResponse =
   DeleteKubernetesPodResponses[keyof DeleteKubernetesPodResponses];
+
+export type GetKubernetesPodLogsData = {
+  body?: never;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+    /**
+     * Namespace
+     */
+    namespace: string;
+    /**
+     * Pod name
+     */
+    name: string;
+  };
+  query?: {
+    /**
+     * Container name (required when the pod has multiple containers)
+     */
+    container?: string;
+    /**
+     * Number of lines from the end of the logs to return
+     */
+    tailLines?: number;
+    /**
+     * Only return logs newer than this many seconds
+     */
+    sinceSeconds?: number;
+    /**
+     * Prefix each log line with an RFC3339 timestamp
+     */
+    timestamps?: boolean;
+    /**
+     * Return the logs of the previous terminated container instance
+     */
+    previous?: boolean;
+    /**
+     * Stream new log lines as they are produced until the client disconnects
+     */
+    follow?: boolean;
+  };
+  url: '/kubernetes/{id}/namespaces/{namespace}/pods/{name}/log';
+};
+
+export type GetKubernetesPodLogsErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Server error occurred while attempting to retrieve the pod logs.
+   */
+  500: unknown;
+};
+
+export type GetKubernetesPodLogsResponses = {
+  /**
+   * Success
+   */
+  200: string;
+};
+
+export type GetKubernetesPodLogsResponse =
+  GetKubernetesPodLogsResponses[keyof GetKubernetesPodLogsResponses];
 
 export type RestartKubernetesPodData = {
   body?: never;
@@ -13895,6 +19993,218 @@ export type RestartKubernetesPodResponses = {
 export type RestartKubernetesPodResponse =
   RestartKubernetesPodResponses[keyof RestartKubernetesPodResponses];
 
+export type GetKubernetesReplicaSetsData = {
+  body?: never;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+    /**
+     * Namespace
+     */
+    namespace: string;
+  };
+  query?: {
+    /**
+     * Only return replica sets owned by this deployment
+     */
+    deployment?: string;
+    /**
+     * Kubernetes label selector to filter the replica sets
+     */
+    labelSelector?: string;
+    /**
+     * Kubernetes field selector to filter the replica sets
+     */
+    fieldSelector?: string;
+  };
+  url: '/kubernetes/{id}/namespaces/{namespace}/replicasets';
+};
+
+export type GetKubernetesReplicaSetsErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Unable to find the deployment given in the deployment query parameter.
+   */
+  404: unknown;
+  /**
+   * Server error occurred while attempting to retrieve the replica sets within the specified namespace.
+   */
+  500: unknown;
+};
+
+export type GetKubernetesReplicaSetsResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesKubernetesReplicaSetListResponse;
+};
+
+export type GetKubernetesReplicaSetsResponse =
+  GetKubernetesReplicaSetsResponses[keyof GetKubernetesReplicaSetsResponses];
+
+export type GetKubernetesResourceQuotasData = {
+  body?: never;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+    /**
+     * Namespace
+     */
+    namespace: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/namespaces/{namespace}/resource_quotas';
+};
+
+export type GetKubernetesResourceQuotasErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Server error occurred while attempting to retrieve the resource quotas within the specified namespace.
+   */
+  500: unknown;
+};
+
+export type GetKubernetesResourceQuotasResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesKubernetesResourceQuotaListResponse;
+};
+
+export type GetKubernetesResourceQuotasResponse =
+  GetKubernetesResourceQuotasResponses[keyof GetKubernetesResourceQuotasResponses];
+
+export type CreateKubernetesSecretData = {
+  /**
+   * Secret definition
+   */
+  body: KubernetesK8sSecretWriteRequest2;
+  path: {
+    /**
+     * Environment identifier
+     */
+    id: number;
+    /**
+     * The namespace name where the secret is created
+     */
+    namespace: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/namespaces/{namespace}/secrets';
+};
+
+export type CreateKubernetesSecretErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * A secret with the same name already exists in the namespace.
+   */
+  409: unknown;
+  /**
+   * Server error occurred while attempting to create the secret.
+   */
+  500: unknown;
+};
+
+export type CreateKubernetesSecretResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesK8sSecret;
+};
+
+export type CreateKubernetesSecretResponse =
+  CreateKubernetesSecretResponses[keyof CreateKubernetesSecretResponses];
+
+export type DeleteKubernetesSecretData = {
+  body?: never;
+  path: {
+    /**
+     * Environment identifier
+     */
+    id: number;
+    /**
+     * The namespace name where the secret is located
+     */
+    namespace: string;
+    /**
+     * The secret name to delete
+     */
+    secret: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/namespaces/{namespace}/secrets/{secret}';
+};
+
+export type DeleteKubernetesSecretErrors = {
+  /**
+   * Invalid request payload, such as missing required fields or fields not meeting validation criteria.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Unable to find the secret to delete.
+   */
+  404: unknown;
+  /**
+   * Server error occurred while attempting to delete the secret.
+   */
+  500: unknown;
+};
+
+export type DeleteKubernetesSecretResponses = {
+  /**
+   * Success
+   */
+  204: void;
+};
+
+export type DeleteKubernetesSecretResponse =
+  DeleteKubernetesSecretResponses[keyof DeleteKubernetesSecretResponses];
+
 export type GetKubernetesSecretData = {
   body?: never;
   path: {
@@ -13947,6 +20257,62 @@ export type GetKubernetesSecretResponses = {
 
 export type GetKubernetesSecretResponse =
   GetKubernetesSecretResponses[keyof GetKubernetesSecretResponses];
+
+export type UpdateKubernetesSecretData = {
+  /**
+   * Secret definition
+   */
+  body: KubernetesK8sSecretWriteRequest2;
+  path: {
+    /**
+     * Environment identifier
+     */
+    id: number;
+    /**
+     * The namespace name where the secret is located
+     */
+    namespace: string;
+    /**
+     * The secret name to update
+     */
+    secret: string;
+  };
+  query?: never;
+  url: '/kubernetes/{id}/namespaces/{namespace}/secrets/{secret}';
+};
+
+export type UpdateKubernetesSecretErrors = {
+  /**
+   * Invalid request payload, such as missing required fields, fields not meeting validation criteria, or a payload name that does not match the route.
+   */
+  400: unknown;
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Unable to find the secret to update.
+   */
+  404: unknown;
+  /**
+   * Server error occurred while attempting to update the secret.
+   */
+  500: unknown;
+};
+
+export type UpdateKubernetesSecretResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesK8sSecret;
+};
+
+export type UpdateKubernetesSecretResponse =
+  UpdateKubernetesSecretResponses[keyof UpdateKubernetesSecretResponses];
 
 export type GetKubernetesServiceAccountData = {
   body?: never;
@@ -14393,7 +20759,10 @@ export type GetKubernetesNodesResponse =
   GetKubernetesNodesResponses[keyof GetKubernetesNodesResponses];
 
 export type DrainNodeData = {
-  body?: never;
+  /**
+   * Drain options, matching kubectl drain flags. Defaults are applied to any omitted field.
+   */
+  body?: KubernetesDrainNodePayload;
   path: {
     /**
      * Environment(Endpoint) identifier
@@ -14763,6 +21132,52 @@ export type UpdateKubernetesPersistentVolumeReclaimPolicyResponses = {
 
 export type UpdateKubernetesPersistentVolumeReclaimPolicyResponse =
   UpdateKubernetesPersistentVolumeReclaimPolicyResponses[keyof UpdateKubernetesPersistentVolumeReclaimPolicyResponses];
+
+export type GetAllKubernetesPodsData = {
+  body?: never;
+  path: {
+    /**
+     * Environment(Endpoint) identifier
+     */
+    id: number;
+  };
+  query?: {
+    /**
+     * Kubernetes label selector to filter the pods (e.g. app=nginx)
+     */
+    labelSelector?: string;
+    /**
+     * Kubernetes field selector to filter the pods (e.g. status.phase=Running)
+     */
+    fieldSelector?: string;
+  };
+  url: '/kubernetes/{id}/pods';
+};
+
+export type GetAllKubernetesPodsErrors = {
+  /**
+   * Unauthorized access - the user is not authenticated or does not have the necessary permissions. Ensure that you have provided a valid API key or JWT token, and that you have the required permissions.
+   */
+  401: unknown;
+  /**
+   * Permission denied - the user is authenticated but does not have the necessary permissions to access the requested resource or perform the specified operation. Check your user roles and permissions.
+   */
+  403: unknown;
+  /**
+   * Server error occurred while attempting to retrieve the pods.
+   */
+  500: unknown;
+};
+
+export type GetAllKubernetesPodsResponses = {
+  /**
+   * Success
+   */
+  200: KubernetesKubernetesPodListResponse;
+};
+
+export type GetAllKubernetesPodsResponse =
+  GetAllKubernetesPodsResponses[keyof GetAllKubernetesPodsResponses];
 
 export type GetKubernetesRbacStatusData = {
   body?: never;
@@ -16883,7 +23298,7 @@ export type StackCreateKubernetesGitResponses = {
   /**
    * OK
    */
-  200: PortainerStack;
+  200: StacksCreateKubernetesStackResponse;
 };
 
 export type StackCreateKubernetesGitResponse =
@@ -16919,7 +23334,7 @@ export type StackCreateKubernetesFileResponses = {
   /**
    * OK
    */
-  200: PortainerStack;
+  200: StacksCreateKubernetesStackResponse;
 };
 
 export type StackCreateKubernetesFileResponse =
@@ -16955,7 +23370,7 @@ export type StackCreateKubernetesUrlResponses = {
   /**
    * OK
    */
-  200: PortainerStack;
+  200: StacksCreateKubernetesStackResponse;
 };
 
 export type StackCreateKubernetesUrlResponse =
@@ -17288,10 +23703,13 @@ export type WebhookInvokeErrors = {
 
 export type WebhookInvokeResponses = {
   /**
-   * Success
+   * Accepted
    */
-  200: unknown;
+  202: StacksWebhookInvokeResponse;
 };
+
+export type WebhookInvokeResponse =
+  WebhookInvokeResponses[keyof WebhookInvokeResponses];
 
 export type SystemInfoData = {
   body?: never;
@@ -17983,11 +24401,11 @@ export type HelmShowData = {
   };
   query: {
     /**
-     * Helm repository URL
+     * Helm repository URL (required unless chart is a self-contained oci:// reference)
      */
-    repo: string;
+    repo?: string;
     /**
-     * Chart name
+     * Chart name, or a self-contained oci:// chart reference
      */
     chart: string;
     /**
@@ -19009,6 +25427,10 @@ export type GetWebsocketKubernetesShellErrors = {
    * Permission denied
    */
   403: unknown;
+  /**
+   * Environment not found
+   */
+  404: unknown;
   /**
    * Server error
    */

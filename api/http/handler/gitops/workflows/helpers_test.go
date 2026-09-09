@@ -11,10 +11,15 @@ import (
 	gittypes "github.com/portainer/portainer/api/git/types"
 	ce "github.com/portainer/portainer/api/gitops/workflows"
 	"github.com/portainer/portainer/api/http/security"
+	"github.com/portainer/portainer/pkg/fips"
 
 	"github.com/segmentio/encoding/json"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	fips.InitFIPS(false)
+}
 
 // buildWorkflowsReq creates an HTTP GET request with security context pre-populated.
 func buildWorkflowsReq(t *testing.T, userID portainer.UserID, role portainer.UserRole, query string) *http.Request {
@@ -52,7 +57,7 @@ func createGitStack(t *testing.T, tx dataservices.DataStoreTx, stack *portainer.
 		src := &portainer.Source{Git: &gittypes.GitSource{URL: stack.GitConfig.URL, Authentication: stack.GitConfig.Authentication, TLSSkipVerify: stack.GitConfig.TLSSkipVerify}, Type: portainer.SourceTypeGit}
 		require.NoError(t, tx.Source().Create(source.InsecureNewAdminContext(), src))
 
-		wf := &portainer.Workflow{Artifacts: []portainer.Artifact{{
+		wf := &portainer.Workflow{Name: stack.Name, Artifacts: []portainer.Artifact{{
 			StackID: stack.ID,
 			Files: []portainer.ArtifactFile{{
 				SourceID: src.ID,

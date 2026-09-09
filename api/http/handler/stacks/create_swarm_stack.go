@@ -118,7 +118,7 @@ func (handler *Handler) createSwarmStackFromFileContent(w http.ResponseWriter, r
 		handler.FileService,
 		handler.StackDeployer)
 
-	stack, httpErr := stackbuilders.Build(r.Context(), handler.DataStore, swarmStackBuilder, &stackPayload, endpoint, userID)
+	stack, httpErr := stackbuilders.BuildAndAsyncDeploy(r.Context(), handler.DataStore, swarmStackBuilder, &stackPayload, endpoint, userID)
 	if httpErr != nil {
 		return httpErr
 	}
@@ -290,10 +290,10 @@ func (handler *Handler) createSwarmStackFromGitRepository(w http.ResponseWriter,
 		handler.DataStore,
 		handler.FileService,
 		handler.GitService,
-		handler.Scheduler,
+		handler.SourceScheduler,
 		handler.StackDeployer)
 
-	stack, httpErr := stackbuilders.Build(r.Context(), handler.DataStore, swarmStackBuilder, &stackPayload, endpoint, userID)
+	stack, httpErr := stackbuilders.BuildAndAsyncDeploy(r.Context(), handler.DataStore, swarmStackBuilder, &stackPayload, endpoint, userID)
 	if httpErr != nil {
 		return httpErr
 	}
@@ -420,7 +420,7 @@ func (handler *Handler) createSwarmStackFromFileUpload(w http.ResponseWriter, r 
 		handler.FileService,
 		handler.StackDeployer)
 
-	stack, httpErr := stackbuilders.Build(r.Context(), handler.DataStore, swarmStackBuilder, &stackPayload, endpoint, userID)
+	stack, httpErr := stackbuilders.BuildAndAsyncDeploy(r.Context(), handler.DataStore, swarmStackBuilder, &stackPayload, endpoint, userID)
 	if httpErr != nil {
 		return httpErr
 	}

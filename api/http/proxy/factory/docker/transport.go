@@ -30,6 +30,8 @@ import (
 	"github.com/portainer/portainer/api/internal/authorization"
 	"github.com/portainer/portainer/api/logs"
 	"github.com/portainer/portainer/api/slicesx"
+	"github.com/portainer/portainer/pkg/fips"
+	httprequest "github.com/portainer/portainer/pkg/libhttp/request"
 	"github.com/portainer/portainer/pkg/libhttp/ssrf"
 
 	"github.com/rs/zerolog/log"
@@ -162,12 +164,23 @@ func isAdminOnlyRoute(method string, path string) bool {
 // ProxyDockerRequest intercepts a Docker API request and apply logic based
 // on the requested operation.
 func (transport *Transport) ProxyDockerRequest(request *http.Request) (*http.Response, error) {
-	// from : /v1.47/containers/{id}/json
-	// or   : /containers/{id}/json
-	// to   : /containers/{id}/json
-	unversionedPath := apiVersionRe.ReplaceAllString(request.URL.Path, "")
+	return transport.proxyDockerRequest(request, fips.FIPSMode())
+}
 
-	if transport.endpoint.Type == portainer.AgentOnDockerEnvironment || transport.endpoint.Type == portainer.EdgeAgentOnDockerEnvironment {
+func (transport *Transport) proxyDockerRequest(request *http.Request, fipsMode bool) (*http.Response, error) {
+	// A percent-encoded path separator lets a request dodge the operation authorization.
+	// Docker API paths never need encoded separators, so reject them outright.
+	if httprequest.ContainsEncodedSeparator(request.URL.EscapedPath()) {
+		return utils.WriteAccessDeniedResponse()
+	}
+
+	unversionedPath := httprequest.TrimDockerVersion(request.URL.Path)
+
+	// The agent verifies this signature unless it is running in FIPS mode, where it
+	// relies on mTLS instead. Skip sending it to match that behaviour.
+	if (transport.endpoint.Type == portainer.AgentOnDockerEnvironment ||
+		transport.endpoint.Type == portainer.EdgeAgentOnDockerEnvironment) &&
+		!fipsMode {
 		signature, err := transport.signatureService.CreateSignature(portainer.PortainerAgentSignatureMessage)
 		if err != nil {
 			return nil, err
@@ -880,7 +893,7 @@ func (transport *Transport) decorateGenericResourceCreationOperation(request *ht
 	teamMemberships_aip, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(tokenData.ID)
 	team_aip, err := transport.dataStore.Team().TeamByName("READONLY")
 	if err != nil {
-		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE] - transport.go:883", tokenData.Username)
+		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE] - transport.go:896", tokenData.Username)
 	}
 	for _, membership_aip := range teamMemberships_aip {
 		if membership_aip.TeamID == team_aip.ID {

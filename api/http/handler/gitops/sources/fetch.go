@@ -11,7 +11,7 @@ import (
 )
 
 // FetchSourceWorkflows returns the workflows and stats for a single source.
-func FetchSourceWorkflows(tx dataservices.DataStoreTx, src *portainer.Source) ([]ce.Workflow, ce.SourceStats, error) {
+func FetchSourceWorkflows(tx dataservices.DataStoreTx, src *portainer.Source) ([]Workflow, ce.SourceStats, error) {
 	wfs, err := tx.Workflow().ReadAll(func(wf portainer.Workflow) bool {
 		return slices.ContainsFunc(wf.Artifacts, func(artifact portainer.Artifact) bool {
 			return slices.ContainsFunc(artifact.Files, func(f portainer.ArtifactFile) bool {
@@ -56,23 +56,20 @@ func FetchSourceWorkflows(tx dataservices.DataStoreTx, src *portainer.Source) ([
 	}
 
 	unknown := ce.WorkflowPhaseStatus{Status: ce.StatusUnknown}
-	items := make([]ce.Workflow, 0, len(stacks))
+	items := make([]Workflow, 0, len(stacks))
 	stats := ce.SourceStats{EndpointIDs: set.Set[portainer.EndpointID]{}}
 
-	for _, stacks := range stacks {
+	for _, stack := range stacks {
 		cfg := src.Git.ToRepoConfig()
-		if file, ok := artifactByStack[stacks.ID]; ok {
+		if file, ok := artifactByStack[stack.ID]; ok {
 			cfg.ReferenceName = file.Ref
 			cfg.ConfigFilePath = file.Path
 			cfg.ConfigHash = file.Hash
 		}
-		items = append(items, ce.MapStackToWorkflow(stacks, cfg, unknown, unknown))
+		items = append(items, MapStackToWorkflow(stack, src.ID, cfg, unknown, unknown))
 		stats.WorkflowCount++
-		if stacks.EndpointID != 0 {
-			stats.EndpointIDs.Add(stacks.EndpointID)
-		}
-		if lastSync := ce.StackLastSyncDate(stacks); lastSync > stats.LastSync {
-			stats.LastSync = lastSync
+		if stack.EndpointID != 0 {
+			stats.EndpointIDs.Add(stack.EndpointID)
 		}
 	}
 

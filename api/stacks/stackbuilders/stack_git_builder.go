@@ -10,9 +10,8 @@ import (
 	"github.com/portainer/portainer/api/dataservices/source"
 	"github.com/portainer/portainer/api/filesystem"
 	gittypes "github.com/portainer/portainer/api/git/types"
+	"github.com/portainer/portainer/api/gitops/scheduling"
 	"github.com/portainer/portainer/api/gitops/workflows"
-	"github.com/portainer/portainer/api/scheduler"
-	"github.com/portainer/portainer/api/stacks/deployments"
 	"github.com/portainer/portainer/api/stacks/stackutils"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/ssrf"
@@ -20,8 +19,9 @@ import (
 
 type GitMethodStackBuilder struct {
 	StackBuilder
-	gitService portainer.GitService
-	scheduler  *scheduler.Scheduler
+	gitService       portainer.GitService
+	sourceScheduler  *scheduling.SourceScheduler
+	resolvedSourceID portainer.SourceID
 }
 
 func (b *GitMethodStackBuilder) prepare(ctx context.Context, payload *StackPayload, userID portainer.UserID) error {
@@ -104,6 +104,12 @@ func (b *GitMethodStackBuilder) prepare(ctx context.Context, payload *StackPaylo
 
 	commitHash, err := stackutils.DownloadGitRepository(ctx, repoConfig, b.gitService, getProjectPath)
 	if err != nil {
+		if txErr := b.dataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
+			return workflows.SaveSourceStatus(tx, userContext, sourceID, err)
+		}); txErr != nil {
+			return fmt.Errorf("failed to download git repository: %w (and failed to persist status: %w)", err, txErr)
+		}
+
 		return fmt.Errorf("failed to download git repository: %w", err)
 	}
 
@@ -114,13 +120,23 @@ func (b *GitMethodStackBuilder) prepare(ctx context.Context, payload *StackPaylo
 
 	if err := b.dataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		file := portainer.ArtifactFile{
-			Path: repoConfig.ConfigFilePath,
-			Ref:  repoConfig.ReferenceName,
-			Hash: repoConfig.ConfigHash,
+			Path:       repoConfig.ConfigFilePath,
+			Ref:        repoConfig.ReferenceName,
+			Hash:       repoConfig.ConfigHash,
+			RefStatus:  portainer.SourceStatusHealthy,
+			PathStatus: portainer.SourceStatusHealthy,
 		}
 
+		var resolvedSrc *portainer.Source
+
 		if sourceID != 0 {
-			file.SourceID = sourceID
+			s, err := tx.Source().Read(userContext, sourceID)
+			if err != nil {
+				return fmt.Errorf("failed to read source: %w", err)
+			}
+
+			file.SourceID = s.ID
+			resolvedSrc = s
 		} else {
 			repoConfig.URL = gittypes.SanitizeURL(repoConfig.URL)
 
@@ -138,10 +154,27 @@ func (b *GitMethodStackBuilder) prepare(ctx context.Context, payload *StackPaylo
 			}
 
 			file.SourceID = src.ID
+			resolvedSrc = src
+		}
+
+		if err := workflows.SaveSourceStatus(tx, userContext, file.SourceID, nil); err != nil {
+			return fmt.Errorf("failed to persist source sync status: %w", err)
+		}
+
+		name := b.stack.Name
+		if name == "" {
+			endpointName := "<unknown>"
+			if b.endpoint != nil {
+				endpointName = b.endpoint.Name
+				if endpointName == "" {
+					endpointName = fmt.Sprintf("<ID=%d>", b.endpoint.ID)
+				}
+			}
+			name = fmt.Sprintf("'%s' from source '%s' in environment '%s'", file.Path, resolvedSrc.Name, endpointName)
 		}
 
 		wf := &portainer.Workflow{
-			Name: b.stack.Name,
+			Name: name,
 			Artifacts: []portainer.Artifact{{
 				StackID: b.stack.ID,
 				Files:   []portainer.ArtifactFile{file},
@@ -152,6 +185,7 @@ func (b *GitMethodStackBuilder) prepare(ctx context.Context, payload *StackPaylo
 		}
 
 		workflowID = wf.ID
+		b.resolvedSourceID = resolvedSrc.ID
 
 		return nil
 	}); err != nil {
@@ -163,35 +197,6 @@ func (b *GitMethodStackBuilder) prepare(ctx context.Context, payload *StackPaylo
 	return nil
 }
 
-// postDeploy enables the auto-update scheduler job for the stack if configured,
-// and persists the resulting job ID back to the database.
-func (b *GitMethodStackBuilder) postDeploy(ctx context.Context, stack *portainer.Stack) error {
-	if stack.AutoUpdate == nil || stack.AutoUpdate.Interval == "" {
-		return nil
-	}
-
-	jobID, err := deployments.StartAutoupdate(ctx, stack.ID,
-		stack.AutoUpdate.Interval,
-		b.scheduler,
-		b.stackDeployer,
-		b.dataStore,
-		b.gitService)
-	if err != nil {
-		return err
-	}
-
-	return b.dataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
-		s, err := tx.Stack().Read(stack.ID)
-		if err != nil {
-			return fmt.Errorf("Unable to retrieve the stack from the database: %w", err)
-		}
-
-		s.AutoUpdate.JobID = jobID
-
-		if err := tx.Stack().Update(s.ID, s); err != nil {
-			return fmt.Errorf("Unable to update the stack inside the database: %w", err)
-		}
-
-		return nil
-	})
+func (b *GitMethodStackBuilder) postDeploy(_ context.Context, _ *portainer.Stack) error {
+	return b.sourceScheduler.Reconcile(b.resolvedSourceID)
 }
