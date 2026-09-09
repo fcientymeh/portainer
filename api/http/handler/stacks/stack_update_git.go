@@ -22,7 +22,6 @@ import (
 	"github.com/portainer/portainer/pkg/libhttp/response"
 
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 type stackGitUpdatePayload struct {

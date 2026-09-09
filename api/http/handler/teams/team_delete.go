@@ -14,7 +14,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 // @id TeamDelete

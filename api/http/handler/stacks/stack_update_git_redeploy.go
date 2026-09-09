@@ -309,7 +309,6 @@ func (handler *Handler) stackGitRedeploy(w http.ResponseWriter, r *http.Request)
 		return httperror.InternalServerError("Unable to persist the stack changes inside the database", errors.Wrap(err, "failed to update the stack"))
 	}
 
-	deployGate.startDeploy()
 	if errorek == nil {
 		if r.Method != http.MethodGet {
 			log.Info().Msgf("[AIP AUDIT] [%s] [Redeploy from GIT STACK %s]     [%s]", uzer.Username, stack.Name, r)
