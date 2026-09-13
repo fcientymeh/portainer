@@ -285,7 +285,7 @@ func (transport *Transport) decorateContainerCreationOperation(request *http.Req
 	teamMemberships_aip, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
 	team_aip, err := transport.dataStore.Team().TeamByName("READONLY")
 	if err != nil {
-		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+		//log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
 	}
 	for _, membership_aip := range teamMemberships_aip {
 		if membership_aip.TeamID == team_aip.ID {

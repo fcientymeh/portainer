@@ -658,7 +658,7 @@ func (transport *Transport) restrictedResourceOperation(request *http.Request, r
 	teamMemberships_aip, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
 	team_aip, err := transport.dataStore.Team().TeamByName("READONLY")
 	if err != nil {
-		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+		//log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
 	}
 	for _, membership_aip := range teamMemberships_aip {
 		if membership_aip.TeamID == team_aip.ID {
@@ -893,7 +893,7 @@ func (transport *Transport) decorateGenericResourceCreationOperation(request *ht
 	teamMemberships_aip, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(tokenData.ID)
 	team_aip, err := transport.dataStore.Team().TeamByName("READONLY")
 	if err != nil {
-		log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE] - transport.go:896", tokenData.Username)
+		//log.Printf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE] - transport.go:896", tokenData.Username)
 	}
 	for _, membership_aip := range teamMemberships_aip {
 		if membership_aip.TeamID == team_aip.ID {
@@ -951,7 +951,7 @@ func (transport *Transport) executeGenericResourceDeletionOperation(request *htt
 	teamMemberships_aip, _ := transport.dataStore.TeamMembership().TeamMembershipsByUserID(uzer.ID)
 	team_aip, err := transport.dataStore.Team().TeamByName("READONLY")
 	if err != nil {
-		log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
+		//log.Info().Msgf("[AIP AUDIT] [%s] [WARNING! TEAM READONLY DOES NOT EXIST]     [NONE]", uzer.Username)
 	}
 	for _, membership_aip := range teamMemberships_aip {
 		if membership_aip.TeamID == team_aip.ID {
